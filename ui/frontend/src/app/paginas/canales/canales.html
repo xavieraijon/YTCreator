@@ -1,0 +1,64 @@
+<header class="cabeza">
+  <div>
+    <span class="antetitulo">Tus canales</span>
+    <h1>Canales</h1>
+    <p class="secundario">Cada canal, con sus vídeos. Trabajas con uno cada vez: el que está marcado.</p>
+  </div>
+  <a mat-flat-button routerLink="/asistente"><mat-icon>add</mat-icon>Crear un canal</a>
+</header>
+
+@if (canales.cargando() && !canales.canales().length) {
+  <mat-progress-bar mode="indeterminate" />
+}
+@if (canales.error(); as e) {
+  <p class="error"><mat-icon>warning</mat-icon>{{ e }}</p>
+}
+
+<div class="lista">
+  @for (c of visibles(); track c.slug) {
+    <article class="canal tarjeta" [class.canal--activo]="c.activo" [class.canal--archivado]="c.archivado">
+      <div class="canal__cabeza">
+        <h2><a [routerLink]="['/canales', c.slug]">{{ c.nombre }}</a></h2>
+        @if (c.activo) {
+          <span class="etiqueta etiqueta--ok"><mat-icon>check</mat-icon>Con el que trabajas</span>
+        } @else if (c.archivado) {
+          <span class="etiqueta">Archivado</span>
+        } @else if (c.creacion) {
+          <span class="etiqueta etiqueta--aviso">Creándose</span>
+        }
+        @if (c.rapido) {
+          <span class="etiqueta etiqueta--acento">Sin nombre</span>
+        }
+      </div>
+
+      @if (c.creacion) {
+        <p class="canal__estado">{{ c.creacion }}</p>
+      } @else if (c.pendientes && !c.archivado) {
+        <p class="canal__estado">Sin terminar de preparar: faltan datos de su ficha.</p>
+      } @else {
+        <p class="canal__estado">{{ c.videos === 0 ? 'Todavía sin vídeos' : c.videos === 1 ? '1 vídeo' : c.videos + ' vídeos' }}</p>
+      }
+
+      <div class="canal__acciones">
+        @if (c.creacion || (c.pendientes && !c.archivado)) {
+          <a mat-flat-button routerLink="/asistente">Seguir preparándolo</a>
+        } @else {
+          <a mat-stroked-button [routerLink]="['/canales', c.slug]">Ver el canal</a>
+        }
+        @if (!c.activo && !c.archivado && !c.creacion) {
+          <button mat-button type="button" (click)="activar(c)">Trabajar con este canal</button>
+        }
+        @if (c.url) {
+          <a mat-button [href]="c.url" target="_blank" rel="noopener"><mat-icon>open_in_new</mat-icon>En YouTube</a>
+        }
+      </div>
+    </article>
+  } @empty {
+    @if (!canales.cargando() && !canales.error()) {
+      <div class="vacio tarjeta">
+        <p>Todavía no tienes ningún canal.</p>
+        <a mat-flat-button routerLink="/asistente"><mat-icon>auto_awesome</mat-icon>Crear mi primer canal</a>
+      </div>
+    }
+  }
+</div>

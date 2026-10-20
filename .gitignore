@@ -1,0 +1,105 @@
+# Espacio de trabajo elegido en este Mac (herramientas/espacio.py elegir)
+.espacio
+
+# Lo propio de cada persona vive en su espacio de trabajo (herramientas/espacio.py), no en el kit.
+# Si el espacio es esta misma carpeta (sin separar), esto no se versiona aquí.
+/canales/
+/analisis/
+/canal_activo
+/data/
+
+# Secretos (NUNCA subir)
+.env
+.env.*
+!.env.example
+
+# Entorno virtual y caché de Python
+.venv/
+
+# Programas que instala /instalar sin permisos de administrador (ffmpeg, ffprobe) y su registro
+/programas/
+__pycache__/
+*.pyc
+
+# Sistema
+.DS_Store
+
+# Temporales de montaje
+**/videos/*/tmp/
+*.tmp
+
+# Pruebas sueltas
+**/videos/_pruebas/
+
+# Registro de consumo local
+data/
+
+# Archivos pesados de cada vídeo (se guardan los textos: guion, fuentes, estado, publicación)
+**/videos/*/voz/
+**/videos/*/img/
+**/videos/**/*.mp4
+**/videos/**/*.jpg
+**/videos/**/*.wav
+
+# Motor de imágenes local (entorno y modelos, muy pesados)
+.venv-local/
+modelos/
+
+# Alineación local de voz (entorno y modelo, muy pesados)
+.venv-whisperx/
+**/videos/*/boceto/
+**/videos/*/*.log
+**/videos/*/voz/bloques/
+
+# Trabajo de la hoja de personaje (variantes, descartes y pruebas); lo bueno está en personaje/ref/
+**/personaje/e2/*.png
+**/personaje/e2/*.semilla
+
+# Análisis de canales (skill analisis-canal-youtube): se guardan los cuadernos .md; las capturas de
+# Studio son privadas y los datos crudos, miniaturas e informes HTML se pueden regenerar
+analisis/entrada/*
+!analisis/entrada/LEEME.md
+canales/*/analisis/entrada/*
+!canales/*/analisis/entrada/LEEME.md
+canales/*/analisis/datos/
+canales/*/analisis/estructuras/*/transcripcion.txt
+canales/*/analisis/miniaturas-*/
+canales/*/analisis/*.html
+analisis/datos/
+analisis/miniaturas-*/
+analisis/*.html
+
+# Imágenes y audio de cada vídeo hechos a mano (Google, web de ai33...): solo se versionan los textos
+**/videos/**/*.jpeg
+**/videos/**/*.png
+**/videos/**/*.mp3
+
+# Interfaz (ui/): Node local, dependencias y compilados
+ui/.node/
+ui/frontend/node_modules/
+ui/frontend/dist/
+ui/frontend/.angular/
+**/videos/*/img/ai33.lock
+
+# Semillas de las pruebas de un vídeo (las imágenes ya las excluye **/videos/**/*.png)
+**/videos/*/prueba_*/*.semilla
+
+# Variantes y descartes de la marca; lo bueno está en marca/ (avatar.png, banner.png, fondos/)
+**/marca/v2/
+
+# Música de Suno de cada vídeo (se guarda musica.json con prompts, tareas y la elegida)
+**/videos/*/musica/*.mp3
+
+# Trabajo interno del kit (plan, progreso, historia, auditorías): local, no se publica. El manual, la
+# guía de instalación, el mercado y la guía de subida sí son del kit público.
+/docs/plan.md
+/docs/progreso.md
+/docs/historia_kit.md
+/docs/auditoria-tecnica.md
+/docs/auditoria-plataforma-*.md
+/docs/plan-mejoras-usuario.md
+/docs/plan-retomar.md
+/docs/prompt-analisis-plataforma.md
+/docs/referentes_plataforma.md
+/docs/escritura_humana.md
+/docs/ui/

@@ -1,0 +1,356 @@
+@use '@angular/material' as mat;
+@use '@fontsource-variable/geist';
+
+// YTCreator: interfaz moderna en Geist, grises fríos y un único acento azul. Claro u oscuro según el sistema
+// (color-scheme); todos los colores salen de estos tokens.
+:root {
+  color-scheme: light dark;
+
+  --ay-fondo: light-dark(#f6f7f9, #0c0d11);
+  --ay-superficie: light-dark(#ffffff, #14151b);
+  --ay-superficie-2: light-dark(#fafbfc, #181a21);
+  --ay-superficie-3: light-dark(#eef0f4, #20232c);
+  --ay-borde: light-dark(#e4e7ec, #23262f);
+  --ay-borde-fuerte: light-dark(#d0d5dd, #343845);
+  --ay-tinta: light-dark(#0f1117, #eceef4);
+  --ay-tenue: light-dark(#555b6a, #9aa1b2);
+  --ay-acento: light-dark(#2b4cf2, #8da2ff);
+  --ay-acento-fuerte: light-dark(#2038c4, #c7d2ff);
+  --ay-acento-suave: light-dark(#e8edff, #1c2240);
+  --ay-ok: light-dark(#2f7a4d, #6cc794);
+  --ay-ok-suave: light-dark(#e3f2e8, #16281e);
+  --ay-aviso: light-dark(#b8660b, #f0a64a);
+  --ay-aviso-suave: light-dark(#fdf0dc, #2e2213);
+  --ay-pago: light-dark(#0e7490, #67d4ec);
+  --ay-pago-suave: light-dark(#e0f4f7, #11262c);
+  --ay-error: light-dark(#b3261e, #f2b8b5);
+  --ay-lateral: #0c0d11;
+  --ay-lateral-borde: #1f222b;
+  --ay-lateral-texto: #a3a9b8;
+
+  --ay-sombra: 0 1px 2px rgb(15 17 23 / 0.04), 0 4px 16px rgb(15 17 23 / 0.05);
+  --ay-sombra-alta: 0 2px 6px rgb(15 17 23 / 0.06), 0 16px 40px rgb(15 17 23 / 0.1);
+  --ay-alto-cabecera: 4.25rem;
+  --ay-radio: 18px;
+  --ay-radio-peq: 12px;
+  --ay-serif: 'Geist Variable', system-ui, sans-serif;
+  --ay-sans: 'Geist Variable', system-ui, -apple-system, sans-serif;
+  --ay-mono: ui-monospace, 'SF Mono', Menlo, monospace;
+}
+
+html {
+  @include mat.theme(
+    (
+      color: mat.$orange-palette,
+      typography: (
+        plain-family: var(--ay-sans),
+        brand-family: var(--ay-serif),
+      ),
+      density: 0,
+    )
+  );
+  // Material toma sus colores de aquí: los mismos tokens que el resto.
+  @include mat.theme-overrides(
+    (
+      primary: var(--ay-acento),
+      on-primary: light-dark(#ffffff, #1c1406),
+      primary-container: var(--ay-acento-suave),
+      on-primary-container: var(--ay-acento-fuerte),
+      secondary-container: var(--ay-acento-suave),
+      on-secondary-container: var(--ay-acento-fuerte),
+      surface: var(--ay-superficie),
+      on-surface: var(--ay-tinta),
+      on-surface-variant: var(--ay-tenue),
+      surface-container-lowest: var(--ay-superficie),
+      surface-container-low: var(--ay-superficie-2),
+      surface-container: var(--ay-superficie-2),
+      surface-container-high: var(--ay-superficie-3),
+      surface-container-highest: var(--ay-superficie-3),
+      outline: var(--ay-borde-fuerte),
+      outline-variant: var(--ay-borde),
+      error: var(--ay-error),
+      corner-medium: var(--ay-radio),
+      corner-small: var(--ay-radio-peq),
+    )
+  );
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: var(--ay-sans);
+  font-size: 14.5px;
+  line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  background: var(--ay-fondo);
+  color: var(--ay-tinta);
+}
+
+a {
+  color: var(--ay-acento);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+::selection {
+  background: var(--ay-acento-suave);
+}
+
+// Cifras alineadas (tabulares) en la interfaz.
+body,
+h1,
+h2,
+h3,
+.titulo {
+  font-variant-numeric: tabular-nums;
+}
+
+// ---- Títulos -------------------------------------------------------------------------------------
+h1,
+.titulo {
+  font-family: var(--ay-serif);
+  font-weight: 700;
+  font-size: clamp(1.75rem, 2.4vw, 2.35rem);
+  line-height: 1.1;
+  letter-spacing: -0.035em;
+  margin: 0 0 0.5rem;
+}
+
+h2 {
+  font-family: var(--ay-serif);
+  font-weight: 700;
+  font-size: 1.3rem;
+  letter-spacing: -0.025em;
+  margin: 2rem 0 0.85rem;
+}
+
+h3 {
+  font-size: 0.95rem;
+  font-weight: 650;
+  margin: 1.25rem 0 0.5rem;
+}
+
+/** Texto pequeño en versalitas sobre un título. */
+.antetitulo {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 650;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ay-acento);
+  margin-bottom: 0.4rem;
+}
+
+.secundario {
+  color: var(--ay-tenue);
+}
+
+.miga__hueco {
+  flex: 1;
+}
+
+.miga {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0 0 1rem;
+  font-size: 0.82rem;
+  color: var(--ay-tenue);
+
+  a {
+    color: var(--ay-tenue);
+    text-decoration: none;
+
+    &:hover {
+      color: var(--ay-acento);
+    }
+  }
+}
+
+// ---- Piezas compartidas ---------------------------------------------------------------------------
+.tarjeta {
+  background: var(--ay-superficie);
+  border: 1px solid var(--ay-borde);
+  border-radius: var(--ay-radio);
+  box-shadow: var(--ay-sombra);
+}
+
+.etiqueta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+  background: var(--ay-superficie-3);
+  color: var(--ay-tenue);
+
+  &--ok {
+    background: var(--ay-ok-suave);
+    color: var(--ay-ok);
+  }
+
+  &--aviso {
+    background: var(--ay-aviso-suave);
+    color: var(--ay-aviso);
+  }
+
+  &--acento {
+    background: var(--ay-acento-suave);
+    color: var(--ay-acento-fuerte);
+  }
+
+  &--pago {
+    background: var(--ay-pago-suave);
+    color: var(--ay-pago);
+  }
+
+  .mat-icon {
+    font-size: 0.95rem;
+    width: 0.95rem;
+    height: 0.95rem;
+  }
+}
+
+/** Tabla de Material dentro de una tarjeta. */
+.tabla {
+  overflow: auto;
+
+  .mat-mdc-table {
+    background: transparent;
+  }
+
+  .mat-mdc-header-cell {
+    font-size: 0.75rem;
+    font-weight: 650;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ay-tenue);
+    background: var(--ay-superficie-2);
+  }
+
+  .mat-mdc-row {
+    transition: background 0.15s;
+
+    &:hover {
+      background: var(--ay-superficie-2);
+    }
+  }
+
+  .mat-mdc-cell,
+  .mat-mdc-header-cell {
+    border-bottom-color: var(--ay-borde);
+  }
+
+  .vacio {
+    padding: 1.5rem;
+    color: var(--ay-tenue);
+  }
+}
+
+.enlace-fuerte {
+  font-weight: 600;
+  color: var(--ay-tinta);
+  text-decoration: none;
+
+  &:hover {
+    color: var(--ay-acento);
+  }
+}
+
+.vacio-grande {
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  color: var(--ay-tenue);
+}
+
+// ---- Material: retoques -------------------------------------------------------------------------
+.mat-mdc-button-base {
+  --mat-button-outlined-outline-color: var(--ay-borde-fuerte);
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.mat-mdc-tooltip {
+  --mat-tooltip-container-color: #0f1117;
+  --mat-tooltip-supporting-text-color: #f6f7f9;
+}
+
+.mat-mdc-snack-bar-container {
+  --mat-snack-bar-container-color: #0f1117;
+  --mat-snack-bar-supporting-text-color: #f6f7f9;
+}
+
+.mat-expansion-panel {
+  --mat-expansion-container-background-color: var(--ay-superficie);
+  box-shadow: none !important;
+  border: 1px solid var(--ay-borde);
+}
+
+.menu-cuota.mat-mdc-menu-panel {
+  max-width: 24rem;
+  border-radius: var(--ay-radio);
+}
+
+.panel-visor .mat-mdc-dialog-surface {
+  padding: 0;
+  overflow: hidden;
+  border-radius: var(--ay-radio);
+}
+
+.mat-mdc-progress-bar {
+  --mat-progress-bar-active-indicator-color: var(--ay-acento);
+  --mat-progress-bar-track-color: var(--ay-acento-suave);
+  border-radius: 99px;
+}
+
+// Barras de desplazamiento discretas.
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--ay-borde-fuerte) transparent;
+}
+
+/* Modal de confirmación (compartido/confirmar.ts): misma superficie y radio que las tarjetas. */
+.panel-confirmar .mat-mdc-dialog-surface {
+  border-radius: var(--ay-radio);
+  background: var(--ay-superficie);
+  box-shadow: var(--ay-sombra-alta);
+}
+
+/* Modo revisión (compartido/modo-revision.ts): pantalla completa, sin marco. */
+.panel-modo-revision .mat-mdc-dialog-surface {
+  padding: 0;
+  border-radius: 0;
+  overflow: hidden;
+  background: #0c0d11;
+}
+
+/* «Saltar al contenido»: invisible hasta que recibe el foco con el teclado. */
+.saltar {
+  position: fixed;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 100;
+  padding: 0.6rem 1rem;
+  border-radius: var(--ay-radio-peq);
+  background: var(--ay-acento);
+  color: #fff;
+  font-weight: 650;
+  text-decoration: none;
+  transform: translateY(-200%);
+}
+
+.saltar:focus {
+  transform: none;
+}
+
+#contenido:focus {
+  outline: none;
+}

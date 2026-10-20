@@ -1,0 +1,38 @@
+{
+  "1": {
+    "dato": "por qué nos quedamos en blanco",
+    "semaforo": "verde",
+    "motivo": "6 clones, sin ráfaga reciente",
+    "clones": 6,
+    "recientes": 0,
+    "perennes": 0,
+    "mediana": 844.5,
+    "demanda": "alta",
+    "en_ingles": 3,
+    "fecha": "2026-10-03T20:41:09"
+  },
+  "2": {
+    "dato": "se puede no pensar en nada",
+    "semaforo": "ambar",
+    "motivo": "17 clones pero con visitas: solo con un ángulo claramente distinto",
+    "clones": 17,
+    "recientes": 0,
+    "perennes": 2,
+    "mediana": 82976,
+    "demanda": "alta",
+    "en_ingles": 2,
+    "fecha": "2026-10-03T20:41:15"
+  },
+  "3": {
+    "dato": "cerebro en reposo gasta energía",
+    "semaforo": "verde",
+    "motivo": "solo 2 clones y el tema amplio tiene público: hueco",
+    "clones": 2,
+    "recientes": 0,
+    "perennes": 0,
+    "mediana": 1101.0,
+    "demanda": "alta",
+    "en_ingles": 24,
+    "fecha": "2026-10-03T20:41:37"
+  }
+}

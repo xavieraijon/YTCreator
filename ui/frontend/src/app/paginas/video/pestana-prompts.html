@@ -1,0 +1,244 @@
+@if (cargando()) {
+  <mat-progress-bar mode="indeterminate" />
+} @else if (error()) {
+  <p class="vacio-grande tarjeta">No se pudieron leer los prompts de guion.json.</p>
+} @else if (datos(); as d) {
+  <app-guia-manual [video]="video()" />
+
+  <div class="barra tarjeta">
+    <label class="buscador">
+      <mat-icon>search</mat-icon>
+      <input
+        type="search"
+        placeholder="Buscar en prompts, rótulos o texto de la escena…"
+        [value]="buscar()"
+        (input)="buscar.set($any($event.target).value)"
+      />
+    </label>
+    <mat-button-toggle-group
+      [value]="version()"
+      (change)="cambiarVersion($event.value)"
+      hideSingleSelectionIndicator
+      aria-label="Versión del prompt"
+    >
+      <mat-button-toggle value="guion" matTooltip="Tal cual está en guion.json, con los {personajes} marcados">
+        Del guion
+      </mat-button-toggle>
+      <mat-button-toggle
+        value="final"
+        matTooltip="El que recibe el modelo: personajes sustituidos, con el estilo y la paleta del canal. Es el que conviene pegar en Gemini u otra web"
+      >
+        Final
+      </mat-button-toggle>
+    </mat-button-toggle-group>
+    <button
+      mat-flat-button
+      type="button"
+      (click)="copiarTodo()"
+      [disabled]="!cuenta().visibles"
+      matTooltip="Todos los que se ven, en un solo texto por escenas (para guardarlos o pasárselos a Claude). Para Gemini, copia de uno en uno."
+    >
+      <mat-icon>{{ copia.reciente() === 'todo' ? 'check' : 'content_copy' }}</mat-icon>
+      Copiar {{ cuenta().visibles }} por escenas
+    </button>
+  </div>
+
+  <div class="filtros">
+    @for (f of estados; track f.clave) {
+      @if (f.clave === null || numero(f.clave)) {
+        <button type="button" class="filtro" [class.filtro--activo]="filtro().estado === f.clave" (click)="cambiarEstado(f.clave)">
+          {{ f.texto }} <span>{{ numero(f.clave) }}</span>
+        </button>
+      }
+    }
+    <span class="filtros__sep"></span>
+    <button type="button" class="filtro" [class.filtro--activo]="filtro().motor === 'klein'" (click)="cambiarMotor('klein')"
+            matTooltip="Solo las de klein (gratis)">
+      klein <span>{{ cuenta().klein }}</span>
+    </button>
+    <button type="button" class="filtro" [class.filtro--activo]="filtro().motor === 'ai33'" (click)="cambiarMotor('ai33')"
+            matTooltip="Solo las de ai33 (de pago)">
+      ai33 <span>{{ cuenta().ai33 }}</span>
+    </button>
+    <span class="filtros__hueco"></span>
+    <button type="button" class="filtro" [class.filtro--activo]="verEstilo()" (click)="verEstilo.set(!verEstilo())">
+      <mat-icon>palette</mat-icon> Estilo y personajes
+    </button>
+  </div>
+
+  @if (verEstilo()) {
+    <section class="estilo tarjeta">
+      @if (d.estilo; as estilo) {
+        <div class="estilo__bloque">
+          <div class="estilo__cabeza">
+            <h3>Estilo del canal <small>(con la paleta de este vídeo; «{{ '{' }}escena{{ '}' }}» es el prompt)</small></h3>
+            <button aria-label="Copiar" mat-icon-button type="button" (click)="copiarTexto(estilo, 'estilo', 'Estilo copiado')" matTooltip="Copiar">
+              <mat-icon>{{ copia.reciente() === 'estilo' ? 'check' : 'content_copy' }}</mat-icon>
+            </button>
+          </div>
+          <p class="estilo__texto">{{ estilo }}</p>
+        </div>
+      }
+      @for (c of personajes(); track c.nombre) {
+        <div class="estilo__bloque">
+          <div class="estilo__cabeza">
+            <h3><code class="personaje">{{ '{' + c.nombre + '}' }}</code></h3>
+            <button aria-label="Copiar"
+              mat-icon-button
+              type="button"
+              (click)="copiarTexto(c.descripcion, 'p-' + c.nombre, 'Personaje copiado')"
+              matTooltip="Copiar"
+            >
+              <mat-icon>{{ copia.reciente() === 'p-' + c.nombre ? 'check' : 'content_copy' }}</mat-icon>
+            </button>
+          </div>
+          <p class="estilo__texto">{{ c.descripcion }}</p>
+        </div>
+      }
+    </section>
+  }
+
+  <div class="cuerpo">
+    <nav class="indice">
+      <span class="antetitulo">Escenas</span>
+      @for (e of escenas(); track e.numero) {
+        <button type="button" class="indice__item" (click)="irA(e.numero)">
+          <span class="indice__num">{{ e.numero }}</span>
+          <span class="indice__texto" [class.indice__texto--voz]="!e.capitulo">{{ e.titulo }}</span>
+          <span class="indice__n">{{ e.filas.length }}</span>
+        </button>
+      }
+    </nav>
+
+    <div class="escenas">
+      @for (e of escenas(); track e.numero) {
+        <section class="escena" [id]="'escena-' + e.numero">
+          <header class="escena__cabeza">
+            <span class="escena__num">{{ e.numero < 10 ? '0' + e.numero : e.numero }}</span>
+            <div class="escena__titulo">
+              <span class="antetitulo">Escena {{ e.numero }}</span>
+              <h3 [class.voz]="!e.capitulo">{{ e.titulo }}</h3>
+            </div>
+            <button mat-stroked-button type="button" (click)="copiarEscena(e)">
+              <mat-icon>{{ copia.reciente() === 'escena-' + e.numero ? 'check' : 'content_copy' }}</mat-icon>
+              Copiar escena
+            </button>
+          </header>
+          <details class="escena__voz">
+            <summary>Lo que dice la voz</summary>
+            <p>{{ e.texto }}</p>
+          </details>
+
+          @for (f of e.filas; track f.p.ident) {
+            <article class="prompt tarjeta" [class.prompt--copiado]="copia.reciente() === f.p.ident">
+              <button
+                type="button"
+                class="prompt__imagen"
+                [class.prompt__imagen--vacia]="!f.img?.existe"
+                (click)="abrir(f)"
+                [attr.aria-label]="'Ver ' + f.p.ident"
+              >
+                @if (f.img?.existe && f.img?.ruta) {
+                  <img [src]="url(f.img!.ruta!)" [alt]="f.p.ident" loading="lazy" />
+                } @else {
+                  <mat-icon>add_photo_alternate</mat-icon>
+                  <span>Nueva: aún no existe</span>
+                }
+              </button>
+              <div class="prompt__cuerpo">
+                <div class="prompt__cabeza">
+                  <code class="prompt__id">{{ f.p.ident }}</code>
+                  @if (f.p.origen === 'prompt') {
+                    <span class="etiqueta" [class.etiqueta--pago]="f.p.motor === 'ai33'">
+                      {{ f.p.motor === 'ai33' ? 'ai33 · pago' : 'klein' }}
+                    </span>
+                  } @else if (f.p.origen === 'reutilizar') {
+                    <span class="etiqueta"><mat-icon>content_copy</mat-icon>Reutiliza {{ f.p.fuente }}</span>
+                  } @else {
+                    <span class="etiqueta">{{ f.p.origen === 'video' ? 'Clip' : 'Archivo propio' }}</span>
+                  }
+                  @if (f.img?.en_cola) {
+                    <span class="etiqueta etiqueta--pago"><mat-icon>schedule</mat-icon>En cola ai33</span>
+                  } @else if (f.img?.desactualizada) {
+                    <span class="etiqueta etiqueta--aviso" matTooltip="Existe, pero su prompt ha cambiado: se sustituirá"><mat-icon>sync_problem</mat-icon>A rehacer</span>
+                  } @else if (f.p.origen === 'prompt' && !f.img?.existe) {
+                    <span class="etiqueta etiqueta--aviso" matTooltip="Todavía no existe"><mat-icon>add_photo_alternate</mat-icon>Nueva</span>
+                  } @else if (f.p.origen === 'prompt') {
+                    <span class="etiqueta etiqueta--ok"><mat-icon>check</mat-icon>Lista</span>
+                  }
+                  @if (f.p.movimiento) {
+                    <span class="etiqueta">{{ f.p.movimiento }}</span>
+                  }
+                  <span class="prompt__hueco"></span>
+                  @if (f.texto) {
+                    <button mat-button type="button" class="prompt__copiar" (click)="copiarUno(f)">
+                      <mat-icon>{{ copia.reciente() === f.p.ident ? 'check' : 'content_copy' }}</mat-icon>
+                      {{ copia.reciente() === f.p.ident ? 'Copiado' : 'Copiar' }}
+                    </button>
+                  }
+                </div>
+                @if (f.p.rotulo) {
+                  <p class="prompt__rotulo"><mat-icon>title</mat-icon>{{ f.p.rotulo }}</p>
+                }
+                @if (!f.texto) {
+                  <p class="secundario prompt__texto">
+                    {{ f.p.origen === 'reutilizar' ? 'Usa la misma imagen que ' + f.p.fuente + '.' : f.p.fuente }}
+                  </p>
+                } @else if (version() === 'guion') {
+                  <p class="prompt__texto">
+                    @for (t of f.trozos; track $index) {
+                      @if (t.personaje) {
+                        <mark class="personaje" [matTooltip]="d.personajes[t.texto.slice(1, -1)] ?? 'Personaje sin definir'">{{ t.texto }}</mark>
+                      } @else {
+                        {{ t.texto }}
+                      }
+                    }
+                  </p>
+                } @else {
+                  <p class="prompt__texto">{{ f.texto }}</p>
+                }
+              </div>
+            </article>
+          }
+        </section>
+      } @empty {
+        <p class="vacio-grande tarjeta">Ningún prompt coincide con la búsqueda o el filtro.</p>
+      }
+
+      @if (d.miniaturas.length && !filtro().estado && !filtro().motor && !buscar()) {
+        <section class="escena" id="escena-miniaturas">
+          <header class="escena__cabeza">
+            <span class="escena__num"><mat-icon>image</mat-icon></span>
+            <div class="escena__titulo">
+              <span class="antetitulo">YouTube</span>
+              <h3>Fondos de las miniaturas</h3>
+            </div>
+          </header>
+          @for (m of d.miniaturas; track m.numero) {
+            <article class="prompt prompt--sin-imagen tarjeta">
+              <div class="prompt__cuerpo">
+                <div class="prompt__cabeza">
+                  <code class="prompt__id">miniatura {{ m.numero }}</code>
+                  @if (m.texto) {
+                    <span class="etiqueta etiqueta--acento">«{{ m.texto }}»</span>
+                  }
+                  @if (m.lado) {
+                    <span class="etiqueta">texto a la {{ m.lado }}</span>
+                  }
+                  <span class="prompt__hueco"></span>
+                  @if (miniaturaTexto(m); as t) {
+                    <button mat-button type="button" class="prompt__copiar" (click)="copiarTexto(t, 'mini-' + m.numero, 'Prompt de la miniatura copiado')">
+                      <mat-icon>{{ copia.reciente() === 'mini-' + m.numero ? 'check' : 'content_copy' }}</mat-icon>
+                      {{ copia.reciente() === 'mini-' + m.numero ? 'Copiado' : 'Copiar' }}
+                    </button>
+                  }
+                </div>
+                <p class="prompt__texto">{{ miniaturaTexto(m) ?? 'Fondo: ' + m.fondo }}</p>
+              </div>
+            </article>
+          }
+        </section>
+      }
+    </div>
+  </div>
+}

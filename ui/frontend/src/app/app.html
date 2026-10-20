@@ -1,0 +1,91 @@
+<a class="saltar" href="#contenido" (click)="saltar($event)">Saltar al contenido</a>
+<div class="marco">
+  <aside class="lateral">
+    <div class="marca">
+      <svg class="marca__logo" width="34" height="34" viewBox="0 0 32 32" role="img" aria-label="YTCreator">
+        <rect width="32" height="32" rx="9" fill="#2b4cf2" />
+        <path d="M9 9l7 8.5L23 9M16 17.5V24" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+      <span class="marca__texto"><b>YT</b>Creator</span>
+    </div>
+    <p class="lateral__seccion">Estudio</p>
+    <nav class="menu">
+      @for (item of menu; track item.ruta) {
+        <a
+          class="menu__item"
+          [routerLink]="item.ruta"
+          routerLinkActive="menu__item--activo"
+          [routerLinkActiveOptions]="{ exact: item.exacta }"
+        >
+          <mat-icon>{{ item.icono }}</mat-icon>
+          <span>{{ item.texto }}</span>
+          @if (item.ruta === '/tareas' && tareas.activas().length) {
+            <span class="menu__cuenta">{{ tareas.activas().length }}</span>
+          }
+        </a>
+      }
+    </nav>
+    <span class="lateral__hueco"></span>
+    @if (canales.activo(); as activo) {
+      <a class="activo" [routerLink]="['/canales', activo.slug]">
+        @if (!sinAvatar()) {
+          <img class="activo__avatar" [src]="avatar(activo.slug)" alt="" (error)="sinAvatar.set(true)" />
+        } @else {
+          <span class="activo__avatar activo__avatar--letra">{{ activo.nombre[0] }}</span>
+        }
+        <span class="activo__texto">
+          <small>Canal activo</small>
+          <strong>{{ activo.nombre }}</strong>
+        </span>
+      </a>
+    }
+  </aside>
+  <div class="principal">
+    <nav class="movil" aria-label="Principal">
+      @for (item of menu; track item.ruta) {
+        <a [routerLink]="item.ruta" routerLinkActive="movil__item--activo" [routerLinkActiveOptions]="{ exact: item.exacta }" class="movil__item">
+          <mat-icon>{{ item.icono }}</mat-icon>
+          <span>{{ item.texto }}</span>
+        </a>
+      }
+    </nav>
+    <header class="cabecera">
+      <app-barra-cuotas class="cabecera__cuotas" />
+      @if (canales.error()) {
+        <span class="cabecera__error"><mat-icon>warning</mat-icon> {{ canales.error() }}</span>
+      }
+      <span class="cabecera__hueco"></span>
+      <app-panel-tareas />
+      @if (actualizado(); as a) {
+        <span class="cabecera__estado cabecera__ancho">{{ a }}</span>
+      }
+      <button
+        mat-icon-button
+        type="button"
+        class="cabecera__boton"
+        aria-label="Volver a leer los archivos y las cuotas"
+        [disabled]="actualizando()"
+        (click)="actualizar()"
+        matTooltip="Todo se actualiza solo. Si algo no cuadra, esto vuelve a leer los archivos y las cuotas"
+      >
+        <mat-icon [class.girando]="actualizando()">sync</mat-icon>
+      </button>
+    </header>
+    @if (reiniciar().length) {
+      <div class="reiniciar">
+        <mat-icon>restart_alt</mat-icon>
+        <div>
+          <strong>Reinicia YTCreator</strong>
+          <span>
+            Hay cambios en el programa que todavía no ha cargado ({{ reiniciar().length }} archivos): hasta entonces, lo nuevo
+            puede fallar. Ciérralo (Ctrl+C en la ventana donde lo arrancaste) y vuelve a arrancarlo.
+          </span>
+        </div>
+      </div>
+    }
+    <main class="contenido" id="contenido" tabindex="-1">
+      <router-outlet />
+    </main>
+  </div>
+</div>
+<app-avisos />

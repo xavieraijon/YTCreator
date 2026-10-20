@@ -1,0 +1,16 @@
+# Revisión de estilo y errores probables del Python del kit (herramientas/ y ui/backend/). Se pasa con
+# `ui/arrancar.sh comprobar` (o `.venv/bin/ruff check`). Solo reglas que encuentran fallos o descuidos reales.
+line-length = 125
+target-version = "py313"
+extend-exclude = ["modelos", ".venv-local", "ui/frontend", "ui/.node", "ui/backend/tests/espacio_de_prueba"]
+
+[lint]
+select = ["E", "F", "W", "B"]
+ignore = [
+    "E501",  # líneas largas: muchas son textos deliberados (encargos a Claude, textos de pantalla); el ancho de la casa es ~125
+    "E741",  # «l» es el nombre de la casa para líneas y letras de fase
+    "E731",  # lambdas cortas con nombre (claves de ordenación, pequeños ayudantes locales)
+    "B008",  # Depends(...) en los argumentos: es como se usa FastAPI
+    "B904",  # «raise … from» dentro de except: los mensajes de error ya explican la causa al usuario
+    "B905",  # zip() sin strict: se usa con listas que van a la par por construcción
+]

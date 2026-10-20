@@ -1,0 +1,98 @@
+// Panel de Claude: lateral fijo a la derecha; en pantallas anchas la página le deja sitio.
+.claude {
+  position: fixed;
+  top: var(--ay-alto-cabecera);
+  right: 0;
+  bottom: 0;
+  z-index: 20;
+  width: min(28rem, 100vw);
+  border-left: 1px solid var(--ay-borde);
+  box-shadow: var(--ay-sombra-alta);
+  transform: translateX(105%);
+  visibility: hidden;
+  transition: transform 0.2s ease, visibility 0.2s;
+
+  &--abierto {
+    transform: none;
+    visibility: visible;
+  }
+}
+
+@media (min-width: 1280px) {
+  :host(.con-claude) {
+    display: block;
+    padding-right: 28rem;
+  }
+}
+
+.boton-claude {
+  position: fixed;
+  right: 1.5rem;
+  bottom: 1.5rem;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.7rem 1.1rem;
+  border: 0;
+  border-radius: 99px;
+  background: var(--ay-lateral);
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  box-shadow: var(--ay-sombra-alta);
+  cursor: pointer;
+
+  mat-icon {
+    color: var(--ay-acento);
+  }
+
+  &--trabajando mat-icon {
+    animation: girar 2.4s linear infinite;
+  }
+}
+
+@keyframes girar {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 760px) {
+  // Por encima de la barra de navegación del móvil; va después de la regla base (app.scss → .movil), sin tapar «Ajustes» (hallazgo 43).
+  .boton-claude {
+    right: 1rem;
+    bottom: calc(5rem + env(safe-area-inset-bottom));
+  }
+}
+
+.archivado {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+  max-width: 44rem;
+  padding: 2rem;
+
+  h1 {
+    margin: 0;
+  }
+
+  p {
+    margin: 0;
+  }
+
+  &__icono {
+    font-size: 2rem;
+    width: 2rem;
+    height: 2rem;
+    color: var(--ay-tenue);
+  }
+
+  &__acciones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "tipo": "short",
+  "formato": "vertical",
+  "pilar": "historia",
+  "titulo": "Prueba de Short",
+  "titulos": ["Prueba de Short (B)", "Prueba de Short (C)"],
+  "titulo_pantalla": "¿Funciona el *Short*?",
+  "musica": "misterio",
+  "descripcion": "Short de prueba del kit.",
+  "fuentes": ["https://example.org"],
+  "comentario_fijado": "¿Qué historia imposible quieres ver?",
+  "escenas": [
+    {"texto": "¿Puede una ciudad entera ponerse a bailar sin música?{img} En mil quinientos dieciocho, en Estrasburgo, pasó.",
+     "imagenes": [{"imagen": "herramientas/prueba/multitud.jpg"},
+                  {"imagen": "herramientas/prueba/plaza.jpg", "movimiento": "zoom_out", "rotulo": "Vertical"}]},
+    {"texto": "Esto es solo una prueba del formato vertical.{img} La historia entera, en el canal.",
+     "imagenes": [{"video": "videos/_pruebas/kit_short/clip_prueba.mp4", "desde": 0.2},
+                  {"reutilizar": "01-1", "movimiento": "zoom_in"}]}
+  ]
+}

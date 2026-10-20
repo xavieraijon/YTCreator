@@ -1,0 +1,147 @@
+@let img = imagen();
+@let r = revision();
+@if (generable()) {
+  <section class="revision">
+    <h3>Revisión</h3>
+
+    @if (rehaciendo(); as t) {
+      <p class="estado estado--rehaciendo">
+        <mat-icon class="girando">sync</mat-icon>
+        Rehaciéndose ({{ t.herramienta === 'rehacer_imagen_ai33' ? 'de pago: su cola puede tardar' : 'gratis' }})…
+      </p>
+    } @else if (r?.estado === 'mal') {
+      <p class="estado estado--mal"><mat-icon>report</mat-icon><span><b>Marcada como mal</b> · «{{ r?.motivo }}»</span></p>
+    } @else if (r?.estado === 'rehecha') {
+      <p class="estado estado--rehecha">
+        <mat-icon>fiber_new</mat-icon><span><b>Rehecha: revísala</b> · el problema era «{{ r?.motivo }}»</span>
+      </p>
+    } @else if (r?.estado === 'bien') {
+      <p class="estado estado--bien"><mat-icon>verified</mat-icon><b>Revisada: está bien</b></p>
+    }
+
+    @if (!abierto()) {
+      <div class="botones">
+        @if (r?.estado !== 'bien') {
+          <button mat-stroked-button type="button" class="boton-bien" [disabled]="ocupado() || !!rehaciendo()" (click)="bien()">
+            <mat-icon>check</mat-icon>Está bien
+          </button>
+        }
+        <button mat-flat-button type="button" class="boton-mal" [disabled]="!!rehaciendo()" (click)="abierto.set(true)">
+          <mat-icon>{{ r?.estado === 'mal' ? 'refresh' : 'close' }}</mat-icon>
+          {{ r?.estado === 'mal' ? 'Rehacer…' : 'Está mal…' }}
+        </button>
+      </div>
+    } @else {
+      <div class="formulario">
+        <label class="campo">
+          <span>¿Qué está mal?</span>
+          <textarea rows="3" placeholder="Por ejemplo: tiene tres brazos; el de la derecha sale del hombro."
+                    [value]="motivo()" (input)="motivo.set($any($event.target).value)"></textarea>
+        </label>
+        <div class="atajos">
+          @for (a of atajos; track a) {
+            <button type="button" class="atajo" (click)="atajo(a)">{{ a }}</button>
+          }
+        </div>
+
+        <button mat-stroked-button type="button" class="boton-claude" [disabled]="sugiriendo() || !motivo().trim()" (click)="sugerir()">
+          <mat-icon [class.girando]="sugiriendo()">{{ sugiriendo() ? 'progress_activity' : 'auto_awesome' }}</mat-icon>
+          {{ sugiriendo() ? 'Claude está mirando la imagen… ' + segundos() + ' s' : 'Pedir a Claude una descripción mejor' }}
+        </button>
+        @if (sugiriendo()) {
+          <p class="nota">Como director de arte: mira la imagen, el guion y tu motivo (≈ 30 s; usa tu suscripción, solo lee).</p>
+        }
+        @if (sugerencia(); as sg) {
+          <div class="sugerencia">
+            <div class="sugerencia__cabeza">
+              <mat-icon>auto_awesome</mat-icon><b>Sugerencia de Claude</b>
+              <button type="button" class="enlace" (click)="descartarSugerencia()">Descartar</button>
+            </div>
+            <p>{{ sg.explicacion }}</p>
+            @if (sg.servicio && sg.servicio !== (servicio() === 'ai33' ? 'ai33' : 'klein')) {
+              <p class="sugerencia__servicio">
+                Recomienda el servicio <b>{{ sg.servicio === 'ai33' ? 'de pago' : 'gratis' }}</b> para esta imagen.
+                <button type="button" class="enlace" (click)="usarServicio(sg.servicio)">Usar ese</button>
+              </p>
+            }
+            <span class="nota">La descripción sugerida está abajo: puedes retocarla antes de rehacer.</span>
+          </div>
+        }
+
+        <button type="button" class="enlace" (click)="editarPrompt.set(!editarPrompt())">
+          <mat-icon>{{ editarPrompt() ? 'expand_less' : 'edit' }}</mat-icon>
+          {{ editarPrompt() ? 'No cambiar la descripción' : 'Ajustar la descripción (opcional)' }}
+        </button>
+        @if (editarPrompt()) {
+          <label class="campo">
+            <span>Descripción de la imagen (en inglés; los {{ '{' }}personajes{{ '}' }} se mantienen)</span>
+            <textarea rows="7" [value]="prompt()" (input)="prompt.set($any($event.target).value)"></textarea>
+          </label>
+          <p class="nota">Con la misma descripción sale otra versión al azar. Si el fallo se repite, pide una sugerencia a Claude o
+            describe qué hace cada mano (contar «two arms» no funciona: el modelo no cuenta bien).</p>
+        }
+
+        <span class="campo__titulo">Rehacer con</span>
+        <div class="servicios">
+          <button type="button" class="servicio" [class.servicio--activo]="servicio() === 'cloudflare'" (click)="servicio.set('cloudflare')"
+                  [disabled]="cabenCloudflare() < 1">
+            <strong>Gratis · en internet</strong>
+            <span>{{ cabenCloudflare() < 1 ? 'Sin cuota ahora' : '≈ ' + cabenCloudflare() + ' libres hoy' }}</span>
+          </button>
+          <button type="button" class="servicio" [class.servicio--activo]="servicio() === 'local'" (click)="servicio.set('local')">
+            <strong>Gratis · en este ordenador</strong>
+            <span>≈ 2 min, ocupa el ordenador</span>
+          </button>
+          <button type="button" class="servicio servicio--pago" [class.servicio--activo]="servicio() === 'ai33'" (click)="servicio.set('ai33')">
+            <strong>De pago · más calidad</strong>
+            <span>≈ {{ creditosAi33() | number }} créditos (0,8 cént.) · mejor con personas</span>
+          </button>
+        </div>
+        @if ((servicio() === 'ai33') !== (img.motor === 'ai33')) {
+          <p class="nota">Se guarda en el guion: a partir de ahora esta imagen irá con el servicio {{ servicio() === 'ai33' ? 'de pago' : 'gratis' }}.</p>
+        }
+
+        <div class="botones">
+          <button mat-button type="button" (click)="abierto.set(false)">Cancelar</button>
+          <button mat-stroked-button type="button" [disabled]="ocupado() || !motivo().trim()" (click)="mal(false)">
+            Solo marcar
+          </button>
+          <button mat-flat-button type="button" class="boton-mal" [disabled]="ocupado() || !motivo().trim()" (click)="mal(true)">
+            <mat-icon>refresh</mat-icon>Marcar y rehacer
+          </button>
+        </div>
+      </div>
+    }
+
+    @if (error(); as e) {
+      <p class="error"><mat-icon>warning</mat-icon>{{ e }}</p>
+    }
+
+    @if (r?.anteriores?.length) {
+      <div class="anteriores">
+        <span class="campo__titulo">Versiones anteriores</span>
+        <div class="anteriores__lista">
+          @for (a of r!.anteriores; track a; let i = $index) {
+            <button type="button" class="anterior" [class.anterior--activa]="anteriorVista() === a" (click)="alternarAnterior(a)">
+              {{ anteriorVista() === a ? 'Ver la actual' : 'Anterior ' + (i + 1) }}
+            </button>
+          }
+        </div>
+      </div>
+    }
+
+    @if (r?.historial?.length) {
+      <details class="historial">
+        <summary>Historial ({{ r!.historial.length }})</summary>
+        <ol>
+          @for (h of r!.historial; track $index) {
+            <li>
+              <span class="historial__fecha">{{ h.fecha | date: 'd MMM, HH:mm' }}</span>
+              {{ h.estado === 'bien' ? 'Bien' : 'Mal' }}{{ h.motivo ? ': «' + h.motivo + '»' : '' }}{{ h.accion ? ' · ' + h.accion : '' }}
+            </li>
+          }
+        </ol>
+      </details>
+    }
+  </section>
+}

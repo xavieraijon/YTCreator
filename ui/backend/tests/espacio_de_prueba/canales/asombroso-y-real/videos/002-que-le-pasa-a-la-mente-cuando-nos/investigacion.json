@@ -1,0 +1,43 @@
+{"resumen": "El tema da para 10 minutos con buena base: quedarse en blanco es un estado distinto de irse por las nubes, y varios experimentos (en ratas en 2011, en personas en 2017 y 2021) muestran que zonas del cerebro despierto producen por un instante ondas como las del sueño justo antes de esos despistes. Además, la red cerebral que trabaja cuando no hacemos nada se descubrió en 1997 con gente mirando fijamente una cruz en una pantalla.",
+ "comprobados": 22, "hipotesis": 4, "leyendas": 2, "fuentes": 26,
+ "actos_posibles": 4, "veredicto": "suficiente",
+ "avisos": [
+  "Corrección del gancho propuesto: el estudio de 2021 no se hizo en París, sino en la Universidad de Monash (Melbourne, Australia); su autor principal es francés y hoy trabaja en París.",
+  "«Parte del cerebro se duerme» simplifica: lo medido son ondas parecidas a las del sueño, y que sea sueño de verdad es la interpretación de los autores. El guion lo dirá así y el título puede mantenerse con ese matiz.",
+  "Conviene una frase responsable sobre las crisis de ausencia (epilepsia infantil que se confunde con estar en las nubes), sin convertirlo en un vídeo médico.",
+  "Parte de los «estaba en blanco» podrían ser pensamientos olvidados al momento: el debate sigue abierto y el vídeo lo contará.",
+  "Los libros de afiliación son de temas vecinos (el sueño, la mente que divaga): no hay ningún libro en castellano centrado en la mente en blanco."
+ ],
+ "datos": [
+  {"texto": "La ciencia separa irse por las nubes (pensar en otra cosa) de quedarse en blanco (no pensar en nada que se pueda contar).", "estado": "comprobado", "fuentes": ["[WW13]", "[AND21]", "[BOU25]"]},
+  {"texto": "Pasamos el 46,9 % de las horas despiertos pensando en algo distinto de lo que hacemos (2.250 voluntarios, 250.000 respuestas en una app de iPhone).", "estado": "comprobado", "fuentes": ["[KG10]", "[HG10]"]},
+  {"texto": "Quedarse en blanco ocupa entre el 6 % (en reposo) y el 12-18 % (en tareas) de los momentos medidos al azar.", "estado": "comprobado", "fuentes": ["[AND21]", "[WW13]", "[MOR22]"]},
+  {"texto": "William James ya escribió en 1890 que la conciencia tiene lapsos en los que se apaga del todo.", "estado": "comprobado", "fuentes": ["[WW13]"]},
+  {"texto": "En 1997, nueve estudios en los que la gente miraba fijamente una cruz en una pantalla revelaron por casualidad zonas del cerebro más activas mirando la cruz que haciendo la tarea.", "estado": "comprobado", "fuentes": ["[MEN23]", "[RAI01]"]},
+  {"texto": "En 2001, Marcus Raichle llamó a esa actividad el «modo por defecto» del cerebro.", "estado": "comprobado", "fuentes": ["[RAI01]", "[MEN23]"]},
+  {"texto": "El cerebro pesa un 2 % del cuerpo y gasta un 20 % de su energía.", "estado": "comprobado", "fuentes": ["[ENER]", "[RAI10]"]},
+  {"texto": "Hacer una tarea concreta sube el gasto del cerebro menos de un 5 %: la mayor parte se va en actividad de fondo, la «energía oscura» del cerebro.", "estado": "comprobado", "fuentes": ["[RAI10]", "[ENER]"]},
+  {"texto": "En 2011, en ratas despiertas, grupos de neuronas se quedaban un instante fuera de línea como en el sueño, en una zona sí y en otra no, y las ratas fallaban más al coger una bolita de azúcar.", "estado": "comprobado", "fuentes": ["[VYA11]", "[NRN11]"]},
+  {"texto": "Ese «sueño local» era más frecuente cuanto más tiempo llevaban despiertas.", "estado": "comprobado", "fuentes": ["[VYA11]", "[NRN11]"]},
+  {"texto": "En 2017, con electrodos dentro del cerebro de pacientes de neurocirugía sin dormir, neuronas del lóbulo temporal se «echaban una siesta» justo antes de los fallos.", "estado": "comprobado", "fuentes": ["[NIR17]", "[SD17]"]},
+  {"texto": "En 2021, en Monash (Melbourne), 26 adultos sanos y descansados hicieron una tarea monótona y se les preguntaba cada 30-70 segundos en qué estaban: 48 % concentrados, 39 % divagando, 12 % en blanco.", "estado": "comprobado", "fuentes": ["[AND21]", "[SNC]"]},
+  {"texto": "Justo antes de divagar o quedarse en blanco aparecían ondas lentas locales parecidas a las del inicio del sueño, más pequeñas y menos extendidas.", "estado": "comprobado", "fuentes": ["[AND21]", "[SNC]", "[MON]"]},
+  {"texto": "La zona decide el despiste: ondas lentas delante, impulsividad y divagar; ondas lentas detrás, lentitud y quedarse en blanco.", "estado": "comprobado", "fuentes": ["[AND21]", "[SNC]", "[MON]"]},
+  {"texto": "En blanco había más fallos, respuestas más lentas, pupilas más pequeñas y la sensación de estar menos despierto.", "estado": "comprobado", "fuentes": ["[AND21]"]},
+  {"texto": "Los delfines duermen con medio cerebro cada vez, con un ojo abierto; el sueño local humano es una versión mucho más pequeña y breve.", "estado": "comprobado", "fuentes": ["[SA-DELF]", "[WDC]"]},
+  {"texto": "En el escáner (Lieja, 2022), al quedarse en blanco todo el cerebro se sincroniza a la vez, con un patrón de baja alerta parecido al del sueño profundo.", "estado": "comprobado", "fuentes": ["[MOR22]", "[GIGA]"]},
+  {"texto": "Antes de quedarse en blanco hay desactivación en casi todo el cerebro, sin que la parte frontal la provoque: no se hace a propósito, pasa.", "estado": "comprobado", "fuentes": ["[BOU23]", "[PSY]"]},
+  {"texto": "Al intentar no pensar en nada a propósito baja la actividad del área de Broca, la del lenguaje y la voz interior.", "estado": "comprobado", "fuentes": ["[KAW19]", "[BOU25]"]},
+  {"texto": "Pasa más en días largos, con falta de sueño y en tareas monótonas o largas, como conducir o un examen.", "estado": "comprobado", "fuentes": ["[MON]", "[VYA11]", "[NIR17]"]},
+  {"texto": "Las crisis de ausencia se confunden con estar en las nubes, pero duran 10-20 segundos, empiezan y acaban de golpe y no se sale de ellas llamando a la persona.", "estado": "comprobado", "fuentes": ["[AAFP]", "[EPI]"]},
+  {"texto": "Que quedarse en blanco sea literalmente un trozo de cerebro durmiendo es la interpretación de los autores, no un hecho cerrado; además, la tarea era poco exigente.", "estado": "hipotesis", "fuentes": ["[AND21]"]},
+  {"texto": "El TDAH podría deberse en parte a más intrusiones de sueño durante el día (en estudio).", "estado": "hipotesis", "fuentes": ["[SNC]", "[MON]"]},
+  {"texto": "El blanco podría funcionar como un breve botón de reinicio entre pensamientos.", "estado": "hipotesis", "fuentes": ["[MOR22]", "[BOU25]"]},
+  {"texto": "Parte de los blancos podrían ser pensamientos olvidados al momento: con la opción «lo he olvidado», se eligió en el 2-7 % de las preguntas.", "estado": "hipotesis", "fuentes": ["[KAW26]", "[BOU25]"]},
+  {"texto": "«Nuestra atención dura ocho segundos, menos que un pez de colores»: no sale de ningún estudio; la BBC lo desmontó en 2017.", "estado": "leyenda", "fuentes": ["[FC]", "[MED]"]},
+  {"texto": "«Los delfines no duermen nunca»: falso, duermen con medio cerebro.", "estado": "leyenda", "fuentes": ["[SA-DELF]", "[WDC]"]}
+ ],
+ "afiliacion": [
+  {"titulo": "Por qué dormimos. La nueva ciencia del sueño (Matthew Walker, Capitán Swing)", "url": "https://www.amazon.es/Por-qu%C3%A9-dormimos-CIENCIA-ENSAYO/dp/8412064526"},
+  {"titulo": "The Wandering Mind: What the Brain Does When You're Not Looking (Michael C. Corballis, en inglés)", "url": "https://www.amazon.co.uk/Wandering-Mind-Brain-Youre-Looking-ebook/dp/B00SLVOLR8"}
+ ]}

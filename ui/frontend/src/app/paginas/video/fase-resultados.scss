@@ -1,0 +1,12 @@
+:host { display: block; }
+.registro { display: flex; flex-direction: column; gap: 1rem; max-width: 40rem; }
+.campos { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 0.9rem; }
+label { display: flex; flex-direction: column; gap: 0.3rem; font-weight: 600; font-size: 0.9rem; }
+label em { font-weight: 400; font-style: normal; color: var(--ay-tenue); }
+label small { font-weight: 400; color: var(--ay-tenue); }
+input { font: inherit; padding: 0.65rem 0.8rem; min-height: 2.75rem; border-radius: var(--ay-radio-peq); border: 1px solid var(--ay-borde-fuerte); background: var(--ay-superficie); color: var(--ay-tinta); box-sizing: border-box; }
+input:focus-visible { outline: 3px solid var(--ay-acento); outline-offset: 1px; }
+.secundario { color: var(--ay-tenue); margin: 0; font-size: 0.9rem; }
+.error { display: flex; gap: 0.4rem; align-items: center; color: var(--ay-error); margin: 0; }
+.acciones { display: flex; gap: 0.75rem; }
+.tarjeta { padding: 1.25rem; border-radius: var(--ay-radio); background: var(--ay-superficie); border: 1px solid var(--ay-borde); }

@@ -1,0 +1,20 @@
+{
+  "video": "001-pulpo-nueve-cerebros",
+  "fase": "F",
+  "completadas": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E"
+  ],
+  "notas": "Enfoque A elegido: 'Toc-toc, ¿quién manda aquí?'. Tok encoge, entra en el pulpo y llama a la puerta de cada brazo para saber quién manda; acaba en el cerebro central. Extras: tres corazones y sangre azul. | Investigación: 9 datos verificados (fuentes.md). Guion: 910 palabras (~5,5 min), 13 escenas, 72 planos (60 imágenes nuevas), 2 Shorts (escenas 6 y 9). Pendiente: aprobación del guion. | Guion aprobado por el usuario. | Guion aprobado; añadido 'dale a like y suscríbete' al cierre (petición del usuario). | Voces generadas (13 escenas, 305 s). Divididos 3 planos >8 s con imágenes reutilizadas (78 planos, 60 nuevas). Voces 3, 7 y 12 regeneradas. | 2026-09-23: cuota diaria de Cloudflare agotada tras 41 de 60 imágenes (las pruebas del día no estaban registradas en cuota.py). Revisadas las 41: rehacer 04-4 (aparece un segundo robot) y 05-3 (no se ve la ventosa con lengua). Pendiente: 19 imágenes + 2 rehechas + 3 fondos de miniatura (~24 imágenes). Continuar tras el reinicio de 00:00 UTC (02:00 hora de España) con: montar.py --solo-imagenes --rehacer-imagenes 04-4,05-3. | 2026-09-24 05:55 UTC: al reanudar, Cloudflare sigue diciendo 'daily free allocation used up' (klein y schnell) sin consumo local desde ayer 18:36 UTC. Posibles causas: el reinicio no es a 00:00 UTC (¿ventana de 24 h?) o el consumo real es muy superior a la estimación de uso.py (41 imágenes ≈ 1.700 estimadas agotaron 10.000). El token no tiene permiso de Account Analytics para ver las neuronas reales. No se ha generado ninguna imagen hoy. | Analítica real (token con Account Analytics:Read): 23/09 = 11.726 neuronas (≈108 por imagen klein); 24/09 = 0 y aun así bloqueado → ventana móvil de 24 h. uso.py recalibrado a 110/imagen. Faltan ~24 imágenes ≈ 2.640 neuronas: reintentar a partir de las 16:00 hora de España (o 20:40 seguro). | 2026-09-24: Shorts pasados a verticales con gancho (aprobado por el usuario): +15 imágenes verticales (img/vertical/) y 2 voces de gancho. El vídeo lleva ya pantalla final automática. Pendiente en F: 19 imágenes + 04-4 y 05-3 rehechas + 15 verticales + 3 fondos de miniatura (≈ 39 imágenes ≈ 4.300 neuronas). Revisar 08-3 (pide una señal de stop: posible texto deformado). | 2026-09-24: voz del canal cambiada a Marta (el usuario encontró la locución aburrida) y texto reescrito con energía (974 palabras; escenas 6 y 8 con estilo curious). Pendiente: aprobación del texto nuevo y regenerar las 13 voces con Marta (≈ 7.800 caracteres); después seguir con las imágenes. | 2026-09-24 13:45: APARCADO por el replanteamiento del canal (narrador en tercera persona, voz Gemini Puck, estilo de imagen en revisión). Al retomar: reescribir guion al formato narrador, regenerar voces y rehacer imágenes con el estilo nuevo. Ver docs/progreso.md → Siguiente paso.",
+  "pendiente": {
+    "rehacer_imagenes": [
+      "04-4",
+      "05-3"
+    ]
+  },
+  "duracion_objetivo": 5,
+  "aparcado": true
+}

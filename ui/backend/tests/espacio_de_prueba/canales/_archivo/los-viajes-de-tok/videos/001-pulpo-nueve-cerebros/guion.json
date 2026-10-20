@@ -1,0 +1,518 @@
+{
+  "titulo": "¿El pulpo tiene nueve cerebros? Me metí dentro para averiguarlo",
+  "duracion_objetivo": 5,
+  "titulos": [
+    "Nueve cerebros y tres corazones: el animal más raro del mar",
+    "Toc-toc, ¿quién manda dentro de un pulpo?"
+  ],
+  "formato": "horizontal",
+  "referencias": [
+    "personaje/ref/tok_frente.png"
+  ],
+  "estilo": "minimalist stick figure doodle scene: {escena}, everything drawn with simple thin black marker lines, only orange as accent color, lots of white space, plain white background, no shading, no text",
+  "personajes": {
+    "tok": "a tiny stick-figure robot with a flat orange square head, two big round white eyes with black pupils, an antenna with a small light bulb, a flat orange square body with a simple clock on its chest, thin black stick arms and legs"
+  },
+  "musica": "alegre",
+  "descripcion": "¿El pulpo tiene de verdad nueve cerebros? Tok se hace diminuto, se mete dentro de un pulpo común y llama a la puerta de cada brazo para averiguar quién manda ahí dentro. Por el camino descubre ventosas que saborean, tres corazones, sangre azul y un cerebro con forma de rosquilla.",
+  "etiquetas": [
+    "pulpo",
+    "nueve cerebros",
+    "curiosidades de animales",
+    "los viajes de tok",
+    "animales marinos",
+    "ciencia para todos",
+    "tres corazones",
+    "sangre azul",
+    "divulgación",
+    "curiosidades"
+  ],
+  "fuentes": [
+    "Natural History Museum: https://www.nhm.ac.uk/discover/octopuses-keep-surprising-us-here-are-eight-examples-how.html",
+    "Smithsonian Magazine: https://www.smithsonianmag.com/science-nature/ten-wild-facts-about-octopuses-they-have-three-hearts-big-brains-and-blue-blood-7625828/",
+    "van Giesen et al. (2020), Cell: https://www.cell.com/cell/fulltext/S0092-8674(20)31149-1",
+    "Nesher et al. (2014), Current Biology: https://www.cell.com/current-biology/fulltext/S0960-9822(14)00462-X",
+    "Wells et al. (1987), Journal of Experimental Biology: Blood flow and pressure changes in exercising octopuses",
+    "Gutnick et al. (2020), Current Biology: https://www.cell.com/current-biology/fulltext/S0960-9822(20)31191-X",
+    "Monterey Bay Aquarium: https://www.montereybayaquarium.org/animals/animals-a-to-z/cephalopods"
+  ],
+  "comentario_fijado": "¿Qué animal quieres que visite Tok en el próximo viaje? 🐝🐋🐌 El más votado gana. Toc-toc.",
+  "miniaturas": [
+    {
+      "prompt": "an underwater background with bubbles, seaweed and a few rocks, the left half mostly empty",
+      "texto": "¿*9* cerebros?",
+      "lado": "izquierda",
+      "pose": "sorprendido"
+    },
+    {
+      "prompt": "an underwater background with bubbles and seaweed, a small orange octopus arm curling in from the bottom left corner",
+      "texto": "¿Quién *MANDA* aquí?",
+      "lado": "izquierda",
+      "pose": "confundido"
+    },
+    {
+      "prompt": "an underwater background with bubbles and three small orange cartoon hearts floating, the left half mostly empty",
+      "texto": "*3* corazones",
+      "lado": "izquierda",
+      "pose": "saludo"
+    }
+  ],
+  "shorts": [
+    {
+      "escenas": [
+        6,
+        6
+      ],
+      "titulo": "El pulpo piensa con los *brazos*",
+      "descripcion": "Dos de cada tres neuronas del pulpo están en sus brazos.",
+      "vertical": true,
+      "gancho": "¿Sabías que un pulpo piensa con los brazos?"
+    },
+    {
+      "escenas": [
+        9,
+        9
+      ],
+      "titulo": "Tres *corazones* y sangre azul",
+      "descripcion": "El pulpo tiene tres corazones… y uno se para cuando nada.",
+      "vertical": true,
+      "gancho": "¿Cuántos corazones crees que tiene un pulpo?"
+    }
+  ],
+  "escenas": [
+    {
+      "capitulo": "Intro",
+      "musica": "alegre",
+      "texto": "Tú tienes un cerebro, uno solo, ¿verdad?{img} Pues el pulpo, según dicen, ¡tiene nueve!{img} ¡Nueve cerebros en un solo animal!{img} Y yo me pregunto: si hay nueve cerebros, ¿quién manda ahí dentro? Te aviso: lo que encontré en su cabeza no me lo esperaba.",
+      "imagenes": [
+        {
+          "prompt": "a simple stick-figure person with one small orange brain drawn inside its head, pointing at itself proudly",
+          "movimiento": "zoom_in"
+        },
+        {
+          "prompt": "a friendly cartoon common octopus with eight arms and big round eyes, drawn with black lines and filled in orange with nine small orange brains floating above it like thought bubbles",
+          "movimiento": "derecha",
+          "rotulo": "¿9 cerebros?"
+        },
+        {
+          "prompt": "nine small orange cartoon brains with tiny faces arguing with each other",
+          "movimiento": "zoom_out"
+        },
+        {
+          "prompt": "{tok} scratching its head in front of a big question mark next to a friendly cartoon common octopus with eight arms and big round eyes, drawn with black lines and filled in orange",
+          "personaje": true,
+          "movimiento": "zoom_in"
+        }
+      ]
+    },
+    {
+      "texto": "Así que hoy me voy a meter dentro de un pulpo para averiguarlo.{img} ¡Soy Tok y esto son Los Viajes de Tok!",
+      "imagenes": [
+        {
+          "prompt": "{tok} holding a magnifying glass and walking towards a friendly cartoon common octopus with eight arms and big round eyes, drawn with black lines and filled in orange",
+          "personaje": true,
+          "movimiento": "izquierda"
+        },
+        {
+          "prompt": "{tok} happily waving hello next to a small homemade time machine box with dials and a clock",
+          "personaje": true,
+          "movimiento": "zoom_in"
+        }
+      ]
+    },
+    {
+      "capitulo": "El viaje",
+      "texto": "{whoosh}¡Iniciando viaje!{img} Rumbo al fondo del mar, tamaño diminuto y modo submarino ¡activado!{img}{record_scratch} Bueno, casi activado.{img} ¿Eso que entra es agua? Nada, nada, ¡los robots y el agua nos llevamos genial!{boing}{img} Nota mental: la próxima vez, revisar las juntas antes de salir.",
+      "imagenes": [
+        {
+          "prompt": "{tok} pressing a big button on a small homemade time machine box, swirling lines around it",
+          "personaje": true,
+          "movimiento": "zoom_in"
+        },
+        {
+          "prompt": "{tok} shrinking inside a tiny round submarine diving down into the sea, bubbles",
+          "personaje": true,
+          "movimiento": "abajo"
+        },
+        {
+          "prompt": "{tok} inside a tiny submarine with water leaking in, a sweat drop on its head",
+          "personaje": true,
+          "movimiento": "zoom_in"
+        },
+        {
+          "reutilizar": "03-3",
+          "movimiento": "derecha"
+        },
+        {
+          "reutilizar": "03-1",
+          "movimiento": "zoom_in"
+        }
+      ]
+    },
+    {
+      "capitulo": "Toc-toc, ¿se puede?",
+      "musica": "tranquilo",
+      "texto": "¡Ya estoy en el Mediterráneo! Y ahí, entre las rocas, hay una cueva pequeñita.{img} ¿Y quién vive en la cueva? ¡Un pulpo común!{img} Ocho brazos, dos ojos enormes y cara de no querer visitas.{img} Toc-toc, ¿se puede entrar en su cuerpo? Es para un vídeo.{img} ¿No dice nada? Pues me lo tomaré como un sí.",
+      "imagenes": [
+        {
+          "prompt": "a rocky sea floor with a small cave between the rocks, seaweed, a tiny round submarine arriving",
+          "movimiento": "derecha"
+        },
+        {
+          "prompt": "a friendly cartoon common octopus with eight arms and big round eyes, drawn with black lines and filled in orange peeking out of a small underwater cave",
+          "movimiento": "zoom_in",
+          "rotulo": "Pulpo común"
+        },
+        {
+          "reutilizar": "04-2",
+          "movimiento": "zoom_out"
+        },
+        {
+          "prompt": "{tok} knocking politely on the arm of a giant octopus, the robot is tiny compared to the arm",
+          "personaje": true,
+          "movimiento": "zoom_in"
+        },
+        {
+          "prompt": "{tok} climbing into a small opening in the skin of a giant octopus arm, like entering a tunnel",
+          "personaje": true,
+          "movimiento": "arriba"
+        }
+      ]
+    },
+    {
+      "capitulo": "Brazos que saborean",
+      "texto": "Primera parada: ¡el brazo número uno! Toc-toc.{img} Nada más entrar, ¡zas!, una ventosa me agarra.{img} ¿Me está chupando? No, peor, ¡me está saboreando!{img} ¿En serio? Pues sí: las ventosas del pulpo tienen sensores que notan el sabor de lo que tocan.{img} Es como si tus dedos tuvieran lengua. ¡No hace falta abrir la boca para saber si algo está rico!{img} Así que cuando el pulpo toca algo, ya sabe si se puede comer.{img} ¿Y el veredicto sobre mí? Sabor a tornillo, poco hecho.{boing}",
+      "imagenes": [
+        {
+          "prompt": "{tok} knocking on a small round door inside a long tunnel shaped like an octopus arm with rows of round suckers",
+          "personaje": true,
+          "movimiento": "derecha",
+          "rotulo": "Brazo 1"
+        },
+        {
+          "prompt": "a big orange octopus sucker grabbing {tok}",
+          "personaje": true,
+          "movimiento": "zoom_in"
+        },
+        {
+          "prompt": "{tok} held by an orange octopus sucker, the sucker has a tiny tongue and tastes the robot, the robot is shocked",
+          "personaje": true,
+          "movimiento": "zoom_out"
+        },
+        {
+          "prompt": "a simple diagram of an orange octopus sucker with tiny sensor dots inside it",
+          "movimiento": "zoom_in",
+          "rotulo": "Sensores de sabor"
+        },
+        {
+          "prompt": "a stick-figure hand where each finger has a small tongue sticking out, funny",
+          "movimiento": "derecha"
+        },
+        {
+          "prompt": "an orange octopus arm touching a small crab and a small rock, a green check mark over the crab and a cross over the rock",
+          "movimiento": "zoom_out"
+        },
+        {
+          "prompt": "{tok} dripping and embarrassed after being tasted, an orange octopus sucker making a disgusted face",
+          "personaje": true,
+          "movimiento": "zoom_in"
+        }
+      ]
+    },
+    {
+      "capitulo": "¿Quién manda aquí?",
+      "texto": "Sigo dentro del brazo del pulpo, pero ¿quién manda aquí?{img} Aquí dentro hay un montón de neuronas, las células que usamos para pensar.{img} ¿Sabes cuántas tiene un pulpo? ¡Unos quinientos millones!{img} Y lo más raro es dónde están. ¡Dos de cada tres están en los brazos, no en la cabeza!{img} ¡Cada brazo tiene una especie de minicerebro propio!{img} Por eso puede tocar, saborear y moverse sin pedir permiso.{img} Un brazo abre una almeja, otro explora una grieta, ¡y otro saluda a los vecinos!{img} Es como una oficina con ocho empleados muy independientes. ¿Y el cerebro central, mientras tanto, qué hace? Paciencia, ya llegaremos.",
+      "estilo_voz": "curious",
+      "imagenes": [
+        {
+          "reutilizar": "05-1",
+          "movimiento": "zoom_out"
+        },
+        {
+          "prompt": "many tiny orange neuron cells connected by thin lines like a network, a tiny {tok} walking among them",
+          "personaje": true,
+          "movimiento": "zoom_out"
+        },
+        {
+          "prompt": "a huge crowd of tiny orange dots representing neurons filling the whole image",
+          "movimiento": "zoom_in",
+          "rotulo": "500 millones"
+        },
+        {
+          "prompt": "a simple drawing of an octopus where the eight arms are filled with orange dots and the head has only a few dots",
+          "movimiento": "abajo",
+          "rotulo": "2 de cada 3, en los brazos"
+        },
+        {
+          "prompt": "a small orange cartoon brain with a tiny office chair and a desk, inside an octopus arm",
+          "movimiento": "zoom_in",
+          "rotulo": "Minicerebro"
+        },
+        {
+          "prompt": "an orange octopus arm doing things on its own while the octopus head sleeps with a Zzz",
+          "movimiento": "derecha"
+        },
+        {
+          "prompt": "a friendly cartoon common octopus with eight arms and big round eyes, drawn with black lines and filled in orange with one arm opening a clam, one arm poking into a crack in a rock and one arm waving at a small fish",
+          "movimiento": "zoom_out"
+        },
+        {
+          "prompt": "eight small orange cartoon octopus arms sitting at office desks, each doing a different task, one of them sleeping",
+          "movimiento": "izquierda"
+        }
+      ]
+    },
+    {
+      "texto": "¿Y por qué tanto cerebro en los brazos? Por un problema de huesos, o mejor dicho, ¡por no tenerlos!{img} Mira tu brazo: tiene huesos y se dobla por el codo, por la muñeca y poco más.{img} ¿Y el del pulpo? ¡Ni un solo hueso! Se puede doblar por cualquier punto y en cualquier dirección.{img} Se estira, se encoge, se retuerce, ¡parece un espagueti!{img} Son tantísimos movimientos posibles que un solo cerebro no daría abasto para controlarlos todos.{img} Según los científicos, funciona así: el cerebro central da una orden general. Por ejemplo, ¡busca comida!{img} Y cada brazo decide los detalles por su cuenta.{img} ¿Te suena? Es como cuando te dicen que ordenes tu cuarto: te dan la orden, y el cómo ya es cosa tuya.{boing}",
+      "imagenes": [
+        {
+          "reutilizar": "01-4",
+          "movimiento": "derecha"
+        },
+        {
+          "prompt": "a simple stick-figure human arm with the elbow and the wrist marked with small orange dots",
+          "movimiento": "zoom_in",
+          "rotulo": "Codo y muñeca"
+        },
+        {
+          "prompt": "an orange octopus arm bending in many different directions like a noodle, with motion lines",
+          "movimiento": "zoom_out",
+          "rotulo": "0 huesos"
+        },
+        {
+          "reutilizar": "07-3",
+          "movimiento": "derecha"
+        },
+        {
+          "prompt": "a tiny sweating orange cartoon brain trying to control a huge tangle of arrows pointing in every direction",
+          "movimiento": "derecha"
+        },
+        {
+          "prompt": "a big orange cartoon brain shouting into a megaphone, eight small octopus arms listening",
+          "movimiento": "zoom_in",
+          "rotulo": "Busca comida"
+        },
+        {
+          "reutilizar": "06-8",
+          "movimiento": "zoom_out"
+        },
+        {
+          "prompt": "a messy stick-figure bedroom with clothes on the floor and a stick-figure teenager shrugging",
+          "movimiento": "izquierda"
+        }
+      ]
+    },
+    {
+      "texto": "Y aquí viene una duda muy seria.{img} Si cada brazo va a su aire y todos tienen ventosas, ¿por qué no se pegan entre ellos?{img} Pues porque la piel del pulpo tiene una sustancia que avisa a las ventosas: ¡esto soy yo, no me agarres!{img} Lo descubrieron unos científicos en dos mil catorce.{img} O sea, que el pulpo nunca se hace un nudo a sí mismo. ¡Qué envidia!{img} Porque yo no puedo decir lo mismo de mis cables.{record_scratch}",
+      "estilo_voz": "curious",
+      "imagenes": [
+        {
+          "reutilizar": "01-4",
+          "movimiento": "zoom_out"
+        },
+        {
+          "prompt": "a funny drawing of octopus arms tied in a big knot with question marks around it",
+          "movimiento": "zoom_out"
+        },
+        {
+          "prompt": "an orange octopus sucker approaching octopus skin and stopping, with a small stop sign between them",
+          "movimiento": "zoom_in",
+          "rotulo": "Esto soy yo"
+        },
+        {
+          "prompt": "stick-figure scientists in lab coats watching an octopus in an aquarium, taking notes",
+          "movimiento": "derecha",
+          "rotulo": "Año 2014"
+        },
+        {
+          "prompt": "a friendly cartoon common octopus with eight arms and big round eyes, drawn with black lines and filled in orange happily moving its eight arms freely without any knot",
+          "movimiento": "zoom_out"
+        },
+        {
+          "prompt": "{tok} completely tangled in its own cables and wires, embarrassed",
+          "personaje": true,
+          "movimiento": "zoom_in"
+        }
+      ]
+    },
+    {
+      "capitulo": "Tres corazones",
+      "texto": "Salgo del brazo y me meto por una tubería. ¡Error!{img} ¡Es un vaso sanguíneo, y la sangre es azul! Como la de la realeza de los cuentos, pero de verdad.{img} ¿Y por qué azul? El pulpo usa cobre para llevar el oxígeno. Nosotros usamos hierro, ¡por eso la nuestra es roja!{img} Sigo la corriente y encuentro no uno, ni dos, ¡sino tres corazones!{img} Dos empujan la sangre por las branquias, que es por donde el pulpo respira.{img} Y el tercero la reparte por todo el cuerpo.{img} Y aquí viene lo curioso: cuando el pulpo nada a chorro, ¡ese tercer corazón se para un momento!{img} ¿Resultado? Nadar le cansa tanto que prefiere ir andando por el fondo.{img} Un animal con tres corazones que prefiere no correr. ¡Me cae bien!",
+      "imagenes": [
+        {
+          "prompt": "{tok} crawling through a tube shaped like a pipe, looking confident",
+          "personaje": true,
+          "movimiento": "derecha"
+        },
+        {
+          "prompt": "{tok} floating in a stream of blue liquid inside a tube, surprised, the liquid is blue",
+          "personaje": true,
+          "movimiento": "zoom_in",
+          "rotulo": "Sangre azul"
+        },
+        {
+          "prompt": "a simple comparison: on the left a blue drop with the word Cu drawn as a copper coin, on the right a red drop with an iron nail",
+          "movimiento": "zoom_out",
+          "rotulo": "Cobre / Hierro"
+        },
+        {
+          "prompt": "three orange cartoon hearts in a row beating, with small motion lines",
+          "movimiento": "zoom_in",
+          "rotulo": "3 corazones"
+        },
+        {
+          "prompt": "two orange cartoon hearts pumping blue blood towards the feathery gills of an octopus",
+          "movimiento": "izquierda"
+        },
+        {
+          "reutilizar": "09-4",
+          "movimiento": "derecha"
+        },
+        {
+          "prompt": "a friendly cartoon common octopus with eight arms and big round eyes, drawn with black lines and filled in orange swimming fast like a rocket with a jet of water behind it, its heart drawn with a pause symbol",
+          "movimiento": "derecha"
+        },
+        {
+          "prompt": "a friendly cartoon common octopus with eight arms and big round eyes, drawn with black lines and filled in orange calmly walking on the sea floor on its arms, relaxed face",
+          "movimiento": "izquierda"
+        },
+        {
+          "reutilizar": "09-8",
+          "movimiento": "zoom_out"
+        }
+      ]
+    },
+    {
+      "capitulo": "El jefe",
+      "musica": "misterio",
+      "texto": "Por fin llego a la cabeza, donde debería estar el jefe. Todo está muy tranquilo. Demasiado tranquilo.{img} Toc-toc, ¿se puede? ¿Hola? ¿Hay alguien en casa?{img} ¡Anda! ¿Qué hace aquí una rosquilla? ¡Ah, no! Es el cerebro del pulpo, que tiene esa forma.{img} Y por el agujero del centro pasa el tubo por donde va la comida.{img} ¿Y eso qué significa? ¡Que cada vez que el pulpo come, la comida le pasa por el medio del cerebro!{img} Pensar y comer a la vez, ¡literalmente!{ding}",
+      "imagenes": [
+        {
+          "prompt": "{tok} arriving at the head of the octopus, a big dark round room with a sign-like door without letters",
+          "personaje": true,
+          "movimiento": "zoom_in"
+        },
+        {
+          "prompt": "{tok} knocking on a big round door inside a dark room",
+          "personaje": true,
+          "movimiento": "derecha"
+        },
+        {
+          "prompt": "a big orange doughnut shaped like a brain, with brain folds drawn on it",
+          "movimiento": "zoom_out",
+          "rotulo": "Cerebro en rosquilla"
+        },
+        {
+          "reutilizar": "10-3",
+          "movimiento": "zoom_in"
+        },
+        {
+          "prompt": "a small cartoon shrimp sliding through a tube that passes through the hole of an orange doughnut-shaped brain, funny",
+          "movimiento": "derecha"
+        },
+        {
+          "prompt": "a friendly cartoon common octopus with eight arms and big round eyes, drawn with black lines and filled in orange eating a crab and thinking at the same time with a thought bubble, very happy",
+          "movimiento": "zoom_out"
+        }
+      ]
+    },
+    {
+      "texto": "Entonces, ¿son nueve cerebros o no?{img} Técnicamente, el pulpo tiene un cerebro central y ocho minicerebros, uno en cada brazo.{img} Y los brazos pueden hacer muchísimas cosas ellos solitos.{img} Pero en dos mil veinte unos científicos comprobaron algo importante: ¡para aprender algo nuevo, los brazos necesitan al cerebro central!{img} Así que ya tengo la respuesta: ¡hay un jefe y ocho empleados muy independientes!{img} Como en muchas oficinas, ¿no? ¡Guiño, guiño!",
+      "imagenes": [
+        {
+          "prompt": "{tok} standing in front of a big orange doughnut-shaped brain, with a question mark",
+          "personaje": true,
+          "movimiento": "zoom_in"
+        },
+        {
+          "prompt": "a simple drawing of an octopus with one big orange brain in the head and eight small orange brains, one at the base of each arm",
+          "movimiento": "zoom_out",
+          "rotulo": "1 + 8"
+        },
+        {
+          "reutilizar": "06-7",
+          "movimiento": "derecha"
+        },
+        {
+          "prompt": "an octopus arm reaching into a small maze with a piece of food at the end, the octopus head with a glowing orange brain guiding it",
+          "movimiento": "zoom_in",
+          "rotulo": "Año 2020"
+        },
+        {
+          "prompt": "a big orange cartoon brain wearing a tiny tie sitting at a boss desk, with eight small orange octopus arms around it as employees",
+          "movimiento": "zoom_out"
+        },
+        {
+          "prompt": "{tok} winking at the viewer next to the boss brain and the eight arm employees",
+          "personaje": true,
+          "movimiento": "zoom_in"
+        }
+      ]
+    },
+    {
+      "capitulo": "Vuelta a casa",
+      "musica": "alegre",
+      "texto": "{whoosh}¡Y vuelta a casa!{img} Resumen del viaje: nueve cerebros, bueno, más o menos.{img} Tres corazones y sangre azul, ¡azul de verdad!{img} Ventosas que saborean, ¡y ni un solo nudo!{img} Tus manos no tienen cerebro propio, aunque a veces lo parezca cuando cogen la última galleta.{img} Pero la próxima vez que veas un pulpo, acuérdate: ¡tiene más neuronas en los brazos que en la cabeza!{img} Y ahora te pregunto yo: ¿qué animal quieres que visite en el próximo viaje? ¡Déjamelo en los comentarios!",
+      "imagenes": [
+        {
+          "reutilizar": "03-3",
+          "movimiento": "zoom_in"
+        },
+        {
+          "reutilizar": "11-2",
+          "movimiento": "zoom_in"
+        },
+        {
+          "reutilizar": "09-4",
+          "movimiento": "zoom_out"
+        },
+        {
+          "reutilizar": "05-3",
+          "movimiento": "zoom_in"
+        },
+        {
+          "prompt": "a stick-figure hand sneakily grabbing the last cookie from a plate, with a mischievous face drawn on the hand",
+          "movimiento": "derecha"
+        },
+        {
+          "reutilizar": "06-4",
+          "movimiento": "zoom_in"
+        },
+        {
+          "prompt": "{tok} holding a pen and a notebook, looking at the viewer with curiosity, several small animals around it: a bee, a snail and a whale",
+          "personaje": true,
+          "movimiento": "zoom_out"
+        }
+      ]
+    },
+    {
+      "texto": "Y ahora, si me disculpas, voy a secarme, que estoy empapado.{img}{record_scratch} ¡Uy! ¿Y eso? ¡La máquina se ha encendido sola!{img} ¿Siguiente destino? ¡Un cerebro humano que se acaba de quedar en blanco!{img} Y si te ha gustado el viaje, dale a like y suscríbete. ¡Mi máquina funciona con eso!{img} Nos vemos en el próximo viaje. Toc-toc.",
+      "imagenes": [
+        {
+          "prompt": "{tok} drying itself with a small towel, water drops around it",
+          "personaje": true,
+          "movimiento": "izquierda"
+        },
+        {
+          "prompt": "a small homemade time machine box turning on by itself with sparks and swirling lines, {tok} surprised next to it",
+          "personaje": true,
+          "movimiento": "zoom_in"
+        },
+        {
+          "prompt": "a simple stick-figure student looking at an exam paper with a completely blank empty thought bubble, a tiny {tok} peeking from behind",
+          "personaje": true,
+          "movimiento": "zoom_out"
+        },
+        {
+          "prompt": "{tok} pointing happily at a big orange thumbs up icon and a big bell icon floating next to it",
+          "personaje": true,
+          "movimiento": "zoom_in"
+        },
+        {
+          "reutilizar": "03-1",
+          "movimiento": "zoom_out"
+        }
+      ]
+    }
+  ]
+}

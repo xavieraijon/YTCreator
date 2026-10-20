@@ -1,0 +1,82 @@
+{
+  "titulo": "Prueba del kit",
+  "titulos": [
+    "Prueba del kit (B)",
+    "Prueba del kit (C)"
+  ],
+  "duracion_objetivo": 0.5,
+  "pilar": "historia",
+  "formato": "horizontal",
+  "musica": "misterio",
+  "descripcion": "Vídeo de prueba del kit: comprueba voz, montaje, Shorts, miniatura y publicación.",
+  "etiquetas": [
+    "prueba"
+  ],
+  "fuentes": [
+    "https://example.org"
+  ],
+  "comentario_fijado": "Comentario de prueba.",
+  "miniaturas": [
+    {
+      "fondo": "herramientas/prueba/plaza.jpg",
+      "texto": "NO PODÍAN *PARAR*",
+      "lado": "derecha"
+    }
+  ],
+  "shorts": [
+    {
+      "escenas": [
+        1,
+        2
+      ],
+      "titulo": "Prueba del *Short*",
+      "descripcion": "Short de prueba.",
+      "vertical": true,
+      "gancho": "¿Funciona todo el kit?"
+    }
+  ],
+  "escenas": [
+    {
+      "texto": "En el verano de mil quinientos dieciocho, en Estrasburgo, una mujer salió a la calle y se puso a bailar.{img} ¿Y sabes qué pasó después? Que no fue la única.",
+      "capitulo": "El caso",
+      "imagenes": [
+        {
+          "imagen": "herramientas/prueba/plaza.jpg",
+          "rotulo": "Estrasburgo, 1518"
+        },
+        {
+          "imagen": "herramientas/prueba/multitud.jpg",
+          "movimiento": "zoom_out"
+        }
+      ]
+    },
+    {
+      "texto": "Esto es una prueba del kit, así que aquí terminan los datos.{img} Si todo va bien, al final tendremos a la vez el vídeo, el Short, la miniatura y los subtítulos.",
+      "capitulo": "La prueba",
+      "musica": "tranquilo",
+      "imagenes": [
+        {
+          "imagen": "herramientas/prueba/noche.jpg"
+        },
+        {
+          "reutilizar": "01-1",
+          "movimiento": "derecha"
+        }
+      ]
+    },
+    {
+      "texto": "Y ahora te toca a ti, que para eso has llegado hasta el final.{img} ¿Qué historia imposible quieres que contemos en el próximo vídeo, una de historia o una del universo?",
+      "capitulo": "Cierre",
+      "imagenes": [
+        {
+          "reutilizar": "01-2",
+          "movimiento": "izquierda"
+        },
+        {
+          "imagen": "herramientas/prueba/noche.jpg",
+          "movimiento": "zoom_in"
+        }
+      ]
+    }
+  ]
+}

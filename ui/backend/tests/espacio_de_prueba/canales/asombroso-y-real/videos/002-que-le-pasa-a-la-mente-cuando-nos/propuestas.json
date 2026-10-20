@@ -1,0 +1,23 @@
+{"propuestas": [
+  {"id": 1, "titulo": "¿Por qué nos quedamos en blanco? (Parte del cerebro se duerme)", "pilar": "ciencia",
+   "enfoque": "Al quedarnos mirando un punto fijo, zonas del cerebro producen las ondas lentas del sueño aunque la persona sigue despierta: el llamado sueño local, medido en 2021.",
+   "gancho": "En dos mil veintiuno, un equipo de investigadores en París registró algo que parecía imposible: personas despiertas, con los ojos abiertos, con trozos del cerebro dormidos.",
+   "porque": "Explica algo que le pasa a todo el mundo con un descubrimiento reciente que suena a ciencia ficción y casi nadie ha contado en castellano.",
+   "recomendada": true,
+   "dato": "por qué nos quedamos en blanco",
+   "amplio": "qué pasa en el cerebro", "en": "mind blanking local sleep brain"},
+  {"id": 2, "titulo": "¿Se puede pensar en nada? (La ciencia ya lo ha medido)", "pilar": "ciencia",
+   "enfoque": "Durante un siglo se creyó que la mente nunca se vacía; los experimentos con avisos al azar demuestran que la mente en blanco existe, cuánto dura y qué hace el cerebro mientras tanto.",
+   "gancho": "Durante más de cien años, los psicólogos dieron por hecho que la mente humana nunca se queda vacía, y estaban equivocados.",
+   "porque": "Desmonta una idea que casi todo el mundo cree y responde una pregunta que mucha gente se ha hecho alguna vez, con datos y sin autoayuda.",
+   "recomendada": false,
+   "dato": "se puede no pensar en nada",
+   "amplio": "mente en blanco", "en": "can you think of nothing mind blanking"},
+  {"id": 3, "titulo": "El cerebro que trabaja más cuando no hacemos nada", "pilar": "ciencia",
+   "enfoque": "La historia de cómo se descubrió por casualidad que el cerebro en reposo apenas ahorra energía y que una red entera se enciende justo cuando dejamos la mirada perdida.",
+   "gancho": "En los años noventa, unos neurólogos de Saint Louis tiraban a la basura una parte de sus datos, hasta que se dieron cuenta de que en ella estaba lo más interesante.",
+   "porque": "Cuenta un descubrimiento científico como una historia con protagonistas y un error afortunado, y cambia la idea de que mirar al vacío es perder el tiempo.",
+   "recomendada": false,
+   "dato": "cerebro en reposo gasta energía",
+   "amplio": "cerebro en reposo", "en": "default mode network discovery"}
+]}

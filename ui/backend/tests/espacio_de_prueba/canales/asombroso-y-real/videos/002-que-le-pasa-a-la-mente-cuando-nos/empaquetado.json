@@ -1,0 +1,18 @@
+{
+  "angulo": "Despierto y con los ojos abiertos, pero con un trozo del cerebro haciendo algo casi idéntico a dormir.",
+  "promesa": "Cuando alguien se queda en blanco mirando un punto fijo, una zona de su cerebro produce durante un instante ondas casi idénticas a las del sueño, aunque sigue despierto y con los ojos abiertos; lo midieron en 2021 en la Universidad de Monash, en Melbourne.",
+  "titulos": [
+    {"texto": "¿Por qué nos quedamos en blanco? (Parte del cerebro duerme)", "por_que": "Una pregunta que todo el mundo se ha hecho y un final entre paréntesis que suena imposible, como el mejor vídeo del canal de referencia.", "recomendado": true},
+    {"texto": "Qué hace tu cerebro cuando te quedas mirando a la nada", "por_que": "Una escena que todos reconocemos y la intriga de qué pasa por dentro, sin prometer nada que el vídeo no cumpla.", "recomendado": false},
+    {"texto": "Qué pasa en tu cerebro cuando te quedas en blanco", "por_que": "Son las palabras que la gente escribe en el buscador, aunque despierta menos curiosidad.", "recomendado": false},
+    {"texto": "¿Por qué nos quedamos en blanco? (No es pensar en nada)", "por_que": "Desmonta lo que creemos saber sin hablar de sueño: la opción más prudente con la misma forma.", "recomendado": false},
+    {"texto": "Tu cerebro se apaga a ratos (y no te enteras)", "por_que": "Inquieta porque te pasa a ti; sirve de recambio si el primer título no consigue clics.", "recomendado": false}
+  ],
+  "miniatura": {
+    "muestra": "Una persona de perfil a la izquierda, con los ojos muy abiertos, mirando una pequeña cruz en una pantalla oscura; en la parte de atrás de su cabeza, una sola zona del cerebro en turquesa de noche con una luna diminuta, y el resto encendido en rojo teja. Lado derecho vacío para el texto y esquina inferior derecha libre.",
+    "oculta": "Qué es esa zona, por qué se apaga y qué siente la persona: la imagen enseña la prueba, no la explicación.",
+    "texto": "Y SIGUE DESPIERTO"
+  },
+  "riesgo_clickbait": "medio",
+  "riesgo_nota": "«Duerme» es la interpretación de los autores (lo medido son ondas parecidas a las del sueño): el gancho debe decir «casi idénticas a las del sueño» y el primer minuto, explicar el matiz; si no cabe, se pasa al título 2 o al 4."
+}

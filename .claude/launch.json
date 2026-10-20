@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "canalyt-ui",
+      "runtimeExecutable": "ui/arrancar.sh",
+      "runtimeArgs": ["dev"],
+      "port": 4300,
+      "url": "http://127.0.0.1:4300"
+    }
+  ]
+}

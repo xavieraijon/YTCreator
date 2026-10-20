@@ -1,0 +1,1622 @@
+{
+  "13-2": {
+    "historial": [
+      {
+        "fecha": "2026-09-30T14:40:50",
+        "estado": "mal",
+        "motivo": "El brazo izquierdo parece el derecho, y le aparece una mano de debajo de la chaqueta",
+        "accion": "prompt cambiado; servicio ai33 → klein"
+      },
+      {
+        "fecha": "2026-09-30T14:40:50",
+        "estado": "mal",
+        "accion": "rehacer con klein (Cloudflare)",
+        "anterior": "img/anteriores/13-2_20260930T144050.png"
+      },
+      {
+        "fecha": "2026-09-30T14:42:15",
+        "estado": "mal",
+        "motivo": "Anatomía: brazos, manos o dedos de más o de menos",
+        "accion": "prompt cambiado; servicio klein → ai33"
+      },
+      {
+        "fecha": "2026-09-30T14:42:16",
+        "estado": "mal",
+        "accion": "rehacer con ai33",
+        "anterior": "img/anteriores/13-2_20260930T144216.png"
+      },
+      {
+        "fecha": "2026-09-30T16:26:40",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-09-30T16:26:40",
+    "motivo": "Anatomía: brazos, manos o dedos de más o de menos",
+    "rehecha_desde": "2026-09-30T14:42:16"
+  },
+  "02-3": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T18:06:51",
+        "estado": "mal",
+        "motivo": "No hay dos fotos, segun el guin, aqui deberian aparecer los documentos y dos fotos muy antiguas de gage"
+      },
+      {
+        "fecha": "2026-10-01T21:14:52",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:14:52",
+    "motivo": "No hay dos fotos, segun el guin, aqui deberian aparecer los documentos y dos fotos muy antiguas de gage"
+  },
+  "03-4": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T18:07:22",
+        "estado": "mal",
+        "motivo": "Las manos parece deformes, se ve un dedo gordo donde no toca."
+      },
+      {
+        "fecha": "2026-10-02T08:03:29",
+        "estado": "mal",
+        "motivo": "Las manos parece deformes, se ve un dedo gordo donde no toca."
+      },
+      {
+        "fecha": "2026-10-02T08:03:29",
+        "estado": "mal",
+        "accion": "rehacer con ai33",
+        "anterior": "img/anteriores/03-4_20261002T080329.png"
+      },
+      {
+        "fecha": "2026-10-02T08:05:54",
+        "estado": "mal",
+        "motivo": "Las manos parece deformes, se ve un dedo gordo donde no toca.",
+        "accion": "prompt cambiado"
+      },
+      {
+        "fecha": "2026-10-02T09:05:56",
+        "estado": "bien"
+      },
+      {
+        "fecha": "2026-10-02T14:51:19",
+        "estado": "bien"
+      },
+      {
+        "fecha": "2026-10-02T14:51:19",
+        "estado": "bien",
+        "accion": "aceptada tal cual: queda al día con el prompt actual del guion"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-02T14:51:19",
+    "motivo": "Las manos parece deformes, se ve un dedo gordo donde no toca.",
+    "etiquetas": []
+  },
+  "03-7": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T18:08:10",
+        "estado": "mal",
+        "motivo": "La escoba el baston y el palo estan desproporcionados en comapracion a la jarra"
+      },
+      {
+        "fecha": "2026-10-01T21:15:04",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:15:04",
+    "motivo": "La escoba el baston y el palo estan desproporcionados en comapracion a la jarra"
+  },
+  "04-2": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T18:08:49",
+        "estado": "mal",
+        "motivo": "No se entiende bien esta imagen con el contexto del guion, aparecen unas lineas que parecen una pista de tenis, pero la comparacion en la imagen no se entiende."
+      },
+      {
+        "fecha": "2026-10-01T21:15:48",
+        "estado": "mal",
+        "motivo": "Anacronismo: No tiene sentido mostrar un campos de tenis, tal vez habria que explicarlo en metros, no con una comparacion"
+      },
+      {
+        "fecha": "2026-10-02T08:03:29",
+        "estado": "mal",
+        "motivo": "Anacronismo: No tiene sentido mostrar un campos de tenis, tal vez habria que explicarlo en metros, no con una comparacion",
+        "accion": "servicio klein → ai33"
+      },
+      {
+        "fecha": "2026-10-02T08:03:29",
+        "estado": "mal",
+        "accion": "rehacer con ai33",
+        "anterior": "img/anteriores/04-2_20261002T080329.png"
+      },
+      {
+        "fecha": "2026-10-02T08:05:54",
+        "estado": "mal",
+        "motivo": "Anacronismo: No tiene sentido mostrar un campos de tenis, tal vez habria que explicarlo en metros, no con una comparacion",
+        "accion": "prompt cambiado"
+      },
+      {
+        "fecha": "2026-10-02T09:06:06",
+        "estado": "bien"
+      },
+      {
+        "fecha": "2026-10-02T14:51:19",
+        "estado": "bien"
+      },
+      {
+        "fecha": "2026-10-02T14:51:19",
+        "estado": "bien",
+        "accion": "aceptada tal cual: queda al día con el prompt actual del guion"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-02T14:51:19",
+    "motivo": "Anacronismo: No tiene sentido mostrar un campos de tenis, tal vez habria que explicarlo en metros, no con una comparacion",
+    "etiquetas": [
+      "anacronismo"
+    ]
+  },
+  "04-3": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T18:09:12",
+        "estado": "mal",
+        "motivo": "El medico tiene barba, y en la siguiente imagen no."
+      },
+      {
+        "fecha": "2026-10-01T21:16:13",
+        "estado": "mal",
+        "motivo": "el doctor esta encima de un caballo de forma extraña y elc aballo parece que tenga ruedas"
+      },
+      {
+        "fecha": "2026-10-02T08:03:29",
+        "estado": "mal",
+        "motivo": "el doctor esta encima de un caballo de forma extraña y elc aballo parece que tenga ruedas",
+        "accion": "servicio klein → ai33"
+      },
+      {
+        "fecha": "2026-10-02T08:03:29",
+        "estado": "mal",
+        "accion": "rehacer con ai33",
+        "anterior": "img/anteriores/04-3_20261002T080329.png"
+      },
+      {
+        "fecha": "2026-10-02T08:05:54",
+        "estado": "mal",
+        "motivo": "el doctor esta encima de un caballo de forma extraña y elc aballo parece que tenga ruedas",
+        "accion": "prompt cambiado"
+      },
+      {
+        "fecha": "2026-10-02T09:06:12",
+        "estado": "bien"
+      },
+      {
+        "fecha": "2026-10-02T14:51:19",
+        "estado": "bien"
+      },
+      {
+        "fecha": "2026-10-02T14:51:19",
+        "estado": "bien",
+        "accion": "aceptada tal cual: queda al día con el prompt actual del guion"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-02T14:51:19",
+    "motivo": "el doctor esta encima de un caballo de forma extraña y elc aballo parece que tenga ruedas",
+    "etiquetas": []
+  },
+  "07-2": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T18:09:41",
+        "estado": "mal",
+        "motivo": "La pluma tiene dos puntas."
+      },
+      {
+        "fecha": "2026-10-02T08:03:29",
+        "estado": "mal",
+        "motivo": "La pluma tiene dos puntas."
+      },
+      {
+        "fecha": "2026-10-02T08:03:29",
+        "estado": "mal",
+        "accion": "rehacer con ai33",
+        "anterior": "img/anteriores/07-2_20261002T080329.png"
+      },
+      {
+        "fecha": "2026-10-02T08:05:54",
+        "estado": "mal",
+        "motivo": "La pluma tiene dos puntas.",
+        "accion": "prompt cambiado"
+      },
+      {
+        "fecha": "2026-10-02T14:48:41",
+        "estado": "bien"
+      },
+      {
+        "fecha": "2026-10-02T14:51:19",
+        "estado": "bien"
+      },
+      {
+        "fecha": "2026-10-02T14:51:19",
+        "estado": "bien",
+        "accion": "aceptada tal cual: queda al día con el prompt actual del guion"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-02T14:51:19",
+    "motivo": "La pluma tiene dos puntas.",
+    "etiquetas": []
+  },
+  "08-2": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T18:10:03",
+        "estado": "mal",
+        "motivo": "El papel sale en blanco, queda muy pobre..."
+      },
+      {
+        "fecha": "2026-10-01T21:16:15",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:16:15",
+    "motivo": "El papel sale en blanco, queda muy pobre..."
+  },
+  "09-3": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T18:10:36",
+        "estado": "mal",
+        "motivo": "El hombre que da la conferencia esta como metido dentro de la pizarra."
+      },
+      {
+        "fecha": "2026-10-01T21:16:39",
+        "estado": "mal",
+        "motivo": "El publico esta dando la espalda al orador, el orador esta bien"
+      },
+      {
+        "fecha": "2026-10-02T08:03:29",
+        "estado": "mal",
+        "motivo": "El publico esta dando la espalda al orador, el orador esta bien",
+        "accion": "servicio klein → ai33"
+      },
+      {
+        "fecha": "2026-10-02T08:03:29",
+        "estado": "mal",
+        "accion": "rehacer con ai33",
+        "anterior": "img/anteriores/09-3_20261002T080329.png"
+      },
+      {
+        "fecha": "2026-10-02T08:05:54",
+        "estado": "mal",
+        "motivo": "El publico esta dando la espalda al orador, el orador esta bien",
+        "accion": "prompt cambiado"
+      },
+      {
+        "fecha": "2026-10-02T14:48:49",
+        "estado": "bien"
+      },
+      {
+        "fecha": "2026-10-02T14:51:20",
+        "estado": "bien"
+      },
+      {
+        "fecha": "2026-10-02T14:51:20",
+        "estado": "bien",
+        "accion": "aceptada tal cual: queda al día con el prompt actual del guion"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-02T14:51:20",
+    "motivo": "El publico esta dando la espalda al orador, el orador esta bien",
+    "etiquetas": []
+  },
+  "09-4": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T18:11:05",
+        "estado": "mal",
+        "motivo": "Se ven formas extrañas en los hombres más cercanos."
+      },
+      {
+        "fecha": "2026-10-01T21:16:56",
+        "estado": "mal",
+        "motivo": "No cuenta lo del guion"
+      },
+      {
+        "fecha": "2026-10-02T08:03:29",
+        "estado": "mal",
+        "motivo": "No cuenta lo del guion",
+        "accion": "servicio klein → ai33"
+      },
+      {
+        "fecha": "2026-10-02T08:03:29",
+        "estado": "mal",
+        "accion": "rehacer con ai33",
+        "anterior": "img/anteriores/09-4_20261002T080329.png"
+      },
+      {
+        "fecha": "2026-10-02T08:05:54",
+        "estado": "mal",
+        "motivo": "No cuenta lo del guion",
+        "accion": "prompt cambiado"
+      },
+      {
+        "fecha": "2026-10-02T14:48:52",
+        "estado": "bien"
+      },
+      {
+        "fecha": "2026-10-02T14:51:20",
+        "estado": "bien"
+      },
+      {
+        "fecha": "2026-10-02T14:51:20",
+        "estado": "bien",
+        "accion": "aceptada tal cual: queda al día con el prompt actual del guion"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-02T14:51:20",
+    "motivo": "No cuenta lo del guion",
+    "etiquetas": [
+      "guion"
+    ]
+  },
+  "14-5": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T18:12:26",
+        "estado": "mal",
+        "motivo": "se supone que son 6 caballos, solo aparecen 4, y hay un camino que no concuerda con la perspectiva dsonde aparece un carro con bacas."
+      },
+      {
+        "fecha": "2026-10-02T08:03:29",
+        "estado": "mal",
+        "motivo": "se supone que son 6 caballos, solo aparecen 4, y hay un camino que no concuerda con la perspectiva dsonde aparece un carro con bacas."
+      },
+      {
+        "fecha": "2026-10-02T08:03:29",
+        "estado": "mal",
+        "accion": "rehacer con ai33",
+        "anterior": "img/anteriores/14-5_20261002T080329.png"
+      },
+      {
+        "fecha": "2026-10-02T08:05:54",
+        "estado": "mal",
+        "motivo": "se supone que son 6 caballos, solo aparecen 4, y hay un camino que no concuerda con la perspectiva dsonde aparece un carro con bacas.",
+        "accion": "prompt cambiado"
+      },
+      {
+        "fecha": "2026-10-02T14:48:55",
+        "estado": "bien"
+      },
+      {
+        "fecha": "2026-10-02T14:51:20",
+        "estado": "bien"
+      },
+      {
+        "fecha": "2026-10-02T14:51:20",
+        "estado": "bien",
+        "accion": "aceptada tal cual: queda al día con el prompt actual del guion"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-02T14:51:20",
+    "motivo": "se supone que son 6 caballos, solo aparecen 4, y hay un camino que no concuerda con la perspectiva dsonde aparece un carro con bacas.",
+    "etiquetas": []
+  },
+  "14-6": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T18:12:58",
+        "estado": "mal",
+        "motivo": "Los caballos estan mirando hacia la camara, deberian verse desde atras."
+      },
+      {
+        "fecha": "2026-10-02T08:03:29",
+        "estado": "mal",
+        "motivo": "Los caballos estan mirando hacia la camara, deberian verse desde atras."
+      },
+      {
+        "fecha": "2026-10-02T08:03:29",
+        "estado": "mal",
+        "accion": "rehacer con ai33",
+        "anterior": "img/anteriores/14-6_20261002T080329.png"
+      },
+      {
+        "fecha": "2026-10-02T08:05:54",
+        "estado": "mal",
+        "motivo": "Los caballos estan mirando hacia la camara, deberian verse desde atras.",
+        "accion": "prompt cambiado"
+      },
+      {
+        "fecha": "2026-10-02T09:06:20",
+        "estado": "bien"
+      },
+      {
+        "fecha": "2026-10-02T14:51:20",
+        "estado": "bien"
+      },
+      {
+        "fecha": "2026-10-02T14:51:20",
+        "estado": "bien",
+        "accion": "aceptada tal cual: queda al día con el prompt actual del guion"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-02T14:51:20",
+    "motivo": "Los caballos estan mirando hacia la camara, deberian verse desde atras.",
+    "etiquetas": []
+  },
+  "15-1": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T18:13:14",
+        "estado": "mal",
+        "motivo": "Solo aparecen 4 caballos, deberian ser 6"
+      },
+      {
+        "fecha": "2026-10-02T08:03:29",
+        "estado": "mal",
+        "motivo": "Solo aparecen 4 caballos, deberian ser 6"
+      },
+      {
+        "fecha": "2026-10-02T08:03:29",
+        "estado": "mal",
+        "accion": "rehacer con ai33",
+        "anterior": "img/anteriores/15-1_20261002T080329.png"
+      },
+      {
+        "fecha": "2026-10-02T08:05:54",
+        "estado": "mal",
+        "motivo": "Solo aparecen 4 caballos, deberian ser 6",
+        "accion": "prompt cambiado"
+      },
+      {
+        "fecha": "2026-10-02T14:48:57",
+        "estado": "bien"
+      },
+      {
+        "fecha": "2026-10-02T14:51:20",
+        "estado": "bien"
+      },
+      {
+        "fecha": "2026-10-02T14:51:20",
+        "estado": "bien",
+        "accion": "aceptada tal cual: queda al día con el prompt actual del guion"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-02T14:51:20",
+    "motivo": "Solo aparecen 4 caballos, deberian ser 6",
+    "etiquetas": []
+  },
+  "15-3": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T18:13:43",
+        "estado": "mal",
+        "motivo": "Los caballos estan descolocados, hay dos delante, y 4 atras, de esos 4 unos mirando a cada lado, deberian estar todos delante"
+      },
+      {
+        "fecha": "2026-10-02T08:03:29",
+        "estado": "mal",
+        "motivo": "Los caballos estan descolocados, hay dos delante, y 4 atras, de esos 4 unos mirando a cada lado, deberian estar todos delante"
+      },
+      {
+        "fecha": "2026-10-02T08:03:29",
+        "estado": "mal",
+        "accion": "rehacer con ai33",
+        "anterior": "img/anteriores/15-3_20261002T080329.png"
+      },
+      {
+        "fecha": "2026-10-02T09:05:23",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-02T09:05:23",
+    "motivo": "Los caballos estan descolocados, hay dos delante, y 4 atras, de esos 4 unos mirando a cada lado, deberian estar todos delante",
+    "etiquetas": [],
+    "rehecha_desde": "2026-10-02T08:03:29"
+  },
+  "15-6": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T18:14:22",
+        "estado": "mal",
+        "motivo": "Los caballos estan mal situados, deberian estar los 6 dealnte de la diligencia, y la diligencia parece una casa, deberia verse igual que en las imagenes anteriores"
+      },
+      {
+        "fecha": "2026-10-02T08:03:29",
+        "estado": "mal",
+        "motivo": "Los caballos estan mal situados, deberian estar los 6 dealnte de la diligencia, y la diligencia parece una casa, deberia verse igual que en las imagenes anteriores"
+      },
+      {
+        "fecha": "2026-10-02T08:03:29",
+        "estado": "mal",
+        "accion": "rehacer con ai33",
+        "anterior": "img/anteriores/15-6_20261002T080329.png"
+      },
+      {
+        "fecha": "2026-10-02T08:05:54",
+        "estado": "mal",
+        "motivo": "Los caballos estan mal situados, deberian estar los 6 dealnte de la diligencia, y la diligencia parece una casa, deberia verse igual que en las imagenes anteriores",
+        "accion": "prompt cambiado"
+      },
+      {
+        "fecha": "2026-10-02T09:06:22",
+        "estado": "bien"
+      },
+      {
+        "fecha": "2026-10-02T14:51:20",
+        "estado": "bien"
+      },
+      {
+        "fecha": "2026-10-02T14:51:20",
+        "estado": "bien",
+        "accion": "aceptada tal cual: queda al día con el prompt actual del guion"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-02T14:51:20",
+    "motivo": "Los caballos estan mal situados, deberian estar los 6 dealnte de la diligencia, y la diligencia parece una casa, deberia verse igual que en las imagenes anteriores",
+    "etiquetas": []
+  },
+  "16-1": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T18:14:33",
+        "estado": "mal",
+        "motivo": "Solo hay 4 caballos"
+      },
+      {
+        "fecha": "2026-10-02T08:03:29",
+        "estado": "mal",
+        "motivo": "Solo hay 4 caballos"
+      },
+      {
+        "fecha": "2026-10-02T08:03:29",
+        "estado": "mal",
+        "accion": "rehacer con ai33",
+        "anterior": "img/anteriores/16-1_20261002T080329.png"
+      },
+      {
+        "fecha": "2026-10-02T08:05:54",
+        "estado": "mal",
+        "motivo": "Solo hay 4 caballos",
+        "accion": "prompt cambiado"
+      },
+      {
+        "fecha": "2026-10-02T09:06:30",
+        "estado": "bien"
+      },
+      {
+        "fecha": "2026-10-02T14:51:20",
+        "estado": "bien"
+      },
+      {
+        "fecha": "2026-10-02T14:51:20",
+        "estado": "bien",
+        "accion": "aceptada tal cual: queda al día con el prompt actual del guion"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-02T14:51:20",
+    "motivo": "Solo hay 4 caballos",
+    "etiquetas": []
+  },
+  "16-2": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T18:14:55",
+        "estado": "mal",
+        "motivo": "Los caballos estan mal colocados, unos van adelante y otros hacia atras, deberian estar los 6 delante."
+      },
+      {
+        "fecha": "2026-10-02T08:03:29",
+        "estado": "mal",
+        "motivo": "Los caballos estan mal colocados, unos van adelante y otros hacia atras, deberian estar los 6 delante."
+      },
+      {
+        "fecha": "2026-10-02T08:03:29",
+        "estado": "mal",
+        "accion": "rehacer con ai33",
+        "anterior": "img/anteriores/16-2_20261002T080329.png"
+      },
+      {
+        "fecha": "2026-10-02T08:05:54",
+        "estado": "mal",
+        "motivo": "Los caballos estan mal colocados, unos van adelante y otros hacia atras, deberian estar los 6 delante.",
+        "accion": "prompt cambiado"
+      },
+      {
+        "fecha": "2026-10-02T14:48:59",
+        "estado": "bien"
+      },
+      {
+        "fecha": "2026-10-02T14:51:20",
+        "estado": "bien"
+      },
+      {
+        "fecha": "2026-10-02T14:51:20",
+        "estado": "bien",
+        "accion": "aceptada tal cual: queda al día con el prompt actual del guion"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-02T14:51:20",
+    "motivo": "Los caballos estan mal colocados, unos van adelante y otros hacia atras, deberian estar los 6 delante.",
+    "etiquetas": []
+  },
+  "16-3": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T18:15:13",
+        "estado": "mal",
+        "motivo": "aparece humo de sitios donde no deberia"
+      },
+      {
+        "fecha": "2026-10-01T21:17:07",
+        "estado": "mal",
+        "motivo": "el tren esta cruzado en las vias"
+      },
+      {
+        "fecha": "2026-10-02T08:03:29",
+        "estado": "mal",
+        "motivo": "el tren esta cruzado en las vias",
+        "accion": "servicio klein → ai33"
+      },
+      {
+        "fecha": "2026-10-02T08:03:29",
+        "estado": "mal",
+        "accion": "rehacer con ai33",
+        "anterior": "img/anteriores/16-3_20261002T080329.png"
+      },
+      {
+        "fecha": "2026-10-02T08:05:54",
+        "estado": "mal",
+        "motivo": "el tren esta cruzado en las vias",
+        "accion": "prompt cambiado"
+      },
+      {
+        "fecha": "2026-10-02T09:06:33",
+        "estado": "bien"
+      },
+      {
+        "fecha": "2026-10-02T14:51:20",
+        "estado": "bien"
+      },
+      {
+        "fecha": "2026-10-02T14:51:20",
+        "estado": "bien",
+        "accion": "aceptada tal cual: queda al día con el prompt actual del guion"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-02T14:51:20",
+    "motivo": "el tren esta cruzado en las vias",
+    "etiquetas": []
+  },
+  "16-5": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T18:15:38",
+        "estado": "mal",
+        "motivo": "el ferrocarril esta cruzado en una carretera de tierra, deberia estar en sus vias."
+      },
+      {
+        "fecha": "2026-10-01T21:17:14",
+        "estado": "mal",
+        "motivo": "el tren esta fuera de la via"
+      },
+      {
+        "fecha": "2026-10-02T08:03:29",
+        "estado": "mal",
+        "motivo": "el tren esta fuera de la via",
+        "accion": "servicio klein → ai33"
+      },
+      {
+        "fecha": "2026-10-02T08:03:29",
+        "estado": "mal",
+        "accion": "rehacer con ai33",
+        "anterior": "img/anteriores/16-5_20261002T080329.png"
+      },
+      {
+        "fecha": "2026-10-02T08:05:54",
+        "estado": "mal",
+        "motivo": "el tren esta fuera de la via",
+        "accion": "prompt cambiado"
+      },
+      {
+        "fecha": "2026-10-02T09:06:35",
+        "estado": "bien"
+      },
+      {
+        "fecha": "2026-10-02T14:51:20",
+        "estado": "bien"
+      },
+      {
+        "fecha": "2026-10-02T14:51:20",
+        "estado": "bien",
+        "accion": "aceptada tal cual: queda al día con el prompt actual del guion"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-02T14:51:20",
+    "motivo": "el tren esta fuera de la via",
+    "etiquetas": []
+  },
+  "17-2": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T18:16:05",
+        "estado": "mal",
+        "motivo": "Salen dos caballos empujando una rueda en direcciones opuestas, deberia ser ganado"
+      },
+      {
+        "fecha": "2026-10-01T21:17:17",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:17:17",
+    "motivo": "Salen dos caballos empujando una rueda en direcciones opuestas, deberia ser ganado"
+  },
+  "18-4": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T18:16:49",
+        "estado": "mal",
+        "motivo": "aparecen caballos sin sentido alguno, deberian empujar la diligencia, y la diligencia deberia ser como las anteriores, parece una casa."
+      },
+      {
+        "fecha": "2026-10-02T08:03:29",
+        "estado": "mal",
+        "motivo": "aparecen caballos sin sentido alguno, deberian empujar la diligencia, y la diligencia deberia ser como las anteriores, parece una casa."
+      },
+      {
+        "fecha": "2026-10-02T08:03:29",
+        "estado": "mal",
+        "accion": "rehacer con ai33",
+        "anterior": "img/anteriores/18-4_20261002T080329.png"
+      },
+      {
+        "fecha": "2026-10-02T08:05:54",
+        "estado": "mal",
+        "motivo": "aparecen caballos sin sentido alguno, deberian empujar la diligencia, y la diligencia deberia ser como las anteriores, parece una casa.",
+        "accion": "prompt cambiado"
+      },
+      {
+        "fecha": "2026-10-02T14:49:02",
+        "estado": "bien"
+      },
+      {
+        "fecha": "2026-10-02T14:51:20",
+        "estado": "bien"
+      },
+      {
+        "fecha": "2026-10-02T14:51:20",
+        "estado": "bien",
+        "accion": "aceptada tal cual: queda al día con el prompt actual del guion"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-02T14:51:20",
+    "motivo": "aparecen caballos sin sentido alguno, deberian empujar la diligencia, y la diligencia deberia ser como las anteriores, parece una casa.",
+    "etiquetas": []
+  },
+  "01-1": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:17:38",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:17:38"
+  },
+  "01-2": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:17:39",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:17:39"
+  },
+  "01-3": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:17:41",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:17:41"
+  },
+  "02-1": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:17:42",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:17:42"
+  },
+  "02-2": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:17:43",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:17:43"
+  },
+  "02-4": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:17:44",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:17:44"
+  },
+  "03-1": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:17:45",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:17:45"
+  },
+  "03-2": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:17:46",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:17:46"
+  },
+  "03-3": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:17:47",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:17:47"
+  },
+  "03-5": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:17:48",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:17:48"
+  },
+  "03-6": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:17:49",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:17:49"
+  },
+  "03-8": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:17:50",
+        "estado": "bien"
+      },
+      {
+        "fecha": "2026-10-01T21:18:17",
+        "estado": "mal",
+        "motivo": "sale una via doble y el tren no encaja correctamente en est a"
+      },
+      {
+        "fecha": "2026-10-02T08:03:29",
+        "estado": "mal",
+        "motivo": "sale una via doble y el tren no encaja correctamente en est a",
+        "accion": "servicio klein → ai33"
+      },
+      {
+        "fecha": "2026-10-02T08:03:29",
+        "estado": "mal",
+        "accion": "rehacer con ai33",
+        "anterior": "img/anteriores/03-8_20261002T080329.png"
+      },
+      {
+        "fecha": "2026-10-02T08:05:54",
+        "estado": "mal",
+        "motivo": "sale una via doble y el tren no encaja correctamente en est a",
+        "accion": "prompt cambiado"
+      },
+      {
+        "fecha": "2026-10-02T09:06:00",
+        "estado": "bien"
+      },
+      {
+        "fecha": "2026-10-02T14:51:19",
+        "estado": "bien"
+      },
+      {
+        "fecha": "2026-10-02T14:51:19",
+        "estado": "bien",
+        "accion": "aceptada tal cual: queda al día con el prompt actual del guion"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-02T14:51:19",
+    "motivo": "sale una via doble y el tren no encaja correctamente en est a",
+    "etiquetas": []
+  },
+  "04-1": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:18:24",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:18:24"
+  },
+  "04-4": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:18:25",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:18:25"
+  },
+  "04-5": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:18:26",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:18:26"
+  },
+  "05-1": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:18:27",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:18:27"
+  },
+  "05-2": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:18:29",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:18:29"
+  },
+  "05-3": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:18:30",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:18:30"
+  },
+  "05-4": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:18:31",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:18:31"
+  },
+  "05-5": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:18:32",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:18:32"
+  },
+  "05-6": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:18:33",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:18:33"
+  },
+  "06-1": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:18:34",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:18:34"
+  },
+  "06-2": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:18:35",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:18:35"
+  },
+  "06-3": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:18:38",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:18:38"
+  },
+  "06-4": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:18:39",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:18:39"
+  },
+  "07-1": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:18:40",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:18:40"
+  },
+  "07-4": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:18:40",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:18:40"
+  },
+  "07-5": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:18:41",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:18:41"
+  },
+  "08-1": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:18:42",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:18:42"
+  },
+  "09-1": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:18:45",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:18:45"
+  },
+  "09-2": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:18:46",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:18:46"
+  },
+  "09-5": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:18:47",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:18:47"
+  },
+  "09-6": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:18:48",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:18:48"
+  },
+  "09-7": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:18:50",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:18:50"
+  },
+  "10-1": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:18:51",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:18:51"
+  },
+  "10-2": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:18:51",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:18:51"
+  },
+  "10-4": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:18:53",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:18:53"
+  },
+  "10-5": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:18:53",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:18:53"
+  },
+  "10-6": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:18:54",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:18:54"
+  },
+  "11-1": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:18:55",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:18:55"
+  },
+  "11-2": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:18:56",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:18:56"
+  },
+  "11-3": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:18:57",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:18:57"
+  },
+  "11-4": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:18:58",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:18:58"
+  },
+  "11-5": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:18:59",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:18:59"
+  },
+  "11-6": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:19:00",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:19:00"
+  },
+  "12-1": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:19:01",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:19:01"
+  },
+  "12-2": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:19:03",
+        "estado": "bien"
+      },
+      {
+        "fecha": "2026-10-01T21:19:17",
+        "estado": "mal",
+        "motivo": "aparecen tres manos, dos sosteniendo un CD y otra en el teclado"
+      },
+      {
+        "fecha": "2026-10-02T08:03:29",
+        "estado": "mal",
+        "motivo": "aparecen tres manos, dos sosteniendo un CD y otra en el teclado",
+        "accion": "servicio klein → ai33"
+      },
+      {
+        "fecha": "2026-10-02T08:03:29",
+        "estado": "mal",
+        "accion": "rehacer con ai33",
+        "anterior": "img/anteriores/12-2_20261002T080329.png"
+      },
+      {
+        "fecha": "2026-10-02T08:05:54",
+        "estado": "mal",
+        "motivo": "aparecen tres manos, dos sosteniendo un CD y otra en el teclado",
+        "accion": "prompt cambiado"
+      },
+      {
+        "fecha": "2026-10-02T09:06:17",
+        "estado": "bien"
+      },
+      {
+        "fecha": "2026-10-02T14:51:20",
+        "estado": "bien"
+      },
+      {
+        "fecha": "2026-10-02T14:51:20",
+        "estado": "bien",
+        "accion": "aceptada tal cual: queda al día con el prompt actual del guion"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-02T14:51:20",
+    "motivo": "aparecen tres manos, dos sosteniendo un CD y otra en el teclado",
+    "etiquetas": []
+  },
+  "12-3": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:19:20",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:19:20"
+  },
+  "12-4": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:19:21",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:19:21"
+  },
+  "12-5": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:19:22",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:19:22"
+  },
+  "12-6": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:19:22",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:19:22"
+  },
+  "12-7": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:19:32",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:19:32"
+  },
+  "13-1": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:19:33",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:19:33"
+  },
+  "13-3": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:19:38",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:19:38"
+  },
+  "13-4": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:19:39",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:19:39"
+  },
+  "13-5": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:19:40",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:19:40"
+  },
+  "14-1": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:19:42",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:19:42"
+  },
+  "14-2": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:19:43",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:19:43"
+  },
+  "14-3": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:19:44",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:19:44"
+  },
+  "14-4": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:19:45",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:19:45"
+  },
+  "14-7": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:19:46",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:19:46"
+  },
+  "15-2": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:19:49",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:19:49"
+  },
+  "15-4": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:19:51",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:19:51"
+  },
+  "15-5": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:19:52",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:19:52"
+  },
+  "16-4": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:19:54",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:19:54"
+  },
+  "17-1": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:19:55",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:19:55"
+  },
+  "17-3": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:19:56",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:19:56"
+  },
+  "17-4": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:19:57",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:19:57"
+  },
+  "17-5": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:19:58",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:19:58"
+  },
+  "17-6": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:20:00",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:20:00"
+  },
+  "17-7": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:20:01",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:20:01"
+  },
+  "18-1": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:20:02",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:20:02"
+  },
+  "18-3": {
+    "historial": [
+      {
+        "fecha": "2026-10-01T21:20:03",
+        "estado": "bien"
+      }
+    ],
+    "estado": "bien",
+    "fecha": "2026-10-01T21:20:03"
+  }
+}

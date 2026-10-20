@@ -1,0 +1,243 @@
+{
+  "_comentario": "Configuración del canal. Las herramientas son genéricas y leen de aquí todo lo propio del canal; para otro canal basta con otro canal.json (y sus recursos). Los campos de un guion.json con el mismo nombre (voz, velocidad, estilo, personajes, referencias) tienen prioridad. Concepto: docs/concepto.md (\"Asombroso y Real\" desde el 2026-09-27; el de Tok, archivado en canales/_archivo/los-viajes-de-tok/).",
+  "nombre": "Asombroso y Real",
+  "url": "https://www.youtube.com/@AsombrosoYReal",
+  "_url": "Renombrado el 2026-09-28 (antes @losviajesdetok). channel_id UCOPeqty7-D8JoAo0dnq5fJA.",
+  "idioma": "es-ES",
+  "voz": "ai33:elevenlabs_DdKbXdRlBmj7Ty7N0FVr",
+  "_voz": "Juanjo Relatos (es-ES) con eleven_v4 a velocidad 1,2 y pausas de 0,3 s como máximo, elegida por el usuario el 2026-10-01 tras comparar con el estilo de WATOP (texto sobrio, sin muletillas ni preguntas que se responde el narrador). Antes, el mismo día: Gabo - Deep, Evocative and Resonant (es-ES) con eleven_v4, elegida por el usuario el 2026-10-01 en una prueba a ciegas de 8 tomas (_pruebas/voces_2026-10-01): con eleven_v3 todas las voces tenían una «tonadilla» que sonaba a IA. Antes: Javier Rojas (ai33_javier).",
+  "voces": {
+    "_comentario": "Opciones que /nuevo-video y /nuevo-short ofrecen antes de locutar (se guarda la elegida en el \"voz\" del guion). ai33 es de pago (≈ 1 crédito/carácter); las otras, gratis.",
+    "ai33": "ai33:elevenlabs_DdKbXdRlBmj7Ty7N0FVr",
+    "ai33_gabo": "ai33:elevenlabs_o0SveC0zgHFuCsEO3vHR",
+    "ai33_salva": "ai33:elevenlabs_hyKxCTlAqtnW188CgltM",
+    "ai33_javier": "ai33:elevenlabs_eHAEFkimnYz57pupUMcq",
+    "ai33_martin_osborne": "ai33:elevenlabs_W5JElH3dK1UYYAiHH7uh",
+    "ai33_daniel": "ai33:elevenlabs_L7eBLM3xgOVCCmqe2GAd",
+    "gemini": "gemini:Puck",
+    "azure": "es-ES-Marta:MAI-Voice-2"
+  },
+  "modelo_voz_ai33": "eleven_v4",
+  "nombre_voz": "Juanjo Relatos · eleven_v4 · velocidad 1,2",
+  "caracteres_bloque_voz": 4000,
+  "pausa_entre_bloques": 0.7,
+  "_caracteres_bloque_voz": "2026-10-01: bloques grandes (eleven_v4 admite 10.000 caracteres por petición): un vídeo de 10 min son 3 locuciones en vez de 10; cada empalme hace que la voz arranque de nuevo, más aguda. Entre bloques, 0,7 s de silencio.",
+  "velocidad_ai33": 1.2,
+  "pausa_max": {
+    "video": 0.3,
+    "_comentario": "silencio máximo entre palabras (s): el narrador de referencia (WATOP) habla de corrido"
+  },
+  "modelo_voz_gemini": "gemini-3.8-flash-tts",
+  "estilo_voz": "Narrador de documental en español de España (acento castellano peninsular): cercano, sereno y con ironía, con curiosidad genuina y ritmo natural, como quien cuenta algo increíble en una cena; nada infantil ni de anuncio",
+  "voz_respaldo": "es-ES-Marta:MAI-Voice-2",
+  "niveles_efectos": {
+    "_comentario": "volumen medio (dB) de efectos que son voz; el resto va a -33 dB"
+  },
+  "subtitulos_efectos": {
+    "_comentario": "efectos que son voz: su texto sale como subtítulo mientras suenan"
+  },
+  "efectos_con_hueco": [],
+  "estilo": "editorial illustration with visible paper grain texture, painted in a {paleta}: {escena}, dramatic chiaroscuro lighting, painterly strokes, adults drawn with realistic proportions, moody and atmospheric, no gore, no text, no letters or numbers anywhere",
+  "paletas": {
+    "_comentario": "Paleta por pilar: el guion elige \"pilar\" (o trae su propia \"paleta\") y montar.py la pone en {paleta} del estilo, DELANTE de la escena (probado el 28/09 en videos/_pruebas/paletas/v3: al final, con escenas largas, perdía peso).",
+    "historia": "limited palette of ochre, deep teal, cream and black",
+    "naturaleza": "limited palette of deep greens, amber and cream",
+    "universo": "limited palette of midnight blue, violet and old gold",
+    "ciencia": "limited palette of muted brick red, deep turquoise and cream, with red and turquoise dominating the image",
+    "defecto": "limited palette of ochre, deep teal, cream and black"
+  },
+  "personajes": {},
+  "referencias": [],
+  "colores": {
+    "acento": "#C8702A",
+    "resaltado": "#F2C14E",
+    "texto": "#1B1B1B",
+    "fondo": "#EFE6D2"
+  },
+  "fuentes": {
+    "_comentario": "Archivos de recursos/fuentes/ (licencias en recursos/LICENCIAS.md). \"nombre\" = familia interna, la que buscan los subtítulos .ass.",
+    "titulo": {
+      "archivo": "PlayfairDisplay-Black.ttf",
+      "nombre": "Playfair Display Black"
+    },
+    "subtitulo": {
+      "archivo": "SourceSans3-Black.ttf",
+      "nombre": "Source Sans 3 Black"
+    },
+    "rotulo": {
+      "archivo": "SourceSans3-Black.ttf",
+      "nombre": "Source Sans 3 Black"
+    },
+    "texto": {
+      "archivo": "SourceSans3-Bold.ttf",
+      "nombre": "Source Sans 3"
+    }
+  },
+  "hashtags_shorts": [
+    "#shorts",
+    "#curiosidades",
+    "#AsombrosoYReal"
+  ],
+  "pantalla_final": {
+    "duracion": 20,
+    "titulo": "ASOMBROSO|*Y REAL*",
+    "lema": "¿Te ha parecido increíble? Hay más.",
+    "papel": true,
+    "musica": "tranquilo"
+  },
+  "marca": {
+    "_comentario": "Avatar y banner del canal: herramientas/marca.py (salen en marca/). *Entre asteriscos* = color de acento.",
+    "monograma": "A*R*",
+    "titulo": "ASOMBROSO *Y REAL*",
+    "lema": "Historias que parecen inventadas… y son reales",
+    "pilares": "Historia insólita  ·  Naturaleza  ·  Universo  ·  Cuerpo y ciencia",
+    "fondo_banner": "marca/fondos/banner_gemini.jpg",
+    "fondo_avatar": "marca/fondos/avatar_gemini.jpg"
+  },
+  "duraciones": {
+    "_comentario": "Largos de 10-14 min (docs/concepto.md). \"paradas\" = actos del desarrollo. ≈ 170 palabras/min: medido el 28/09 con Javier Rojas y Daniel (eleven_v3, velocidad 1) = 175 ppm de habla continua; 170 descontando pausas y efectos. Imágenes: una cada 5-8 s.",
+    "10": {
+      "palabras": [
+        1650,
+        1750
+      ],
+      "paradas": [
+        3,
+        4
+      ],
+      "imagenes": 95,
+      "capitulos": [
+        5,
+        6
+      ]
+    },
+    "12": {
+      "palabras": [
+        1980,
+        2100
+      ],
+      "paradas": [
+        4,
+        5
+      ],
+      "imagenes": 115,
+      "capitulos": [
+        5,
+        7
+      ]
+    },
+    "14": {
+      "palabras": [
+        2300,
+        2450
+      ],
+      "paradas": [
+        4,
+        5
+      ],
+      "imagenes": 130,
+      "capitulos": [
+        6,
+        8
+      ]
+    },
+    "short": {
+      "palabras": [
+        90,
+        140
+      ],
+      "imagenes": 12,
+      "segundos": [
+        30,
+        55
+      ]
+    }
+  },
+  "palabras_por_minuto": 170,
+  "pedir_preguntas": false,
+  "_pedir_preguntas": "false: revisar_guion.py no pide una pregunta por escena (narración sobria, 01/10)",
+  "frases_obligatorias": [
+    {
+      "texto": "?",
+      "donde": "final",
+      "motivo": "pregunta concreta a los comentarios en el cierre",
+      "tipos": [
+        "video"
+      ]
+    }
+  ],
+  "max_emociones_escena": 1,
+  "reglas_texto": [
+    "Reglas propias del canal que comprueba revisar_guion.py (expresión regular sobre el texto con marcas).",
+    {
+      "patron": "\\{(boing|record_scratch|error|remate_chiste|toc_toc|tok_pues_si|interferencia|clic)\\}",
+      "nivel": "error",
+      "mensaje": "efecto cómico del canal antiguo (Tok): este canal es sobrio y no los usa"
+    },
+    {
+      "patron": "\\bTok\\b",
+      "nivel": "error",
+      "mensaje": "aparece Tok: el canal ya no tiene personaje (docs/concepto.md)"
+    },
+    {
+      "patron": "\\b(hola|bienvenid[oa]s?|en el vídeo de hoy|hoy vamos a hablar)\\b",
+      "nivel": "aviso",
+      "mensaje": "presentación o saludo: el gancho entra directo en el caso (docs/concepto.md)"
+    },
+    {
+      "patron": "\\[(excited|cheerfully|playfully)\\]",
+      "nivel": "aviso",
+      "mensaje": "marca de emoción eufórica: el narrador es sereno (mejor [curious], [whispers], [amazed], [explaining])"
+    },
+    {
+      "patron": "\\w{4,}[aeiouns](\\.\\.\\.|…)",
+      "nivel": "aviso",
+      "mensaje": "puntos suspensivos tras una palabra llana larga: eleven_v3 sube el final y carga la última sílaba («sobreviviera…» sonó «sobrevivierá», 28/09). Une la frase («no es que sobreviviera, sino…») o cierra con punto"
+    },
+    {
+      "patron": "[.!?…]»|»\\s*\\.",
+      "nivel": "aviso",
+      "mensaje": "la frase acaba justo al cerrar una cita: el tono suele subir. Pon algo detrás («…, le dijo al médico») o deja la cita en medio de la frase"
+    },
+    {
+      "patron": "(^|[.?!]\\s*(\\{img\\}\\s*)?)(Pues|Ojo|Fíjate|Imagínate|Imagínatela|Por cierto|Total, que|La verdad es que|Vamos, que)\\b",
+      "nivel": "aviso",
+      "mensaje": "muletilla coloquial: el narrador es sobrio y declarativo, como WATOP (01/10: con estas expresiones la voz sonaba a IA)"
+    },
+    {
+      "patron": "\\?\\s*(\\{img\\}\\s*)?(Pues|Sí|No|Nada|Ni|Que)\\b",
+      "nivel": "aviso",
+      "mensaje": "pregunta que el narrador se responde («¿…? Pues…»): cuéntalo como un hecho; la intriga sale de los datos (estilo WATOP, 01/10)"
+    },
+    {
+      "patron": "\\b(tú|te lo|te imaginas|imagínat\\w*|acuérdate|guárdate|¿sabes|¿te acuerdas|te diré|te pregunto|crees que)\\b",
+      "nivel": "aviso",
+      "mensaje": "le habla de tú al espectador: el narrador cuenta en tercera persona (estilo WATOP, 01/10); solo la pregunta final a los comentarios"
+    },
+    {
+      "patron": "\\b(dale a like|dale like|like y suscr)",
+      "nivel": "aviso",
+      "mensaje": "petición de like genérica: si se pide suscripción, una vez y con una razón"
+    }
+  ],
+  "max_segundos_imagen": 10,
+  "musica_ai33": {
+    "_nota": "Música de pago con Suno por ai33 (herramientas/musica_ai33.py): base + prompt del ambiente; cada vídeo puede llevar el suyo en <vídeo>/musica/musica.json",
+    "creditos_por_encargo": 3600,
+    "base": "Instrumental underscore for a documentary narration. No vocals, no drum kit, no build-ups or drops, steady dynamics so a narrator's voice sits clearly on top, loop-friendly ending. ",
+    "prompts": {
+      "misterio": "Mystery mood, slow tempo around 70 BPM, sparse solo cello and low piano, soft pizzicato strings, distant timpani swells, subtle ticking texture. Dark but curious, not horror.",
+      "tranquilo": "Reflective and warm, slow tempo around 65 BPM, gentle felt piano and soft string pads, light celesta touches. Calm, hopeful and intimate, no sadness or melodrama.",
+      "alegre": "Light and lively, moderate tempo around 100 BPM, acoustic guitar, pizzicato strings and light hand percussion. Curious and optimistic, a sense of travel and discovery, never comic."
+    }
+  },
+  "cumplimiento": {
+    "_comentario": "Declaraciones del canal ante YouTube y sobre derechos; se rellenan en la fase G de /nuevo-canal y se comprueban en la fase H de cada vídeo. Revisa la política vigente de YouTube antes de decidir: cambia con el tiempo.",
+    "contenido_sintetico": "no",
+    "motivo_sintetico": "Son ilustraciones de estilo editorial y el narrador no imita a ninguna persona real (YouTube lo exige solo para contenido realista que pueda confundir).",
+    "afiliacion": true,
+    "licencias": "Música original del kit y de Suno (ai33) con la licencia de su plan; fuentes con licencia abierta; imágenes generadas (ver recursos/LICENCIAS.md)."
+  },
+  "duracion_minima": 8,
+  "duracion_minima_motivo": "Sin anuncios a mitad de vídeo por debajo de 8 min y pocas horas de reproducción para el YPP."
+}

@@ -1,0 +1,63 @@
+{
+  "misterio": {
+    "prompt": "Instrumental cinematic underscore for a historical documentary narration, 19th-century mystery. Slow tempo around 70 BPM, sparse and restrained: solo cello and low piano, soft pizzicato strings, distant timpani swells, subtle ticking texture. Dark but curious, not horror. No vocals, no drums kit, no build-ups or drops, steady dynamics so a narrator's voice sits clearly on top. Seamless loop-friendly ending.",
+    "tarea": "6b4f310a-91ec-428c-b4c1-4a42709379c0",
+    "fecha": "2026-10-02T15:39:17",
+    "prompt_enviado": "Instrumental cinematic underscore for a historical documentary narration, 19th-century mystery. Slow tempo around 70 BPM, sparse and restrained: solo cello and low piano, soft pizzicato strings, distant timpani swells, subtle ticking texture. Dark but curious, not horror. No vocals, no drums kit, no build-ups or drops, steady dynamics so a narrator's voice sits clearly on top. Seamless loop-friendly ending.",
+    "versiones": [
+      {
+        "n": 1,
+        "archivo": "musica/misterio_v1.mp3",
+        "duracion": 181.9
+      },
+      {
+        "n": 2,
+        "archivo": "musica/misterio_v2.mp3",
+        "duracion": 178.0
+      }
+    ],
+    "creditos": 3600,
+    "estilo_suno": "Cinematic orchestral underscore at 70 BPM with restrained slow pulse, sparse minor-key cello and low felt piano, soft pizzicato strings and distant timpani swells; verse-like bed stays steady throughout with subtle left-behind motion, occasional rising harmonic turns, and loop-friendly tailing sustain. Dry close-mic cello, roomy piano, faint ticking percussion texture, elegant low-end, dark-curious and narrator-friendly mix., cello, dynamics, slow, low, steady, soft",
+    "elegida": 1
+  },
+  "tranquilo": {
+    "prompt": "Instrumental underscore for a documentary narration. No vocals, no drum kit, no build-ups or drops, steady dynamics so a narrator's voice sits clearly on top, loop-friendly ending. Reflective and warm, 19th-century story of a survivor, slow tempo around 65 BPM, gentle felt piano and soft string pads, solo cello answering the piano, light celesta touches. Calm, hopeful and intimate, no sadness or melodrama.",
+    "tarea": "33963de6-d255-4ced-8247-a9b48af74ccb",
+    "fecha": "2026-10-02T15:48:48",
+    "prompt_enviado": "Instrumental underscore for a documentary narration. No vocals, no drum kit, no build-ups or drops, steady dynamics so a narrator's voice sits clearly on top, loop-friendly ending. Reflective and warm, 19th-century story of a survivor, slow tempo around 65 BPM, gentle felt piano and soft string pads, solo cello answering the piano, light celesta touches. Calm, hopeful and intimate, no sadness or melodrama.",
+    "versiones": [
+      {
+        "n": 1,
+        "archivo": "musica/tranquilo_v1.mp3",
+        "duracion": 188.8
+      },
+      {
+        "n": 2,
+        "archivo": "musica/tranquilo_v2.mp3",
+        "duracion": 180.0
+      }
+    ],
+    "creditos": 3600,
+    "estilo_suno": "Delicate documentary underscore, reflective chamber neoclassical at a slow 65 BPM with steady dynamics and a gentle flowing pulse; verse-like openings on felt piano and soft string pads, solo cello answering each piano phrase, pre-chorus feel stays restrained with celesta sparkles and sustained harmony, final stretch keeps the same calm level for a seamless loop. Close, intimate mix with warm mids, airy top, and plenty of narration space; subtle room tone, soft pedal noise, no drama, no swell, warm, dynamics, light, steady, cello, slow, soft, gentle"
+  },
+  "alegre": {
+    "prompt": "Instrumental underscore for a documentary narration. No vocals, no drum kit, no build-ups or drops, steady dynamics so a narrator's voice sits clearly on top, loop-friendly ending. 1850s Chile, a stagecoach driver on the road from Valparaiso to Santiago: light folk feel, acoustic guitar and bright plucked strings, pizzicato strings, soft hand percussion with a trotting-horse rhythm, around 100 BPM. Optimistic, sense of travel and open landscapes, never comic.",
+    "tarea": "12ee2d59-6b5a-4b9b-8565-f3eac6f87b76",
+    "fecha": "2026-10-02T15:51:44",
+    "prompt_enviado": "Instrumental underscore for a documentary narration. No vocals, no drum kit, no build-ups or drops, steady dynamics so a narrator's voice sits clearly on top, loop-friendly ending. 1850s Chile, a stagecoach driver on the road from Valparaiso to Santiago: light folk feel, acoustic guitar and bright plucked strings, pizzicato strings, soft hand percussion with a trotting-horse rhythm, around 100 BPM. Optimistic, sense of travel and open landscapes, never comic.",
+    "versiones": [
+      {
+        "n": 1,
+        "archivo": "musica/alegre_v1.mp3",
+        "duracion": 153.9
+      },
+      {
+        "n": 2,
+        "archivo": "musica/alegre_v2.mp3",
+        "duracion": 155.9
+      }
+    ],
+    "creditos": 3600,
+    "estilo_suno": "Light folk underscore, around 100 BPM, with a trotting pulse from acoustic guitar, bright plucked strings, pizzicato strings, and soft hand percussion; verse-like sections stay sparse for narration, then a gentle middle passage adds a wider string bed before settling back to the same calm pattern. Subtle rhythmic swells, finger squeaks, and a soft loop tail. Warm, open, documentary-ready mix, comic, dynamics, soft, folk, light, steady, acoustic, bright"
+  }
+}

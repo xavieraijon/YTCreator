@@ -1,0 +1,226 @@
+<div class="revision">
+  <header class="cabeza">
+    <div class="cabeza__titulo">
+      <mat-icon>rate_review</mat-icon>
+      <strong>Modo revisión</strong>
+      @if (vista() === 'revisar' && total()) {
+        <span class="secundario">{{ indice() + 1 }} de {{ total() }} · {{ hechas() }} revisadas</span>
+      }
+    </div>
+    @if (vista() === 'revisar') {
+      <nav class="filtros">
+        <button type="button" [class.activo]="filtro() === 'rehechas'" (click)="elegirFiltro('rehechas')">
+          Rehechas <span>{{ cuentas().rehechas }}</span></button>
+        <button type="button" [class.activo]="filtro() === 'sin_revisar'" (click)="elegirFiltro('sin_revisar')">
+          Sin revisar <span>{{ cuentas().sin_revisar }}</span></button>
+        <button type="button" [class.activo]="filtro() === 'mal'" (click)="elegirFiltro('mal')">
+          Marcadas mal <span>{{ cuentas().mal }}</span></button>
+        <button type="button" [class.activo]="filtro() === 'todas'" (click)="elegirFiltro('todas')">
+          Todas <span>{{ cuentas().todas }}</span></button>
+      </nav>
+    } @else {
+      <button mat-button type="button" (click)="vista.set('revisar')"><mat-icon>arrow_back</mat-icon>Volver a revisar</button>
+    }
+    <button mat-icon-button type="button" (click)="cerrar()" aria-label="Cerrar (Esc)"><mat-icon>close</mat-icon></button>
+  </header>
+
+  @if (tareasEnMarcha().length) {
+    <section class="en-marcha" aria-live="polite">
+      @for (t of tareasEnMarcha(); track t.id) {
+        <div class="en-marcha__fila">
+          <mat-icon class="girando">progress_activity</mat-icon>
+          <strong>{{ t.titulo }}</strong>
+          @if (t.cuantas) {
+            <span class="secundario">{{ t.cuantas }} {{ t.cuantas === 1 ? 'imagen' : 'imágenes' }}</span>
+          }
+          <span class="secundario en-marcha__detalle">{{ t.detalle }}</span>
+          @if (t.porcentaje !== null) {
+            <mat-progress-bar mode="determinate" [value]="t.porcentaje" />
+          } @else {
+            <mat-progress-bar mode="indeterminate" />
+          }
+        </div>
+      }
+    </section>
+  }
+
+  @if (vista() === 'revisar') {
+    @if (total()) {
+      <mat-progress-bar class="avance" mode="determinate" [value]="(100 * hechas()) / total()" />
+    }
+    <main class="cuerpo">
+      @if (actual(); as img) {
+        <div class="lienzo" [class.lienzo--doble]="!!anterior()">
+          @for (x of [img]; track x.ident + (x.revision?.fecha ?? '')) {
+            @if (anterior(); as a) {
+              <figure>
+                <img [src]="url(a)" [alt]="x.ident + ' anterior'" />
+                <figcaption>Anterior <kbd>A</kbd> quedarme con esta</figcaption>
+              </figure>
+            }
+            <figure>
+              <img [src]="url(x.ruta)" [alt]="x.ident" />
+              @if (anterior()) {
+                <figcaption>Nueva</figcaption>
+              }
+            </figure>
+          }
+        </div>
+        <aside class="ficha">
+          <div class="ficha__cabeza">
+            <strong class="ficha__id">{{ img.ident }}</strong>
+            <span class="chip" [class.chip--pago]="img.motor === 'ai33'">{{ img.motor === 'ai33' ? 'de pago' : 'gratis' }}</span>
+            @if (rehaciendose().has(img.ident)) {
+              <span class="chip chip--rehaciendo"><mat-icon class="girando">progress_activity</mat-icon>Rehaciéndose</span>
+            } @else if (img.revision; as r) {
+              <span class="chip" [class]="'chip chip--' + r.estado">
+                {{ r.estado === 'mal' ? 'Marcada mal' : r.estado === 'rehecha' ? 'Rehecha: revísala' : 'Bien' }}
+              </span>
+            }
+          </div>
+          @if (img.voz) {
+            <p class="voz"><mat-icon>record_voice_over</mat-icon><span>«{{ img.voz }}»</span></p>
+          }
+          @if (img.revision?.motivo && img.revision?.estado !== 'bien') {
+            <p class="motivo"><mat-icon>report</mat-icon><span>{{ img.revision?.motivo }}</span></p>
+          }
+
+          @if (!marcando()) {
+            <div class="acciones">
+              <button mat-flat-button type="button" class="boton-bien" [disabled]="ocupado()" (click)="bien()">
+                <mat-icon>check</mat-icon>Está bien <kbd>→</kbd>
+              </button>
+              <button mat-flat-button type="button" class="boton-mal" [disabled]="ocupado()" (click)="abrirMarca()">
+                <mat-icon>close</mat-icon>Está mal <kbd>M</kbd>
+              </button>
+            </div>
+            <div class="acciones acciones--secundarias">
+              <button mat-button type="button" (click)="mover(-1)" [disabled]="indice() === 0"><kbd>←</kbd> Anterior</button>
+              <button mat-button type="button" (click)="mover(1)" [disabled]="indice() >= total() - 1">Saltar <kbd>S</kbd></button>
+              @if (anterior()) {
+                <button mat-button type="button" [disabled]="ocupado()" (click)="quedarmeAnterior()">
+                  <mat-icon>history</mat-icon>Quedarme con la anterior <kbd>A</kbd>
+                </button>
+              }
+            </div>
+          } @else {
+            <div class="marca">
+              <p class="marca__titulo">¿Qué falla? <span class="secundario">(teclas 1-7, Enter para guardar)</span></p>
+              <div class="etiquetas">
+                @for (e of etiquetas; track e.clave; let n = $index) {
+                  <button type="button" class="etiqueta" [class.etiqueta--activa]="elegidas().has(e.clave)"
+                          (click)="alternarEtiqueta(e.clave)">
+                    <kbd>{{ n + 1 }}</kbd>{{ e.texto }}
+                  </button>
+                }
+              </div>
+              <input #campo type="text" class="marca__texto" placeholder="Precisa si quieres: «deberían ser 6 caballos, delante»"
+                     [value]="texto()" (input)="texto.set($any($event.target).value)" />
+              <div class="acciones">
+                <button mat-button type="button" (click)="cerrarMarca()">Cancelar <kbd>Esc</kbd></button>
+                <button mat-flat-button type="button" class="boton-mal" [disabled]="ocupado()" (click)="guardarMal()">
+                  Marcar y seguir <kbd>Enter</kbd>
+                </button>
+              </div>
+            </div>
+          }
+          @if (error(); as e) {
+            <p class="error"><mat-icon>warning</mat-icon>{{ e }}</p>
+          }
+        </aside>
+      } @else if (video()) {
+        <div class="vacio">
+          <mat-icon>task_alt</mat-icon>
+          <p>No hay imágenes en «{{ filtro() === 'rehechas' ? 'Rehechas' : filtro() === 'sin_revisar' ? 'Sin revisar'
+            : filtro() === 'mal' ? 'Marcadas mal' : 'Todas' }}».</p>
+        </div>
+      }
+    </main>
+  } @else {
+    <main class="lote">
+      <div class="lote__cabeza">
+        <div>
+          <h2>Rehacer las marcadas ({{ bandeja().length }})</h2>
+          <p class="secundario">
+            Elige el servicio de cada una (se propone el de pago si el fallo es de anatomía, cantidad o personaje) y, si quieres,
+            pide a Claude que corrija todas las descripciones de una vez con tus motivos.
+          </p>
+        </div>
+        <button mat-stroked-button type="button" [disabled]="corrigiendo() || !bandeja().length" (click)="corregirConClaude()">
+          <mat-icon [class.girando]="corrigiendo()">{{ corrigiendo() ? 'progress_activity' : 'auto_awesome' }}</mat-icon>
+          {{ corrigiendo() ? 'Claude corrigiendo…' : 'Corregir las descripciones con Claude (gratis)' }}
+        </button>
+      </div>
+      @if (avanceClaude(); as a) {
+        <div class="avance-claude">
+          @if (a.porcentaje !== null) {
+            <mat-progress-bar mode="determinate" [value]="a.porcentaje" />
+          } @else {
+            <mat-progress-bar mode="indeterminate" />
+          }
+          <p class="secundario">{{ a.porcentaje !== null ? a.porcentaje + ' % · ' : '' }}{{ a.etapa }} — puedes cerrar la
+            revisión: sigue en segundo plano (panel de Tareas) y las propuestas quedan guardadas.</p>
+        </div>
+      }
+      <ul class="lista">
+        @for (img of bandeja(); track img.ident) {
+          @let c = correcciones()[img.ident];
+          <li class="fila">
+            <img [src]="url(img.ruta)" [alt]="img.ident" />
+            <div class="fila__info">
+              <div class="fila__cabeza">
+                <strong>{{ img.ident }}</strong>
+                <div class="servicio">
+                  <button type="button" [class.activo]="servicios()[img.ident] !== 'ai33'" (click)="cambiarServicio(img.ident, 'klein')">Gratis</button>
+                  <button type="button" class="pago" [class.activo]="servicios()[img.ident] === 'ai33'" (click)="cambiarServicio(img.ident, 'ai33')">De pago</button>
+                </div>
+              </div>
+              <p class="motivo"><mat-icon>report</mat-icon>{{ img.revision?.motivo }}</p>
+              @if (c) {
+                <label class="usar"><input type="checkbox" [checked]="c.usar" (change)="alternarUso(img.ident)" />
+                  Usar la descripción de Claude</label>
+                @if (c.explicacion) {
+                  <p class="explicacion"><mat-icon>auto_awesome</mat-icon>{{ c.explicacion }}</p>
+                }
+                @if (c.usar) {
+                  <textarea rows="3" [value]="c.prompt" (input)="editarPrompt(img.ident, $any($event.target).value)"></textarea>
+                }
+              }
+            </div>
+          </li>
+        } @empty {
+          <li class="vacio"><mat-icon>task_alt</mat-icon><p>{{ rehaciendose().size
+            ? 'Las marcadas se están rehaciendo: revísalas en «Rehechas» cuando lleguen.'
+            : 'No hay imágenes marcadas como mal.' }}</p></li>
+        }
+      </ul>
+      @if (error(); as e) {
+        <p class="error"><mat-icon>warning</mat-icon>{{ e }}</p>
+      }
+    </main>
+  }
+
+  <footer class="bandeja">
+    @if (aviso(); as a) {
+      <span class="bandeja__aviso"><mat-icon>info</mat-icon>{{ a }}</span>
+    } @else if (vista() === 'revisar') {
+      <span class="secundario atajos"><kbd>→</kbd> bien · <kbd>M</kbd> mal · <kbd>←</kbd> atrás · <kbd>S</kbd> saltar ·
+        <kbd>A</kbd> anterior · <kbd>Esc</kbd> cerrar</span>
+    }
+    <span class="hueco"></span>
+    @if (vista() === 'revisar') {
+      <span class="bandeja__cuenta"><mat-icon>inbox</mat-icon>Bandeja: <strong>{{ bandeja().length }}</strong> marcadas mal
+        @if (rehaciendose().size) { · {{ rehaciendose().size }} rehaciéndose }</span>
+      <button mat-flat-button type="button" [disabled]="!bandeja().length" (click)="abrirLote()">
+        <mat-icon>autorenew</mat-icon>Rehacer {{ bandeja().length }}
+      </button>
+    } @else {
+      @let r = resumenLote();
+      <span class="bandeja__cuenta">{{ r.klein }} gratis · {{ r.ai33 }} de pago
+        @if (r.ai33) { (≈ {{ miles(r.creditos) }} créditos) }</span>
+      <button mat-flat-button type="button" [disabled]="ocupado() || corrigiendo() || !bandeja().length" (click)="rehacerLote()">
+        <mat-icon>autorenew</mat-icon>Rehacer {{ bandeja().length }}
+      </button>
+    }
+  </footer>
+</div>

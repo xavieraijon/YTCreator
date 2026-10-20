@@ -1,0 +1,167 @@
+{
+  "tipo": "short",
+  "formato": "vertical",
+  "titulo": "¿Sabías que en Venus el día es eterno?",
+  "titulos": [
+    "¿Sabías esto de Venus? 🤯",
+    "En Venus, mañana llega en 4 meses"
+  ],
+  "titulo_pantalla": "¿Sabías esto de *Venus*?",
+  "musica": "alegre",
+  "personajes": {
+    "venus": "a round cartoon planet with a thick smooth dark outline, filled with flat pale orange, with a few soft curved cream-colored cloud bands across it, no rings, no moons, no face",
+    "silla": "a small blue folding camping stool without armrests",
+    "paisaje": "the rocky surface of Venus: reddish-orange ground with a few rounded rocks, a flat horizon and a thick cloudy yellowish sky",
+    "paisaje_noche": "the rocky surface of Venus at night: reddish-orange ground with a few rounded rocks, a flat horizon and a thick cloudy dark purple night sky, no sun, no moon"
+  },
+  "descripcion": "Tok viaja a Venus para ver amanecer y descubre que allí la espera es eterna: Venus tarda unos 243 días terrestres en girar una vez sobre sí mismo y solo unos 225 en dar la vuelta al Sol. Su día (una vuelta completa) dura más que su año. De un amanecer al siguiente pasan unos 117 días, casi cuatro meses. Y cuando por fin amanece, el Sol sale por el oeste: Venus gira al revés que casi todos los planetas.",
+  "etiquetas": [
+    "venus",
+    "un día en venus",
+    "sistema solar",
+    "planetas",
+    "astronomía",
+    "curiosidades del espacio",
+    "rotación de venus",
+    "ciencia para todos",
+    "los viajes de tok",
+    "curiosidades"
+  ],
+  "fuentes": [
+    "NASA · Venus Facts: https://science.nasa.gov/venus/venus-facts/",
+    "NASA · Ficha de Venus (litografía): https://www.nasa.gov/wp-content/uploads/2009/12/venus_lithograph.pdf",
+    "BIRA-IASB · Venus: backwards rotation and orbital period: https://www.aeronomie.be/en/encyclopedia/venus-backwards-rotation-and-orbital-period",
+    "ESA · Venus Express, Could Venus be shifting gear?: https://www.esa.int/Science_Exploration/Space_Science/Venus_Express/Could_Venus_be_shifting_gear"
+  ],
+  "comentario_fijado": "Si en tu planeta \"mañana\" fuera dentro de casi cuatro meses, ¿qué dejarías para mañana? Toc-toc.",
+  "escenas": [
+    {
+      "musica": "alegre",
+      "texto": "[excited] ¡En Venus, un día dura más que un año!{img} [curious] Tok llama a la puerta:{toc_toc}{img} [cheerfully] ¡Claro que se puede, Tok! [excited] ¿Vienes a ver amanecer?{tok_pues_si}",
+      "imagenes": [
+        {
+          "prompt": "{venus} large and centered in the middle of the frame, a small round white clock with only two hands and no numbers and a small blank white calendar page without numbers floating at its left side, soft dark blue space background with a few small simple stars, vertical composition, empty space in the top third for a big title, nothing near the right edge",
+          "movimiento": "zoom_in",
+          "imagen": "videos/S001-venus-dia-ano/google/01-1.jpeg"
+        },
+        {
+          "prompt": "cheerful {tok}, three-quarter view turned to the left with both eyes visible, knocking with a raised white glove fist on a lone closed purple wooden door with a round yellow knob, the door standing by itself without any walls at Tok's left side, small motion lines next to the fist, on {paisaje_noche}, vertical composition, Tok large and centered, plain reddish-orange ground filling the lower third, nothing near the right edge",
+          "personaje": true,
+          "movimiento": "zoom_out",
+          "video": "videos/S001-venus-dia-ano/google/anim01-2.mp4",
+          "desde": 0
+        },
+        {
+          "prompt": "happy smiling {tok} with tiny black sunglasses resting on top of its head, front view, sitting in {silla}, facing the viewer, on {paisaje_noche}, vertical composition, Tok large and centered, plain reddish-orange ground filling the lower third, nothing near the right edge",
+          "personaje": true,
+          "movimiento": "zoom_in",
+          "imagen": "videos/S001-venus-dia-ano/google/01-3.jpeg"
+        }
+      ]
+    },
+    {
+      "texto": "[playfully] Pasa una semana... pasa un mes... [surprised] ¡y sigue de noche!{img} [curious] ¿Se habrá roto el reloj? [laughs] ¡No, Tok!{img} [explaining] El problema es Venus, que gira sobre sí mismo muy... muy despacio.{img} [curious] ¿Sabes cuánto tarda en dar una vuelta? [excited] ¡Doscientos cuarenta y tres días!{ping:0}{img} [explaining] Y en dar la vuelta al Sol, doscientos veinticinco.{img} [amazed] ¡Su día dura más que su año!{boing}",
+      "imagenes": [
+        {
+          "prompt": "bored {tok} with half-closed droopy eyes and a flat bored mouth, front view, sitting still in {silla} with both glove hands resting on its knees, a few blank torn calendar pages without numbers on the ground beside the stool, on {paisaje_noche}, vertical composition, Tok large and centered, plain reddish-orange ground filling the lower third, nothing near the right edge",
+          "personaje": true,
+          "movimiento": "zoom_in",
+          "imagen": "videos/S001-venus-dia-ano/google/02-1.jpeg"
+        },
+        {
+          "prompt": "very worried and anxious {tok} with a big downturned frowning mouth, raised worried eyebrow lines above both round eyes, a drop of sweat on its head, front view, upper body, looking down at the big clock on its chest, the clock face with only two hands and no numbers, the hands blurred with spinning motion lines, soft yellow background, vertical composition, Tok large and centered, plain white oval feet with no faces, nothing near the right edge",
+          "personaje": true,
+          "movimiento": "zoom_in",
+          "video": "videos/S001-venus-dia-ano/google/anim02-2.mp4",
+          "desde": 0
+        },
+        {
+          "prompt": "{venus} large and centered in the middle of the frame, a big friendly green snail with a round yellow spiral shell, about a quarter of the planet's size, crawling slowly on top of the planet along a thick curved white arrow, soft dark blue space background with a few small simple stars, vertical composition, nothing near the right edge",
+          "movimiento": "izquierda",
+          "imagen": "videos/S001-venus-dia-ano/google/02-3.jpeg"
+        },
+        {
+          "prompt": "{venus} large and centered in the middle of the frame, one thick white circular arrow going all the way around it, a trail of small blank white calendar pages without numbers following the arrow, soft dark blue space background with a few small simple stars, vertical composition, nothing near the right edge",
+          "movimiento": "zoom_out",
+          "rotulo": "243 días",
+          "imagen": "videos/S001-venus-dia-ano/google/02-4.jpeg"
+        },
+        {
+          "prompt": "a small bright yellow cartoon sun with short rounded rays and no face in the center of the frame, a large thin white circular orbit line around it, well inside the frame, a small {venus} sitting at the bottom-left of the orbit line with a small white arrow along the orbit, soft dark blue space background with a few small simple stars, vertical composition, nothing near the right edge",
+          "movimiento": "arriba",
+          "rotulo": "225 días",
+          "imagen": "videos/S001-venus-dia-ano/google/02-5.jpeg"
+        },
+        {
+          "prompt": "a classic golden two-pan balance scale seen from the front, large and centered, clearly unbalanced: the LEFT pan is DOWN, almost touching the table, and holds a small {venus} (a plain ball with no rings); the RIGHT pan is UP high and holds only a thin white ring shape; soft lilac background, simple flat table line, vertical composition, nothing near the right edge",
+          "movimiento": "zoom_in",
+          "rotulo": "Día > año",
+          "imagen": "videos/S001-venus-dia-ano/google/02-6.jpeg"
+        }
+      ]
+    },
+    {
+      "texto": "[explaining] Eso sí, de un amanecer al siguiente pasan menos días:{img} [excited] ¡unos ciento diecisiete, casi cuatro meses!{img} [playfully] Y Tok tiene una idea genial:{img} [excited] ¡dejar los deberes para mañana! [laughs] Buen intento, Tok.{remate_chiste}",
+      "imagenes": [
+        {
+          "prompt": "proud {tok} with a confident smile, front view, standing with one white glove finger raised like a teacher, floating at its left side a simple drawing of two small yellow half suns on a straight dark horizon line joined by a curved white arrow, soft light blue background, vertical composition, Tok large and centered, nothing near the right edge",
+          "personaje": true,
+          "movimiento": "derecha",
+          "imagen": "videos/S001-venus-dia-ano/google/03-1.jpeg"
+        },
+        {
+          "prompt": "a big blank white wall calendar without numbers or letters, large and centered in the middle of the frame, hanging on a soft yellow wall, four blank white pages flying off it, one small orange half sun drawn on the last page, vertical composition, nothing near the right edge",
+          "movimiento": "zoom_out",
+          "rotulo": "117 días",
+          "imagen": "videos/S001-venus-dia-ano/google/03-2.jpeg"
+        },
+        {
+          "prompt": "sly {tok} with a mischievous grin and narrowed eyes, front view, its antenna light bulb glowing bright yellow, hugging a tall stack of plain notebooks with red, green and blue covers and no letters, soft yellow background, vertical composition, Tok large and centered, nothing near the right edge",
+          "personaje": true,
+          "movimiento": "zoom_in",
+          "imagen": "videos/S001-venus-dia-ano/google/03-3.jpeg"
+        },
+        {
+          "prompt": "smug relaxed {tok} with a cheeky smile, front view, leaning back in {silla} with tiny black sunglasses resting on top of its head, lazily pushing a stack of plain red, green and blue notebooks without letters away with one foot, Tok alone in the scene, no other characters, on {paisaje_noche}, vertical composition, Tok large and centered, plain reddish-orange ground filling the lower third, nothing near the right edge",
+          "personaje": true,
+          "movimiento": "izquierda",
+          "imagen": "videos/S001-venus-dia-ano/google/03-4.jpeg"
+        }
+      ]
+    },
+    {
+      "musica": "misterio",
+      "texto": "[excited] ¡Por fin, casi dos meses después, amanece!{img} [surprised] ¡Pero Tok, miras hacia el lado equivocado!{record_scratch}{img} [amazed] ¡Aquí el Sol sale por el oeste: Venus gira al revés!{img} [playfully] Tok gira la silla y espera otra vez. [excited] Ya lo sabes:",
+      "imagenes": [
+        {
+          "prompt": "patient {tok}, three-quarter view turned to the right with both eyes visible, sitting in {silla}, looking at an empty horizon on the right, while a soft orange sunrise glow rises from the horizon on the left behind Tok's back, on {paisaje_noche}, vertical composition, Tok large and centered, plain reddish-orange ground filling the lower third, nothing near the right edge",
+          "personaje": true,
+          "movimiento": "zoom_in",
+          "rotulo": "58 días de noche",
+          "imagen": "videos/S001-venus-dia-ano/google/04-1.jpeg"
+        },
+        {
+          "prompt": "shocked {tok} with huge round eyes and a wide open mouth, both hands on its cheeks, three-quarter view with both eyes visible, sitting in {silla}, a big half yellow sun rising from the horizon right behind Tok, on {paisaje}, vertical composition, Tok large and centered, plain reddish-orange ground filling the lower third, nothing near the right edge",
+          "personaje": true,
+          "movimiento": "zoom_out",
+          "video": "videos/S001-venus-dia-ano/google/anim04-2.mp4",
+          "desde": 1.0
+        },
+        {
+          "prompt": "{venus} large and centered in the middle of the frame, a thick white curved arrow around it spinning clockwise, beside it at its left a tiny round blue and green planet with a tiny white arrow spinning counterclockwise, soft dark blue space background with a few small simple stars, vertical composition, nothing near the right edge",
+          "movimiento": "derecha",
+          "rotulo": "Sale por el oeste",
+          "imagen": "videos/S001-venus-dia-ano/google/04-3.jpeg"
+        },
+        {
+          "prompt": "resigned {tok} with droopy eyes and a small sigh, three-quarter view with both eyes visible, walking to the left and pulling {silla} behind it with one hand, the other arm hanging down, a half yellow sun rising on the horizon at the left, on {paisaje}, vertical composition, Tok large and centered, plain reddish-orange ground filling the lower third, nothing near the right edge",
+          "personaje": true,
+          "movimiento": "izquierda",
+          "imagen": "videos/S001-venus-dia-ano/google/04-4.jpeg"
+        }
+      ]
+    }
+  ],
+  "voz": "ai33:elevenlabs_L7eBLM3xgOVCCmqe2GAd",
+  "voz_archivo": "videos/S001-venus-dia-ano/voz/web.mp3"
+}

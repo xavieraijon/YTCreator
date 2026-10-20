@@ -1,0 +1,64 @@
+{
+  "fase": "D",
+  "completadas": [
+    "A",
+    "B",
+    "C"
+  ],
+  "tipo": "largo",
+  "tema": "Que le pasa a la mente cuando nos quedamos en blanco mirando en un punto fijo?",
+  "pilar": "ciencia",
+  "notas": "Creado desde la UI el 2026-10-03. Tema pedido: Que le pasa a la mente cuando nos quedamos en blanco mirando en un punto fijo?. Fase A (03/10): cuota Cloudflare 10.000 neuronas libres, Azure 500.000 caracteres, ai33 3.119.373 créditos; probar_kit.py no se puede lanzar desde el chat de la UI (no está entre las herramientas permitidas). Fase B: saturación medida el 03/10 (ver ideas.md); propuestos 3 enfoques, pendiente de elección y duración.",
+  "creado_desde": "UI",
+  "pasos_hechos": [
+    "b-hueco",
+    "b-temas"
+  ],
+  "propuesta_elegida": 1,
+  "titulo_provisional": "¿Por qué nos quedamos en blanco? (Parte del cerebro se duerme)",
+  "enfoque": "Al quedarnos mirando un punto fijo, zonas del cerebro producen las ondas lentas del sueño aunque la persona sigue despierta: el llamado sueño local, medido en 2021.",
+  "gancho": "En dos mil veintiuno, un equipo de investigadores en París registró algo que parecía imposible: personas despiertas, con los ojos abiertos, con trozos del cerebro dormidos.",
+  "duracion_objetivo": 10,
+  "hueco": "VERDE (2026-10-03): 6 clones, sin ráfaga reciente",
+  "aprobaciones": {
+    "b-aprobar": {
+      "fecha": "2026-10-03T20:41:44",
+      "desde": "UI",
+      "comentario": "Enfoque 1: «¿Por qué nos quedamos en blanco? (Parte del cerebro se duerme)», 10 min"
+    },
+    "c-aprobar": {
+      "fecha": "2026-10-03T21:56:05",
+      "desde": "UI"
+    },
+    "d-aprobar-empaquetado": {
+      "fecha": "2026-10-03T22:00:45",
+      "desde": "UI",
+      "comentario": "Título 1: «¿Por qué nos quedamos en blanco? (Parte del cerebro duerme)»"
+    }
+  },
+  "historial_fases": [
+    {
+      "de": "B",
+      "a": "C",
+      "fecha": "2026-10-03T20:41:44",
+      "desde": "UI"
+    },
+    {
+      "de": "C",
+      "a": "D",
+      "fecha": "2026-10-03T21:56:05",
+      "desde": "UI"
+    }
+  ],
+  "titulo_elegido": "¿Por qué nos quedamos en blanco? (Parte del cerebro duerme)",
+  "cambios_pedidos": [
+    {
+      "punto": "d-aprobar-escaleta",
+      "texto": "Veo que hay 7 avisos, entiendo que son avisos negativos? Que hacemos con ellos?",
+      "fecha": "2026-10-03T22:12:24",
+      "desde": "UI",
+      "atendido": "2026-10-03",
+      "respuesta": "No eran fallos: 4 eran instrucciones para el guionista (ya aplicadas en la escaleta, ahora como «Notas para el guionista») y el bucle «¿vacío u olvido?» queda abierto a propósito. Los otros dos se han resuelto: la frase de William James se ha comprobado en el original de 1890 y se ha corregido (no «sospechaba» la mente en blanco: dijo que los huecos de la conciencia no se notan desde dentro), y el cierre anuncia «El hombre que no podía olvidar», el mismo que anunciaba el 001. Avisos pendientes: ninguno."
+    }
+  ]
+}

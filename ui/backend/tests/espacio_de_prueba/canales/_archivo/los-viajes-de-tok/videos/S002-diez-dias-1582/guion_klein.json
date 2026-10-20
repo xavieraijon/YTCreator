@@ -1,0 +1,158 @@
+{
+  "tipo": "short",
+  "formato": "vertical",
+  "titulo": "Los 10 días que nunca existieron",
+  "titulos": [
+    "Del jueves 4 al viernes 15 🤯",
+    "1582: el año que perdió 10 días"
+  ],
+  "titulo_pantalla": "¿Y los *10 días*?",
+  "musica": "alegre",
+  "personajes": {
+    "castilla_1582": "a quiet Castilian village street in autumn 1582: simple houses of warm golden stone with small wooden balconies and terracotta tile roofs, a dusty ochre ground and a soft pale blue autumn sky",
+    "habitacion": "a simple 16th-century Castilian bedroom with whitewashed walls, a small wooden shuttered window and a warm brown wooden floor",
+    "calendario": "a big old wall calendar made of a thick pad of cream parchment tear-off pages hanging from a dark wooden bar by a string, the pages completely blank without numbers or letters",
+    "cama": "a small wooden bed with a patchwork blanket of red and yellow squares",
+    "gorro": "a floppy blue nightcap with a white pompom",
+    "julio_cesar": "a round cartoon Roman emperor with a green laurel crown, a white toga with a red sash and a friendly proud face",
+    "papa": "a round friendly cartoon old pope with a short white beard, a small white round skullcap, a long white robe with a short red cape over the shoulders and a golden cross on the chest",
+    "rey": "a thin cartoon Spanish king of the 1500s with a short pointed grey-blond beard, an all-black outfit with a white ruff collar, a golden chain on the chest and a small golden crown",
+    "convento": "a simple Castilian convent of warm golden sandstone with a small bell gable holding one bronze bell, a small arched wooden door and a few small windows, beside a calm river crossed by an old stone bridge with many arches"
+  },
+  "descripcion": "En España, al jueves 4 de octubre de 1582 le siguió el viernes 15: los días del 5 al 14 no existieron. El calendario de Julio César contaba el año como 365,25 días, pero el año solar dura unos 365,2422: sobraban unos 11 minutos al año, y desde el Concilio de Nicea (325) el desfase ya sumaba 10 días y descolocaba la Pascua. El papa Gregorio XIII lo corrigió con la bula Inter gravissimas y en España lo aplicó Felipe II. Nadie perdió días de vida: solo cambió el número de la fecha, y la semana siguió en orden (del jueves al viernes). Santa Teresa de Jesús murió en Alba de Tormes la noche del 4 de octubre y fue enterrada al día siguiente, que ya era 15; por eso su fiesta es el 15 de octubre.",
+  "etiquetas": [
+    "calendario gregoriano",
+    "1582",
+    "10 días que no existieron",
+    "felipe ii",
+    "gregorio xiii",
+    "santa teresa de jesús",
+    "historia de españa",
+    "curiosidades de historia",
+    "los viajes de tok",
+    "curiosidades"
+  ],
+  "fuentes": [
+    "Archivo Histórico Provincial de Sevilla (Junta de Andalucía) · Octubre de 1582: los 10 días que nunca existieron: https://www.juntadeandalucia.es/organismos/culturaydeporte/areas/cultura/archivos/archivos-consejeria/archivo-historico-provincial-sevilla/ahps-recomienda/paginas/documento-ahps-ene-2012.html",
+    "Britannica · Inter gravissimas: https://www.britannica.com/topic/Inter-gravissimas",
+    "Wikipedia · Inter gravissimas: https://en.wikipedia.org/wiki/Inter_gravissimas",
+    "Wikipedia · Gregorian calendar: https://en.wikipedia.org/wiki/Gregorian_calendar",
+    "Catholic Encyclopedia (New Advent) · St. Teresa of Jesus: https://www.newadvent.org/cathen/14515b.htm",
+    "Carmelitas Descalzas de Alba de Tormes · Exposición pública de Santa Teresa de Jesús: https://carmelitasalba.org/exposicion-publica-de-santa-teresa-de-jesus/",
+    "Universidad de Salamanca (Biblioteca General Histórica) · El origen salmantino del Calendario Gregoriano: https://bibliotecahistoricausal.wordpress.com/2020/03/30/el-origen-salmantino-del-calendario-gregoriano/",
+    "Wikipedia · Teresa de Jesús: https://es.wikipedia.org/wiki/Teresa_de_Jes%C3%BAs"
+  ],
+  "comentario_fijado": "Si mañana te saltaras diez días de golpe, ¿qué preferirías saltarte: exámenes, lunes o la espera hasta tu cumpleaños? Toc-toc.",
+  "escenas": [
+    {
+      "musica": "alegre",
+      "texto": "[amazed] En España, un día, del cuatro se saltó al quince.{img} Castilla, año mil quinientos ochenta y dos. Tok llama a la puerta:{toc_toc}{img} [cheerfully] ¡Pasa, Tok! Es jueves, cuatro de octubre.",
+      "imagenes": [
+        {
+          "prompt": "{calendario} hanging in the center of the frame on a soft yellow wall above a light brown wooden floor, its top page torn off and flying with motion lines, a big curved white arrow leaping from the top page over a thick bundle of blank pages, vertical composition, calendar large in the middle third, empty wall in the top third for a big title, nothing near the right edge",
+          "movimiento": "zoom_in"
+        },
+        {
+          "prompt": "cheerful {tok}, three-quarter view turned to the left with both eyes visible, knocking with one raised white glove fist on a big closed dark wooden door with round iron studs set in a golden stone house wall at Tok's left side, the other arm hanging down, small motion lines next to the fist, in {castilla_1582}, vertical composition, Tok large and centered, dusty ochre ground filling the lower third, nothing near the right edge",
+          "personaje": true,
+          "movimiento": "zoom_out"
+        },
+        {
+          "prompt": "happy smiling {tok}, front view, waving hello with one raised glove hand, the other arm hanging down, standing next to {calendario} hanging on the whitewashed wall at Tok's left side, inside {habitacion}, soft morning light, vertical composition, Tok large and centered, warm brown wooden floor filling the lower third, nothing near the right edge",
+          "personaje": true,
+          "movimiento": "zoom_in",
+          "rotulo": "Jueves 4 de octubre"
+        }
+      ]
+    },
+    {
+      "texto": "[playfully] Tok se va a dormir tan tranquilo...{img} [surprised] ¡Y se despierta el viernes quince!{record_scratch}{img} [laughs] No, Tok, no has dormido once días.{img} [amazed] ¡Es que diez días no existieron! ¿Por qué?",
+      "imagenes": [
+        {
+          "prompt": "sleepy {tok} with both eyes closed as two curved lines and a peaceful smile, front view, wearing {gorro}, lying in {cama} with the blanket pulled up to its chest and both glove hands resting on top of the blanket, a lit candle on the windowsill, a dark blue night with a crescent moon outside the window, inside {habitacion} at night with soft blue light, vertical composition, Tok and the bed large and centered, nothing near the right edge, no letters",
+          "personaje": true,
+          "movimiento": "zoom_in"
+        },
+        {
+          "prompt": "shocked {tok} with huge round eyes and a wide open mouth, three-quarter view turned to the left with both eyes visible, sitting up in {cama} with {gorro} askew, both glove hands on its cheeks, staring at {calendario} on the wall at its left, bright morning sunlight through the window, inside {habitacion}, vertical composition, Tok large and centered, nothing near the right edge",
+          "personaje": true,
+          "movimiento": "zoom_out",
+          "rotulo": "Viernes 15"
+        },
+        {
+          "prompt": "confused {tok} with a puzzled wavy mouth and one raised eyebrow line, front view, standing and wearing {gorro}, a short fluffy white cartoon beard stuck under its face, a small grey cobweb between its antenna and its head, both glove hands raised at shoulder height with palms up in a shrug, inside {habitacion}, soft morning light, vertical composition, Tok large and centered, warm brown wooden floor filling the lower third, nothing near the right edge",
+          "personaje": true,
+          "movimiento": "derecha"
+        },
+        {
+          "prompt": "{calendario} large and centered on a soft lilac wall, a thick bundle of blank pages from the middle of the pad bursting away and vanishing into sparkles and small white puffs of smoke, a light brown wooden floor strip at the bottom, vertical composition, calendar in the middle third, nothing near the right edge",
+          "movimiento": "zoom_in",
+          "rotulo": "10 días borrados"
+        }
+      ]
+    },
+    {
+      "texto": "[explaining] El calendario de Julio César se pasaba unos once minutos al año.{img} [playfully] Poca cosa... pero gota a gota, en mil doscientos años, sumó diez días.{img} [surprised] ¡Y la Pascua ya no cuadraba con el comienzo de la primavera!{img} [excited] Así que el papa Gregorio trece{img} y Felipe segundo los borraron de golpe.{ping}",
+      "imagenes": [
+        {
+          "prompt": "{julio_cesar}, front view, smiling proudly, holding up a small blank paper scroll in one hand, the other hand on his belly, beside him at his left a big round white clock with only two hands and no numbers, with a small red slice marked on its face, soft terracotta background, pale stone floor filling the lower third, vertical composition, character large and centered, nothing near the right edge",
+          "movimiento": "zoom_in",
+          "rotulo": "11 minutos al año"
+        },
+        {
+          "prompt": "close-up of an old brass tap sticking out of a golden stone wall, dripping tiny blank cream calendar pages instead of water drops, one tiny page falling in the air, into a wooden bucket overflowing with tiny blank calendar pages, tap and bucket large in the upper two thirds, soft light blue background, plain grey stone floor filling the lower third, vertical composition, nothing near the right edge",
+          "movimiento": "abajo",
+          "rotulo": "10 días de desfase"
+        },
+        {
+          "prompt": "surprised {tok} with big round eyes and an open round mouth, front view, both glove hands raised in surprise, standing next to a small clay pot with a spring flower sprout on the ground at its right side, looking up at a painted cartoon Easter egg flying away to the upper left along a curved white arrow, soft pale green background, light green grass ground filling the lower third, vertical composition, Tok large and centered, nothing near the right edge",
+          "movimiento": "izquierda",
+          "personaje": true
+        },
+        {
+          "prompt": "{papa}, front view, cheerful and determined, rubbing out the middle pages of {calendario} hanging on the wall at his left with a giant pink eraser held in both hands, pink eraser crumbs and small sparkles flying, soft golden-yellow background, pale stone floor filling the lower third, vertical composition, character large and centered, nothing near the right edge",
+          "movimiento": "zoom_out",
+          "rotulo": "Gregorio XIII"
+        },
+        {
+          "prompt": "{rey}, three-quarter view with both eyes visible, slamming down a big wooden royal stamp with a plain blank bottom onto a thick bundle of blank calendar pages lying on a wooden table in front of him, a big round puff of dust and blank pages bursting away with motion lines, soft red background, vertical composition, character large and centered, nothing near the right edge",
+          "movimiento": "derecha",
+          "rotulo": "Felipe II"
+        }
+      ]
+    },
+    {
+      "musica": "misterio",
+      "texto": "La noche del cuatro, en Alba de Tormes, murió Santa Teresa de Jesús.{img} [curious] ¿Y sabes cuándo la enterraron? Al día siguiente... que ya era quince.{impacto}{img} Por eso su fiesta es el quince de octubre.",
+      "imagenes": [
+        {
+          "prompt": "{convento} at night, one warm yellow lit window, a calm dark blue starry sky with a thin crescent moon, the dark river in front reflecting the lit window, no people, peaceful and respectful quiet mood, soft muted colors, vertical composition, convent and bell gable large in the middle of the frame, nothing near the right edge",
+          "movimiento": "zoom_in",
+          "rotulo": "Alba de Tormes"
+        },
+        {
+          "prompt": "the front of {convento} at soft dawn, pale pink and gold sky, the bronze bell in the bell gable ringing with small curved sound lines, a few dry autumn leaves drifting in the air, no people, no calendar, no text, calm and respectful mood, vertical composition, convent large and centered, nothing near the right edge",
+          "movimiento": "zoom_out",
+          "rotulo": "Del 4 al 15"
+        },
+        {
+          "prompt": "close-up of a small bunch of white and yellow flowers and a lit candle in a simple clay holder on a golden stone step in front of a closed arched wooden convent door, soft warm autumn morning light, a few golden autumn leaves, no people, peaceful and respectful mood, vertical composition, flowers and candle large in the center of the frame, nothing near the right edge",
+          "movimiento": "arriba",
+          "rotulo": "15 de octubre"
+        }
+      ]
+    },
+    {
+      "musica": "alegre",
+      "texto": "[playfully] Tok arranca la hoja del jueves:",
+      "imagenes": [
+        {
+          "prompt": "cheeky {tok} with a mischievous smile, three-quarter view turned to the left with both eyes visible, tearing the top blank page off {calendario} on the wall at its left with one glove hand, the other arm hanging down, the page flying with motion lines, inside {habitacion}, soft morning light, vertical composition, Tok large and centered, warm brown wooden floor filling the lower third, nothing near the right edge",
+          "personaje": true,
+          "movimiento": "zoom_in"
+        }
+      ]
+    }
+  ],
+  "voz": "ai33:elevenlabs_L7eBLM3xgOVCCmqe2GAd"
+}

@@ -1,0 +1,8 @@
+azure-cognitiveservices-speech==1.51.2
+fonttools==4.65.0
+numpy==2.5.3
+pillow==12.3.0
+python-dotenv==1.2.3
+requests==2.34.2
+# Sin versión fija: YouTube cambia a menudo y yt-dlp se pone al día con él (pip install -U yt-dlp)
+yt-dlp

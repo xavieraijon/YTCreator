@@ -1,0 +1,148 @@
+{
+  "_comentario": "Configuración del canal \"{{nombre}}\" (creado el {{fecha}} con /nuevo-canal desde plantillas/canal/). Las herramientas son genéricas y leen de aquí todo lo propio del canal. Los campos de un guion.json con el mismo nombre (voz, velocidad, estilo, personajes, referencias) tienen prioridad. Concepto: docs/concepto.md. Las marcas RELLENAR (entre << >>) se rellenan en /nuevo-canal (`herramientas/canales.py pendientes {{slug}}` dice cuáles quedan).",
+  "nombre": "{{nombre}}",
+  "url": "<<RELLENAR: https://www.youtube.com/@… (fase I, cuando el canal exista en YouTube)>>",
+  "idioma": "es-ES",
+  "voz": "<<RELLENAR: voz elegida en la fase E (p. ej. ai33:elevenlabs_… de pago, gemini:Puck o es-ES-…:MAI-Voice-2 gratis)>>",
+  "voces": {
+    "_comentario": "Opciones que /nuevo-video y /nuevo-short ofrecen antes de locutar (se guarda la elegida en el \"voz\" del guion). ai33 es de pago (≈ 1 crédito/carácter); las otras, gratis. \"azure\" es OBLIGATORIA: probar_kit.py la fuerza para no gastar créditos.",
+    "gemini": "gemini:Puck",
+    "azure": "es-ES-Marta:MAI-Voice-2"
+  },
+  "modelo_voz_ai33": "eleven_v3",
+  "velocidad_ai33": 1,
+  "modelo_voz_gemini": "gemini-3.8-flash-tts",
+  "estilo_voz": "<<RELLENAR: cómo habla el narrador, en una frase (acento, registro, ritmo, qué NO es); lo usan las voces que aceptan instrucciones>>",
+  "voz_respaldo": "es-ES-Marta:MAI-Voice-2",
+  "niveles_efectos": {
+    "_comentario": "volumen medio (dB) de efectos que son voz; el resto va a -33 dB"
+  },
+  "subtitulos_efectos": {
+    "_comentario": "efectos que son voz: su texto sale como subtítulo mientras suenan"
+  },
+  "efectos_con_hueco": [],
+  "estilo": "<<RELLENAR: prompt base de imagen elegido en la fase D con laboratorio_estilo.py; {escena} obligatorio y {paleta} delante de la escena si hay paletas>>",
+  "paletas": {
+    "_comentario": "Paletas: con una sola, basta \"defecto\" (el guion no necesita \"pilar\"). Paleta por pilar: el guion elige \"pilar\" (o trae su propia \"paleta\") y montar.py la pone en {paleta} del estilo, DELANTE de la escena (al final pierde peso). Borra este bloque si el estilo no usa {paleta}.",
+    "defecto": "<<RELLENAR: paleta por defecto (p. ej. limited palette of ochre, deep teal, cream and black)>>"
+  },
+  "personajes": {},
+  "referencias": [],
+  "colores": {
+    "_comentario": "Marca del canal (fase F): acento = títulos y línea de marca; resaltado = palabra activa de los subtítulos; texto y fondo = pantalla final, avatar y banner.",
+    "acento": "<<RELLENAR: #RRGGBB>>",
+    "resaltado": "<<RELLENAR: #RRGGBB>>",
+    "texto": "#1B1B1B",
+    "fondo": "<<RELLENAR: #RRGGBB>>"
+  },
+  "fuentes": {
+    "_comentario": "Archivos de recursos/fuentes/ (o <canal>/recursos/fuentes/; licencias en recursos/LICENCIAS.md). \"nombre\" = familia interna, la que buscan los subtítulos .ass. Disponibles: PlayfairDisplay-Black, SourceSans3-Black/Bold, LuckiestGuy-Regular, Nunito-Black/Bold, Baloo2-ExtraBold/SemiBold.",
+    "titulo": {
+      "archivo": "<<RELLENAR: .ttf de títulos, miniaturas y pantalla final>>",
+      "nombre": "<<RELLENAR: familia interna>>"
+    },
+    "subtitulo": {
+      "archivo": "SourceSans3-Black.ttf",
+      "nombre": "Source Sans 3 Black"
+    },
+    "rotulo": {
+      "archivo": "SourceSans3-Black.ttf",
+      "nombre": "Source Sans 3 Black"
+    },
+    "texto": {
+      "archivo": "SourceSans3-Bold.ttf",
+      "nombre": "Source Sans 3"
+    }
+  },
+  "hashtags_shorts": [
+    "#shorts",
+    "<<RELLENAR: #hashtag del tema>>",
+    "<<RELLENAR: #NombreDelCanal>>"
+  ],
+  "pantalla_final": {
+    "duracion": 20,
+    "titulo": "<<RELLENAR: NOMBRE en una o dos líneas separadas por |, *palabras* en color de acento>>",
+    "lema": "<<RELLENAR: frase corta de despedida (p. ej. ¿Te ha gustado? Hay más.)>>",
+    "papel": true,
+    "musica": "tranquilo"
+  },
+  "marca": {
+    "_comentario": "Avatar y banner del canal: herramientas/marca.py (salen en marca/). *Entre asteriscos* = color de acento. Opcionales: \"fondo_banner\" y \"fondo_avatar\" (ilustraciones oscuras sin letras dentro del canal, p. ej. marca/fondos/banner.png): el texto pasa a crema y resaltado.",
+    "monograma": "<<RELLENAR: 1-3 letras del avatar, p. ej. A*R*>>",
+    "titulo": "<<RELLENAR: nombre en el banner, p. ej. ASOMBROSO *Y REAL*>>",
+    "lema": "<<RELLENAR: promesa del canal en una frase>>",
+    "pilares": "<<RELLENAR: pilares separados por '  ·  ' (o borra la clave)>>"
+  },
+  "duraciones": {
+    "_comentario": "Duraciones que ofrece /nuevo-video (fase B del concepto). \"paradas\" = actos del desarrollo. Palabras calculadas a 170 palabras/min (medido con eleven_v3 a velocidad 1 el 2026-09-28; otra voz = medir con una muestra y ajustar palabras_por_minuto y los rangos). Imágenes: una cada 5-8 s.",
+    "10": {
+      "palabras": [1650, 1750],
+      "paradas": [3, 4],
+      "imagenes": 95,
+      "capitulos": [5, 6]
+    },
+    "12": {
+      "palabras": [1980, 2100],
+      "paradas": [4, 5],
+      "imagenes": 115,
+      "capitulos": [5, 7]
+    },
+    "short": {
+      "palabras": [90, 140],
+      "imagenes": 12,
+      "segundos": [30, 55]
+    }
+  },
+  "palabras_por_minuto": 170,
+  "frases_obligatorias": [
+    {
+      "texto": "?",
+      "donde": "final",
+      "motivo": "pregunta concreta a los comentarios en el cierre",
+      "tipos": ["video"]
+    }
+  ],
+  "max_emociones_escena": 1,
+  "reglas_texto": [
+    "Reglas propias del canal que comprueba revisar_guion.py (expresión regular sobre el texto con marcas). Las de eleven_v3 vienen del kit (medidas el 2026-09-28): bórralas si la voz no es eleven_v3.",
+    {
+      "patron": "\\b(hola|bienvenid[oa]s?|en el vídeo de hoy|hoy vamos a hablar)\\b",
+      "nivel": "aviso",
+      "mensaje": "presentación o saludo: el gancho entra directo en el tema"
+    },
+    {
+      "patron": "\\w{4,}[aeiouns](\\.\\.\\.|…)",
+      "nivel": "aviso",
+      "mensaje": "puntos suspensivos tras una palabra llana larga: eleven_v3 sube el final y carga la última sílaba («sobreviviera…» sonó «sobrevivierá»). Une la frase o cierra con punto"
+    },
+    {
+      "patron": "[.!?…]»|»\\s*\\.",
+      "nivel": "aviso",
+      "mensaje": "la frase acaba justo al cerrar una cita: el tono suele subir. Pon algo detrás («…, le dijo al médico») o deja la cita en medio de la frase"
+    },
+    {
+      "patron": "\\b(dale a like|dale like|like y suscr)",
+      "nivel": "aviso",
+      "mensaje": "petición de like genérica: si se pide suscripción, una vez y con una razón"
+    }
+  ],
+  "max_segundos_imagen": 10,
+  "musica_ai33": {
+    "_nota": "Opcional, DE PAGO: música a medida con Suno por ai33 (herramientas/musica_ai33.py). Prompt = base + el del ambiente, en inglés y ≤ 500 caracteres; cada vídeo puede llevar el suyo.",
+    "creditos_por_encargo": 3600,
+    "base": "Instrumental underscore for a documentary narration. No vocals, no drum kit, no build-ups or drops, steady dynamics so a narrator's voice sits clearly on top, loop-friendly ending. ",
+    "prompts": {
+      "misterio": "<<RELLENAR: misterio según el estilo del canal (tempo, instrumentos, carácter)>>",
+      "tranquilo": "<<RELLENAR: tranquilo según el estilo del canal>>",
+      "alegre": "<<RELLENAR: alegre según el estilo del canal>>"
+    }
+  },
+  "cumplimiento": {
+    "_comentario": "Declaraciones del canal ante YouTube y sobre derechos; se rellenan en la fase G de /nuevo-canal y se comprueban en la fase H de cada vídeo. Revisa la política vigente de YouTube antes de decidir: cambia con el tiempo.",
+    "contenido_sintetico": "<<RELLENAR: 'si' o 'no'. SÍ si hay voz imitada o clonada, personas reales o escenas realistas que puedan confundirse con grabaciones>>",
+    "motivo_sintetico": "<<RELLENAR: por qué esa respuesta>>",
+    "afiliacion": "<<RELLENAR: true o false; si es true, el aviso «(enlace de afiliado)» va en la descripción>>",
+    "licencias": "<<RELLENAR: de dónde salen la música, las fuentes tipográficas y las imágenes, y qué permite su licencia (ver recursos/LICENCIAS.md)>>"
+  },
+  "duracion_minima": "<<RELLENAR: minutos mínimos de un vídeo largo (p. ej. 8) y, en duracion_minima_motivo, por qué>>"
+}

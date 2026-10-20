@@ -1,0 +1,558 @@
+{
+  "titulo": "Phineas Gage no se volvió un monstruo: se fue a Chile",
+  "titulos": [
+    "El hombre que no se volvió un monstruo (y acabó en Chile)",
+    "El «monstruo» de los libros conducía diligencias en Chile"
+  ],
+  "duracion_objetivo": 10,
+  "formato": "horizontal",
+  "pilar": "ciencia",
+  "musica": "misterio",
+  "personajes": {
+    "gage": "a 25-year-old railway foreman of 1848, medium height and sturdy, square jaw, smooth shaven face, thick dark wavy hair, wearing an off-white linen shirt with sleeves rolled to the elbow, an open dark brown wool waistcoat, brown wool trousers with braces and a low-crowned brown felt hat",
+    "gage_despues": "a sturdy man in his late twenties with a square jaw, a smooth shaven face and thick dark wavy hair combed back, seen in right profile facing the right edge of the frame, the left side of his face turned away into shadow, wearing a white shirt with a high collar, a black silk neck stock, a dark patterned waistcoat and a dark wool frock coat",
+    "gage_cochero": "a sturdy stagecoach driver in his early thirties with a square jaw, a smooth shaven sunburnt face and dark wavy hair under a low-crowned round black felt hat with a flat wide brim, seen in right profile facing the right edge of the frame, wearing a long dark brown wool coachman's coat with a short shoulder cape, a cream linen shirt, a knotted dark neckerchief, brown leather gloves and dusty tall boots",
+    "harlow": "a 29-year-old country doctor of 1848, slim, dark hair parted at the side, dark side-whiskers along his jaw, bare-headed, wearing a long black wool frock coat, a black waistcoat, a white shirt with a high stiff collar and a black silk cravat",
+    "harlow_mayor": "a country doctor of about fifty in 1868, greying hair parted at the side, full grey side-whiskers along his jaw, small oval wire spectacles, wearing a long black wool frock coat, a black waistcoat, a white shirt with a high stiff collar and a black bow tie",
+    "williams": "a stout middle-aged country doctor of 1848 with grey side-whiskers, wearing a tall black top hat, a long black wool frock coat and a black cravat",
+    "trevitt": "a slim American man in his early twenties around 1860, light brown hair parted at the side, a short trimmed beard along the jaw, wearing a brown wool sack coat, a buttoned waistcoat, a white shirt with a turned-down collar and a narrow black bow tie",
+    "wilgus": "an American couple in their sixties, the man with short grey hair and a trimmed grey beard wearing a plaid flannel shirt, the woman with shoulder-length silver hair and reading glasses wearing a knitted cardigan",
+    "barra": "a single perfectly straight smooth dark iron bar of even thickness along its whole length, round in section and as thick as a thick broom handle, slightly longer than a walking cane, one end cut straight across at full thickness like the end of a broom handle, the other end gradually narrowing over the last quarter of its length to a sharp point",
+    "diligencia": "a heavy wooden stagecoach with a rounded egg-shaped body hung on thick leather straps, large wooden spoked wheels, trunks tied on the roof and a high driver's box at the front, pulled by a short compact team of six horses in three rows, two horses side by side in each row, the three rows close together in front of the coach",
+    "barra2": "a single perfectly straight smooth dark iron bar of even thickness along its whole length, round in section and as thick as a thick broom handle, slightly longer than a walking cane, all of it the same dull dark grey iron from end to end, one end plain and round like the end of a broom handle, the other end gradually narrowing over the last quarter of its length to a long sharp point",
+    "diligencia2": "a heavy dark wooden stagecoach with a boxy passenger body with curved lower panels, a door and small square windows on its side, large wooden spoked wheels, trunks tied on the roof and a high driver's box at the front, pulled by a short compact team of six horses in three rows, two horses side by side in each row, the three rows close together in front of the coach",
+    "diligencia3": "a dark brown wooden Concord stagecoach with an oval passenger body that has straight upper sides and a deeply curved rounded bottom, hung on two thick leather straps between the axles, a door with a small window in the middle of its side and a small square window on each side of the door, a low iron rail on the flat roof with leather trunks tied on top, a leather-covered luggage boot at the back, a high driver's seat at the front and four large wooden spoked wheels, the rear wheels bigger than the front ones, pulled by exactly six horses harnessed in three pairs, all six facing forward in the direction of travel: two wheel horses just in front of the coach, two swing horses in front of them and two lead horses at the very front",
+    "williams2": "a stout country doctor of about fifty in 1848 with a round face, grey hair, thick grey mutton-chop side-whiskers running down his cheeks to the corners of his jaw, his chin and upper lip bare, wearing a tall black top hat, a long black wool frock coat, a black waistcoat, a white shirt with a high collar and a black cravat"
+  },
+  "descripcion": "En 1848 una barra de hierro atravesó la cabeza de Phineas Gage, y los libros lo convirtieron en un monstruo. Los documentos cuentan otra cosa: años después conducía diligencias de seis caballos entre Valparaíso y Santiago.\n\nEl caso más famoso de la neurología, contado con lo que dicen los papeles de la época, las dos fotos que aparecieron en 2009 y 2010 y los estudios de hoy. Lo comprobado, separado de las hipótesis y de las leyendas.\n\nPara saber más:\n- Sam Kean, «Una historia insólita de la neurología» (Ariel): ENLACE PENDIENTE (enlace de afiliado)\n- Francisco Aravena, «La vida eterna de Phineas Gage» (novela sobre sus años en Chile): ENLACE PENDIENTE (enlace de afiliado)\n- Malcolm Macmillan, «An Odd Kind of Fame: Stories of Phineas Gage» (MIT Press, en inglés): ENLACE PENDIENTE (enlace de afiliado)\n\nAsombroso… y real.",
+  "etiquetas": [
+    "Phineas Gage",
+    "neurología",
+    "historia de la ciencia",
+    "cerebro",
+    "lóbulo frontal",
+    "mitos de la psicología",
+    "Chile",
+    "Valparaíso",
+    "historias reales",
+    "curiosidades",
+    "casos reales increíbles",
+    "Asombroso y Real"
+  ],
+  "fuentes": [
+    "https://www.bps.org.uk/psychologist/phineas-gage-unravelling-myth",
+    "https://pubmed.ncbi.nlm.nih.gov/20480430/",
+    "https://pmc.ncbi.nlm.nih.gov/articles/PMC9096075/",
+    "https://aeon.co/essays/how-the-myth-of-phineas-gage-affects-brain-injury-survivors",
+    "https://collections.countway.harvard.edu/onview/exhibits/show/beyond-the-bone-box/the-case-of-phineas-gage",
+    "https://www.smithsonianmag.com/history/phineas-gage-neurosciences-most-famous-patient-11390067/",
+    "https://www.sciencehistory.org/stories/disappearing-pod/everything-you-know-about-phineas-gage-is-wrong/",
+    "https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0037454",
+    "https://www.sciencedaily.com/releases/2012/05/120516195408.htm",
+    "https://www.bps.org.uk/research-digest/first-ever-photo-phineas-gage-discovered",
+    "https://www.npr.org/2010/01/24/122810679/the-face-of-a-famous-skull-found-on-flickr",
+    "https://www.memoriachilena.gob.cl/602/w3-article-599.html"
+  ],
+  "comentario_fijado": "¿Dónde oíste hablar de Phineas Gage por primera vez: en clase, en un libro o en un documental? ¿Y te contaron lo de Chile? Te leo aquí abajo.",
+  "miniaturas": [
+    {
+      "prompt": "medium close-up, {gage_cochero}, in the left third of the frame sitting on the high driver's box of a stagecoach, a fan of six leather reins in his gloved hands, the heads of two horses at the lower left edge, dry coastal hills of central Chile covered in golden grass and low shrubs at dawn behind him, the right half of the image an empty dark turquoise dawn sky fading into black, strong warm light from the right on his face, high contrast",
+      "texto": "NO TE LO *CONTARON*",
+      "lado": "derecha"
+    },
+    {
+      "prompt": "wide shot, {diligencia}, climbing a slope of dry coastal hills of central Chile covered in golden grass and low shrubs at dawn in the left half of the frame, a trail of golden dust behind it, the snowy Andes as a faint pale line far away, the right half of the image an empty dark turquoise sky fading into black, strong low sun from the left, high contrast",
+      "texto": "*SEIS* CABALLOS",
+      "lado": "derecha"
+    },
+    {
+      "prompt": "medium shot painted portrait, {gage_despues}, standing in the left third of the frame, holding {barra}, upright beside him like a walking cane with his right hand on its top, the right half of the image an empty plain deep dark background, a single warm light from the right on his face, high contrast",
+      "texto": "NO ERA UN *MONSTRUO*",
+      "lado": "derecha"
+    }
+  ],
+  "escenas": [
+    {
+      "capitulo": "La tarde del 13 de septiembre",
+      "musica": "misterio",
+      "texto": "El trece de septiembre de mil ochocientos cuarenta y ocho, una explosión sacudió una obra del ferrocarril en Vermont, en Estados Unidos.{img} Una barra de hierro de más de un metro salió disparada contra la cara del capataz, un hombre de veinticinco años.{img} Le entró por debajo del pómulo izquierdo, le salió por lo alto de la cabeza y fue a caer a unos veinte metros.",
+      "imagenes": [
+        {
+          "prompt": "extreme wide shot at eye level of a raw railway cutting blasted through grey layered rock on a wooded Vermont hillside in 1848, a sudden burst of pale smoke, dust and flying stone chips erupting from the centre of the cutting, three small workmen as dark silhouettes crouching on the rubble, one at the left edge, one in the centre distance and one on the right, green wooded hills with the first yellow maple leaves behind, low late-afternoon sun from the right, dust hanging in the air",
+          "rotulo": "Cavendish, Vermont · 13 de septiembre de 1848"
+        },
+        {
+          "prompt": "medium wide shot at a low angle from behind, {gage}, seen from behind as a dark silhouette on the left third of the frame, staggering backward with his arms flung out wide to both sides and his empty hands open, a burst of pale smoke and dust erupting from the rock floor in front of him, {barra}, flying upward out of the smoke high in the upper right of the frame, far above him and far from his head, walls of grey layered rock on both sides, a small wooden powder keg with iron hoops on the ground at the left edge, low evening sun glowing through the smoke, flying grit",
+          "motor": "ai33"
+        },
+        {
+          "prompt": "wide shot at a low angle looking up, {barra2}, flying diagonally upward through an empty ochre evening sky with its sharp point leading toward the upper right, small and dark against the light, a thin trail of pale smoke behind its round end, the rim of a grey rock cutting and the dark tops of pine trees along the bottom edge of the frame, low sun behind thin clouds on the right, dust drifting in the air"
+        }
+      ]
+    },
+    {
+      "texto": "Lo normal habría sido que muriera en el acto. Pero a los pocos minutos, el capataz estaba consciente y podía hablar.{img} Se llamaba Phineas Gage, y durante décadas los libros lo presentaron como el hombre al que una barra convirtió en un monstruo.{img} Sin embargo, unos documentos y dos fotografías cuentan algo muy distinto de lo que dicen los libros.{img} Su historia termina en Chile, al mando de una diligencia de seis caballos.",
+      "imagenes": [
+        {
+          "prompt": "wide shot at eye level, {gage}, seen from behind sitting upright on the rubble floor of a rocky railway cutting, his right hand raised as he talks, two workmen in loose off-white linen shirts, brown wool trousers with braces and low felt hats running toward him, one from the left and one from the right, grey rock walls, pale smoke thinning above them, dusk light from the left, settling dust"
+        },
+        {
+          "prompt": "close-up at a high angle of an old schoolbook lying open on a worn wooden school desk, the left page filled with an old black engraving of a hulking shadowy man with hunched shoulders and clenched fists looming over a village street, the right page blank cream paper, a slate and a stub of chalk beside the book, soft light from a classroom window on the left, dust in the light"
+        },
+        {
+          "prompt": "close-up at a slight high angle of a plain wooden desk, two small hinged daguerreotype cases of dark embossed leather standing open side by side in the centre, one on the left and one on the right with a gap between them, each case holding a small dim silvery old portrait of a man in a dark coat seen in right profile, his face lost in deep shadow and tarnish, holding a long dark bar upright beside him, around the cases a spread of old handwritten pages in faded brown ink with lines of faint scribbled handwriting, a folded letter tied with a thin ribbon, lit by a single candle on the right, warm glow and deep shadows on the left, dust in the light"
+        },
+        {
+          "prompt": "extreme wide shot at eye level, {diligencia2}, climbing a winding dirt road across dry golden hills of central Chile, small in the landscape and seen from the side, scattered low thorny espino shrubs, golden dry grass and a few small evergreen trees with dense rounded dark green crowns along the road, rows of low rounded dry hills fading into a pale hazy sky on the horizon, dawn sun low on the left, a long trail of golden dust behind the coach",
+          "motor": "ai33"
+        }
+      ]
+    },
+    {
+      "texto": "En aquellos años, Nueva Inglaterra abría paso al tren a través de las montañas a base de pólvora.{img} Gage era capataz en el ferrocarril de Rutland a Burlington, y su cuadrilla se encargaba de volar la roca.{img} Era un trabajo con futuro, siempre que todo saliera bien, y cada voladura seguía el mismo procedimiento.{img} Primero se metía pólvora en un agujero de la roca junto con una mecha, después se echaba arena encima y se apretaba con una barra de hierro.{img} Aquella tarde, la barra golpeó la roca y saltó una chispa. Lo más probable es que todavía no hubieran echado la arena.{img} La barra medía un metro y nueve centímetros, pesaba unos seis kilos y terminaba en punta, como un lápiz.{img} Era más larga que un bastón, más gruesa que el palo de una escoba y tan pesada como una garrafa de seis litros de agua.{img} Gage trabajaba para el tren, el gran invento de su siglo, y ese tren volvería a cruzarse en su vida.",
+      "imagenes": [
+        {
+          "prompt": "extreme wide shot from a hilltop over green wooded Vermont hills in 1848, a long raw cut of pale grey rock slicing through the side of a hill, a fresh earth embankment curving along a river valley, simple wooden trestles and plank ramps, two tiny workmen with wooden wheelbarrows, one on the embankment and one at the rock cut, white clapboard farmhouses far below, soft afternoon light from the right, haze in the valley"
+        },
+        {
+          "prompt": "medium wide shot at a slight low angle, {gage}, standing on a rock ledge in the centre of the frame, pointing down with his right arm outstretched and his left hand on his hip, three workmen below him in loose off-white linen shirts, brown wool trousers with braces and battered low felt hats, one swinging a pick on the left, one shovelling in the centre, one pushing a wooden wheelbarrow on the right, grey layered rock walls of a railway cutting, afternoon sun from the left, dust in the air",
+          "rotulo": "Ferrocarril Rutland & Burlington"
+        },
+        {
+          "prompt": "wide shot at eye level, a small blast of rock and pale smoke bursting from the far wall of a railway cutting, stone chips flying, two workmen in loose linen shirts and low felt hats crouching behind large boulders in the foreground, one on the left and one on the right, their heads ducked, a wooden bucket and a pick lying on the ground, grey layered rock, overcast afternoon light, a dust cloud rolling toward them"
+        },
+        {
+          "prompt": "medium shot from the side at a slight high angle, a blasting workman of 1848 seen in left profile, standing on a flat ledge of grey layered rock in a raw railway cutting, wearing a loose off-white linen shirt with sleeves rolled to the elbow, brown wool trousers held up by braces and a battered low-crowned brown felt hat, leaning a little forward and pushing {barra} straight down into a small round drill hole in the flat rock at his feet, the bar upright with its sharp point upward and its blunt end down in the hole, both his hands in heavy brown leather work gloves wrapped around the upper part of the bar, one glove above the other, a thin dark tarred-cord fuse running out of the hole and across the rock, a little heap of pale sand around the rim of the hole, a small wooden powder keg with iron hoops on the rock to the left and a wooden bucket of pale sand to the right, low late-afternoon sun from the right, dust in the air",
+          "motor": "ai33"
+        },
+        {
+          "prompt": "extreme close-up at rock level, the flat round end of a thick round dark iron bar, round in section like a thick broom handle, striking the rim of a round drill hole in grey rock, a single bright spark flying from the point of contact, a few black grains of powder around the rim of the hole, a wooden bucket full of pale sand standing untouched in the soft-focus background on the right, low amber evening light from the left, fine dust"
+        },
+        {
+          "prompt": "wide shot at eye level of {barra2}, lying horizontally, isolated and centred across the whole width of a plain warm cream background, its pointed end on the right with the long gradual taper taking up the last quarter of the bar, a long soft shadow beneath it, strong raking side light from the left, subtle paper grain",
+          "rotulo": "1,09 m · 3,2 cm · 6 kg"
+        },
+        {
+          "prompt": "wide still life at eye level on a plain cream floor against a dark turquoise wall, the whole height of every object visible from the floor to its top with empty wall above them, four objects standing upright in a row with wide gaps between them: on the left a slim wooden walking cane with a curved handle, next to it a long wooden broom with a thin handle, its handle top a little higher than the cane, in the centre {barra}, standing upright on its thick end with the point upward, a little taller than the cane and clearly thicker than the broom handle, and on the right a large clear plastic water bottle with a small handle moulded at its neck, small beside the others, only about a third as tall as the cane, a single soft light from the left, long shadows on the wall"
+        },
+        {
+          "prompt": "wide shot from a slightly raised position beside the line, an 1840s steam locomotive with a tall funnel-shaped smokestack, a cowcatcher, big spoked driving wheels and an open wooden cab, pulling one small wooden tender, seen in three-quarter view from the front-left as it runs from the right toward the left along one single railway line: two parallel iron rails on wooden cross-ties, every wheel of the engine resting on those two rails, the line curving gently out of a raw railway cutting of grey layered rock, green wooded Vermont hills behind, a plume of pale steam and smoke trailing back over the hills, a small workman in an off-white linen shirt and a low-crowned brown felt hat standing on the rocks at the far left of the frame watching it pass, low evening sun, haze",
+          "motor": "ai33"
+        }
+      ]
+    },
+    {
+      "capitulo": "«Doctor, aquí tiene trabajo de sobra»",
+      "texto": "Sus hombres lo subieron a una carreta de bueyes y lo llevaron hasta el pueblo, y Gage hizo todo el trayecto consciente.{img} La barra había volado unos veinte metros, casi el largo de una pista de tenis.{img} En el pueblo, Gage esperó sentado delante de la posada hasta que llegó el primer médico en su coche de caballos.{img} Era el doctor Edward Williams, que contó después que Gage lo recibió diciéndole que allí tenía trabajo de sobra.{img} Probablemente es una de las mayores subestimaciones de la historia de la medicina rural, y la hizo el propio herido.",
+      "imagenes": [
+        {
+          "prompt": "wide shot at eye level from behind, a heavy two-wheeled wooden farm cart with plank sides moving away from the viewer along a rutted dirt road, pulled by a pair of brown oxen side by side under a single wooden yoke at the front, {gage}, seen from behind sitting on the floor of the cart, only his back, his shoulders and his hat visible above the plank side, two workmen in loose off-white linen shirts, brown wool trousers with braces and low felt hats walking beside the cart, one on the left holding a long wooden goad and one on the right, a small village of white clapboard houses and a white church steeple in the distance, dusk light from the left, dust from the wheels",
+          "motor": "ai33"
+        },
+        {
+          "prompt": "low angle wide shot along the floor of a raw railway cutting blasted through grey layered rock on a wooded Vermont hillside, in the foreground {barra}, lying alone across the loose rubble and dust, dark and sharply drawn, its whole length visible from end to end, behind it the empty floor of the cutting stretching a long way back into the distance, and far away at the end of it the blasting spot, small and distant: a thin plume of grey smoke rising from the rock and three tiny workmen in off-white linen shirts and low-crowned brown felt hats, one on the left, one in the centre, one on the right, standing still and looking toward the camera, low late-afternoon sun, long shadows, dust in the air",
+          "rotulo": "≈ 20-25 m",
+          "motor": "ai33"
+        },
+        {
+          "prompt": "wide shot at eye level, seen from straight across the dirt street, of a two-storey white clapboard inn with a long covered front porch and wooden posts, {gage}, sitting upright on a wooden chair on the porch at the far left of the frame, seen in right profile facing the right edge of the frame, his hands resting on his knees, in the centre and right of the frame a light two-wheeled one-horse gig seen exactly side-on, just stopped in the street: at the front one brown horse standing with all four hooves on the ground, its head toward the left, harnessed between two long thin wooden shafts that run back along its sides to the gig, and behind the horse's tail, with a clear gap after its hind legs, the small open gig: one large wooden spoked wheel under a single seat, a black leather hood raised behind the seat, the seat lower than the horse's back, {williams2}, sitting on that seat with the reins in both hands, his face turned toward the inn in three-quarter view, dusk light, a little dust settling around the wheel",
+          "motor": "ai33"
+        },
+        {
+          "prompt": "medium shot at eye level on the covered porch of a white clapboard inn, {gage}, sitting calmly on a wooden chair on the left, seen in right profile facing the right edge of the frame, both hands resting on his knees, {williams}, standing in front of him on the right, holding a small black leather bag in his left hand and leaning back slightly with raised eyebrows, wooden porch posts and a whitewashed wall behind, warm dusk light from the right on their faces, dust in the air"
+        },
+        {
+          "prompt": "medium close-up at eye level of {williams}, on the porch of a country inn, his eyebrows raised high and his mouth slightly open, holding a small black leather bag against his chest with both hands, two curious villagers peering out of a doorway behind him on the left, a man in a dark wool coat and a woman in a white linen cap, warm dusk light from the right, dust in the air",
+          "motor": "ai33"
+        }
+      ]
+    },
+    {
+      "musica": "tranquilo",
+      "texto": "Del tratamiento se encargó otro médico del pueblo, John Martyn Harlow, y lo peor todavía no había pasado.{img} Una infección grave estuvo a punto de matarlo. Perdió la vista del ojo izquierdo, pero sobrevivió.{img} Y aun así, no tardó mucho en volver a casa.{img} Unas diez semanas después del accidente, a finales de noviembre, volvió a casa de sus padres en Lebanon, New Hampshire.{img} Había sobrevivido a algo que parecía imposible. Pero lo que hizo famoso a Phineas Gage no fue cómo salió vivo de aquella tarde,{img} sino quién salió de aquella carreta.",
+      "imagenes": [
+        {
+          "prompt": "medium shot at eye level, {harlow}, standing at the foot of a narrow wooden bed in a small upstairs room of a country inn, holding a small brass whale-oil lamp with a bare open flame in his right hand and looking down at the bed, a patient lying under a patchwork quilt as a dark shape in deep shadow, plain whitewashed plaster walls, wide pine floorboards, a washstand with a white china basin and pitcher, the lamp as the only light, night",
+          "motor": "ai33"
+        },
+        {
+          "prompt": "medium wide shot at eye level of a small dark bedroom of a country inn in 1848 at night, a narrow wooden bed with a patchwork quilt on the right, a figure lying still under the quilt turned away into shadow, only the outline of a shoulder visible, a bedside table on the left with a single tallow candle in a tin candlestick, a white china bowl, folded cloths and a small glass medicine bottle, plain whitewashed plaster walls, the candle as the only light, warm glow on the table and deep shadows over the bed, stillness",
+          "motor": "ai33"
+        },
+        {
+          "prompt": "medium shot at eye level, {harlow}, sitting on a ladder-back chair beside a narrow wooden bed at dawn, leaning forward with his elbows on his knees and his hands clasped, tired, the patient in the bed as a dark shape under a patchwork quilt in shadow, pale cold dawn light through a small multi-pane window behind him, a burnt-down candle on the bedside table, quiet",
+          "motor": "ai33"
+        },
+        {
+          "prompt": "extreme wide shot at eye level of a modest white clapboard farmhouse with a brick chimney among bare grey maples and frozen brown fields in the New Hampshire hills, a thin first snow on the ground, dry stone walls, a thin line of smoke rising from the chimney, a single small figure of a man in a dark wool coat and a low felt hat walking up the dirt lane toward the house, seen from behind, overcast late November afternoon light, cold haze",
+          "rotulo": "Lebanon, New Hampshire"
+        },
+        {
+          "prompt": "medium shot at eye level inside a farmhouse room, {gage_despues}, standing on the left of the frame and looking out of a small multi-pane window on the right at snowy winter fields, his right hand resting on the window frame, plain pine board walls, a small wooden table with a tallow candle, pale winter daylight through the window lighting the right side of his face, the room behind him in shadow, still air"
+        },
+        {
+          "prompt": "wide shot at eye level of an empty heavy two-wheeled wooden farm cart with plank sides standing alone on a rutted dirt road, its shafts resting on the ground, bare fields on both sides, a line of dark trees on the horizon, a low dusk sun behind the cart casting a long shadow toward the viewer, dust in the golden air"
+        }
+      ]
+    },
+    {
+      "capitulo": "«Ya no era Gage»",
+      "musica": "misterio",
+      "texto": "Aquí empieza la versión que cuentan los libros. Harlow escribió que el Gage que volvió no tenía paciencia y cambiaba de planes constantemente.{img} También se había vuelto malhablado, algo que en una cuadrilla de voladuras probablemente no extrañaba a nadie.{img} Sus amigos decían que ya no era el mismo, que ya no era Gage, y Harlow dejó esa frase por escrito.{img} Con ella, Gage entró en la historia de la neurología. Pero los documentos de la época no dicen exactamente lo mismo.",
+      "imagenes": [
+        {
+          "prompt": "medium close-up at eye level, {harlow}, sitting at a plank desk writing with a quill pen in a small leather-bound notebook, frowning, his left hand holding the page flat, a tallow candle in a tin candlestick and an inkwell beside the notebook, shelves of leather-bound books behind him in darkness, lit only by the candle on the right, deep shadows on the left side of his face, night",
+          "motor": "ai33"
+        },
+        {
+          "prompt": "medium wide shot at eye level of three railway blasters of 1848 around a small campfire at night in a rocky cutting, one on the left laughing with his head thrown back, one in the centre shouting and waving a tin cup, one on the right grinning, loose off-white linen shirts with rolled sleeves, braces and battered low felt hats, dusty faces, a pick and a shovel leaning on the rock behind them, the fire as the only light, sparks and smoke rising",
+          "motor": "ai33"
+        },
+        {
+          "prompt": "medium shot at eye level on a village street of 1849 New England, two men in dark wool coats and low felt hats standing close together on the left, one leaning to whisper into the other's ear while both glance to the right, in the right background a man in a dark frock coat walking away down the dirt street seen from behind, white clapboard houses along the street, late afternoon light from the right, long shadows",
+          "motor": "ai33"
+        },
+        {
+          "prompt": "medium close-up of a man's head and shoulders as a dark silhouette in right profile facing the right edge of the frame, the back half of the silhouette glowing in warm ochre light and the front half sinking into cold deep turquoise shadow, thick wavy hair and a high shirt collar visible only as outline, a plain dark background, a single hard light from behind, thin haze",
+          "motor": "ai33"
+        }
+      ]
+    },
+    {
+      "texto": "Hay dos detalles que casi nunca se mencionan. El primero es que un cirujano de Harvard, Henry Bigelow, examinó a Gage algo más de un año después.{img} Según su informe, Gage estaba «del todo restablecido de cuerpo y mente», una conclusión que pocas veces se cita.{img} Es posible que se fijara sobre todo en el cuerpo, pero la palabra mente es suya.{img} El segundo detalle viene de su madre. Gage inventaba historias fantásticas para sus sobrinos, y le gustaban mucho los animales y los niños.{img} Además, llevaba la barra a todas partes, y pocas personas pasean durante años el objeto que estuvo a punto de matarlas.",
+      "imagenes": [
+        {
+          "prompt": "medium shot at eye level in a bright hospital room of 1849 Boston, {gage_despues}, sitting upright on a plain wooden chair on the left, a slim surgeon of about thirty with dark hair swept back, wearing a dark grey wool frock coat buttoned high, a white shirt with a high collar and a black neck stock, standing on the right and bending to look closely at his face, tall arched multi-pane windows behind them, pale plaster walls, a wooden cabinet of glass jars, cold winter daylight from the windows, dust in the light",
+          "rotulo": "Boston, 1849"
+        },
+        {
+          "prompt": "close-up at a high angle of a surgeon's right hand in a dark grey wool frock coat sleeve with a white shirt cuff, writing on a sheet of cream paper covered with lines of faint scribbled brown handwriting, the hand holding a goose-feather quill pen: a long white feather whose soft feathered vane rises above the hand and curves back over his wrist, its thin bare shaft running down between the thumb and the first two fingers to a single cut point touching the paper, on a wooden desk beside a tall window, a glass inkwell and a blotting pad next to the page, bright winter daylight from the left, dust in the light",
+          "motor": "ai33"
+        },
+        {
+          "reutilizar": "07-1",
+          "movimiento": "zoom_in"
+        },
+        {
+          "prompt": "medium shot at eye level by a farmhouse fireplace, {gage_despues}, sitting on a low wooden stool on the left and leaning toward two children sitting on a rag rug on the right, a boy of about eight in a linen shirt and brown trousers with braces and a girl of about six in a long blue-grey wool dress with a white pinafore, both with realistic proportions, listening with wide eyes, his right hand raised as he tells a story, a brown dog asleep at his feet, a brick fireplace with a low fire behind the children, the fire as the main light, warm glow and soft shadows",
+          "motor": "ai33"
+        },
+        {
+          "prompt": "wide shot at eye level on a dirt road through a small New England village, {gage_despues}, walking toward the right edge of the frame with {barra}, carried over his right shoulder, his right hand gripping it near his chest, white clapboard houses and a picket fence behind him, a woman in a bonnet and a shawl on the far left turning her head to watch him, autumn afternoon light from the right, falling leaves"
+        }
+      ]
+    },
+    {
+      "texto": "Las dos versiones no encajan: la del hombre impaciente y grosero, y la del que contaba cuentos a sus sobrinos.{img} Los estudiosos describen el informe de Harlow como vago y muy general, y la fecha en que lo publicó es importante.{img} La barra, además, todavía existe, y se conserva en un lugar que aparece al final de esta historia.",
+      "imagenes": [
+        {
+          "prompt": "wide split composition at eye level, on the left half the dark silhouette of a man in a frock coat hunched forward with clenched fists against a cold deep turquoise background, on the right half the same man as a silhouette kneeling beside two small children and a dog against a warm glowing ochre background, a thin vertical strip of cream paper dividing the two halves, the two figures facing each other, soft haze",
+          "motor": "ai33"
+        },
+        {
+          "prompt": "close-up at a slight high angle of an old thin printed medical booklet of the 1860s lying open on a dark wooden desk, both yellowed pages filled edge to edge with dense columns of tiny faint grey lines of print, softly blurred and hard to read, a small engraved illustration of a long plain iron bar across the top of the right page, a few loose folded handwritten pages in faded brown ink fanned out under the booklet, a silver pocket watch with its chain coiled beside it, its lid open, a single tallow candle with a small open flame in a brass candlestick at the top edge of the frame, warm glow on the pages and deep shadows around, dust in the light"
+        },
+        {
+          "reutilizar": "03-6",
+          "movimiento": "zoom_in"
+        }
+      ]
+    },
+    {
+      "capitulo": "Cómo se fabrica un monstruo",
+      "texto": "Harlow publicó ese informe en mil ochocientos sesenta y ocho,{img} veinte años después del accidente y ocho después de la muerte de Gage.{img} Diez años más tarde, David Ferrier usó el caso para defender que cada zona del cerebro tiene su función, y Gage se hizo famoso.{img} A partir de ahí, el caso pasó de un libro a otro, y en cada paso se deformó un poco más.{img} En los años noventa, Antonio Damasio escribió en un libro famoso que Gage acabó en un circo y que nunca volvió a vivir por su cuenta.{img} Otros autores añadieron el juego, la prostitución y la crueldad, sin ningún documento que lo respalde.{img} Lo único que se dice es que llegó a exhibirse en el museo de Barnum, en Nueva York, y ni siquiera eso está bien documentado.",
+      "imagenes": [
+        {
+          "prompt": "medium shot at eye level in an 1860s print shop, {harlow_mayor}, on the left handing a thick bundle of handwritten pages tied with string to a printer on the right, a stocky man in a white shirt with rolled sleeves, a dark waistcoat and a long canvas apron, a black iron hand press behind them, wooden type cases along the wall, sheets of printed paper hanging to dry on cords overhead, daylight from a tall window on the left, paper dust in the light",
+          "rotulo": "1868"
+        },
+        {
+          "prompt": "wide shot at eye level of an empty wooden ladder-back chair beside a small window in a bare farmhouse room, a dark wool frock coat hanging over the back of the chair and a low felt hat on its seat, dust on the floorboards, late golden light slanting through the window across the chair, a long shadow on the wall, dust floating in the air"
+        },
+        {
+          "prompt": "wide shot from the floor of a steep lecture theatre in 1878 London at a low angle, looking up at tiered curved wooden benches that rise in the background, every seated man on the benches facing toward the viewer and toward the centre of the floor, small calm faces turned down toward the speaker, all wearing long black frock coats, dark waistcoats and white high collars, full beards or side-whiskers, in the left foreground a scientist with a full dark beard in a long black frock coat standing in three-quarter view facing the right, his right arm stretched out holding a long wooden pointer toward the right, on the right side a large painted chart of a brain divided into zones of turquoise, ochre and cream on a tall wooden easel facing the benches, gas lamps glowing on the walls, a haze of pipe smoke",
+          "rotulo": "1878",
+          "motor": "ai33"
+        },
+        {
+          "prompt": "wide shot at eye level of a straight row of five open books standing upright on a long dark wooden table, the row receding diagonally from the left foreground to the right background, the nearest book an old leather-bound volume with yellowed pages and the further ones gradually newer, the last one a glossy modern textbook, the pages show no writing, only one ink drawing each of the same young man's head in right profile facing the right edge of the page, in the nearest book the drawing is a calm faithful portrait, and in each next book the same head is redrawn darker, rougher and more distorted, wilder hair, a heavier scowling brow, until in the furthest book it is a grotesque angry caricature, a plain dark turquoise background, a single warm lamp light from the left, haze",
+          "motor": "ai33"
+        },
+        {
+          "prompt": "medium shot at eye level of a 1990s study desk at night, a boxy beige computer with a bulky CRT monitor showing a glowing grey 3D model of a human brain, a thick stack of typed manuscript pages beside the keyboard, a mug full of pens, bookshelves in darkness behind, the monitor glow and a small desk lamp as the only light, late-night haze",
+          "rotulo": "1994"
+        },
+        {
+          "prompt": "close-up at a high angle of a heap of cheap 19th-century illustrated story papers scattered on a dark table, their pictures showing a hulking menacing man in shadow with glaring eyes, a fan of playing cards on top, two dark glass bottles and a small spilled pile of coins, everything soft and blurred toward the edges, a single harsh lamp from above, drifting smoke"
+        },
+        {
+          "prompt": "wide shot at eye level of a large five-storey stone building on a busy New York street around 1850, large painted picture banners hanging between its upper windows showing strange animals and giants, small flags on the roof, a plain smooth cream band along the top of the facade, a crowd of men in top hats and women in bonnets on the street, a horse-drawn omnibus on the left, pale hazy morning light, the whole scene half dissolved in thin mist",
+          "rotulo": "Nueva York"
+        }
+      ]
+    },
+    {
+      "texto": "También se ha escrito que pegaba a su mujer y a sus hijos, pero Gage no tuvo ni mujer ni hijos.{img} Tampoco hay ninguna prueba de que fuera un borracho, un violento o un mendigo, y trabajó para ganarse la vida hasta el año de su muerte.{img} El lugar donde lo hizo es la parte más sorprendente de esta historia.{img} El mito, sin embargo, sigue vivo. El investigador Stephan Schleim revisó veinticinco artículos científicos que mencionaban el caso.{img} El noventa y dos por ciento hablaba de su cambio de personalidad, y más de la mitad lo describía casi como un psicópata.{img} Solo el dieciséis por ciento, uno de cada seis, mencionaba que se había recuperado.",
+      "imagenes": [
+        {
+          "prompt": "medium shot at eye level of a long plain wooden farmhouse table with a single place set at one end, one tin plate, one cup, one fork and one knife, a single ladder-back chair pulled out in front of it, the rest of the table bare, a whitewashed wall, a tallow candle burning beside the plate, soft evening light from a window on the right, stillness"
+        },
+        {
+          "prompt": "wide shot at eye level of the open doorway of a wooden livery stable on a rutted dirt street of a New England town around 1851, {gage_despues}, walking out of the stable toward the right edge of the frame and leading a brown horse by the bridle with his right hand, the horse following behind him, straw on the ground, harness hanging on pegs inside, a white clapboard house and a wooden hitching post across the dirt street, morning sun from the right, dust and straw in the air",
+          "motor": "ai33"
+        },
+        {
+          "reutilizar": "02-4",
+          "movimiento": "zoom_in"
+        },
+        {
+          "prompt": "wide shot at eye level of a modern researcher with short hair in a dark jumper seen from behind, sitting at a large table at night covered edge to edge with printed scientific papers laid out in neat rows, a laptop open in the centre, one hand resting on a page, a desk lamp glowing on the right, a dark window behind with distant city lights, quiet",
+          "rotulo": "2022 · 25 artículos"
+        },
+        {
+          "prompt": "close-up at eye level of two stacks of printed papers standing on a wooden table like the bars of a chart, the stack on the left very tall and the stack on the right about half its height, a plain dark turquoise wall behind, warm lamp light from the left casting long shadows, dust in the light",
+          "rotulo": "92 % · 52 %"
+        },
+        {
+          "prompt": "high angle view of six sheets of printed paper laid on a dark wooden table in two neat rows of three, one row above the other, with clear gaps between all six sheets, the sheet at the bottom right lit by a warm pool of ochre light from above, the other five sheets in deep turquoise shadow, night",
+          "rotulo": "Solo el 16 %",
+          "motor": "ai33"
+        }
+      ]
+    },
+    {
+      "texto": "Durante casi ciento cincuenta años no se conoció ninguna fotografía de Gage.{img} Los coleccionistas Jack y Beverly Wilgus tuvieron durante unos treinta años un daguerrotipo de un hombre con un ojo cerrado.{img} Creían que era un ballenero con su arpón, hasta que lo publicaron en Flickr y alguien les advirtió de que aquello no era un arpón.{img} Lo compararon con la máscara y la barra que se conservan en Harvard, y en dos mil nueve lo confirmaron: era Phineas Gage.{img} Durante treinta años, el hombre más famoso de la neurología había estado en su casa, confundido con un ballenero.{img} Después apareció una segunda fotografía. En las dos se ve a un hombre bien vestido y orgulloso, incluso atractivo, con la barra.{img} No tiene el aspecto de un monstruo, sino el de alguien con un futuro por delante. Aun así, el daño en su cerebro fue real.",
+      "imagenes": [
+        {
+          "prompt": "medium shot at eye level of an empty oval gilt portrait frame hanging on a dark turquoise museum wall, inside the frame only the flat dark silhouette of a man's head and shoulders, a soft spotlight from above, a rope on brass posts in the foreground, dust in the light"
+        },
+        {
+          "prompt": "medium shot at eye level in a cosy living room with framed antique photographs covering the walls, {wilgus}, sitting side by side on a sofa, the woman on the left holding a small open daguerreotype case of dark embossed leather in both hands, the man on the right leaning in to look at it, a small silvery portrait inside the case, a table lamp glowing on the left, warm evening light"
+        },
+        {
+          "prompt": "medium shot at eye level from behind {wilgus}, sitting at a wooden desk and looking at a flat LCD computer monitor that shows an old sepia portrait of a man holding a long iron bar upright, a framed painting of a whaling ship on the wall above the monitor, a desk lamp and a keyboard, the monitor glow lighting their faces in profile, evening",
+          "rotulo": "2007 · Flickr",
+          "motor": "ai33"
+        },
+        {
+          "prompt": "wide shot at eye level of a museum table covered with dark cloth, three objects laid out side by side with clear space between them: on the left a pale plaster life mask of a young man's face with closed eyes, in the centre {barra}, lying horizontally, on the right a small open daguerreotype case of dark leather with a silvery portrait inside, soft light from above, a dark museum room behind, dust in the light",
+          "rotulo": "2009"
+        },
+        {
+          "prompt": "medium shot at eye level, {wilgus}, laughing softly together on a sofa in a cosy living room, the woman on the left with a hand over her mouth, the man on the right shaking his head with a smile, a small open daguerreotype case on the coffee table in front of them, framed antique photographs on the wall behind, a table lamp on the right, warm evening light"
+        },
+        {
+          "prompt": "medium shot painted portrait in the manner of an 1850s studio portrait, {gage_despues}, standing upright and proud, holding {barra}, upright beside him like a walking cane with his right hand on its top, a plain dark background, a draped cloth and the carved back of a studio chair at the left edge, soft window light from the right falling on his face, calm dignity"
+        },
+        {
+          "reutilizar": "11-6",
+          "movimiento": "zoom_in"
+        }
+      ]
+    },
+    {
+      "capitulo": "Lo que dice su cráneo",
+      "musica": "tranquilo",
+      "texto": "Para saber qué le ocurrió de verdad, la ciencia volvió a estudiar su cráneo, que se conserva junto a la barra.{img} En dos mil doce, un equipo de UCLA y Harvard recuperó un escáner del cráneo hecho en dos mil uno, que estaba casi perdido.{img} Lo compararon con los cerebros de ciento diez personas actuales y reconstruyeron el recorrido de la barra.{img} La barra dañó alrededor del cuatro por ciento de la corteza, y más del diez por ciento de las conexiones, la llamada sustancia blanca.{img} El cerebro se puede imaginar como una ciudad vista desde el aire. La barra solo destruyó unas pocas manzanas,{img} pero cortó una de cada diez calles y cables. Lo que falló entonces fue la comunicación entre barrios.{img} Un cuatro por ciento parece poco, pero el daño en las conexiones afecta a todo el sistema.",
+      "imagenes": [
+        {
+          "prompt": "wide shot at eye level of a dim museum room with dark wood floors, a single tall glass display case in the centre lit from above, inside it {barra}, placed diagonally and, on a small stand beside it, an old ivory-coloured skull seen from the front at a distance, half in shadow, the rest of the room in darkness, a soft beam of light with floating dust"
+        },
+        {
+          "prompt": "medium shot at eye level in a dim modern research office at night, a single researcher with short dark hair in a dark jumper, seen from behind and slightly from the left, standing beside a desk next to an open dusty cardboard archive box full of old CD cases, his right hand lifting a single CD in a clear plastic case out of the box, his left hand resting flat on the edge of the box, in front of him one flat monitor glowing blue and showing a grey cross-section scan of a skull, a second researcher seated far in the background on the right, seen from behind, arms folded across his chest, watching another monitor, cool blue monitor light, dust in the air",
+          "rotulo": "2012 · UCLA y Harvard",
+          "motor": "ai33"
+        },
+        {
+          "prompt": "medium shot at eye level of a translucent glass-like digital model of a human head and skull in three-quarter view facing the left edge of the frame, floating alone in empty dark turquoise space, a thin glowing amber-gold straight line crossing diagonally through it from below the left cheekbone up to the top of the head, a faint grid of fine cream lines around it, a soft row of small pale translucent brain shapes fading into the dark behind, cool light, clean and schematic"
+        },
+        {
+          "prompt": "close-up of a stylised network of glowing turquoise fibres running in smooth curving bundles across a dark background, like strands of fibre-optic cable, a small patch on the left where the surface glows amber-gold, and a band of fibres passing through that patch cut short, their broken ends dark and dim, clean schematic look, soft glow",
+          "rotulo": "≈ 4 % de la corteza · > 10 % de las conexiones"
+        },
+        {
+          "prompt": "high aerial view looking straight down on a painted city whose outline has the rounded folded shape of a human brain seen from above, dense blocks in deep turquoise, cream streets winding between them like the folds of the brain, a small patch of a few blocks near the front left flattened into pale ochre rubble, soft even light, haze"
+        },
+        {
+          "prompt": "high aerial view looking down on a painted city shaped like a human brain seen from above, dense turquoise blocks and cream streets, long bridges and highways connecting its districts, a straight diagonal band of glowing amber-gold crossing the city from the lower left to the upper right, the bridges and roads broken where the band crosses them, long queues of tiny cream cars stopped at the broken ends, soft dusk light, haze"
+        },
+        {
+          "prompt": "medium wide shot at eye level of a cosy living room at night with four lamps, the two lamps on the left glowing warm and the two on the right dark, a wall socket in the centre with two cut electric wires hanging loose from it, their bare copper ends showing, a sofa and a bookshelf, soft ochre glow on the left and deep turquoise shadow on the right"
+        }
+      ]
+    },
+    {
+      "texto": "Lo único seguro es que se dañó el lóbulo frontal izquierdo, y el resto sigue en discusión.{img} El investigador Malcolm Macmillan sugiere que el cambio de carácter no duró mucho más de dos o tres años.{img} No existe ningún informe médico de sus años en Chile y en California, solo testimonios.{img} Con un daño así, lo esperable habría sido que no volviera a trabajar.{img} Sin embargo, Gage se marchó a la otra punta de América para conducir una diligencia de seis caballos.",
+      "imagenes": [
+        {
+          "prompt": "medium shot of a stylised painted human brain seen from the front and slightly above, floating alone in empty dark turquoise space, the front part of its left hemisphere, on the right side of the image, glowing amber-gold, the rest of the brain pale cream with its far side fading into soft fog, clean schematic look, soft light"
+        },
+        {
+          "prompt": "medium shot at eye level from the side, an elderly scholar with grey hair and a short grey beard in a close-fitting brown tweed jacket, seen in right profile standing close to a cork wall in a library at night, his right elbow bent and tucked near his side, his right hand at shoulder height pressing a single brass pin into a small handwritten note, his left hand holding a small stack of notes flat against his chest, a long timeline of pinned papers and old engravings on the cork wall in front of him, a desk covered with old documents and books behind him, a green-shaded desk lamp on the desk as the only light, dust in the light",
+          "motor": "ai33"
+        },
+        {
+          "prompt": "close-up at a high angle of an empty wooden archive drawer pulled open, its bare bottom covered in a thin layer of dust, three old folded letters in faded brown ink lying on top of the cabinet beside it, a small blank brass label holder on the drawer front, a single desk lamp from the left, deep shadows, dust in the light"
+        },
+        {
+          "prompt": "wide shot at eye level of a lone man in a dark wool frock coat and a low felt hat seen from behind, sitting on a wooden bench at the edge of a snowy field in winter, his shoulders hunched, bare grey trees and a dry stone wall, an empty dirt road leading away into grey fog, overcast afternoon light, cold mist"
+        },
+        {
+          "prompt": "wide shot at eye level of a three-masted sailing ship with full cream sails leaving a New England harbour at sunrise, heading out to the open sea on the right, small wooden wharves and white houses on the shore at the left, a low sun just above the horizon, golden light on the sails, sea spray and morning haze"
+        }
+      ]
+    },
+    {
+      "capitulo": "Seis caballos hacia Santiago",
+      "texto": "Valparaíso, a principios o mediados de los años cincuenta. Gage llegó con un hombre que quería montar allí una línea de diligencias.{img} Según Harlow, su trabajo era cuidar los caballos y conducir a menudo un coche muy cargado, tirado por seis caballos.{img} La ruta iba de Valparaíso a Santiago, y Gage se quedó en Chile entre cinco y siete años.{img} Según Macmillan, el trabajo empezaba de madrugada, cargando el equipaje y posiblemente cobrando los pasajes,{img} y después había que guiar seis caballos por un camino transitado y a veces peligroso.{img} Cada viaje duraba unas trece horas y exigía atención constante.{img} Seis caballos, un solo par de manos y un solo ojo.",
+      "imagenes": [
+        {
+          "prompt": "extreme wide shot from a hillside above the bay of Valparaíso in the 1850s, a wide curved bay crowded with three-masted sailing ships and one paddle steamer at anchor, a long wooden pier, low whitewashed adobe houses with ochre clay-tile roofs scattered up steep dry hills, two church towers, dirt lanes winding up the slopes, bright morning sun from the right, pale turquoise sky, sea haze",
+          "rotulo": "Valparaíso, Chile"
+        },
+        {
+          "prompt": "medium shot at eye level in a coaching inn yard with thick whitewashed adobe walls, {gage_cochero}, standing on the left third and facing right, brushing the neck of a brown horse that stands on the right side of the frame, a wooden grooming brush in his right hand, his left hand resting on the horse's shoulder, three more horses tied to a wooden rail in the background on the left, a heavy wooden stagecoach with trunks on its roof parked far behind them, warm morning sun from the right lighting his face, dust and straw in the air",
+          "motor": "ai33"
+        },
+        {
+          "prompt": "extreme wide bird's-eye view of central Chile painted from high above, the Pacific coast and a curved bay at the bottom left, rows of dry ochre coastal hills across the middle, a green valley with a small town at the upper right, a thin winding pale road crossing the hills from the bay to the valley, the snowy Andes as a long pale line along the top edge, soft even daylight, haze",
+          "rotulo": "Valparaíso – Santiago"
+        },
+        {
+          "prompt": "wide shot at eye level of a coaching inn courtyard before dawn, a heavy wooden stagecoach with a rounded body and large spoked wheels parked in the centre, {gage_cochero}, standing on the left lifting a leather trunk up onto the roof of the coach with both hands, a passenger in a dark frock coat and top hat waiting on the right with a carpetbag, two lanterns hanging from hooks on the whitewashed adobe wall, dark turquoise sky, warm lantern light, cold breath in the air",
+          "motor": "ai33"
+        },
+        {
+          "prompt": "high-angle wide view looking down at about forty-five degrees from the hillside above a road, {diligencia3}, all six horses dark bay with black manes and tails, travelling toward the right along a single narrow dirt road that enters at the left edge of the frame and leaves at the right edge, cut into a steep dry golden coastal hillside of central Chile, from this high angle each of the three pairs clearly shows two horses side by side, the far horse's head and back visible beyond the near horse, a driver in a low-crowned round black felt hat with a flat wide brim and a long dark brown caped coat on the high seat holding the reins, a steep drop below the road down to a dry ravine at the bottom of the frame, the slope above the road covered only in golden dry grass, low thorny espino shrubs and a few small evergreen trees with dense rounded dark green crowns, midday sun from the left, a cloud of golden dust behind the coach",
+          "motor": "ai33"
+        },
+        {
+          "prompt": "point-of-view shot from the high driver's seat of a stagecoach looking straight ahead along a dusty dirt road toward the horizon, six dark bay horses with black manes and tails walking away from the viewer in three pairs, one pair in front of the other, the round rumps and long black tails of the two wheel horses filling the lower middle of the frame just beyond the footboard, the swing pair further ahead and the lead pair small in the distance, every horse showing only its back, its mane and the back of its head with both ears pointing forward toward the horizon, a fan of six leather reins running forward from a pair of brown gloved hands at the bottom edge of the frame, the dark wooden footboard along the bottom edge, dry golden hills ahead, afternoon sun from the right, dust in the air",
+          "rotulo": "≈ 13 horas por viaje",
+          "motor": "ai33"
+        },
+        {
+          "prompt": "close-up at eye level of {gage_cochero}, sitting on the high driver's box of a stagecoach, his gaze fixed on the road ahead and his jaw set, a fan of leather reins held tight in his gloved hands at the bottom edge of the frame, dry hills softly blurred behind him, strong late-afternoon sun from the right lighting his face, dust in the air",
+          "motor": "ai33"
+        }
+      ]
+    },
+    {
+      "musica": "alegre",
+      "texto": "Según los libros, Gage era incapaz de seguir un plan, y en Chile llevaba a pasajeros desconocidos por las cuestas entre el mar y Santiago.{img} No hay ningún examen médico de esa época, pero sí el testimonio de Henry Trevitt, un estadounidense de Valparaíso que lo conoció allí.{img} Según Trevitt, Gage gozaba de buena salud, «sin deterioro alguno de sus facultades mentales», y seguía conduciendo diligencias.{img} En su relato no aparece por ningún lado el monstruo de los libros.{img} Macmillan y Lena proponen una hipótesis: la rutina estricta de aquel trabajo pudo ayudarle a recuperarse, como hoy lo hace la rehabilitación.{img} No se curó del todo, pero se recuperó lo suficiente para pasar años al mando de seis caballos. Y el tren volvió a aparecer en su vida.",
+      "imagenes": [
+        {
+          "prompt": "wide shot from a raised point behind the stagecoach and to its left, looking down at a three-quarter angle, {diligencia3}, seen from behind and from its left side with its leather luggage boot toward the viewer, travelling away from the viewer toward the upper right along a winding dirt road that climbs a slope of the dry coastal hills of central Chile at dawn, the whole team of six horses further up the road ahead of the coach, in three pairs one pair behind the other, the two horses of each pair side by side and both clearly visible, a coachman seen from behind on the high driver's seat in a low-crowned round black felt hat with a flat wide brim and a long dark brown caped coat, the hats of two passengers at the side windows, scattered low thorny espino shrubs, golden dry grass, a few small evergreen trees with dense rounded dark green crowns, rows of rounded dry hills fading into a pale hazy sky, low dawn sun from the left, golden dust behind the coach",
+          "motor": "ai33"
+        },
+        {
+          "prompt": "medium shot at eye level in a professor's study around 1860, {trevitt}, sitting on the left and leaning forward as he talks, his right hand open in the air, an older professor of about sixty with white hair and a white chin beard in a black frock coat sitting at a desk on the right, listening and writing with a pen in a notebook, bookshelves and a globe behind them, a brass oil lamp with a tall clear glass chimney and a small open flame inside on the desk, warm lamplight and turquoise shadows, evening",
+          "rotulo": "Testimonio, hacia 1860",
+          "motor": "ai33"
+        },
+        {
+          "prompt": "wide shot from a little above eye level of a sunny square in 1850s Santiago, {diligencia3}, standing still in the centre of the frame and seen from the side facing right, the six horses standing in a straight line ahead of the coach toward the right edge of the frame, both horses of every pair visible, the coachman on the high seat seen in right profile, wearing a low-crowned black felt hat and a long dark brown caped coat, raising his empty right hand in a friendly wave, one passenger in a dark frock coat and a top hat stepping down from the coach door onto the ground, low whitewashed adobe buildings with tiled roofs and wooden balconies behind, a baroque church facade on the left, the snowy Andes as a pale line far away above the rooftops, bright midday sun",
+          "motor": "ai33"
+        },
+        {
+          "prompt": "medium shot at eye level beside a large wooden stagecoach wheel in a coaching inn yard, {gage_cochero}, standing on the left with one hand resting on the top of the wheel, {trevitt}, standing on the right facing him and laughing, both relaxed and friendly, a whitewashed adobe wall and harnessed horses behind them, warm afternoon sun from the right, dust in the air",
+          "motor": "ai33"
+        },
+        {
+          "prompt": "wide shot at eye level of a coaching inn yard at dawn, four horses standing in a neat row being harnessed by two stable hands in short striped woollen ponchos and flat-brimmed felt hats, one on the left and one on the right, harness hanging in order on wooden pegs along a whitewashed adobe wall, a small brass bell hanging from an iron bracket above a doorway, lanterns still lit, pale dawn sky, cold mist",
+          "motor": "ai33"
+        },
+        {
+          "prompt": "wide shot from a low hillside behind the stagecoach and to its left, looking down at a three-quarter angle, {diligencia3}, filling about a third of the width of the frame in the lower left, seen from behind and from its left side with its leather luggage boot toward the viewer, travelling away from the viewer toward the upper right along a straight dirt road across a wide sunlit valley of central Chile, the whole team of six horses further along the road ahead of the coach, in three pairs one pair behind the other, the two horses of each pair side by side and both clearly visible, behind the coach only the empty road and a long trail of golden dust, dry ochre fields and a row of tall poplars along the road, rounded dry hills on both sides, a pale hazy sky above the far hills, afternoon sun from the right, warm haze",
+          "motor": "ai33"
+        }
+      ]
+    },
+    {
+      "musica": "tranquilo",
+      "texto": "Gage se hirió construyendo un ferrocarril, y en Chile conducía diligencias entre Valparaíso y Santiago, dos ciudades que otro ferrocarril empezaba a unir.{img} Las obras comenzaron en mil ochocientos cincuenta y dos, aunque no se sabe si él llegó a verlas.{img} La línea se inauguró el catorce de septiembre de mil ochocientos sesenta y tres, quince años y un día después de su accidente.{img} Aquel tren dejó sin trabajo a las diligencias, aunque para entonces Gage ya no estaba en Chile.{img} Fue como si el ferrocarril lo hubiera perseguido durante toda su vida.",
+      "imagenes": [
+        {
+          "prompt": "wide split composition, on the left half a raw rock cutting blasted through grey layered rock on a green wooded Vermont hillside, loose rubble on its floor, two small workmen in off-white linen shirts and battered low-crowned brown felt hats, one on the left kneeling and holding a long steel hand drill upright in the rock and one on the right swinging a sledgehammer, a small wooden powder keg with iron hoops, under a cool turquoise evening sky, on the right half {diligencia3}, seen from behind and from its left side at a three-quarter angle from above with its leather luggage boot toward the viewer, travelling away from the viewer up a dirt road into dry golden coastal hills of central Chile, the whole team of six horses further up the road ahead of the coach, in three pairs one pair behind the other, the two horses of each pair side by side and both clearly visible, under warm ochre sunlight, a thin vertical strip of cream paper dividing the two halves, haze",
+          "motor": "ai33"
+        },
+        {
+          "prompt": "extreme wide shot from a high dry hillside looking down, in the lower left of the frame {diligencia3}, seen from behind and from its right side at a three-quarter angle from above with its leather luggage boot toward the viewer, travelling away from the viewer toward the upper left along a dirt road over dry ochre hills, the whole team of six horses further up the road ahead of the coach, in three pairs one pair behind the other, the two horses of each pair side by side and both clearly visible, behind the coach only the empty road and golden dust, far away in the upper right background, beyond a ridge of dry hills, a different green irrigated valley with rows of tall poplars and orchards where tiny workers with picks and wheelbarrows are laying a thin line of new rails, the road and the rails in separate valleys, afternoon sun, haze",
+          "rotulo": "1852",
+          "motor": "ai33"
+        },
+        {
+          "prompt": "wide shot at eye level seen exactly from the side, an 1860s steam locomotive with a dark green boiler with brass bands, a tall funnel-shaped smokestack, an open wooden cab, a cowcatcher and big spoked driving wheels, decorated with garlands and strings of small cloth pennants, standing on a straight railway track that runs horizontally across the lower part of the frame from the left edge to the right edge, the whole engine parallel to the bottom of the picture and every wheel resting on the two iron rails, behind the train a long raised wooden platform with a wooden roof on posts running parallel to the track, a cheering crowd of men in dark frock coats and top hats and women in wide skirts and shawls on that platform behind the engine, waving hats and handkerchiefs, a single column of pale smoke rising from the top of the smokestack, spring sunlight from the left",
+          "rotulo": "14 de septiembre de 1863",
+          "motor": "ai33"
+        },
+        {
+          "prompt": "wide shot at eye level of an empty old stagecoach standing abandoned at the side of a dirt road, one wheel sunk in the dry grass, its paint faded and its roof bare, in the background on the right a steam train with a tall funnel-shaped smokestack passing along an embankment trailing white smoke, dry golden hills, late-afternoon sun, dust"
+        },
+        {
+          "prompt": "wide shot at a low angle seen from the side, a single straight railway track on a low gravel embankment running horizontally across the middle of the frame from the left edge to the right edge, iron rails on wooden cross-ties, an 1860s steam locomotive with a dark green boiler with brass bands, a tall funnel-shaped smokestack, an open wooden cab, a cowcatcher and big spoked driving wheels standing on that track in the right half of the frame, seen in full side view, every wheel resting on the two rails, a single plume of smoke from its smokestack drifting back, in the foreground an old wooden wagon wheel lying flat in dry golden grass below the embankment on the left, a low ochre sunset sun on the left, long shadows, dust in the golden air",
+          "motor": "ai33"
+        }
+      ]
+    },
+    {
+      "texto": "En mil ochocientos cincuenta y nueve, Gage enfermó y dejó Chile.{img} Se marchó a San Francisco, donde vivían su madre y su hermana, y trabajó en el campo.{img} En febrero del año siguiente empezaron los ataques epilépticos, y murió en mayo, con treinta y seis años.{img} Años más tarde, Harlow consiguió que la familia le entregara el cráneo y la barra.{img} Hoy se conservan en el Museo Anatómico Warren, en Harvard, junto a una máscara de su cara hecha en vida.{img} La barra lleva grabado su nombre, pero mal escrito, Phinehas, y la fecha del accidente aparece con un día de retraso.{img} Casi ciento ochenta años de fama, y ni siquiera en su propia barra escribieron bien su nombre.",
+      "imagenes": [
+        {
+          "prompt": "wide shot at eye level of a three-masted sailing ship leaving the bay of Valparaíso under a grey overcast sky, a lone man in a dark wool coat and a low felt hat standing at the stern rail seen from behind, his shoulders hunched, the dry hills and whitewashed houses of the port fading behind, grey sea, cold wind, sea haze",
+          "rotulo": "1859"
+        },
+        {
+          "prompt": "extreme wide shot at eye level of a farm in the Santa Clara valley near San Francisco in 1859, a small wooden plank farmhouse with a porch among rolling dry golden hills and scattered dark oak trees, a split-rail fence, in the middle ground a man in a faded blue cotton work shirt, brown canvas trousers with braces and a wide straw hat, seen from behind on foot with a long thin herding stick in his right hand, driving three brown cows ahead of him along the fence toward the farmhouse, one cow on the left, one in the centre and one on the right, all three walking the same way, two women in long dresses and bonnets standing on the porch far away, afternoon sun, golden dust",
+          "rotulo": "San Francisco"
+        },
+        {
+          "prompt": "medium wide shot at eye level of the porch of a small wooden plank farmhouse at dusk, an empty wooden rocking chair on the porch, through the window behind it a single candle burning inside, green hills turning gold in the distance, the last light of dusk, stillness",
+          "rotulo": "Mayo de 1860"
+        },
+        {
+          "prompt": "medium shot at eye level at the doorway of a white farmhouse, {harlow_mayor}, on the left standing on the doorstep and receiving with both hands a long narrow bundle wrapped in pale cloth and tied with string from an older woman on the right in a long dark wool dress, a shawl and a white linen cap, both solemn, overcast afternoon light, a quiet street behind",
+          "motor": "ai33"
+        },
+        {
+          "prompt": "medium shot at eye level of a tall glass museum display case lit from above in a dark room, inside it {barra}, placed diagonally across the case, a pale plaster life mask of a young man's face with closed eyes on a small stand on the left, and an old ivory-coloured skull seen from the front on a stand at the back right, half in shadow, dark wood floor, a soft beam of light with floating dust",
+          "rotulo": "Museo Anatómico Warren, Harvard"
+        },
+        {
+          "prompt": "extreme close-up at a low angle along the length of {barra2}, lying under warm museum light, a faint row of small scratched marks engraved along the dark iron, the pointed end fading into soft focus, a dark velvet backdrop, soft reflections along the smooth metal"
+        },
+        {
+          "prompt": "extreme wide shot at eye level of a dark museum room, a single glass display case glowing in a pool of light in the centre, a lone visitor in a dark coat standing before it seen from behind with his hands clasped behind his back, dark wood floor, rows of empty display cabinets fading into shadow, dust in the light beam"
+        }
+      ]
+    },
+    {
+      "texto": "Algunos investigadores advierten de que este mito todavía pesa sobre quienes sobreviven hoy a una lesión cerebral.{img} La historia completa de Phineas Gage es la de un hombre que volvió a trabajar.{img} ¿Dónde oíste hablar de él por primera vez, en clase o en un documental?{img} La ciencia recordó mal a Gage. En el próximo vídeo, la historia de un hombre que no podía olvidar nada.",
+      "imagenes": [
+        {
+          "prompt": "medium shot at eye level of a present-day young woman seen from behind, standing in a bright rehabilitation room and looking out of a large sunny window, one hand resting on a wooden parallel bar, an exercise mat and a pair of light dumbbells on the floor, green trees outside, warm morning sunlight, soft glow"
+        },
+        {
+          "reutilizar": "14-7",
+          "movimiento": "zoom_out"
+        },
+        {
+          "prompt": "medium shot at eye level of a wooden table with three objects side by side and space between them: on the left an open old schoolbook, in the centre a closed hardback book, on the right a small old television set with a blank glowing screen, a warm table lamp above, a dark turquoise wall behind, soft shadows"
+        },
+        {
+          "prompt": "wide shot from a low hillside a little above the road, seen from the side and a little from above, {diligencia3}, driving to the right along a straight dirt road that runs horizontally across the middle of the frame, the oval dark brown coach body with its deeply curved bottom clearly visible in side view, the six horses stretched out in a straight line on the road ahead of the coach toward the right edge of the frame, both horses of every pair visible, all pulling forward, golden dry grass, scattered low thorny espino shrubs and a few small evergreen trees with dense rounded dark green crowns, rows of low rounded dry hills fading into a pale hazy sky, a low sunset sun ahead of the coach on the right, a long trail of glowing dust behind it",
+          "motor": "ai33"
+        }
+      ]
+    }
+  ],
+  "paleta": "limited palette of deep turquoise, ochre and warm cream with charcoal black shadows, turquoise and ochre dominating the image",
+  "ai33": {
+    "modelo": "gemini-3.1-flash-image-preview",
+    "resolucion": "1K",
+    "referencias_estilo": [
+      "videos/001-phineas-gage/img/07-5.png"
+    ],
+    "creditos_por_imagen": 1720
+  }
+}

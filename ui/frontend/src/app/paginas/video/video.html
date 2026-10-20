@@ -1,0 +1,58 @@
+@if (video.error() && !datos()) {
+  <p class="vacio-grande tarjeta">Ese vídeo no existe (quizá se ha borrado su carpeta).</p>
+} @else if (datos(); as v) {
+  <nav class="miga">
+    <a routerLink="/canales">Canales</a> <span>/</span>
+    <a [routerLink]="['/canales', v.canal]">{{ nombreCanal(v.canal) }}</a> <span>/</span>
+    <span>{{ v.titulo || v.carpeta }}</span>
+    <span class="miga__hueco"></span>
+    @if (v.aparcado) { <span class="etiqueta">Archivado</span> }
+    <button mat-icon-button type="button" [matMenuTriggerFor]="menuVideo" aria-label="Más acciones del vídeo"><mat-icon>more_vert</mat-icon></button>
+    <mat-menu #menuVideo="matMenu" xPosition="before">
+      @if (v.aparcado) {
+        <button mat-menu-item type="button" (click)="archivar(false)"><mat-icon>unarchive</mat-icon>Recuperar del archivo</button>
+      } @else {
+        <button mat-menu-item type="button" (click)="archivar(true)"><mat-icon>archive</mat-icon>Archivar (sale de «en marcha»)</button>
+      }
+      <button mat-menu-item type="button" (click)="verArchivos()"><mat-icon>folder_open</mat-icon>Archivos y notas del vídeo</button>
+      <button mat-menu-item type="button" (click)="aPapelera()"><mat-icon>delete</mat-icon>Mover a la papelera</button>
+    </mat-menu>
+  </nav>
+  @if (errorGestion()) { <p class="error"><mat-icon>warning</mat-icon>{{ errorGestion() }}</p> }
+  @if (v.estado_real?.archivo_danado; as aviso) { <p class="error" role="alert"><mat-icon>broken_image</mat-icon>{{ aviso }}</p> }
+  @if (v.estado_real?.esquema; as aviso) { <p class="error" role="alert"><mat-icon>system_update</mat-icon>{{ aviso }}</p> }
+
+  @if (v.aparcado) {
+    <!-- Un vídeo archivado no se trabaja: resumen y cómo recuperarlo (hallazgo 48 del recorrido profano). -->
+    <section class="archivado tarjeta">
+      <mat-icon class="archivado__icono">inventory_2</mat-icon>
+      <span class="antetitulo">{{ v.tipo === 'short' ? 'Short archivado' : 'Vídeo archivado' }}</span>
+      <h1>{{ v.titulo || v.carpeta }}</h1>
+      <p class="secundario">
+        No sale en Inicio ni entre los vídeos en marcha, pero no se ha borrado nada.
+        @if (v.estado_real?.vista_nombre; as fase) { Lo dejaste en «{{ fase }}». }
+      </p>
+      <div class="archivado__acciones">
+        <button mat-flat-button type="button" (click)="archivar(false)"><mat-icon>unarchive</mat-icon>Recuperar del archivo</button>
+        <button mat-button type="button" (click)="aPapelera()"><mat-icon>delete</mat-icon>Mover a la papelera</button>
+      </div>
+    </section>
+  } @else {
+    <app-fase-guiada [video]="v" (hablar)="alternarClaude(true)" />
+  }
+} @else {
+  <mat-progress-bar mode="indeterminate" />
+}
+
+@if (datos(); as v) {
+  <aside class="claude" [class.claude--abierto]="claudeVisible()" [attr.aria-hidden]="!claudeVisible()">
+    <app-panel-claude [video]="v" (cerrar)="alternarClaude(false)" />
+  </aside>
+  @if (!claudeVisible()) {
+    <button type="button" class="boton-claude" [class.boton-claude--trabajando]="claudeTrabajando()"
+            (click)="alternarClaude(true)" aria-label="Abrir el chat con Claude">
+      <mat-icon>auto_awesome</mat-icon>
+      <span>{{ claudeTrabajando() ? 'Claude trabajando…' : 'Claude' }}</span>
+    </button>
+  }
+}

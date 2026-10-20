@@ -1,0 +1,162 @@
+{
+  "_archivado": "Canal ARCHIVADO el 2026-09-28: \"Los Viajes de Tok\" pasó a ser \"Asombroso y Real\" (canales/asombroso-y-real/). Configuración tal como estaba antes del cambio de concepto (git d184f5c^). Para volver a montar una pieza: CANAL=_archivo/los-viajes-de-tok .venv/bin/python herramientas/montar.py videos/S002-diez-dias-1582/guion.json",
+  "_comentario": "Configuración del canal. Las herramientas son genéricas y leen de aquí todo lo propio del canal; para otro canal basta con otro canal.json (y sus recursos). Los campos de un guion.json con el mismo nombre (voz, velocidad, estilo, personajes, referencias) tienen prioridad.",
+  "nombre": "Los Viajes de Tok",
+  "url": "https://www.youtube.com/@losviajesdetok",
+  "idioma": "es-ES",
+  "voz": "ai33:elevenlabs_L7eBLM3xgOVCCmqe2GAd",
+  "voces": {
+    "_comentario": "Opciones que /nuevo-video y /nuevo-short ofrecen antes de locutar (se guarda la elegida en el \"voz\" del guion). ai33 es de pago (≈ 1 crédito/carácter); las otras, gratis.",
+    "ai33": "ai33:elevenlabs_L7eBLM3xgOVCCmqe2GAd",
+    "gemini": "gemini:Puck",
+    "azure": "es-ES-Marta:MAI-Voice-2"
+  },
+  "modelo_voz_ai33": "eleven_v3",
+  "velocidad_ai33": 1,
+  "modelo_voz_gemini": "gemini-3.8-flash-tts",
+  "estilo_voz": "Narrador de dibujos animados, en español de España (acento castellano peninsular): cálido, alegre y emocionado, con ritmo ágil y natural, como el narrador de una serie infantil que habla con el protagonista y con el público",
+  "voz_respaldo": "es-ES-Marta:MAI-Voice-2",
+  "niveles_efectos": {
+    "_comentario": "volumen medio (dB) de efectos que son voz; el resto va a -33 dB",
+    "toc_toc": -21,
+    "tok_pues_si": -21
+  },
+  "subtitulos_efectos": {
+    "_comentario": "efectos que son voz: su texto sale como subtítulo mientras suenan",
+    "toc_toc": "¡Toc-toc! ¿Se puede?",
+    "tok_pues_si": "¡Pues sí!"
+  },
+  "efectos_con_hueco": [
+    "toc_toc",
+    "tok_pues_si"
+  ],
+  "estilo": "simple 2D cartoon frame from a modern preschool TV show: {escena}, clean thick smooth outlines, rounded friendly shapes, bright cheerful flat colors, soft-colored background and colored ground (never plain white), lots of empty space, no text, no letters or numbers anywhere",
+  "personajes": {
+    "tok": "a tiny cute robot: a flat orange square head with two small round orange ears on the sides and two tiny bolts on the top corners, two big round white eyes with black pupils (both eyes always visible, never a one-eyed side profile), a thin wiggly antenna with a small glowing yellow light bulb on top, a separate flat orange square body with a simple round clock on the chest (only two hands, no numbers), exactly two arms and exactly two legs, all four limbs thin, solid black and fully filled (never white, grey, hollow or outlined tubes), the two arms ending in white cartoon glove hands and the two legs in white oval feet"
+  },
+  "referencias": [
+    "personaje/ref/tok_frente.png"
+  ],
+  "poses": "personaje/ref/tok_{pose}.png",
+  "colores": {
+    "acento": "#F58C32",
+    "resaltado": "#FFD23F",
+    "texto": "#141414",
+    "fondo": "#FFFFFF"
+  },
+  "hashtags_shorts": [
+    "#shorts",
+    "#curiosidades",
+    "#LosViajesDeTok"
+  ],
+  "pantalla_final": {
+    "duracion": 20,
+    "pose": "saludo",
+    "texto": "¡Nos vemos en el *próximo viaje*!",
+    "musica": "alegre"
+  },
+  "duraciones": {
+    "3": {
+      "palabras": [
+        450,
+        520
+      ],
+      "paradas": 2,
+      "imagenes": 35,
+      "capitulos": [
+        3,
+        4
+      ]
+    },
+    "5": {
+      "palabras": [
+        750,
+        880
+      ],
+      "paradas": 3,
+      "imagenes": 55,
+      "capitulos": [
+        4,
+        5
+      ]
+    },
+    "10": {
+      "palabras": [
+        1500,
+        1650
+      ],
+      "paradas": [
+        5,
+        6
+      ],
+      "imagenes": 100,
+      "capitulos": [
+        6,
+        8
+      ]
+    },
+    "short": {
+      "palabras": [
+        100,
+        150
+      ],
+      "imagenes": 20,
+      "segundos": [
+        30,
+        55
+      ]
+    }
+  },
+  "palabras_por_minuto": 160,
+  "frases_obligatorias": [
+    {
+      "texto": "¡Iniciando viaje!",
+      "donde": "principio",
+      "motivo": "el narrador, cuando Tok pulsa el botón de la máquina",
+      "tipos": [
+        "video"
+      ]
+    },
+    {
+      "texto": "{toc_toc}",
+      "donde": "principio",
+      "motivo": "saludo de Tok al llegar (clip fijo con voz robótica)",
+      "tipos": [
+        "video",
+        "short"
+      ]
+    },
+    {
+      "texto": "suscr",
+      "donde": "final",
+      "motivo": "el narrador pide like y suscripción con un gag con Tok",
+      "tipos": [
+        "video"
+      ]
+    },
+    {
+      "texto": "próximo viaje",
+      "donde": "final",
+      "motivo": "despedida: ¡Nos vemos en el próximo viaje!{toc_toc}",
+      "tipos": [
+        "video"
+      ]
+    },
+    {
+      "texto": "{toc_toc}",
+      "donde": "final",
+      "motivo": "Tok cierra llamando a la puerta del siguiente destino",
+      "tipos": [
+        "video"
+      ]
+    },
+    {
+      "texto": "¿Sabías que",
+      "donde": "cualquiera",
+      "motivo": "sección fija de curiosidad antes de la vuelta a casa",
+      "tipos": [
+        "video"
+      ]
+    }
+  ]
+}

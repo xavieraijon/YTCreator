@@ -1,0 +1,318 @@
+{
+  "_comentario": "Datos de referencia de mercado.py. Cada cifra lleva su fuente, fecha y confianza (alta = oficial o datos reales de YouTube Studio con metodología publicada; media = estudio con muestra grande pero con sesgo conocido; baja = blogs o rangos sin metodología). Revisar cada 6 meses o si YouTube anuncia cambios. Cuando el canal tenga datos propios de Studio, SUSTITUIR los RPM por los reales.",
+  "actualizado": "2026-09-27",
+  "ypp": {
+    "actual": {
+      "suscriptores": 1000,
+      "horas_12_meses": 4000,
+      "shorts_90_dias": 10000000
+    },
+    "desde_2027_02_01": {
+      "suscriptores": 1000,
+      "horas_12_meses": 8000,
+      "shorts_90_dias": 20000000,
+      "nota": "Solo para quien solicite a partir de esa fecha; los ya admitidos mantienen su estado (aceptar las condiciones nuevas en Studio antes del 31-01-2027). ADEMÁS, para TODOS: los ingresos de Shorts (anuncios y Premium) solo se cobran si el canal tiene 10 M de visualizaciones de Shorts en los últimos 90 días. Premium: 30 % de los ingresos netos (Premium Lite 60 %) repartido 55 % largos / 45 % Shorts. Actividad (según creadores, no visto en el blog): 1.000 h en 365 días o 1 M de Shorts en 90 días para seguir activo.",
+      "shorts_minimo_para_cobrar_90_dias": 10000000
+    },
+    "fan_funding": {
+      "suscriptores": 500,
+      "subidas_90_dias": 3,
+      "horas_12_meses": 3000,
+      "shorts_90_dias": 3000000,
+      "nota": "Nivel sin anuncios: Super Thanks, miembros, compras. Sin cambios en 2027."
+    },
+    "fuentes": [
+      {
+        "url": "https://blog.youtube/news-and-events/youtube-partner-program-updates-2027-new-opportunities-earn/",
+        "que": "comunicado oficial: 8.000 h / 20 M para nuevos; 10 M de Shorts en 90 días para cobrar Shorts; reparto de Premium y Premium Lite",
+        "confianza": "alta"
+      },
+      {
+        "url": "https://support.google.com/youtube/answer/72851",
+        "que": "requisitos actuales y aviso de cambio el 01-02-2027",
+        "confianza": "alta"
+      },
+      {
+        "url": "https://www.tubefilter.com/2026/08/10/youtube-partner-program-ad-eligibility-requirements-shorts/",
+        "que": "cifras nuevas (8.000 h / 20 M) y declaración de Amjad Hanif (YouTube)",
+        "confianza": "media-alta"
+      }
+    ]
+  },
+  "reparto_shorts": {
+    "creador": 0.45,
+    "nota": "Los anuncios del feed de Shorts van a un fondo mensual por país; se descuenta la música; el creador recibe el 45 % de lo que le toca según sus visualizaciones con interacción.",
+    "fuente": {
+      "url": "https://support.google.com/youtube/answer/12504220",
+      "confianza": "alta"
+    }
+  },
+  "rpm_usd": {
+    "_nota": "RPM = lo que recibe el creador por 1.000 visualizaciones (todas, no solo las monetizadas). Tres escenarios: bajo, medio y alto.",
+    "largo_mercado_global": {
+      "educacion": {
+        "bajo": 2.31,
+        "medio": 10.22,
+        "alto": 19.5
+      },
+      "entretenimiento": {
+        "bajo": 0.88,
+        "medio": 2.43,
+        "alto": 5.02
+      },
+      "kids": {
+        "bajo": 0.16,
+        "medio": 0.33,
+        "alto": 0.88
+      },
+      "todos": {
+        "medio": 2.3
+      },
+      "fuente": {
+        "url": "https://air.io/en/air-data-findings/which-youtube-niche-makes-the-most-money-in-2026-ranked-by-real-rpm-and-cpm",
+        "que": "300 canales, 3.595 meses-canal monetizados (may 2025 - may 2026), datos de Studio; medianas y P25-P75",
+        "confianza": "media",
+        "sesgo": "canales de una red (MCN), mayoritariamente en inglés; la mezcla de países no se publica"
+      }
+    },
+    "largo_castellano": {
+      "educacion": {
+        "bajo": 0.5,
+        "medio": 2.0,
+        "alto": 5.0
+      },
+      "entretenimiento": {
+        "bajo": 0.3,
+        "medio": 1.0,
+        "alto": 3.0
+      },
+      "kids": {
+        "bajo": 0.05,
+        "medio": 0.15,
+        "alto": 0.5
+      },
+      "_razonamiento": "No hay estudio con metodología para audiencia hispana. Se parte del P25 global de educación (2,31 $) y de los rangos de España (1-4 $, 2-6 €) y de CPM anunciante de Latinoamérica (0,7-3,5 $ en general; el RPM del creador es menor). Una audiencia mixta España + Latinoamérica tira hacia abajo. Escenarios deliberadamente prudentes.",
+      "fuentes": [
+        {
+          "url": "https://monetizateonline.es/cuanto-paga-youtube-espana/",
+          "confianza": "baja"
+        },
+        {
+          "url": "https://tusfollowers.com/es/blog/cuanto-paga-youtube-en-espana",
+          "confianza": "baja"
+        },
+        {
+          "url": "https://fluxnote.io/guides/youtube-cpm-latin-america-by-country",
+          "confianza": "baja"
+        }
+      ],
+      "confianza": "baja"
+    },
+    "short": {
+      "general": {
+        "bajo": 0.01,
+        "medio": 0.03,
+        "alto": 0.07
+      },
+      "_nota": "Shorts pagan el 3-14 % del largo por 1.000 visualizaciones; para la mayoría de canales son menos del 2 % de sus ingresos. Hacen falta 11.000-34.000 visualizaciones de Shorts para igualar 1.000 de un largo. Los canales con 1 Short por cada 2-3 largos rinden mejor en suscriptores e ingresos; los que se vuelcan en Shorts empeoran en ambos (educación, sobre todo).",
+      "fuentes": [
+        {
+          "url": "https://air.io/en/air-data-findings/what-is-youtube-shorts-rpm-in-your-niche-in-2026",
+          "que": "274 canales, API de Analytics, medianas anuales",
+          "confianza": "media"
+        },
+        {
+          "url": "https://mediacube.io/en-US/blog/youtube-shorts-rpm",
+          "confianza": "baja"
+        },
+        {
+          "url": "https://www.tubefilter.com/2026/08/10/youtube-partner-program-ad-eligibility-requirements-shorts/",
+          "que": "Zach King: 2.918 $ por 196 M de visualizaciones el primer mes de anuncios en Shorts (≈ 0,015 $/1.000)",
+          "confianza": "media"
+        }
+      ]
+    }
+  },
+  "competencia": {
+    "concentracion_ingresos": {
+      "top10": 0.58,
+      "top25": 0.82,
+      "mitad_inferior": 0.04,
+      "fuente": {
+        "url": "https://air.io/en/air-data-findings/how-much-does-youtube-really-pay-in-2026-real-rpm-data-from-300-channels",
+        "confianza": "media"
+      }
+    },
+    "reparto_suscriptores": {
+      "llega_1k": 0.406,
+      "llega_10k": 0.079,
+      "llega_100k": 0.013,
+      "llega_1M": 0.0013,
+      "nota": "Canales con al menos 1 suscriptor público (61,2 M), julio de 2026.",
+      "fuente": {
+        "url": "https://vidiq.com/research/youtube-subscriber-benchmarks-2026/",
+        "confianza": "media"
+      }
+    },
+    "tiempo_a_1k": {
+      "mediana_meses": 16,
+      "p25_meses": 8.5,
+      "p75_meses": 24,
+      "nota": "Solo canales creados después de 2023 QUE SÍ llegaron a 1.000 (9.414): sesgo de supervivencia; los que no llegan no cuentan.",
+      "fuente": {
+        "url": "https://vidiq.com/blog/post/youtube-subscriber-growth-statistics/",
+        "confianza": "media"
+      }
+    },
+    "ia_en_shorts": {
+      "slop_ia_feed_nuevo": 0.21,
+      "brainrot_feed_nuevo": 0.33,
+      "espana_canales_slop_top100": 8,
+      "espana_suscriptores_slop": 20220000,
+      "nota": "Primeros 500 Shorts de una cuenta nueva; top 100 de canales en tendencia por país (octubre de 2025).",
+      "fuente": {
+        "url": "https://www.kapwing.com/blog/ai-slop-report-the-global-rise-of-low-quality-ai-videos/",
+        "confianza": "media"
+      }
+    }
+  },
+  "riesgos": {
+    "contenido_no_autentico": {
+      "texto": "Desde el 15-07-2025 no se monetiza el contenido repetitivo o producido en masa: plantillas con poca variación, contenido de IA con plantillas genéricas que da impresión de producción en masa, pases de imágenes con poco valor narrativo o educativo. SÍ se permite: misma intro/cierre con contenido sustancialmente distinto y series con historias distintas aunque sigan un patrón. La revisión mira el canal entero (temas, vídeos más vistos, metadatos).",
+      "fuente": {
+        "url": "https://support.google.com/youtube/answer/1311392",
+        "confianza": "alta"
+      }
+    },
+    "hecho_para_ninos": {
+      "texto": "Si YouTube clasifica el canal o los vídeos como 'hecho para niños' (COPPA): sin anuncios personalizados, sin comentarios, sin notificaciones ni pantalla final. El sistema mira personajes animados, estilo de dibujos y lenguaje dirigido a niños. RPM mediano del nicho infantil: 0,33 $ frente a 10,22 $ de educación (≈ 30 veces menos).",
+      "fuentes": [
+        {
+          "url": "https://support.google.com/youtube/answer/9632097",
+          "confianza": "alta"
+        },
+        {
+          "url": "https://air.io/en/air-data-findings/which-youtube-niche-makes-the-most-money-in-2026-ranked-by-real-rpm-and-cpm",
+          "confianza": "media"
+        }
+      ]
+    }
+  },
+  "otras_plataformas": {
+    "tiktok_creator_rewards": {
+      "texto": "España incluida. ≥ 18 años, ≥ 10.000 seguidores, ≥ 100.000 visualizaciones en 30 días, vídeos ORIGINALES de MÁS DE 1 MINUTO. RPM en Europa ≈ 0,40-1,30 (moneda local).",
+      "confianza": "media-baja (fuentes secundarias; la página oficial no se pudo leer: comprobar en la app antes de decidir)",
+      "fuentes": [
+        {
+          "url": "https://linkdash.eu/en/blog/tiktok-creator-rewards-europe-2026-realistic-earnings-by-country-uk-13",
+          "confianza": "baja"
+        },
+        {
+          "url": "https://quasa.io/media/tiktok-creator-rewards-program-eligible-countries-in-2026",
+          "confianza": "baja"
+        }
+      ]
+    }
+  },
+  "supuestos_herramienta": {
+    "retencion_media_largo": {
+      "bajo": 0.3,
+      "medio": 0.4,
+      "alto": 0.5,
+      "nota": "Fracción del vídeo que se ve de media. No es pública: supuesto razonable para divulgación de 5-12 min; sustituir por la de Studio en cuanto haya datos."
+    }
+  },
+  "casos_reales": {
+    "_nota": "Cifras que dan los propios creadores en sus vídeos (autodeclaradas, sin auditar). Casi todos venden cursos, herramientas o afiliación: incentivo a exagerar. Útiles como órdenes de magnitud, no como promesa.",
+    "casos": [
+      {
+        "quien": "Digital Income Project (inglés)",
+        "url": "https://www.youtube.com/watch?v=jUTOst0tb7Q",
+        "dato": "Canal A (nicho malo, todo externalizado): 64 M de visitas → ≈ 6.000 $ en total (≈ 0,09 $/1.000). Canal B (marketing digital): 10 M de visitas en 2 años → 45.000 $ de anuncios (≈ 4,5 $/1.000), 280.000 subs; coste 600-2.500 $/vídeo, 36.000 $ y 2.000 h invertidas. Lo gordo (50-125 k$/mes) sale de patrocinios, afiliación y productos propios."
+      },
+      {
+        "quien": "Eric, invitado de Adrián Sáenz (inglés, largos de ≥ 30 min)",
+        "url": "https://www.youtube.com/watch?v=mi2wUjaNUtI",
+        "dato": "4 M de visitas en 12 meses → 33.000 € (RPM ≈ 8 €); ≈ 4.000 €/mes con costes de ≈ 300 €/mes; sus otros canales, 20-30 €/día de media. Método: canales < 200.000 subs con muchas más visitas que suscriptores, inglés, vídeos largos, nicho de RPM alto (salud)."
+      },
+      {
+        "quien": "Canal de Shorts de curiosidades (inglés), estimación de vidIQ",
+        "url": "https://www.youtube.com/watch?v=8Rf0xna31xg",
+        "dato": "≈ 250 M de visualizaciones en 90 días → ≈ 40.000 $ (≈ 0,16 $/1.000); otro canal: 2.000 M en 12 meses → ≈ 170.000 $ (≈ 0,085 $/1.000). ESTIMACIONES, no datos de Studio."
+      },
+      {
+        "quien": "Alston Godbolt (4-5 canales faceless)",
+        "url": "https://www.youtube.com/watch?v=COIQlej3tfA",
+        "dato": "Un vídeo de 56.000 visitas le dio la monetización; ahora 20-30 $/día en ese canal. Muchos canales faceless abandonan a los 3-9 meses por falta de dinero. Los atajos (comprar suscriptores u horas) violan las condiciones de YouTube."
+      },
+      {
+        "quien": "Stickman Matt (experimento de 30 días)",
+        "url": "https://www.youtube.com/watch?v=2n2P-rpql34",
+        "dato": "14 vídeos, 4.000 visitas, 103 subs y 94 $ de afiliación en 30 días (30-40 h de trabajo)."
+      },
+      {
+        "quien": "Adrián Sáenz (canal hecho con Claude, castellano)",
+        "url": "https://www.youtube.com/watch?v=R9HLtrNlRj4",
+        "dato": "Flujo casi igual al nuestro (guion → voz clonada → imágenes con zoom, 14 min por ≈ 14 $ y 2 h). Monetización prevista: anuncios + afiliación (Audible, 10 € por prueba gratuita). Un experimento anterior: 117.000 visitas de largos (sin cifra de ingresos). El vídeo en sí monetiza con un cupón de afiliado de hosting."
+      },
+      {
+        "quien": "Edu Serrano (castellano)",
+        "url": "https://www.youtube.com/watch?v=vmuVNLl9TR0",
+        "dato": "4.000 h = 240.000 min: con 6 min vistos de media son 40.000 visitas. Recomienda largos de 10-20 min, temas que se buscan (un canal nuevo casi no sale en la portada), listas y pantallas finales, un solo tema durante 40-50 vídeos. Discrepa de AIR en los Shorts (él: canal de largos, solo largos; AIR: 1 Short por cada 2-3 largos rinde mejor)."
+      }
+    ]
+  },
+  "referentes_faceless": {
+    "_nota": "Datos de yt-dlp del 2026-09-27 (analisis/datos/faceless/). Los más vistos, de la lista UULP.",
+    "canales": [
+      {
+        "canal": "Kurzgesagt",
+        "subs": 25600000,
+        "ritmo": "1,5 largos/mes",
+        "duracion": "≈ 14 min",
+        "mediana_reciente": 4931068,
+        "claves": "Animación con mascota (pájaro), ciencia con tono ADULTO y existencial; producción muy cara; demuestra que dibujos ≠ infantil si el tema y el tono son de adultos. Top: pandemias, sistema inmune, 'qué pasaría si', escala del universo."
+      },
+      {
+        "canal": "The Infographics Show",
+        "subs": 15500000,
+        "ritmo": "≈ 35 largos/mes",
+        "duracion": "≈ 19 min",
+        "mediana_reciente": 513699,
+        "claves": "Monigotes animados simples, volumen altísimo, curiosidad morbosa: muerte, crímenes, militares, cuerpo, desastres."
+      },
+      {
+        "canal": "Daily Dose Of Internet",
+        "subs": 20700000,
+        "ritmo": "≈ 14 largos/mes",
+        "duracion": "≈ 15 min",
+        "mediana_reciente": 1536687,
+        "claves": "Recopilaciones de clips reales verificados (dice expresamente que no usa IA). No replicable para nosotros (derechos de clips)."
+      },
+      {
+        "canal": "MagnatesMedia",
+        "subs": 1860000,
+        "ritmo": "< 1 largo/mes",
+        "duracion": "≈ 31 min",
+        "mediana_reciente": 508407,
+        "claves": "Documentales narrados de negocios (nicho de RPM alto), títulos 'The INSANE truth about…'. Pocos vídeos, muy trabajados."
+      },
+      {
+        "canal": "Zenn",
+        "subs": 192000,
+        "ritmo": "≈ 5 largos/mes",
+        "duracion": "≈ 8,5 min",
+        "mediana_reciente": 18641,
+        "claves": "El modelo más cercano a un equipo de una persona: fórmula de serie reconocible ('The X Effect', 'What did ancient humans…'), psicología y curiosidad, 6-10 min, sin Shorts. Mediana modesta y outliers de 300.000+."
+      },
+      {
+        "canal": "Adrián Sáenz",
+        "subs": 4080000,
+        "ritmo": "≈ 11 largos/mes",
+        "duracion": "≈ 35 min",
+        "mediana_reciente": 324836,
+        "claves": "NO es faceless (marca personal de finanzas). Sus más vistos: 'apps que te pagan'. Negocio: afiliación y formación; sirve de fuente sobre estrategia, no de modelo de contenido."
+      }
+    ]
+  }
+}
