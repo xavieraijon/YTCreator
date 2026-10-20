@@ -244,6 +244,55 @@
   }
 }
 
+.reiniciar__boton {
+  flex: none;
+  margin-left: auto;
+  border-radius: 99px;
+}
+
+// Cerrado o reiniciando: tapa toda la app (lo de debajo ya no responde).
+.apagado {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: color-mix(in srgb, var(--ay-fondo) 92%, transparent);
+  backdrop-filter: blur(4px);
+}
+
+.apagado__caja {
+  max-width: 28rem;
+  padding: 2rem;
+  border-radius: var(--ay-radio);
+  background: var(--ay-superficie);
+  box-shadow: var(--ay-sombra-alta);
+  text-align: center;
+
+  mat-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    font-size: 2.5rem;
+    color: var(--ay-acento);
+  }
+
+  h2 {
+    margin: 0.75rem 0 0.5rem;
+    font-family: var(--ay-serif);
+  }
+
+  p {
+    margin: 0 0 1rem;
+    line-height: 1.55;
+    color: var(--ay-tenue);
+  }
+
+  button {
+    border-radius: 99px;
+  }
+}
+
 .contenido {
   width: 100%;
   max-width: 88rem;

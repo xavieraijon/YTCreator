@@ -101,13 +101,37 @@ def ocupado(puerto: int) -> bool:
         if s.connect_ex(("127.0.0.1", puerto)):
             return False
     print(f"El puerto {puerto} ya está en uso: otro programa lo tiene abierto.")
-    print(f"Si es CanalYT, ya está abierto: http://127.0.0.1:{puerto}  ·  Para pararlo, cierra la ventana donde se arrancó.")
+    print(f"Si es YTCreator, ya está abierto: http://127.0.0.1:{puerto}  ·  Para cerrarlo: botón de apagado, arriba a la "
+          "derecha en la interfaz (o Ctrl+C en la ventana donde se arrancó).")
     return True
 
 
 def _uvicorn(*extra, puerto: int = PUERTO) -> list[str]:
     return _orden(PY, "-m", "uvicorn", "app.main:app", "--host", "127.0.0.1", "--port", puerto,
                   "--timeout-graceful-shutdown", "2", *extra)
+
+
+def _servir(orden: list[str], entorno: dict, cwd: Path) -> int:
+    """Lanza el servidor y lo relanza mientras pida «reiniciar» (botones «Reiniciar ahora» y «Cerrar YTCreator»: el
+    servidor escribe la orden en CANALYT_ORDEN y se para solo, app/rutas/sistema.py). Sin orden, devuelve su código."""
+    fd, archivo = tempfile.mkstemp(prefix="ytcreator-orden-")
+    os.close(fd)
+    pedido = Path(archivo)
+    try:
+        while True:
+            pedido.write_text("", encoding="utf-8")
+            codigo = subprocess.run(orden, cwd=cwd, env={**entorno, "CANALYT_ORDEN": archivo}, **_baja()).returncode
+            que = pedido.read_text(encoding="utf-8").strip()
+            if que == "cerrar":
+                print("YTCreator cerrado desde la interfaz.", flush=True)
+                return 0
+            if que != "reiniciar":
+                return codigo
+            print("Reiniciando YTCreator…", flush=True)
+    except KeyboardInterrupt:
+        return 130
+    finally:
+        pedido.unlink(missing_ok=True)
 
 
 # ---------------------------------------------------------------------------------------------------- modos
@@ -167,7 +191,7 @@ def arrancar() -> int:
     if not (UI / "frontend" / "dist" / "frontend" / "browser" / "index.html").exists() and compilar():
         return 1
     print(f"CanalYT: http://127.0.0.1:{PUERTO}  ·  espacio de trabajo: {_espacio_actual()}", flush=True)
-    return _ejecutar(_uvicorn(), UI / "backend")
+    return _servir(_uvicorn(), ENTORNO, UI / "backend")
 
 
 def prueba() -> int:
@@ -186,10 +210,7 @@ def prueba() -> int:
     url = f"http://127.0.0.1:{PUERTO_PRUEBA}"
     print(f"YTCreator de PRUEBA: {url}  ·  canal de prueba en {destino} (sin gasto; `prueba nueva` lo rehace)", flush=True)
     threading.Timer(3, webbrowser.open, [url]).start()
-    try:
-        return subprocess.run(_uvicorn(puerto=PUERTO_PRUEBA), cwd=UI / "backend", env=entorno, **_baja()).returncode
-    except KeyboardInterrupt:
-        return 130
+    return _servir(_uvicorn(puerto=PUERTO_PRUEBA), entorno, UI / "backend")
 
 
 MODOS = {"dev": dev, "compilar": compilar, "comprobar": comprobar, "prueba": prueba, "": arrancar}

@@ -173,7 +173,10 @@ en un Mac con chip de Apple; en los demás sistemas no aparece en Servicios. Los
 
 Aplicación web local en http://127.0.0.1:8765 (solo en tu ordenador). `python ui/arrancar.py [dev|compilar|comprobar]` vale en los tres
 sistemas (con cualquier python: se relanza con el del `.venv`). La primera vez pregunta dónde guardar tu espacio de trabajo. Tras un cambio
-en el backend se reinicia (Ctrl+C y de nuevo `ui/arrancar.sh`); tras un cambio en la pantalla, `ui/arrancar.sh compilar` y Cmd+Shift+R.
+en el backend se reinicia con el botón de apagado de la cabecera → «Reiniciar YTCreator» (o «Reiniciar ahora» en el aviso, o
+Ajustes → Este equipo); tras un cambio en la pantalla, `ui/arrancar.sh compilar` y Cmd+Shift+R. «Cerrar YTCreator» (mismo botón)
+para el programa y libera el puerto. Solo si se abrió con `arrancar.py` (no en `dev`: ahí, Ctrl+C): el servidor deja la orden
+en un archivo (`CANALYT_ORDEN`) y `arrancar.py` lo vuelve a lanzar o termina.
 
 **Para ver la interfaz con un canal de prueba**: `ui/arrancar.sh prueba` abre http://127.0.0.1:8766 con el canal «Asombroso y Real»
 ya avanzado, sin gasto y sin tocar tu espacio (`herramientas/demo.py`, en la carpeta temporal del sistema): `001-phineas-gage`

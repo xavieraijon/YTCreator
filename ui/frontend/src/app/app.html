@@ -70,6 +70,22 @@
       >
         <mat-icon [class.girando]="actualizando()">sync</mat-icon>
       </button>
+      @if (apagado.apagable()) {
+        <button
+          mat-icon-button
+          type="button"
+          class="cabecera__boton"
+          aria-label="Cerrar o reiniciar YTCreator"
+          matTooltip="Cerrar o reiniciar YTCreator"
+          [matMenuTriggerFor]="menuApagar"
+        >
+          <mat-icon>power_settings_new</mat-icon>
+        </button>
+        <mat-menu #menuApagar="matMenu" xPosition="before">
+          <button mat-menu-item type="button" (click)="apagado.reiniciar()"><mat-icon>restart_alt</mat-icon>Reiniciar YTCreator</button>
+          <button mat-menu-item type="button" (click)="apagado.cerrar()"><mat-icon>power_settings_new</mat-icon>Cerrar YTCreator</button>
+        </mat-menu>
+      }
     </header>
     @if (reiniciar().length) {
       <div class="reiniciar">
@@ -77,10 +93,18 @@
         <div>
           <strong>Reinicia YTCreator</strong>
           <span>
-            Hay cambios en el programa que todavía no ha cargado ({{ reiniciar().length }} archivos): hasta entonces, lo nuevo
-            puede fallar. Ciérralo (Ctrl+C en la ventana donde lo arrancaste) y vuelve a arrancarlo.
+            Hay cambios en el programa que todavía no ha cargado ({{ reiniciar().length === 1 ? '1 archivo' : reiniciar().length + ' archivos' }}):
+            hasta entonces, lo nuevo puede fallar.
+            @if (apagado.apagable()) {
+              Reinícialo: tarda unos segundos y no se pierde nada.
+            } @else {
+              Ciérralo (Ctrl+C en la ventana donde lo arrancaste) y vuelve a arrancarlo.
+            }
           </span>
         </div>
+        @if (apagado.apagable()) {
+          <button mat-flat-button type="button" class="reiniciar__boton" (click)="apagado.reiniciar()">Reiniciar ahora</button>
+        }
       </div>
     }
     <main class="contenido" id="contenido" tabindex="-1">
@@ -89,3 +113,27 @@
   </div>
 </div>
 <app-avisos />
+@if (apagado.estado(); as e) {
+  <div class="apagado" role="alertdialog" aria-modal="true" aria-labelledby="apagado-titulo">
+    <div class="apagado__caja">
+      @switch (e) {
+        @case ('reiniciando') {
+          <mat-icon class="girando" aria-hidden="true">restart_alt</mat-icon>
+          <h2 id="apagado-titulo">Reiniciando YTCreator…</h2>
+          <p>Vuelve en unos segundos. No cierres esta pestaña: se recarga sola.</p>
+        }
+        @case ('cerrado') {
+          <mat-icon aria-hidden="true">power_settings_new</mat-icon>
+          <h2 id="apagado-titulo">YTCreator está cerrado</h2>
+          <p>Ya puedes cerrar esta pestaña. Para volver a usarlo, abre «Abrir YTCreator» (en Aplicaciones, en el menú Inicio o en el Escritorio).</p>
+        }
+        @case ('sin_volver') {
+          <mat-icon aria-hidden="true">warning</mat-icon>
+          <h2 id="apagado-titulo">YTCreator no ha vuelto a abrirse</h2>
+          <p>Ábrelo tú con «Abrir YTCreator» (en Aplicaciones, en el menú Inicio o en el Escritorio) y después pulsa aquí.</p>
+          <button mat-flat-button type="button" (click)="recargar()">Volver a intentarlo</button>
+        }
+      }
+    </div>
+  </div>
+}

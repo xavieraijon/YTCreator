@@ -4,11 +4,12 @@ import { MatButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
 
 import { TarjetaTarea } from '../../compartido/tarjeta-tarea';
+import { ApagadoService } from '../../core/apagado.service';
 import { TERMINADAS, TareasService } from '../../core/tareas.service';
 import { AjustesCopia } from './copia';
 import { DatosAjustes } from './modelos';
 
-/** Ajustes → Este equipo: programas instalados, dónde están el kit y el espacio de trabajo, la prueba de todo el kit y la copia de seguridad. */
+/** Ajustes → Este equipo: programas instalados, dónde están el kit y el espacio de trabajo, la prueba de todo el kit, cerrar o reiniciar y la copia de seguridad. */
 @Component({
   selector: 'app-ajustes-equipo',
   imports: [AjustesCopia, MatButton, MatIcon, TarjetaTarea],
@@ -44,6 +45,18 @@ import { DatosAjustes } from './modelos';
         @if (errorPrueba()) { <p class="error"><mat-icon>warning</mat-icon>{{ errorPrueba() }}</p> }
         @for (t of tareaKit(); track t.id) { <app-tarjeta-tarea [tarea]="t" /> }
       </section>
+      <section class="bloque">
+        <h2>Cerrar o reiniciar</h2>
+        @if (apagado.apagable()) {
+          <p class="secundario">Reiniciar carga lo nuevo del programa (tarda unos segundos). Cerrar lo apaga en este ordenador. En los dos casos no se pierde nada.</p>
+          <div class="acciones">
+            <button mat-stroked-button type="button" (click)="apagado.reiniciar()"><mat-icon>restart_alt</mat-icon>Reiniciar YTCreator</button>
+            <button mat-stroked-button type="button" (click)="apagado.cerrar()"><mat-icon>power_settings_new</mat-icon>Cerrar YTCreator</button>
+          </div>
+        } @else {
+          <p class="secundario">Este YTCreator no se abrió con «Abrir YTCreator»: ciérralo en la ventana donde se arrancó (Ctrl+C).</p>
+        }
+      </section>
       <app-ajustes-copia />
     } @else {
       <p class="secundario">Cargando…</p>
@@ -53,6 +66,7 @@ import { DatosAjustes } from './modelos';
 })
 export class AjustesEquipo {
   private readonly tareas = inject(TareasService);
+  protected readonly apagado = inject(ApagadoService);
   protected readonly datos = httpResource<DatosAjustes>(() => '/api/ajustes');
   protected readonly errorPrueba = signal<string | null>(null);
   protected readonly tareaKit = computed(() => this.tareas.tareas().filter((t) => t.herramienta === 'probar_kit').slice(0, 1));

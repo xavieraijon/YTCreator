@@ -15,7 +15,7 @@ instala a mano: a quien no lo tenga, darle la línea. Instalación normal: el es
 en `~/YTCreator/programa` (fuera del git del espacio y de la copia de seguridad), con el lanzador «Abrir YTCreator» (y el
 acceso del Escritorio). «Abre YTCreator» → `python ui/arrancar.py` en segundo plano y abrir http://127.0.0.1:8765.
 «Actualiza YTCreator» / «Repara YTCreator» → `/instalar` (vuelve a pasar el instalador; carpeta movida: antes
-`espacio.py elegir`). «Reinicia YTCreator» → parar el proceso de `ui/arrancar.py` y volver a abrirla.
+`espacio.py elegir`). «Reinicia YTCreator» → botón de apagado de la cabecera → «Reiniciar YTCreator» (o `POST /api/reiniciar`); si no se abrió con `arrancar.py`, parar su proceso y volver a abrirla.
 «Abre YTCreator de prueba» → `python ui/arrancar.py prueba` en segundo plano (canal de prueba ya avanzado de `herramientas/demo.py` en http://127.0.0.1:8766, sin gasto; se construye la primera vez y `prueba nueva` lo rehace).
 
 ## Kit y espacio de trabajo

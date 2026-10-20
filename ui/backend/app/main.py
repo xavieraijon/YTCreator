@@ -199,7 +199,8 @@ def _codigo_cambiado():
 @app.get("/api/salud", tags=["sistema"])
 def salud():
     cambiados = _codigo_cambiado()
-    return {"ok": True, "raiz": str(config.KIT), "espacio": str(config.RAIZ), "reiniciar": bool(cambiados), "cambiados": cambiados}
+    return {"ok": True, "raiz": str(config.KIT), "espacio": str(config.RAIZ), "reiniciar": bool(cambiados), "cambiados": cambiados,
+            "arranque": ARRANQUE, "apagable": sistema.apagable()}
 
 
 # Frontend compilado (ng build): se sirve desde aquí; en desarrollo se usa ng serve con proxy a /api.
