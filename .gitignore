@@ -103,3 +103,4 @@ ui/frontend/.angular/
 /docs/referentes_plataforma.md
 /docs/escritura_humana.md
 /docs/ui/
+.playwright-mcp/

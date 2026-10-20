@@ -18,11 +18,11 @@ import { DatosAjustes, Limite } from './modelos';
       <section class="bloque">
         <h2>Modo sin gasto</h2>
         <label class="tarjeta interruptor">
-          <input type="checkbox" [ngModel]="d.sin_gasto" (ngModelChange)="cambiarSinGasto($event)" name="sin-gasto" />
+          <input type="checkbox" [ngModel]="d.sin_gasto || d.sin_gasto_activo" [disabled]="d.sin_gasto_activo && !d.sin_gasto" (ngModelChange)="cambiarSinGasto($event)" name="sin-gasto" />
           <span>
             <strong>Bloquear todo lo que gaste créditos de pago</strong>
             <small class="secundario">Voz, imágenes y música de ai33 no se envían: salen versiones falsas (imágenes con la leyenda «SIMULADO», voz de zumbido, música sintetizada). Lo gratuito al que le falte la clave también sale falso. Tu suscripción de IA sigue funcionando. Al desactivarlo, las falsas se rehacen de verdad en el siguiente montaje.</small>
-            @if (d.sin_gasto_activo && !d.sin_gasto) { <small class="secundario">Ahora mismo lo fuerza el entorno del servidor.</small> }
+            @if (d.sin_gasto_activo && !d.sin_gasto) { <small class="secundario"><mat-icon>lock</mat-icon>Está activado y no se puede quitar desde aquí: este YTCreator se abrió en modo de prueba, que nunca gasta.</small> }
           </span>
         </label>
       </section>

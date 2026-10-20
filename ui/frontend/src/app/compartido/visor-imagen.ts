@@ -69,15 +69,18 @@ const ORIGEN: Record<Imagen['origen'], string> = {
           <p class="secundario fuente">{{ img.origen === 'reutilizar' ? 'Reutiliza ' : '' }}{{ img.fuente }}</p>
         }
         @if (img.prompt) {
-          <div class="visor__prompt-cabeza">
-            <h3>Descripción de la imagen</h3>
-            <button mat-stroked-button type="button" (click)="copiar(img.ident, img.prompt)">
-              <mat-icon>{{ copia.reciente() === 'visor-' + img.ident ? 'check' : 'content_copy' }}</mat-icon>
-              {{ copia.reciente() === 'visor-' + img.ident ? 'Copiado' : 'Copiar' }}
-            </button>
-          </div>
-          <p class="prompt">{{ img.prompt }}</p>
-          <p class="secundario nota">Es la del guion, en inglés. La completa (con estilo y paleta) está en «Detalles técnicos», al final del paso de imágenes.</p>
+          <details class="visor__prompt">
+            <summary>Lo que se le pidió al programa que pinta (en inglés)</summary>
+            <div class="visor__prompt-cabeza">
+              <span class="secundario">Es la descripción del guion. Solo te hace falta si quieres pintarla tú en otro sitio.</span>
+              <button mat-stroked-button type="button" (click)="copiar(img.ident, img.prompt)">
+                <mat-icon>{{ copia.reciente() === 'visor-' + img.ident ? 'check' : 'content_copy' }}</mat-icon>
+                {{ copia.reciente() === 'visor-' + img.ident ? 'Copiado' : 'Copiar' }}
+              </button>
+            </div>
+            <p class="prompt">{{ img.prompt }}</p>
+            <p class="secundario nota">La completa (con estilo y paleta) está en «Detalles técnicos», al final del paso de imágenes.</p>
+          </details>
         }
         @if (datos.videoId) {
           <app-subir-imagen [videoId]="datos.videoId" [imagen]="img" (cambiado)="recargar()" />
@@ -172,14 +175,19 @@ const ORIGEN: Record<Imagen['origen'], string> = {
       color: var(--ay-tinta);
       border-left: 1px solid var(--ay-borde);
     }
+    .visor__prompt {
+      margin-top: 1.25rem;
+      summary {
+        cursor: pointer;
+        font-weight: 600;
+      }
+    }
     .visor__prompt-cabeza {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-top: 1.25rem;
-      h3 {
-        margin: 0;
-      }
+      gap: 0.75rem;
+      margin-top: 0.5rem;
     }
     .nota {
       font-size: 0.78rem;

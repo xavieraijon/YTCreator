@@ -484,14 +484,14 @@ def preparar(s, herramienta: str, video_id: int | None, argumentos: dict) -> Tar
         except gasto.ErrorTope as e:
             raise ErrorTarea(str(e)) from None
     if video:
-        canal, titulo = video.canal, f"{h.titulo} · {video.carpeta}"
+        canal, titulo = video.canal, f"{h.titulo} · «{video.titulo or video.carpeta}»"
     elif (argumentos or {}).get("canal"):     # herramienta de canal sin vídeo (p. ej. un vídeo de referencia)
         import canal as kit_canal
         if argumentos["canal"] not in kit_canal.canales():
             raise ErrorTarea("Ese canal no existe o está archivado")
         canal = argumentos["canal"]
     if h.subtitulo and h.subtitulo(argumentos or {}):
-        titulo = f"{h.titulo} {h.subtitulo(argumentos or {})} · {video.carpeta if video else ''}".rstrip(" ·")
+        titulo = f"{h.titulo} {h.subtitulo(argumentos or {})} · {f'«{video.titulo or video.carpeta}»' if video else ''}".rstrip(" ·")
     comando = [*sistema.prioridad_baja(), str(config.PYTHON), str(config.HERRAMIENTAS / h.script),
                *h.argumentos(guion, argumentos or {})]
     t = Tarea(herramienta=herramienta, titulo=titulo, canal=canal, video_id=video.id if video else None,

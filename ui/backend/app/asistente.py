@@ -195,7 +195,8 @@ def estado(videos: list, situaciones: dict[int, dict] | None = None) -> dict:
         "fases": [{"letra": l, "nombre": _PARA_USUARIO.get(l, n)} for l, n in FASES_CANAL]},
         "video": {"en_curso": [{"id": v.id, "carpeta": v.carpeta, "titulo": v.titulo, "fase": v.fase, "tipo": v.tipo,
                                 "fase_nombre": sit[v.id].get("vista_nombre")} for v in en_curso],
-                  "publicables": [{"id": v.id, "carpeta": v.carpeta, "titulo": v.titulo} for v in publicables]}}
+                  "publicables": [{"id": v.id, "carpeta": v.carpeta, "titulo": v.titulo} for v in publicables],
+                  "publicados": [{"id": v.id, "carpeta": v.carpeta, "titulo": v.titulo} for v in publicados]}}
 
 
 def _contar(n: int, uno: str, varios: str) -> str:

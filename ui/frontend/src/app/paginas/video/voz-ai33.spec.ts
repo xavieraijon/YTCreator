@@ -59,8 +59,9 @@ describe('VozAi33: la voz de pago se confirma con el coste del momento', () => {
     await crear(previsto());
     expect(texto()).toContain('1 de 3 bloques locutados');
     expect(texto()).toContain('1.725 créditos');
-    expect(botones().some((b) => b.includes('de prueba') && b.includes(`${n(1150)} créditos`))).toBe(true);
-    expect(botones().some((b) => b.includes('Locutar los 2 bloques') && b.includes(`${n(1725)} créditos`))).toBe(true);
+    // En los botones, euros (los créditos, en el texto de arriba): una persona no sabe cuánto es un crédito.
+    expect(botones().some((b) => b.includes('de prueba (menos de 1 céntimo)') && !b.includes('créditos'))).toBe(true);
+    expect(botones().some((b) => b.includes('Locutar los 2 bloques') && b.includes('(≈ 0,01 €)') && !b.includes('créditos'))).toBe(true);
   });
 
   it('confirma el coste que da el backend al pulsar (no el de la pantalla) y lo manda como previsto', async () => {

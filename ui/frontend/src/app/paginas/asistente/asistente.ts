@@ -118,8 +118,18 @@ type IdPaso = AsistenteEstado['actual'];
                     <a mat-stroked-button [routerLink]="['/videos', v.id]"><mat-icon>movie</mat-icon>{{ v.titulo || v.carpeta }}</a>
                   }
                 </div>
+              } @else if (e.video.publicados?.length) {
+                <p class="secundario">Ya has publicado {{ e.video.publicados.length === 1 ? 'un vídeo' : e.video.publicados.length + ' vídeos' }}. Ahora mismo no hay otro listo para subir: cuando termines el siguiente, aparecerá aquí.</p>
               } @else {
                 <p class="secundario">Todavía no hay ningún vídeo listo para subir (con el montaje, la miniatura y los textos aprobados). Cuando lo haya, aparecerá aquí con la guía de subida.</p>
+              }
+              @if (e.video.publicados?.length) {
+                <p>Ya publicados:</p>
+                <div class="acciones">
+                  @for (v of e.video.publicados; track v.id) {
+                    <a mat-stroked-button [routerLink]="['/videos', v.id]"><mat-icon>check_circle</mat-icon>{{ v.titulo || v.carpeta }}</a>
+                  }
+                </div>
               }
               @if (guia.value()?.texto; as texto) {
                 <mat-accordion>

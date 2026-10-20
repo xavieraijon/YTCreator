@@ -414,6 +414,16 @@ def _luz_revisor(rev: dict, ya_publicado: bool = False) -> dict:
                YA_PUBLICADO if ya_publicado and ne else f"{na} aviso(s) para mirar." if na else "Nada que corregir.")
 
 
+def _luz_coste_voz(palabras: int) -> dict:
+    """Lo que costaría locutarlo con la voz de pago, en euros (los créditos, de apoyo)."""
+    from .gasto import euros
+    creditos = round(palabras * CREDITOS_POR_PALABRA, -2)
+    e = euros(creditos)
+    valor = "menos de 1 céntimo" if e < 0.01 else f"≈ {e:.2f} €".replace(".", ",")
+    return luz("Coste de la voz", valor, "gris",
+               f"Solo con la voz de pago ({creditos:,.0f} créditos); la gratis no cuesta.".replace(",", "."))
+
+
 def luces_guion(ctx: Ctx):
     v, e, rev = ctx.video, ctx.estado, ctx.revisor or {}
     objetivo = e.get("duracion_objetivo") or 0
@@ -427,8 +437,7 @@ def luces_guion(ctx: Ctx):
     c = ctx.guia
     luces.append(luz("Datos verificados", "Hecho" if c.existe("verificacion.md") else "Falta", "verde" if c.existe("verificacion.md") else "rojo",
                      "Cada afirmación contra las fuentes."))
-    luces.append(luz("Coste de la voz", f"≈ {round((v.palabras or 0) * CREDITOS_POR_PALABRA, -2):,.0f} créditos".replace(",", "."),
-                     "gris", "Solo con la voz de pago; la gratis no cuesta."))
+    luces.append(_luz_coste_voz(v.palabras or 0))
     return luces
 
 
@@ -460,8 +469,7 @@ def luces_guion_short(ctx: Ctx):
              luz("Imágenes", v.imagenes_total or "—", "gris", "Una cada 2-4 segundos, en vertical.")]
     if rev:
         luces.insert(0, _luz_revisor(rev, publicado(ctx)))
-    luces.append(luz("Coste de la voz", f"≈ {round(pal * CREDITOS_POR_PALABRA, -2):,.0f} créditos".replace(",", "."),
-                     "gris", "Solo con la voz de pago; la gratis no cuesta."))
+    luces.append(_luz_coste_voz(pal))
     return luces
 
 

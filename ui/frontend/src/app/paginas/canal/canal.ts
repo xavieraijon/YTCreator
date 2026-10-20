@@ -62,7 +62,11 @@ import { mensajeError } from '../../core/errores';
         </p>
       }
       <p class="secundario">
-        {{ c.slug }}
+        @if (c.archivado) {
+          Está guardado en el archivo: puedes ver sus vídeos, pero ya no se trabaja en él.
+        } @else {
+          {{ c.slug }}
+        }
         @if (c.url) {
           · <a [href]="c.url" target="_blank" rel="noopener">YouTube</a>
         }
@@ -112,7 +116,7 @@ import { mensajeError } from '../../core/errores';
         </section>
       }
 
-      @if (papelera.value()?.length) {
+      @if (papelera.hasValue() && papelera.value().length) {
         <details class="papelera tarjeta">
           <summary><mat-icon>delete</mat-icon>Papelera ({{ papelera.value()!.length }})</summary>
           <p class="secundario">Los vídeos que has movido a la papelera. No se borran: puedes devolverlos a su sitio.</p>
@@ -197,6 +201,8 @@ export class CanalPagina {
 
   protected readonly papelera = httpResource<{ nombre: string; carpeta: string; titulo: string; borrado: string | null }[]>(() => {
     this.eventos.version();
+    // Los archivados (`_archivo/<canal>`) no tienen papelera: no se trabaja en ellos.
+    if (this.slug().startsWith('_archivo/')) return undefined;
     return `/api/canales/${this.slug()}/papelera`;
   });
 

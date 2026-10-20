@@ -99,7 +99,7 @@ class Tarea(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     herramienta: Mapped[str] = mapped_column(String)                # clave de tareas.HERRAMIENTAS
-    titulo: Mapped[str] = mapped_column(String)                     # "Revisar guion · 001-phineas-gage"
+    titulo: Mapped[str] = mapped_column(String)                     # "Revisar guion · «El hombre de la barra»" (título del vídeo; sin él, su carpeta)
     canal: Mapped[str | None] = mapped_column(String)
     video_id: Mapped[int | None] = mapped_column(Integer, index=True)   # sin FK: el vídeo puede desaparecer
     argumentos: Mapped[dict] = mapped_column(JSON, default=dict)

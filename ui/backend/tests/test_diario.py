@@ -40,6 +40,10 @@ def test_resumen_de_cambios_legible():
     assert diario.diferencias({"estado.json": "{}"}, {"estado.json": "{}"}) == []
 
 
+def test_el_resumen_de_claude_sale_sin_marcas_de_markdown():
+    assert diario._plano("## Hecho\n- **Escena 3**: cambié `guion.json`\n1. otra") == "Hecho\nEscena 3: cambié guion.json\notra"
+
+
 def test_las_acciones_del_usuario_quedan_en_el_diario(cliente, video):
     vid, carpeta = video
     (carpeta / "propuestas.json").write_text(json.dumps({"propuestas": [
@@ -71,6 +75,6 @@ def test_un_turno_de_claude_registra_que_cambio(cliente, video, tmp_path, monkey
         time.sleep(0.1)
     e = d[0]
     assert e["quien"] == "claude" and e["titulo"] == "Claude respondió a tu mensaje" and e["pedido"].startswith("Revisa los avisos")
-    assert e["detalle"] == "He leído **CLAUDE.md**."                                  # su última respuesta de texto
+    assert e["detalle"] == "He leído CLAUDE.md."              # su última respuesta de texto, sin marcas de markdown
     assert e["cambios"][0]["archivo"] == "escaleta.json" and e["cambios"][0]["resumen"] == ["Avisos: se quitaron 1: Aviso 1"]
     assert "-" in e["cambios"][0]["diff"]

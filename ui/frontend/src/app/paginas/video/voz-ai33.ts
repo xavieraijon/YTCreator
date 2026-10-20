@@ -35,7 +35,7 @@ import { miles, euros as eurosLlano } from '../../core/formato';
                 </p>
               } @else {
                 <p class="secundario voz-nombre">
-                  Voz: <strong>{{ d.nombre_voz ?? d.voz }}</strong>{{ d.modelo && !d.nombre_voz ? ' · ' + d.modelo : '' }}
+                  Voz: <strong>{{ d.nombre_voz ?? d.voz }}</strong>
                   · {{ d.bloques.length }} {{ d.bloques.length === 1 ? 'bloque' : 'bloques' }} (cada bloque se locuta de una tirada)
                 </p>
               }
@@ -93,12 +93,12 @@ import { miles, euros as eurosLlano } from '../../core/formato';
               <div class="acciones">
                 @if (d.prueba && d.pendientes > 1) {
                   <button mat-stroked-button type="button" (click)="lanzar(true)">
-                    <mat-icon>mic</mat-icon>Locutar solo el siguiente bloque, de prueba (≈ {{ miles(d.prueba.creditos) }} créditos)
+                    <mat-icon>mic</mat-icon>Locutar solo el siguiente bloque, de prueba ({{ euros(d.prueba.euros) }})
                   </button>
                 }
                 <button mat-flat-button type="button" (click)="lanzar(false)">
                   <mat-icon>mic</mat-icon>Locutar {{ d.pendientes === 1 ? 'el bloque que falta' : 'los ' + d.pendientes + ' bloques' }}
-                  (≈ {{ miles(d.creditos) }} créditos)
+                  ({{ euros(d.euros) }})
                 </button>
               </div>
               <p class="secundario nota">

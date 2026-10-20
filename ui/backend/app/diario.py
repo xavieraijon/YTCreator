@@ -47,6 +47,12 @@ def _corto(texto, n=110):
     return t if len(t) <= n else t[:n - 1] + "…"
 
 
+def _plano(texto: str) -> str:
+    """El markdown de Claude, sin sus marcas (negritas, código, títulos y viñetas): el diario lo enseña como texto."""
+    t = re.sub(r"(\*\*|__|`)", "", texto)
+    return re.sub(r"(?m)^\s*(#{1,6}|[-*]|\d+\.)\s+", "", t)
+
+
 def _texto_item(x):
     if isinstance(x, dict):
         return _corto(x.get("texto") or x.get("titulo") or x.get("nombre") or json.dumps(x, ensure_ascii=False))
@@ -176,7 +182,7 @@ def registrar_turno(carpeta: Path, pedido: str, antes: dict, fase: str | None, r
         titulo += " (parado por ti)"
     elif estado == "error":
         titulo = "Claude no pudo terminar: " + titulo[0].lower() + titulo[1:]
-    return registrar(carpeta, "claude", "claude", titulo, _corto(resumen, 900) if resumen else None, fase,
+    return registrar(carpeta, "claude", "claude", titulo, _corto(_plano(resumen), 900) if resumen else None, fase,
                      pedido=usuario, cambios=cambios, segundos=segundos, error=True if estado == "error" else None)
 
 

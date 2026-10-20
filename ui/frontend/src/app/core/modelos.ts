@@ -474,6 +474,7 @@ export interface AsistenteEstado {
   video: {
     en_curso: { id: number; carpeta: string; titulo: string | null; fase: string | null; fase_nombre: string | null; tipo: string }[];
     publicables: { id: number; carpeta: string; titulo: string | null }[];
+    publicados?: { id: number; carpeta: string; titulo: string | null }[];
   };
 }
 
