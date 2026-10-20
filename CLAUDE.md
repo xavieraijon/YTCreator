@@ -16,6 +16,7 @@ en `~/YTCreator/programa` (fuera del git del espacio y de la copia de seguridad)
 acceso del Escritorio). «Abre YTCreator» → `python ui/arrancar.py` en segundo plano y abrir http://127.0.0.1:8765.
 «Actualiza YTCreator» / «Repara YTCreator» → `/instalar` (vuelve a pasar el instalador; carpeta movida: antes
 `espacio.py elegir`). «Reinicia YTCreator» → parar el proceso de `ui/arrancar.py` y volver a abrirla.
+«Abre YTCreator de prueba» → `python ui/arrancar.py prueba` en segundo plano (canal de ejemplo en http://127.0.0.1:8766, sin gasto, copia nueva en cada arranque).
 
 ## Kit y espacio de trabajo
 Dos carpetas, dos repositorios git: el **kit** (este: código, plantillas, agentes, comandos, `docs/`) y el **espacio de trabajo**
@@ -29,7 +30,7 @@ Los cambios del kit (herramientas, agentes, plantillas, docs) se commitean en el
 
 ## Canales
 Cada canal vive en su carpeta `canales/<nombre>/` (`CANAL.md`, `canal.json`, `docs/`, `equipo/`, `marca/`,
-`recursos/`, `videos/`, `analisis/`). Hoy no hay ninguno (espacio limpio desde el 05/10/2026): el primero se crea con
+`recursos/`, `videos/`, `analisis/`). Hoy no hay ninguno (espacio a cero desde el 20/10/2026): el primero se crea con
 `/nuevo-canal` o con el Asistente de la UI.
 - **Canal activo**: el que dice el archivo `canal_activo`; la variable `CANAL` lo cambia para un comando.
   **`<canal>` en cualquier documento, agente o comando = `canales/<canal activo>`**, y `canal.json` a secas

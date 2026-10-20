@@ -4,6 +4,8 @@
     python ui/arrancar.py dev        → desarrollo: backend con recarga (8765) + ng serve (http://127.0.0.1:4300)
     python ui/arrancar.py compilar   → solo compila el frontend
     python ui/arrancar.py comprobar  → todo lo que debe pasar antes de dar un cambio por bueno: ruff, pytest, Vitest y compilación
+    python ui/arrancar.py prueba     → la interfaz con un canal de ejemplo (http://127.0.0.1:8766), sin gasto y sin tocar tu espacio:
+                                       cada arranque parte de una copia nueva de ui/backend/tests/espacio_de_prueba
 
 `python` puede ser cualquiera: si no es el del .venv del kit, se relanza con él. En Mac y Linux, `ui/arrancar.sh` es un atajo.
 La primera vez pregunta dónde guardar tus canales y claves (espacio de trabajo); después lo recuerda (herramientas/espacio.py).
@@ -15,7 +17,10 @@ import shutil
 import socket
 import subprocess
 import sys
+import tempfile
+import threading
 import time
+import webbrowser
 from pathlib import Path
 
 UI = Path(__file__).resolve().parent
@@ -24,7 +29,8 @@ sys.path.insert(0, str(RAIZ / "herramientas"))
 import sistema  # noqa: E402
 
 PY = sistema.python_venv(RAIZ)
-PUERTO, PUERTO_DEV = 8765, 4300
+PUERTO, PUERTO_DEV, PUERTO_PRUEBA = 8765, 4300, 8766
+EJEMPLO = UI / "backend" / "tests" / "espacio_de_prueba"
 
 
 def _entorno() -> dict:
@@ -99,8 +105,8 @@ def ocupado(puerto: int) -> bool:
     return True
 
 
-def _uvicorn(*extra) -> list[str]:
-    return _orden(PY, "-m", "uvicorn", "app.main:app", "--host", "127.0.0.1", "--port", PUERTO,
+def _uvicorn(*extra, puerto: int = PUERTO) -> list[str]:
+    return _orden(PY, "-m", "uvicorn", "app.main:app", "--host", "127.0.0.1", "--port", puerto,
                   "--timeout-graceful-shutdown", "2", *extra)
 
 
@@ -164,7 +170,29 @@ def arrancar() -> int:
     return _ejecutar(_uvicorn(), UI / "backend")
 
 
-MODOS = {"dev": dev, "compilar": compilar, "comprobar": comprobar, "": arrancar}
+def prueba() -> int:
+    """Canal de ejemplo para ver la interfaz paso a paso: copia nueva del espacio de las pruebas, puerto propio y sin gasto."""
+    if ocupado(PUERTO_PRUEBA):
+        return 1
+    if not (UI / "frontend" / "dist" / "frontend" / "browser" / "index.html").exists() and compilar():
+        return 1
+    destino = Path(tempfile.gettempdir()) / "YTCreator-prueba"
+    shutil.rmtree(destino, ignore_errors=True)
+    shutil.copytree(EJEMPLO, destino)
+    entorno = {**ENTORNO, "CANALYT_ESPACIO": str(destino), "CANALYT_SIN_GASTO": "1"}
+    if subprocess.run([str(PY), str(RAIZ / "herramientas" / "espacio.py"), "preparar"], env=entorno,
+                      capture_output=True).returncode:
+        sys.exit("ERROR: no se pudo preparar el espacio de prueba")
+    url = f"http://127.0.0.1:{PUERTO_PRUEBA}"
+    print(f"YTCreator de PRUEBA: {url}  ·  canal de ejemplo en {destino} (se rehace en cada arranque; sin gasto)", flush=True)
+    threading.Timer(3, webbrowser.open, [url]).start()
+    try:
+        return subprocess.run(_uvicorn(puerto=PUERTO_PRUEBA), cwd=UI / "backend", env=entorno, **_baja()).returncode
+    except KeyboardInterrupt:
+        return 130
+
+
+MODOS = {"dev": dev, "compilar": compilar, "comprobar": comprobar, "prueba": prueba, "": arrancar}
 
 
 def main():
@@ -173,7 +201,7 @@ def main():
         print(__doc__)
         return
     if modo not in MODOS:
-        sys.exit(f"ERROR: modo desconocido «{modo}» (dev, compilar o comprobar; sin nada, arranca la interfaz)")
+        sys.exit(f"ERROR: modo desconocido «{modo}» (dev, compilar, comprobar o prueba; sin nada, arranca la interfaz)")
     if not PY.exists():
         sys.exit(f"ERROR: falta el entorno de Python del kit ({PY}). Se crea al instalar: vuelve a pegar la línea de instalación (docs/instalar.md).")
     if Path(sys.prefix).resolve() != PY.parent.parent.resolve():          # otro python: se relanza con el del .venv
