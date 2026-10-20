@@ -4,8 +4,9 @@
     python ui/arrancar.py dev        → desarrollo: backend con recarga (8765) + ng serve (http://127.0.0.1:4300)
     python ui/arrancar.py compilar   → solo compila el frontend
     python ui/arrancar.py comprobar  → todo lo que debe pasar antes de dar un cambio por bueno: ruff, pytest, Vitest y compilación
-    python ui/arrancar.py prueba     → la interfaz con un canal de ejemplo (http://127.0.0.1:8766), sin gasto y sin tocar tu espacio:
-                                       cada arranque parte de una copia nueva de ui/backend/tests/espacio_de_prueba
+    python ui/arrancar.py prueba     → la interfaz con un canal de prueba ya avanzado (http://127.0.0.1:8766), sin gasto y sin
+                                       tocar tu espacio: un vídeo publicado, otro por montar y otro a medio guion (herramientas/demo.py).
+                                       Se construye la primera vez (unos 3 min) y se reutiliza; `prueba nueva` lo rehace desde cero
 
 `python` puede ser cualquiera: si no es el del .venv del kit, se relanza con él. En Mac y Linux, `ui/arrancar.sh` es un atajo.
 La primera vez pregunta dónde guardar tus canales y claves (espacio de trabajo); después lo recuerda (herramientas/espacio.py).
@@ -30,7 +31,6 @@ import sistema  # noqa: E402
 
 PY = sistema.python_venv(RAIZ)
 PUERTO, PUERTO_DEV, PUERTO_PRUEBA = 8765, 4300, 8766
-EJEMPLO = UI / "backend" / "tests" / "espacio_de_prueba"
 
 
 def _entorno() -> dict:
@@ -171,20 +171,20 @@ def arrancar() -> int:
 
 
 def prueba() -> int:
-    """Canal de ejemplo para ver la interfaz paso a paso: copia nueva del espacio de las pruebas, puerto propio y sin gasto."""
+    """Canal de prueba para ver la interfaz fase a fase: espacio aparte (herramientas/demo.py), puerto propio y sin gasto."""
     if ocupado(PUERTO_PRUEBA):
         return 1
     if not (UI / "frontend" / "dist" / "frontend" / "browser" / "index.html").exists() and compilar():
         return 1
-    destino = Path(tempfile.gettempdir()) / "YTCreator-prueba"
-    shutil.rmtree(destino, ignore_errors=True)
-    shutil.copytree(EJEMPLO, destino)
+    destino = Path(tempfile.gettempdir()) / "YTCreator-demo"
+    nueva = sys.argv[2:3] == ["nueva"]
+    if nueva or not (destino / ".demo").exists():
+        print("Preparando el canal de prueba (unos 3 minutos, solo esta vez)…", flush=True)
+        if subprocess.run([str(PY), str(RAIZ / "herramientas" / "demo.py"), "hacer", str(destino)]).returncode:
+            return 1
     entorno = {**ENTORNO, "CANALYT_ESPACIO": str(destino), "CANALYT_SIN_GASTO": "1"}
-    if subprocess.run([str(PY), str(RAIZ / "herramientas" / "espacio.py"), "preparar"], env=entorno,
-                      capture_output=True).returncode:
-        sys.exit("ERROR: no se pudo preparar el espacio de prueba")
     url = f"http://127.0.0.1:{PUERTO_PRUEBA}"
-    print(f"YTCreator de PRUEBA: {url}  ·  canal de ejemplo en {destino} (se rehace en cada arranque; sin gasto)", flush=True)
+    print(f"YTCreator de PRUEBA: {url}  ·  canal de prueba en {destino} (sin gasto; `prueba nueva` lo rehace)", flush=True)
     threading.Timer(3, webbrowser.open, [url]).start()
     try:
         return subprocess.run(_uvicorn(puerto=PUERTO_PRUEBA), cwd=UI / "backend", env=entorno, **_baja()).returncode

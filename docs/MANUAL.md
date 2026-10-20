@@ -175,9 +175,12 @@ Aplicación web local en http://127.0.0.1:8765 (solo en tu ordenador). `python u
 sistemas (con cualquier python: se relanza con el del `.venv`). La primera vez pregunta dónde guardar tu espacio de trabajo. Tras un cambio
 en el backend se reinicia (Ctrl+C y de nuevo `ui/arrancar.sh`); tras un cambio en la pantalla, `ui/arrancar.sh compilar` y Cmd+Shift+R.
 
-**Para ver la interfaz con un canal de ejemplo**: `ui/arrancar.sh prueba` abre http://127.0.0.1:8766 con el canal «Asombroso y Real»
-(dos vídeos en fases distintas y un canal archivado), sin gasto y sin tocar tu espacio: cada arranque parte de una copia nueva de
-`ui/backend/tests/espacio_de_prueba` en la carpeta temporal del sistema. Puede abrirse a la vez que la interfaz normal (8765).
+**Para ver la interfaz con un canal de prueba**: `ui/arrancar.sh prueba` abre http://127.0.0.1:8766 con el canal «Asombroso y Real»
+ya avanzado, sin gasto y sin tocar tu espacio (`herramientas/demo.py`, en la carpeta temporal del sistema): `001-phineas-gage`
+montado, publicado y con resultados (fase J), `003-phineas-gage-para-montar` con voz e imágenes hechas, a falta de pulsar «Montar»
+(fase G), y `002-…` a medio guion (fase D). La voz y las imágenes son de relleno (rayas con «SIMULADO» y un zumbido) y los datos de
+publicación, inventados. Se construye la primera vez (unos 3 minutos) y se reutiliza; `ui/arrancar.sh prueba nueva` lo rehace desde
+cero. Puede abrirse a la vez que la interfaz normal (8765).
 
 **Ajustes** (en el menú) reúne todo lo de configuración:
 - **Servicios**: una tarjeta por servicio (Cloudflare, Azure, ai33, Gemini). La clave se guarda en el `.env` del espacio y no se vuelve a
