@@ -150,7 +150,7 @@ class Contexto:
             motivos.append("la voz ha cambiado después de montarlo")
         if self.por_generar():
             motivos.append("hay imágenes por rehacer")
-        elif self.ultima("img/*.png") > t:
+        elif self.ultima(IMAGENES) > t:
             motivos.append("hay imágenes nuevas desde que se montó")
         try:
             registro = json.loads((self.carpeta / "montaje.json").read_text(encoding="utf-8"))
@@ -411,10 +411,12 @@ def de(tipo):
 
 # --- Vigencia de las fases ya hechas ----------------------------------------------------------------
 
+# Imágenes de las escenas (NN-K.png): no los fondos de las miniaturas, que montar.py hace después de final.mp4.
+IMAGENES = "img/[0-9][0-9]-*.png"
 # Lo que aprueba cada punto: si alguno de esos archivos es posterior a la aprobación, lo aprobado ya no es lo que hay.
-APROBADO = {"e-aprobar": ("la voz", ("voz/[0-9][0-9].wav",)), "f-aprobar": ("las imágenes", ("img/*.png",)),
+APROBADO = {"e-aprobar": ("la voz", ("voz/[0-9][0-9].wav",)), "f-aprobar": ("las imágenes", (IMAGENES,)),
             "g-aprobar": ("el vídeo montado", ("final.mp4",)),
-            "sc-aprobar": ("la voz o las imágenes", ("voz/[0-9][0-9].wav", "img/*.png")),
+            "sc-aprobar": ("la voz o las imágenes", ("voz/[0-9][0-9].wav", IMAGENES)),
             "sd-aprobar": ("el vídeo montado", ("final.mp4",))}
 # Fase de la voz, de las imágenes y del montaje en cada tipo.
 FASES_PRODUCTO = {"largo": ("E", "F", "G"), "short": ("C", "C", "D")}

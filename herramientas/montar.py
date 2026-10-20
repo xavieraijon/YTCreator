@@ -1632,7 +1632,9 @@ def montar(guion_ruta, rehacer_imagenes=(), rehacer_voces=(), solo_imagenes=Fals
     fase(12, "Vídeo")
     print("5/6 Vídeo")
     salida = carpeta / "final.mp4"
-    renderizar(lista_v, TAMANOS[formato], audio, ass, salida, rango=(12, 96))
+    parcial = tmp / "final.mp4"     # final.mp4 solo aparece entero: la UI no lo da por montado a medias
+    renderizar(lista_v, TAMANOS[formato], audio, ass, parcial, rango=(12, 96))
+    os.replace(parcial, salida)
     registrar_montaje(carpeta)
 
     fase(96, "Shorts, miniaturas y publicación")

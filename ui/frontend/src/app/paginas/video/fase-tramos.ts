@@ -244,7 +244,9 @@ export class VisorDocs {
                 }
                 @case ('guion') {
                   <ul class="lista-pasos">@for (p of a.datos['pasos'] ?? []; track p.texto) { <li [class.falta]="!p.hecho"><mat-icon>{{ p.hecho ? 'check_circle' : 'radio_button_unchecked' }}</mat-icon>{{ p.texto }}</li> }</ul>
-                  @if (a.datos['errores']?.length) {
+                  @if (a.datos['errores']?.length && a.datos['publicado']) {
+                    <details class="avisos"><summary><mat-icon>info</mat-icon>El revisor ve {{ a.datos['errores'].length === 1 ? '1 cosa' : a.datos['errores'].length + ' cosas' }} que mejorar. Ya está publicado: esto no cambia lo que hay en YouTube.</summary><ul>@for (x of a.datos['errores']; track x) { <li>{{ x }}</li> }</ul></details>
+                  } @else if (a.datos['errores']?.length) {
                     <details class="avisos avisos--error" open><summary><mat-icon>error</mat-icon>{{ a.datos['errores'].length }} {{ a.datos['errores'].length === 1 ? 'error que hay que corregir' : 'errores que hay que corregir' }} (el revisor no los deja pasar)</summary><ul>@for (x of a.datos['errores']; track x) { <li>{{ x }}</li> }</ul></details>
                   }
                   @if (a.datos['avisos']?.length) {
@@ -342,9 +344,10 @@ export class VisorDocs {
                 @if (mirando()) {
                   <span class="secundario"><mat-icon>history</mat-icon>Ya hecho</span>
                 } @else if (a.aprobable) {
-                  <button mat-flat-button type="button" [disabled]="ocupado() || d.trabajo.estado === 'pensando'" (click)="aprobar()">
+                  <button mat-flat-button type="button" [disabled]="ocupado() || d.trabajo.estado === 'pensando' || trabajando()" (click)="aprobar()">
                     {{ textoAprobar(a.vista) }}<mat-icon iconPositionEnd>arrow_forward</mat-icon>
                   </button>
+                  @if (trabajando()) { <span class="secundario"><mat-icon>hourglass_empty</mat-icon>Espera a que termine el trabajo en marcha.</span> }
                 } @else if (a.aprobacion) {
                   <span class="secundario"><mat-icon>hourglass_empty</mat-icon>Cuando esté listo, podrás aprobarlo aquí.</span>
                 }
@@ -486,6 +489,10 @@ export class FaseTramos {
   }
   protected enMarcha(clave: string): boolean {
     return this.tareas.tareas().some((t) => t.video_id === this.video().id && t.herramienta === clave && !TERMINADAS.includes(t.estado));
+  }
+  /** Algún trabajo de este vídeo en marcha (montaje, imágenes, voz…): no se aprueba lo que todavía se está haciendo. */
+  protected trabajando(): boolean {
+    return this.tareas.tareas().some((t) => t.video_id === this.video().id && !TERMINADAS.includes(t.estado));
   }
   protected async tarea(clave: string): Promise<void> {
     this.error.set(await this.tareas.lanzar(clave, this.video().id));

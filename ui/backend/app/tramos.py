@@ -399,11 +399,19 @@ def datos_escaleta(ctx: Ctx):
                       for a in _lista(j.get("actos"), 10)]}
 
 
-def _luz_revisor(rev: dict) -> dict:
+YA_PUBLICADO = "Ya está publicado: esto no cambia lo que hay en YouTube."
+
+
+def publicado(ctx: Ctx) -> bool:
+    """El vídeo ya está en YouTube (enlace registrado): lo que falte o cambie aquí ya no lo bloquea."""
+    return bool(_publicacion(ctx).get("url"))
+
+
+def _luz_revisor(rev: dict, ya_publicado: bool = False) -> dict:
     ne, na = len(rev.get("errores", [])), len(rev.get("avisos", []))
     return luz("Revisión automática", "Sin errores" if not ne else "1 error" if ne == 1 else f"{ne} errores",
-               "rojo" if ne else "verde" if not na else "ambar",
-               f"{na} aviso(s) para mirar." if na else "Nada que corregir.")
+               "gris" if ya_publicado and ne else "rojo" if ne else "verde" if not na else "ambar",
+               YA_PUBLICADO if ya_publicado and ne else f"{na} aviso(s) para mirar." if na else "Nada que corregir.")
 
 
 def luces_guion(ctx: Ctx):
@@ -415,7 +423,7 @@ def luces_guion(ctx: Ctx):
              luz("Imágenes", v.imagenes_total or "—", "gris",
                  f"≈ {max(1, -(-v.imagenes_total // IMAGENES_POR_DIA))} día(s) de cuota gratis." if v.imagenes_total else "")]
     if rev:
-        luces.insert(0, _luz_revisor(rev))
+        luces.insert(0, _luz_revisor(rev, publicado(ctx)))
     c = ctx.guia
     luces.append(luz("Datos verificados", "Hecho" if c.existe("verificacion.md") else "Falta", "verde" if c.existe("verificacion.md") else "rojo",
                      "Cada afirmación contra las fuentes."))
@@ -430,7 +438,7 @@ def datos_guion(ctx: Ctx):
              ("revision_estructura.md", "Ritmo y estructura revisados"), ("brief_visual.md", "Brief visual"),
              ("guion_generado.json", "Copia para aprender de tus cambios")]
     return {"errores": rev.get("errores", [])[:10], "avisos": rev.get("avisos", [])[:12],
-            "resumen": rev.get("resumen"),
+            "resumen": rev.get("resumen"), "publicado": publicado(ctx),
             "pasos": [{"texto": t, "hecho": (ctx.carpeta / f).exists()} for f, t in pasos]
             + [{"texto": "Una descripción por imagen", "hecho": bool(ctx.guia.imagenes)}]}
 
@@ -451,7 +459,7 @@ def luces_guion_short(ctx: Ctx):
                  f"Entre {SHORT_PALABRAS[0]} y {SHORT_PALABRAS[1]}."),
              luz("Imágenes", v.imagenes_total or "—", "gris", "Una cada 2-4 segundos, en vertical.")]
     if rev:
-        luces.insert(0, _luz_revisor(rev))
+        luces.insert(0, _luz_revisor(rev, publicado(ctx)))
     luces.append(luz("Coste de la voz", f"≈ {round(pal * CREDITOS_POR_PALABRA, -2):,.0f} créditos".replace(",", "."),
                      "gris", "Solo con la voz de pago; la gratis no cuesta."))
     return luces
@@ -460,6 +468,7 @@ def luces_guion_short(ctx: Ctx):
 def datos_guion_short(ctx: Ctx):
     rev = ctx.revisor or {}
     return {"errores": rev.get("errores", [])[:10], "avisos": rev.get("avisos", [])[:12], "resumen": rev.get("resumen"),
+            "publicado": publicado(ctx),
             "pasos": [{"texto": "Guion escrito", "hecho": (ctx.carpeta / "guion.md").exists()},
                       {"texto": "Una descripción por imagen, en vertical", "hecho": bool(ctx.guia.imagenes)}]}
 
@@ -509,6 +518,8 @@ def luces_montaje(ctx: Ctx):
     que = ("El Short final, en vertical y con subtítulos." if ctx.video.tipo == "short"
            else "El vídeo final, con pantalla final y subtítulos.")
     montado = (luz("Vídeo montado", "Sí", "verde", que) if m["al_dia"]
+               else luz("Vídeo montado", "Desactualizado", "gris", "Desde que se montó, " + ", ".join(m["motivos"]) + ". "
+                        + YA_PUBLICADO + " Vuelve a montarlo solo si quieres subir una versión nueva.") if publicado(ctx)
                else luz("Vídeo montado", "Desactualizado", "ambar", "Hay que volver a montarlo: " + ", ".join(m["motivos"]) + ".")
                if m["existe"] else luz("Vídeo montado", "Todavía no", "rojo", que))
     return [montado,
