@@ -11,6 +11,6 @@ Spec-Driven Development with GitHub Spec Kit (`/speckit-*`).
 
 ## Status
 
-- 001 `design-system-foundation`: spec done, branch `001-design-system-foundation`. **Next: `/speckit-plan`.**
+- 001 `design-system-foundation`: spec and plan done, branch `001-design-system-foundation`. **Next: `/speckit-tasks`.**
 - Planned order after 001: onboarding (install + AI choice) → channel and niche → idea bank → script and outline →
   publishing package → subtitles.
