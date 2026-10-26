@@ -1,0 +1,41 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Builds
+dist/
+build/
+.vite/
+coverage/
+*.tsbuildinfo
+
+# Secrets and environment
+.env
+.env.*
+!.env.example
+
+# Local data (SQLite, creator workspace)
+*.db
+*.db-journal
+*.sqlite
+data/
+
+# Logs
+*.log
+logs/
+
+# Tests
+playwright-report/
+test-results/
+.playwright-mcp/
+
+# Claude Code: local settings and private state (the shared skills do get committed)
+.claude/settings.local.json
+.claude/*.local.*
+
+# System / editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
