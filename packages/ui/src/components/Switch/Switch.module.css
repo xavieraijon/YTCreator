@@ -1,0 +1,110 @@
+@layer components {
+  .switch {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    column-gap: var(--s-space-4);
+    row-gap: var(--s-space-1);
+    align-items: center;
+  }
+
+  .switch > p {
+    grid-column: 2;
+  }
+
+  .input {
+    position: relative;
+    inline-size: var(--c-switch-track-width);
+    block-size: var(--s-target-min);
+    margin: 0;
+    border: var(--s-border-width-default) solid var(--c-switch-track-border);
+    border-radius: var(--s-radius-full);
+    background: var(--c-switch-track);
+    appearance: none;
+    cursor: pointer;
+    transition-property: background-color, border-color;
+    transition-duration: var(--s-duration-fast);
+    transition-timing-function: var(--s-easing-standard);
+  }
+
+  /* The thumb: its position, not only the color, says whether it is on (WCAG 1.4.1). */
+  .input::before {
+    position: absolute;
+    inset-block-start: 50%;
+    inset-inline-start: var(--s-space-1);
+    inline-size: var(--c-switch-thumb-size);
+    block-size: var(--c-switch-thumb-size);
+    border-radius: var(--s-radius-full);
+    background: var(--c-switch-thumb);
+    content: '';
+    translate: 0 -50%;
+    transition: translate var(--s-duration-fast) var(--s-easing-standard);
+  }
+
+  .input:checked {
+    border-color: var(--c-switch-track-on);
+    background: var(--c-switch-track-on);
+  }
+
+  .input:checked::before {
+    background: var(--c-switch-thumb-on);
+    translate: calc(
+        var(--c-switch-track-width) - var(--c-switch-thumb-size) - var(--s-space-1) * 2 -
+          var(--s-border-width-default) * 2
+      ) -50%;
+  }
+
+  .input:is(:hover, [data-force-state='hover']):not(:disabled) {
+    border-color: var(--c-switch-track-border-hover);
+  }
+
+  .input:is(:checked:hover, :checked[data-force-state='hover']):not(:disabled) {
+    border-color: var(--s-color-accent-hover);
+    background: var(--s-color-accent-hover);
+  }
+
+  .input:is(:focus-visible, [data-force-state='focus']) {
+    outline: var(--s-focus-ring-width) solid var(--s-color-border-focus);
+    outline-offset: var(--s-focus-ring-offset);
+  }
+
+  .input:disabled {
+    border-color: var(--s-color-border-subtle);
+    background: var(--s-color-surface-sunken);
+    cursor: not-allowed;
+  }
+
+  .input:disabled::before {
+    background: var(--s-color-text-disabled);
+  }
+
+  .label {
+    color: var(--c-field-label);
+    font-size: var(--s-font-size-sm);
+    font-weight: var(--s-font-weight-medium);
+    cursor: pointer;
+  }
+
+  .input:disabled + .label {
+    color: var(--s-color-text-disabled);
+    cursor: not-allowed;
+  }
+
+  @media (forced-colors: active) {
+    .input::before {
+      background: ButtonText;
+    }
+
+    .input:checked::before {
+      background: Highlight;
+    }
+  }
+}
+
+/* Forced colors: system colors only, no shadows or gradients. */
+@layer components {
+  @media (forced-colors: active) {
+    .input {
+      border-color: CanvasText;
+    }
+  }
+}

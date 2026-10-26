@@ -1,0 +1,75 @@
+@layer components {
+  .progress {
+    display: grid;
+    gap: var(--s-space-2);
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--s-space-4);
+    font-size: var(--s-font-size-sm);
+    line-height: var(--s-line-height-ui);
+  }
+
+  .label {
+    color: var(--s-color-text-primary);
+    font-weight: var(--s-font-weight-medium);
+  }
+
+  .value {
+    color: var(--s-color-text-secondary);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .track {
+    position: relative;
+    overflow: hidden;
+    block-size: var(--c-progress-bar-height);
+    border-radius: var(--s-radius-full);
+    background: var(--c-progress-bar-track);
+  }
+
+  .bar {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 0;
+    inline-size: var(--progress);
+    border-radius: inherit;
+    background: var(--c-progress-bar-fill);
+    transition: inline-size var(--s-duration-normal) var(--s-easing-standard);
+  }
+
+  .track[data-indeterminate] .bar {
+    inline-size: 40%;
+    animation: ytc-progress-slide calc(var(--s-duration-slow) * 4) var(--s-easing-standard) infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .track[data-indeterminate] .bar {
+      inline-size: 100%;
+      opacity: 0.5;
+      animation: none;
+    }
+  }
+
+  @media (forced-colors: active) {
+    .track {
+      outline: var(--s-border-width-default) solid CanvasText;
+    }
+
+    .bar {
+      background: Highlight;
+    }
+  }
+
+  @keyframes ytc-progress-slide {
+    from {
+      translate: -100% 0;
+    }
+
+    to {
+      translate: 250% 0;
+    }
+  }
+}

@@ -1,0 +1,184 @@
+@layer components {
+  .group {
+    display: grid;
+    gap: var(--c-field-gap);
+    min-inline-size: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  .legend {
+    margin-block-end: var(--s-space-2);
+    padding: 0;
+  }
+
+  .options {
+    display: grid;
+    gap: var(--s-space-2);
+  }
+
+  .option {
+    position: relative;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    column-gap: var(--s-space-4);
+    row-gap: var(--s-space-1);
+    align-items: center;
+  }
+
+  .input {
+    display: grid;
+    place-items: center;
+    inline-size: var(--c-radio-size);
+    block-size: var(--c-radio-size);
+    margin: var(--s-space-1);
+    border: var(--s-border-width-strong) solid var(--c-radio-border);
+    border-radius: var(--s-radius-full);
+    background: var(--c-radio-bg);
+    appearance: none;
+    cursor: pointer;
+    transition: border-color var(--s-duration-fast) var(--s-easing-standard);
+  }
+
+  /* The dot: a shape, not only a color, marks the choice. */
+  .input::before {
+    inline-size: var(--c-radio-dot-size);
+    block-size: var(--c-radio-dot-size);
+    border-radius: var(--s-radius-full);
+    background: var(--c-radio-checked);
+    content: '';
+    scale: 0;
+    transition: scale var(--s-duration-fast) var(--s-easing-standard);
+  }
+
+  .input:checked {
+    border-color: var(--c-radio-checked);
+  }
+
+  .input:checked::before {
+    scale: 1;
+  }
+
+  .input:is(:hover, [data-force-state='hover']):not(:disabled, :checked) {
+    border-color: var(--c-radio-border-hover);
+  }
+
+  .input:is(:focus-visible, [data-force-state='focus']) {
+    outline: var(--s-focus-ring-width) solid var(--s-color-border-focus);
+    outline-offset: var(--s-focus-ring-offset);
+  }
+
+  .input[aria-invalid='true'] {
+    border-color: var(--c-field-error);
+  }
+
+  .input:disabled {
+    border-color: var(--s-color-border-subtle);
+    background: var(--s-color-surface-sunken);
+    cursor: not-allowed;
+  }
+
+  .label {
+    color: var(--c-field-label);
+    font-size: var(--s-font-size-sm);
+    font-weight: var(--s-font-weight-medium);
+    cursor: pointer;
+  }
+
+  .option:has(:disabled) .label {
+    color: var(--s-color-text-disabled);
+    cursor: not-allowed;
+  }
+
+  .hint {
+    grid-column: 2;
+    color: var(--c-field-description);
+    font-size: var(--s-font-size-sm);
+    line-height: var(--s-line-height-reading);
+  }
+
+  .icon {
+    display: none;
+  }
+
+  .selectedMark {
+    position: absolute;
+    inset-block-start: var(--s-space-5);
+    inset-inline-end: var(--s-space-5);
+    color: var(--c-radio-checked);
+    visibility: hidden;
+  }
+
+  /* Cards: the whole card is the target; the radio stays visible for the keyboard and for clarity. */
+  .group[data-appearance='cards'] .options {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+    gap: var(--s-space-4);
+  }
+
+  .group[data-appearance='cards'] .option {
+    grid-template-columns: auto auto 1fr;
+    align-items: start;
+    padding: var(--s-space-5);
+    padding-inline-end: var(--s-space-9);
+    border: var(--s-border-width-default) solid var(--c-radio-card-border);
+    border-radius: var(--c-radio-card-radius);
+    background: var(--c-radio-card-bg);
+    transition: border-color var(--s-duration-fast) var(--s-easing-standard);
+  }
+
+  .group[data-appearance='cards'] .icon {
+    display: block;
+    color: var(--c-field-description);
+  }
+
+  .group[data-appearance='cards'] .label {
+    font-size: var(--s-font-size-base);
+    font-weight: var(--s-font-weight-semibold);
+  }
+
+  /* Stretch the label so the whole card picks the option. */
+  .group[data-appearance='cards'] .label::after {
+    position: absolute;
+    inset: 0;
+    content: '';
+  }
+
+  .group[data-appearance='cards'] .hint {
+    grid-column: 3;
+  }
+
+  .group[data-appearance='cards'] .option:has(.input:not(:disabled):hover) {
+    border-color: var(--c-radio-border-hover);
+  }
+
+  .group[data-appearance='cards'] .option:has(:checked) {
+    border-color: var(--c-radio-checked);
+  }
+
+  .group[data-appearance='cards'] .option:has(:checked) .selectedMark {
+    visibility: visible;
+  }
+
+  .group[data-appearance='cards'] .option:has(:checked) .icon {
+    color: var(--c-radio-checked);
+  }
+}
+
+/* Forced colors: system colors only, no shadows or gradients. */
+@layer components {
+  @media (forced-colors: active) {
+    .input {
+      border-color: CanvasText;
+    }
+
+    .input::before {
+      background: Highlight;
+    }
+
+    .group[data-appearance='cards'] .option {
+      border-color: CanvasText;
+      box-shadow: none;
+    }
+  }
+}

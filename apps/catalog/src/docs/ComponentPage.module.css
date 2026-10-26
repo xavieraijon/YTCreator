@@ -1,0 +1,82 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr));
+  gap: var(--s-space-4);
+}
+
+.figure {
+  display: grid;
+  grid-template-rows: 1fr auto;
+  gap: var(--s-space-2);
+}
+
+.stage {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-space-3);
+  align-items: center;
+  min-inline-size: 0;
+  padding: var(--s-space-5);
+  border: var(--s-border-width-default) solid var(--s-color-border-subtle);
+  border-radius: var(--s-radius-lg);
+  background: var(--s-color-bg);
+}
+
+/* Full-width children (fields, cards, panels) take the whole stage. */
+.stage > :only-child {
+  flex: 1 1 auto;
+}
+
+.caption {
+  color: var(--s-color-text-secondary);
+  font-size: var(--s-font-size-sm);
+}
+
+.usage {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+  column-gap: var(--s-space-6);
+}
+
+.examples {
+  display: grid;
+  gap: var(--s-space-4);
+}
+
+.example {
+  display: grid;
+  gap: var(--s-space-3);
+}
+
+.exampleText {
+  display: flex;
+  gap: var(--s-space-2);
+  align-items: baseline;
+  color: var(--s-color-text-secondary);
+  line-height: var(--s-line-height-reading);
+}
+
+.example[data-kind='dos'] .exampleText > svg {
+  color: var(--s-color-success-fg);
+}
+
+.example[data-kind='donts'] .exampleText > svg {
+  color: var(--s-color-danger-fg);
+}
+
+.notes {
+  display: grid;
+  gap: var(--s-space-2);
+  max-inline-size: 70ch;
+  padding-inline-start: var(--s-space-5);
+  color: var(--s-color-text-secondary);
+  line-height: var(--s-line-height-reading);
+  list-style: disc;
+}
+
+.tokens {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-space-2) var(--s-space-4);
+  font-size: var(--s-font-size-sm);
+}

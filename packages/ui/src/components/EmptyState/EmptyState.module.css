@@ -1,0 +1,38 @@
+@layer components {
+  .emptyState {
+    display: grid;
+    justify-items: center;
+    gap: var(--s-space-3);
+    padding: var(--c-empty-state-padding);
+    border: var(--s-border-width-default) dashed var(--c-empty-state-border);
+    border-radius: var(--c-empty-state-radius);
+    text-align: center;
+  }
+
+  .iconWrap {
+    display: grid;
+    place-items: center;
+    inline-size: var(--s-space-10);
+    block-size: var(--s-space-10);
+    margin-block-end: var(--s-space-2);
+    border-radius: var(--s-radius-full);
+    background: var(--c-empty-state-icon-bg);
+    color: var(--c-empty-state-icon);
+  }
+
+  .title {
+    font-size: var(--s-font-size-md);
+    font-weight: var(--s-font-weight-semibold);
+  }
+
+  .description {
+    max-inline-size: 40ch;
+    color: var(--s-color-text-secondary);
+    font-size: var(--s-font-size-sm);
+    line-height: var(--s-line-height-reading);
+  }
+
+  .action {
+    margin-block-start: var(--s-space-3);
+  }
+}

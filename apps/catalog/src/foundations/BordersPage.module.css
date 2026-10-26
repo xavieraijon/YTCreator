@@ -1,0 +1,19 @@
+.line {
+  display: block;
+  inline-size: 4rem;
+  block-size: var(--s-control-height-md);
+  border: var(--preview) solid var(--s-color-border-strong);
+  border-radius: var(--s-radius-md);
+}
+
+.focus {
+  display: inline-block;
+  margin: var(--s-space-2);
+  padding: var(--s-space-2) var(--s-space-3);
+  border: var(--s-border-width-default) solid var(--s-color-border-default);
+  border-radius: var(--s-radius-md);
+  outline: var(--s-focus-ring-width) solid var(--s-color-border-focus);
+  outline-offset: var(--s-focus-ring-offset);
+  font-size: var(--s-font-size-xs);
+  white-space: nowrap;
+}

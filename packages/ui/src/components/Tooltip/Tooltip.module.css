@@ -1,0 +1,27 @@
+@layer components {
+  .tooltip {
+    z-index: var(--s-z-popover);
+    max-inline-size: 20rem;
+    padding: var(--c-tooltip-padding-block) var(--c-tooltip-padding-inline);
+    border-radius: var(--c-tooltip-radius);
+    background: var(--c-tooltip-bg);
+    box-shadow: var(--c-tooltip-shadow);
+    color: var(--c-tooltip-text);
+    font-size: var(--s-font-size-xs);
+    font-weight: var(--s-font-weight-medium);
+    line-height: var(--s-line-height-ui);
+    animation: ytc-tooltip-in var(--s-duration-fast) var(--s-easing-enter);
+  }
+
+  @keyframes ytc-tooltip-in {
+    from {
+      opacity: 0;
+    }
+  }
+
+  @media (forced-colors: active) {
+    .tooltip {
+      outline: var(--s-border-width-default) solid CanvasText;
+    }
+  }
+}

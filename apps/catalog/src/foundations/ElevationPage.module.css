@@ -1,0 +1,9 @@
+.card {
+  display: block;
+  inline-size: 3.5rem;
+  block-size: var(--s-control-height-lg);
+  margin: var(--s-space-4);
+  border-radius: var(--s-radius-lg);
+  background: var(--s-color-surface-raised);
+  box-shadow: var(--preview);
+}

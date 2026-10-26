@@ -1,0 +1,51 @@
+.scroller {
+  overflow-x: auto;
+  margin-block-end: var(--s-space-8);
+}
+
+.table {
+  inline-size: 100%;
+  border-collapse: collapse;
+  font-size: var(--s-font-size-sm);
+}
+
+.caption {
+  margin-block-end: var(--s-space-3);
+  color: var(--s-color-text-primary);
+  font-size: var(--s-font-size-lg);
+  font-weight: var(--s-font-weight-semibold);
+  text-align: start;
+}
+
+.table th,
+.table td {
+  padding: var(--s-space-3);
+  border-block-end: var(--s-border-width-default) solid var(--s-color-border-subtle);
+  text-align: start;
+  vertical-align: middle;
+}
+
+.table thead th {
+  color: var(--s-color-text-tertiary);
+  font-size: var(--s-font-size-xs);
+  font-weight: var(--s-font-weight-medium);
+}
+
+.name {
+  font-weight: var(--s-font-weight-regular);
+  white-space: nowrap;
+}
+
+.usage {
+  min-inline-size: 16rem;
+  color: var(--s-color-text-secondary);
+}
+
+.value {
+  color: var(--s-color-text-secondary);
+  font-size: var(--s-font-size-xs);
+}
+
+.preview {
+  min-inline-size: 6rem;
+}

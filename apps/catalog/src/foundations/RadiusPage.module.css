@@ -1,0 +1,8 @@
+.shape {
+  display: block;
+  inline-size: 4rem;
+  block-size: var(--s-control-height-lg);
+  border: var(--s-border-width-default) solid var(--s-color-border-default);
+  border-radius: var(--preview);
+  background: var(--s-color-surface-raised);
+}

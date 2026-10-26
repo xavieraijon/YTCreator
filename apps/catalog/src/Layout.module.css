@@ -1,0 +1,182 @@
+.layout {
+  display: grid;
+  grid-template-areas:
+    'header'
+    'main';
+  grid-template-rows: auto 1fr;
+  grid-template-columns: minmax(0, 1fr);
+  min-block-size: 100dvh;
+}
+
+.skip {
+  position: absolute;
+  inset-block-start: var(--s-space-2);
+  inset-inline-start: var(--s-space-2);
+  z-index: var(--s-z-toast);
+  padding: var(--s-space-3) var(--s-space-5);
+  border-radius: var(--s-radius-md);
+  background: var(--s-color-surface-inverse);
+  color: var(--s-color-text-inverse);
+  transform: translateY(-200%);
+}
+
+.skip:focus-visible {
+  transform: none;
+}
+
+.header {
+  grid-area: header;
+  position: sticky;
+  inset-block-start: 0;
+  z-index: var(--s-z-sticky);
+  display: flex;
+  align-items: center;
+  gap: var(--s-space-4);
+  padding: var(--s-space-3) var(--s-space-5);
+  border-block-end: var(--s-border-width-default) solid var(--s-color-border-subtle);
+  background: var(--s-color-surface);
+}
+
+.menuButton {
+  display: inline-grid;
+  place-items: center;
+  min-inline-size: var(--s-control-height-lg);
+  min-block-size: var(--s-control-height-lg);
+  border-radius: var(--s-radius-md);
+  color: var(--s-color-text-secondary);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--s-space-3);
+  color: var(--s-color-text-primary);
+  text-decoration: none;
+  font-size: var(--s-font-size-md);
+}
+
+.title {
+  color: var(--s-color-text-secondary);
+  font-weight: var(--s-font-weight-regular);
+}
+
+.actions {
+  margin-inline-start: auto;
+}
+
+.nav {
+  position: fixed;
+  inset-block: 0;
+  inset-inline-start: 0;
+  z-index: var(--s-z-overlay);
+  inline-size: min(18rem, 85vw);
+  padding: var(--s-space-6) var(--s-space-4);
+  overflow-y: auto;
+  background: var(--s-color-surface-raised);
+  box-shadow: var(--s-shadow-3);
+  translate: -100% 0;
+  visibility: hidden;
+  transition:
+    translate var(--s-duration-normal) var(--s-easing-exit),
+    visibility var(--s-duration-normal);
+}
+
+.nav[data-open='true'] {
+  translate: 0 0;
+  visibility: visible;
+  transition-timing-function: var(--s-easing-enter);
+}
+
+.heading {
+  margin-block: var(--s-space-6) var(--s-space-2);
+  padding-inline: var(--s-space-3);
+  color: var(--s-color-text-tertiary);
+  font-size: var(--s-font-size-xs);
+  font-weight: var(--s-font-weight-medium);
+  text-transform: uppercase;
+}
+
+.group + .group {
+  margin-block-start: var(--s-space-3);
+}
+
+.groupHeading {
+  padding: var(--s-space-1) var(--s-space-3);
+  color: var(--s-color-text-secondary);
+  font-size: var(--s-font-size-sm);
+  font-weight: var(--s-font-weight-semibold);
+}
+
+.list {
+  display: grid;
+  gap: var(--s-space-1);
+}
+
+.link {
+  display: block;
+  padding: var(--s-space-3);
+  border-radius: var(--s-radius-md);
+  color: var(--s-color-text-secondary);
+  text-decoration: none;
+  font-size: var(--s-font-size-sm);
+}
+
+.link:hover {
+  background: var(--s-color-surface-sunken);
+  color: var(--s-color-text-primary);
+}
+
+.link[aria-current='page'] {
+  background: var(--s-color-accent-subtle);
+  color: var(--s-color-text-accent);
+  font-weight: var(--s-font-weight-medium);
+}
+
+.main {
+  grid-area: main;
+  min-inline-size: 0;
+  padding: var(--s-space-7) var(--s-space-5);
+}
+
+.main:focus {
+  outline: none;
+}
+
+/* On a narrow phone the logo alone names the catalog. */
+@media (max-width: 40rem) {
+  .title {
+    display: none;
+  }
+}
+
+@media (min-width: 64rem) {
+  .layout {
+    grid-template-areas:
+      'header header'
+      'nav main';
+    grid-template-columns: 16rem minmax(0, 1fr);
+  }
+
+  .menuButton {
+    display: none;
+  }
+
+  .nav {
+    grid-area: nav;
+    position: sticky;
+    inset-block-start: 0;
+    block-size: 100dvh;
+    inline-size: auto;
+    z-index: var(--s-z-base);
+    border-inline-end: var(--s-border-width-default) solid var(--s-color-border-subtle);
+    background: var(--s-color-bg);
+    box-shadow: none;
+    translate: none;
+    visibility: visible;
+    transition: none;
+  }
+
+  .main {
+    padding: var(--s-space-9) var(--s-space-10);
+  }
+}

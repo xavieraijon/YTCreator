@@ -1,0 +1,16 @@
+.bar {
+  display: block;
+  inline-size: var(--preview);
+  block-size: var(--s-space-4);
+  border-radius: var(--s-radius-sm);
+  background: var(--s-color-accent);
+}
+
+.square {
+  display: block;
+  inline-size: var(--preview);
+  block-size: var(--preview);
+  border: var(--s-border-width-default) dashed var(--s-color-border-strong);
+  border-radius: var(--s-radius-sm);
+  background: var(--s-color-accent-subtle);
+}

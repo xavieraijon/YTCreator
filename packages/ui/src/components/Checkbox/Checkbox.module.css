@@ -1,0 +1,112 @@
+@layer components {
+  .checkbox {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    column-gap: var(--s-space-4);
+    row-gap: var(--s-space-1);
+    align-items: center;
+  }
+
+  /* Stacked items keep their targets apart (WCAG 2.5.8). */
+  .checkbox + .checkbox {
+    margin-block-start: var(--s-space-2);
+  }
+
+  .checkbox > p {
+    grid-column: 2;
+  }
+
+  .control {
+    position: relative;
+    display: grid;
+    place-items: center;
+    inline-size: var(--s-target-min);
+    block-size: var(--s-target-min);
+  }
+
+  .input {
+    inline-size: var(--c-checkbox-size);
+    block-size: var(--c-checkbox-size);
+    margin: 0;
+    border: var(--s-border-width-strong) solid var(--c-checkbox-border);
+    border-radius: var(--c-checkbox-radius);
+    background: var(--c-checkbox-bg);
+    appearance: none;
+    cursor: pointer;
+    transition-property: background-color, border-color;
+    transition-duration: var(--s-duration-fast);
+    transition-timing-function: var(--s-easing-standard);
+  }
+
+  .input:is(:checked, [data-indeterminate]) {
+    border-color: var(--c-checkbox-checked-bg);
+    background: var(--c-checkbox-checked-bg);
+  }
+
+  .input:is(:hover, [data-force-state='hover']):not(:disabled) {
+    border-color: var(--c-checkbox-border-hover);
+  }
+
+  .input:is(:checked, [data-indeterminate]):is(:hover, [data-force-state='hover']):not(:disabled) {
+    border-color: var(--s-color-accent-hover);
+    background: var(--s-color-accent-hover);
+  }
+
+  .input:is(:focus-visible, [data-force-state='focus']) {
+    outline: var(--s-focus-ring-width) solid var(--s-color-border-focus);
+    outline-offset: var(--s-focus-ring-offset);
+  }
+
+  .input[aria-invalid='true'] {
+    border-color: var(--c-field-error);
+  }
+
+  .input:disabled {
+    border-color: var(--s-color-border-subtle);
+    background: var(--s-color-surface-sunken);
+    cursor: not-allowed;
+  }
+
+  .mark {
+    position: absolute;
+    color: var(--c-checkbox-checked-mark);
+    pointer-events: none;
+    visibility: hidden;
+  }
+
+  .input:checked:not([data-indeterminate]) ~ .check,
+  .input[data-indeterminate] ~ .minus {
+    visibility: visible;
+  }
+
+  .input:disabled ~ .mark {
+    color: var(--s-color-text-disabled);
+  }
+
+  .label {
+    color: var(--c-field-label);
+    font-size: var(--s-font-size-sm);
+    font-weight: var(--s-font-weight-medium);
+    cursor: pointer;
+  }
+
+  .checkbox:has(:disabled) .label {
+    color: var(--s-color-text-disabled);
+    cursor: not-allowed;
+  }
+
+  @media (forced-colors: active) {
+    .mark {
+      color: HighlightText;
+    }
+  }
+}
+
+/* Forced colors: system colors only, no shadows or gradients. */
+@layer components {
+  @media (forced-colors: active) {
+    .input {
+      border-color: CanvasText;
+    }
+  }
+}

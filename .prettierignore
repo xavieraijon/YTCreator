@@ -1,0 +1,9 @@
+dist
+.tsbuild
+pnpm-lock.yaml
+playwright-report
+test-results
+coverage
+.specify
+specs
+.claude

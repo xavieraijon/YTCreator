@@ -11,7 +11,11 @@ Spec-Driven Development with GitHub Spec Kit (`/speckit-*`).
 
 ## Status
 
-- 001 `design-system-foundation`: spec, plan, tasks (105) and analysis done, branch
-  `001-design-system-foundation`. **Next: upgrade to Node 24, then `/speckit-implement`.**
+- 001 `design-system-foundation`: implemented on branch `001-design-system-foundation` (tokens in
+  `packages/tokens`, components in `packages/ui`, catalog in `apps/catalog`). Validation in
+  `specs/001-design-system-foundation/checklists/validation.md`. **Pending: the creator's aesthetic approval (T104)
+  and checking quickstart scenarios 7 (VoiceOver) and 9 (real macOS settings) by hand. Next feature: onboarding.**
+- Commands (Node 24, `fnm exec --using=24 --`): `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:e2e`,
+  `pnpm format`; catalog with `pnpm --filter @ytcreator/catalog dev`.
 - Planned order after 001: onboarding (install + AI choice) → channel and niche → idea bank → script and outline →
   publishing package → subtitles.

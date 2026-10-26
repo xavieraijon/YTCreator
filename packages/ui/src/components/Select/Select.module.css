@@ -1,0 +1,17 @@
+@layer components {
+  .select {
+    appearance: none;
+    padding-inline-end: var(--s-space-7);
+    cursor: pointer;
+  }
+
+  .select:disabled {
+    cursor: not-allowed;
+  }
+
+  .chevron {
+    position: absolute;
+    inset-inline-end: var(--c-field-padding-inline);
+    pointer-events: none;
+  }
+}

@@ -1,0 +1,21 @@
+@layer components {
+  .iconButton[data-size] {
+    inline-size: var(--s-control-height-md);
+    padding: 0;
+  }
+
+  .iconButton[data-size='sm'] {
+    inline-size: var(--s-control-height-sm);
+  }
+
+  .iconButton[data-size='lg'] {
+    inline-size: var(--s-control-height-lg);
+  }
+
+  @media (pointer: coarse) {
+    .iconButton[data-size] {
+      inline-size: var(--s-control-height-lg);
+      min-block-size: var(--s-control-height-lg);
+    }
+  }
+}

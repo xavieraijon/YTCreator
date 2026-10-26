@@ -1,0 +1,101 @@
+@layer components {
+  .stepper {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--s-space-3);
+  }
+
+  .position {
+    color: var(--s-color-text-secondary);
+    font-size: var(--s-font-size-sm);
+  }
+
+  .list {
+    display: flex;
+    gap: var(--s-space-4);
+    padding: 0;
+    list-style: none;
+  }
+
+  .step {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    gap: var(--s-space-3);
+    min-inline-size: 0;
+    color: var(--s-color-text-secondary);
+    font-size: var(--s-font-size-sm);
+  }
+
+  .step + .step::before {
+    flex: 0 1 var(--s-space-6);
+    block-size: var(--s-border-width-strong);
+    margin-inline-end: var(--s-space-1);
+    background: var(--c-stepper-line);
+    content: '';
+  }
+
+  .marker {
+    display: inline-grid;
+    flex: none;
+    place-items: center;
+    inline-size: var(--c-stepper-marker-size);
+    block-size: var(--c-stepper-marker-size);
+    border: var(--s-border-width-strong) solid var(--c-stepper-marker-border);
+    border-radius: var(--s-radius-full);
+    background: var(--s-color-surface);
+    font-variant-numeric: tabular-nums;
+    font-weight: var(--s-font-weight-semibold);
+  }
+
+  .label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .step[data-state='done'] .marker {
+    border-color: var(--c-stepper-done);
+    background: var(--c-stepper-done);
+    color: var(--s-color-text-on-accent);
+  }
+
+  .step[data-state='current'] {
+    color: var(--s-color-text-primary);
+    font-weight: var(--s-font-weight-semibold);
+  }
+
+  .step[data-state='current'] .marker {
+    border-color: var(--c-stepper-done);
+    color: var(--s-color-text-accent);
+  }
+
+  .step[data-state='pending'] .marker {
+    border-style: dashed;
+  }
+
+  @media (max-width: 40rem) {
+    .step:not([data-state='current']) .label {
+      display: none;
+    }
+
+    .step:not([data-state='current']) {
+      flex: none;
+    }
+  }
+}
+
+/* Forced colors: system colors only, no shadows or gradients. */
+@layer components {
+  @media (forced-colors: active) {
+    .marker {
+      border-color: CanvasText;
+    }
+
+    .step[data-state='done'] .marker {
+      border-color: Highlight;
+      background: Highlight;
+      color: HighlightText;
+    }
+  }
+}
