@@ -127,7 +127,7 @@ Cada decisión sigue el formato Decisión / Motivo / Alternativas. Todas las dep
   | Sección plegable | `<details>/<summary>` | Cerrada no recibe foco y anuncia su estado (escenario 2.5) |
   | Diálogo | `<dialog>` + `showModal()` | Capa superior, contenido de fuera inerte, Escape. El componente guarda y devuelve el foco por su cuenta (escenario 2.3) |
   | Pestañas | Radix Tabs | Foco itinerante y activación por flechas |
-  | Tooltip | Radix Tooltip | Posicionamiento y retardos. En táctil, un toque en el disparador lo abre |
+  | Tooltip | Radix Tooltip | Posicionamiento y retardos. Radix no lo abre en táctil, así que su contenido va también en el nombre accesible del disparador o en texto visible |
   | Aviso flotante | Radix Toast | Región viva, pausa al pasar el ratón o con foco, atajo F8, apilado |
 
   Se usa el paquete unificado `radix-ui`, del que solo se importan esas tres primitivas.
@@ -176,8 +176,8 @@ Cada decisión sigue el formato Decisión / Motivo / Alternativas. Todas las dep
     opacidad baja en reposo largo (caso «indicador sin fin»). Siempre la acompaña un texto visible dentro de
     `role="status"`.
   - **Movimiento reducido (FR-014, SC-009):** con `prefers-reduced-motion: reduce`, los tokens de duración pasan a
-    0 ms, salvo las opacidades breves (≤ 150 ms). La aurora se vuelve un degradado estático y el spinner un pulso
-    de opacidad.
+    0 ms, salvo las opacidades breves (≤ 150 ms). La aurora se vuelve un degradado estático y el spinner un icono
+    estático junto a su texto (un pulso continuo seguiría siendo una animación sin fin).
   - **Colores forzados:** con `@media (forced-colors: active)` se quitan sombras y degradados, se dejan bordes
     `CanvasText` y el foco usa `Highlight`.
 - **Alternativas:** aurora en `<canvas>` o WebGL (más coste y más difícil de respetar las preferencias); animar
@@ -188,9 +188,10 @@ Cada decisión sigue el formato Decisión / Motivo / Alternativas. Todas las dep
 - **Decisión:**
   - `UiStringsProvider` es un contexto de React con un catálogo por defecto en español (`strings/es.ts`), tipado con
     `UiStrings`.
-  - Los componentes leen de ahí sus textos internos («Cerrar», «Cargando…», «Paso {actual} de {total}»…).
+  - Los componentes leen de ahí sus textos internos («Cerrar», «Cargando…», «Paso {current} de {total}»…).
   - Los textos de contenido llegan siempre por *props*.
-  - El catálogo y la página de muestra tienen su propio fichero de textos.
+  - El catálogo y la página de muestra tienen su propio fichero de textos. Las fichas `*.doc.tsx` son contenido del
+    catálogo (no de `ui`), así que sus textos pueden vivir en ellas sin incumplir FR-019.
   - Sin librería de i18n por ahora: la interpolación es una función de 10 líneas.
 - **Motivo:** cumple la preparación para i18n sin meter una dependencia que la v1 aún no necesita (X).
 - **Alternativas:** i18next o FormatJS (se adoptarán cuando haya un segundo idioma; el contrato `UiStrings` se

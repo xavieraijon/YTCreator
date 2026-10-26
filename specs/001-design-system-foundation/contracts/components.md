@@ -47,7 +47,7 @@ error se asocian con `useId` mediante `aria-describedby`. El error añade `aria-
 |---|---|---|
 | `ToastProvider` + `useToast()` | `toast({ title, description?, tone?: 'neutral' \| 'success' \| 'warning' \| 'danger', action?: { label; onClick } })` | Radix Toast arriba (ver research R15), 3 visibles como mucho. Con `action` no se cierra solo. Siempre lleva botón de cerrar |
 | `Badge` | `tone`, `children` | Una línea. Si el texto es largo se recorta con elipsis y el texto completo va en `title` y en el nombre accesible |
-| `Tooltip` | `content: string`, `children` (disparador enfocable) | Aparece con el ratón encima y con el foco; en táctil, con un toque. Nunca lleva información esencial |
+| `Tooltip` | `content: string`, `children` (disparador enfocable) | Aparece con el ratón encima y con el foco. En táctil no se garantiza que aparezca, así que su contenido DEBE estar también disponible por otra vía (nombre accesible del disparador o texto visible). Nunca lleva información esencial |
 | `EmptyState` | `icon?`, `title`, `description`, `action?` | Una sola acción principal |
 | `ErrorMessage` | `title` (qué ha pasado), `description` (qué se puede hacer), `action: { label; onClick }` | `role="alert"` si aparece después de una acción del usuario. Lenguaje llano (escenario 2.6) |
 
@@ -57,7 +57,7 @@ error se asocian con `useId` mediante `aria-describedby`. El error añade `aria-
 |---|---|---|
 | `Stepper` | `steps: { id; label }[]`, `current: number` | `<ol>` con `aria-current="step"`. Los pasos hechos llevan check y el texto oculto «completado»; los pendientes, «pendiente». No depende solo del color (escenario 2.4) |
 | `ProgressBar` | `value?: number` (0–100; sin valor = indeterminada), `label` | `role="progressbar"` con `aria-valuenow`. El ancho va por la custom property `--progress` |
-| `Spinner` | `label?`, `size` | Con `label`: `role="status"`. Sin él: decorativo. Con movimiento reducido pasa a pulso de opacidad |
+| `Spinner` | `label?`, `size` | Con `label`: `role="status"`. Sin él: decorativo. Con movimiento reducido pasa a un icono estático, sin animación continua (FR-014) |
 | `Skeleton` | `shape: 'text' \| 'rect' \| 'circle'`, `lines?` | `aria-hidden`. El contenedor pone `aria-busy` |
 | `AiWorking` | `label: string` (p. ej. «Escribiendo tu guion…»), `progress?: number`, `variant?: 'inline' \| 'panel'` | La firma de la IA: aurora con el degradado `gradient-ai` y el texto visible dentro de `role="status"` (FR-011). Con movimiento reducido, degradado estático (escenario 3.2) |
 

@@ -37,7 +37,7 @@ pnpm lint && pnpm typecheck && pnpm test && pnpm test:e2e
 | 6 | `#/componentes/dialog`: abrir, pulsar Tab muchas veces y luego Escape | El foco no sale del diálogo y al cerrar vuelve al botón que lo abrió | 2.3 |
 | 7 | Probar el lector de pantalla (VoiceOver) en `Stepper` y `Disclosure` | Anuncia «paso 3 de 5» y el estado de cada paso, y si «Modo experto» está desplegado o plegado | 2.4, 2.5 |
 | 8 | Activar `AiWorking` y abrir un `GlassPanel` | Aurora reconocible y texto visible | US3 (3.1) |
-| 9 | Activar en macOS «Reducir movimiento» y «Reducir transparencia» y repetir el paso 8 | Sin animación continua y con cristal sólido (en Safari y Firefox el cristal se mantiene, pero legible) | 3.2, 3.3, SC-009 |
+| 9 | Activar en macOS «Reducir movimiento» y «Reducir transparencia» y repetir el paso 8 | Sin animación continua y con cristal sólido (en Safari y Firefox, que no exponen «reducir transparencia», el cristal se mantiene, pero legible; FR-015) | 3.2, 3.3, SC-009 |
 | 10 | Abrir `#/muestra` en escritorio y completar el paso | Elegir, escribir, abrir «Modo experto», generar, ver el resultado y el aviso, sin instrucciones | US4 (4.1) |
 | 11 | Repetir el paso 10 a 375 px (DevTools) y solo con teclado | Sin desplazamiento horizontal, con la acción principal fija abajo y los avisos arriba | 4.2, SC-003, SC-005 |
 | 12 | Comparar `#/muestra` en claro y en oscuro | La misma marca, la misma firma de IA y la misma jerarquía | 4.3 |

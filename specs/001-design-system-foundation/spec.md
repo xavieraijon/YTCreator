@@ -104,7 +104,8 @@ cristal pasa a ser sólido, sin perder legibilidad ni significado.
    entiende que algo se está generando. Un texto visible acompaña la animación (p. ej. «Escribiendo tu guion…»).
 2. **Given** «reducir movimiento» activado en el sistema, **When** aparece el indicador de IA o cualquier transición,
    **Then** no hay desplazamientos ni animaciones continuas; el estado se comunica con un cambio estático o muy suave.
-3. **Given** «reducir transparencia» activado, o un navegador que no admite el desenfoque, **When** se muestra una
+3. **Given** «reducir transparencia» activado (en un navegador que expone esa preferencia), o un navegador que no
+   admite el desenfoque, **When** se muestra una
    superficie de cristal, **Then** se ve como una superficie sólida equivalente, con el mismo contraste o mejor.
 4. **Given** una superficie de cristal sobre un fondo con mucho detalle o color, **When** se lee su texto, **Then**
    el contraste sigue cumpliendo AA.
@@ -233,8 +234,9 @@ con un mensaje claro.
   firma de la IA. La documentación DEBE prohibir expresamente su uso en superficies de lectura larga.
 - **FR-014**: Con «reducir movimiento» activado, el sistema DEBE eliminar las animaciones continuas y los
   desplazamientos, y conservar como mucho transiciones de opacidad breves.
-- **FR-015**: Con «reducir transparencia» activado, o sin soporte de desenfoque, toda superficie de cristal DEBE
-  mostrarse sólida con un contraste igual o mejor.
+- **FR-015**: Con «reducir transparencia» activado (en los navegadores que exponen esa preferencia), o sin soporte
+  de desenfoque, toda superficie de cristal DEBE mostrarse sólida con un contraste igual o mejor. Donde la
+  preferencia no se pueda detectar, el texto sobre cristal DEBE cumplir AA sin depender del desenfoque.
 
 **Iconografía**
 
@@ -294,8 +296,9 @@ con un mensaje claro.
   principio IX).
 - **SC-008**: El creador del producto aprueba explícitamente la estética en la página de muestra, en ambos temas y en
   móvil, antes de cerrar la feature.
-- **SC-009**: Con «reducir movimiento» y «reducir transparencia» activados, no queda ninguna animación continua ni
-  ninguna superficie translúcida, y no se pierde ninguna información.
+- **SC-009**: Con «reducir movimiento» activado no queda ninguna animación continua; con «reducir transparencia»
+  activado, en los navegadores que exponen esa preferencia, no queda ninguna superficie translúcida. En ningún caso
+  se pierde información.
 
 ## Assumptions
 
