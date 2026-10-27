@@ -33,9 +33,9 @@ Fecha: 2026-10-26. Lo hizo el agente de implementación. Las comprobaciones en e
 | 4 | ✅ «Automático», sin errores en consola | `theme.spec.ts`, con el almacenamiento bloqueado, en WebKit además de los otros motores |
 | 5 | ✅ Alcance con Tab, activación con Espacio y foco visible | `keyboard.spec.ts` (2.1, 2.2) y `preferences.spec.ts` (foco con colores forzados) |
 | 6 | ✅ El foco queda atrapado y vuelve al botón | `keyboard.spec.ts` (2.3), cerrando con Escape y con el botón |
-| 7 | ⚠️ Árbol accesible correcto; falta oírlo con VoiceOver real | El snapshot ARIA de WebKit da «Paso 3 de 5» y cada paso con «completado», «paso actual» o «pendiente». «Modo experto» es un `details/summary` nativo, que VoiceOver anuncia como plegado o desplegado. **Falta confirmarlo con VoiceOver.** |
+| 7 | ✅ Árbol accesible correcto y confirmado con VoiceOver real | El snapshot ARIA de WebKit da «Paso 3 de 5» y cada paso con «completado», «paso actual» o «pendiente». «Modo experto» es un `details/summary` nativo, que VoiceOver anuncia como plegado o desplegado. El creador lo comprobó con VoiceOver el 2026-10-27. |
 | 8 | ✅ Aurora y texto visibles | Fichas `ai-working` y `glass-panel`, y la muestra mientras genera |
-| 9 | ⚠️ Correcto por emulación; falta probarlo con los ajustes reales de macOS | `preferences.spec.ts`: sin animaciones infinitas con movimiento reducido, y cristal sólido con transparencia reducida (Chromium). **Falta activarlo en macOS y mirarlo.** |
+| 9 | ✅ Correcto por emulación y con los ajustes reales de macOS | `preferences.spec.ts`: sin animaciones infinitas con movimiento reducido, y cristal sólido con transparencia reducida (Chromium). El creador lo comprobó con los ajustes reales de macOS el 2026-10-27. |
 | 10 | ✅ Flujo completo sin instrucciones | `sample.spec.ts` |
 | 11 | ✅ Sin desplazamiento horizontal a 375 y 320 px, acción fija abajo, avisos arriba, solo teclado | `responsive.spec.ts` y `sample.spec.ts` |
 | 12 | ✅ La misma marca, la misma firma de IA y la misma jerarquía | `a11y.spec.ts` en los dos temas y capturas comparadas |
@@ -43,8 +43,9 @@ Fecha: 2026-10-26. Lo hizo el agente de implementación. Las comprobaciones en e
 | 14 | ✅ Explica los tres niveles, con ejemplo, quién usa cada uno y qué hacer si falta un token | Portada `#/` (T098) |
 | 15 | ✅ Usable a 200 % (1280×800 equivale a 640×400 px CSS): el flujo se completa sin desplazamiento horizontal | Comprobación puntual con Playwright en WebKit y captura |
 
-**Pendiente del creador:** los escenarios 7 (VoiceOver) y 9 (ajustes reales de macOS) necesitan una persona delante del Mac.
+Los escenarios 7 (VoiceOver) y 9 (ajustes reales de macOS) los comprobó el creador a mano en su Mac.
 
 ## Estética (T104)
 
-- [ ] Pendiente de aprobación explícita del creador en `#/muestra`, en los dos temas y en móvil.
+- [X] Aprobada explícitamente por el creador el 2026-10-27 en `#/muestra`, en los dos temas y en móvil, tras la
+  revisión estética T106–T111.
