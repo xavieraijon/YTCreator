@@ -25,7 +25,7 @@ contraste AA en ambos temas y glosario) y Playwright + axe en los tres motores d
 
 **Language/Version**: TypeScript `strict` (+ `erasableSyntaxOnly`), Node 24 LTS
 
-**Primary Dependencies**: React 19, Vite (CSS Modules), `radix-ui` (Tabs, Tooltip y Toast), `lucide-react`,
+**Primary Dependencies**: React 19, Vite (CSS Modules), `radix-ui` (Tabs, Tooltip, Toast y Select), `lucide-react`,
 `@fontsource-variable/geist` y `@fontsource-variable/geist-mono`. Detalle en [research.md](./research.md).
 
 **Storage**: `localStorage["ytc.theme"]` para la preferencia de tema. No hay base de datos.
@@ -83,7 +83,7 @@ VI.
 | Dependencia | Qué resuelve | Alternativa sin ella | Coste de mantenimiento |
 |---|---|---|---|
 | `react`, `react-dom`, `vite`, `typescript` | La base del stack que fija la constitución | — | Bajo |
-| `radix-ui` (Tabs, Tooltip, Toast) | Foco itinerante, posicionamiento y región viva con pausa, todo accesible | Escribirlo a mano: es donde más se falla en accesibilidad | Medio. Plan B: Base UI (R6) |
+| `radix-ui` (Tabs, Tooltip, Toast, Select) | Foco itinerante, posicionamiento, región viva con pausa y *listbox* diseñable, todo accesible | Escribirlo a mano: es donde más se falla en accesibilidad | Medio. Plan B: Base UI (R6) |
 | `lucide-react` | Iconos coherentes con licencia ISC (FR-016) | SVG propios | Bajo |
 | `@fontsource-variable/geist`, `…/geist-mono` | Fuentes autoalojadas con licencia OFL | Copiar los `.woff2` a mano | Bajo |
 | `stylelint`, `stylelint-declaration-strict-value` | FR-021 | Un script de expresiones regulares propio (frágil) | Bajo |

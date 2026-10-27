@@ -227,6 +227,19 @@ con un mensaje claro.
   cuando se conozca.
 - **FR-012**: Los avisos flotantes DEBEN poder cerrarse, no tapar la acción principal, durar lo suficiente para
   leerse (o no desaparecer solos si incluyen una acción) y anunciarse a las tecnologías de apoyo.
+- **FR-012a**: Cada aviso DEBE ser **temporal** (se va solo) o **persistente** (se queda hasta que se cierra), según
+  lo que pida su mensaje, y quien lo lanza DEBE poder fijar la duración o hacerlo persistente. Por defecto:
+
+  | Aviso | Comportamiento | Por qué |
+  |---|---|---|
+  | Confirma algo que la persona acaba de hacer (`success`, `info`) y no tiene acción | Temporal: 5 s más 50 ms por carácter, como mucho 12 s | Solo confirma; si se pierde, no pasa nada |
+  | Pide atención o una decisión (`warning`) | Persistente | Hay algo que revisar |
+  | Informa de un error (`danger`) | Persistente | Hay que leerlo entero y saber qué hacer |
+  | Tiene una acción (p. ej. «Deshacer») | Persistente | Hace falta tiempo para llegar al botón (WCAG 2.2.1) |
+  | Su contenido no se puede recuperar en otro sitio | Persistente, aunque sea `info` | Perderlo sería perder información |
+
+  El temporal DEBE mostrar cuánto le queda (una barra que se vacía, salvo con «reducir movimiento») y DEBE pausarse
+  mientras el puntero o el foco están sobre los avisos o la ventana pierde el foco.
 
 **Cristal, brillo y movimiento**
 

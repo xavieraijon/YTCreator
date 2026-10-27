@@ -21,6 +21,17 @@ function ToastDemo() {
       <Button
         onClick={() =>
           toast({
+            title: 'El título es muy largo',
+            description: 'YouTube corta a partir de 100 caracteres.',
+            tone: 'warning',
+          })
+        }
+      >
+        Aviso de atención
+      </Button>
+      <Button
+        onClick={() =>
+          toast({
             title: 'No se pudo guardar',
             description: 'Revisa la conexión y vuelve a intentarlo.',
             tone: 'danger',
@@ -54,19 +65,30 @@ function LongToastDemo() {
 export const toastDoc: ComponentDoc = {
   id: 'toast',
   name: 'Toast',
-  summary: 'Aviso breve que confirma algo que ya ha pasado. Se va solo, salvo si tiene una acción.',
+  summary:
+    'Aviso breve. Las confirmaciones se van solas (con una barra que muestra el tiempo que queda); los avisos de atención, los errores y los que tienen una acción se quedan hasta que se cierran.',
   group: 'communication',
   variants: [{ title: 'Tonos y acción', render: () => <ToastDemo /> }],
   states: [{ state: 'Texto largo (se ajusta en varias líneas)', render: () => <LongToastDemo /> }],
-  dos: [{ text: 'Úsalo para confirmar en pasado: «Guion guardado».' }],
+  dos: [
+    {
+      text: 'Temporal (por defecto en `success` e `info` sin acción): confirma en pasado lo que la persona acaba de hacer, «Guion guardado». Dura de 5 a 12 s según el texto.',
+    },
+    {
+      text: 'Persistente (por defecto en `warning`, `danger` y con acción): pide leer algo entero, decidir o deshacer.',
+    },
+    { text: "Usa `duration: 'persistent'` si el mensaje no se puede recuperar en otro sitio, aunque sea `info`." },
+  ],
   donts: [
     { text: 'No lo uses para errores que bloquean una tarea: ahí va un ErrorMessage junto a la tarea.' },
     { text: 'No metas en él la única forma de hacer algo.' },
+    { text: 'No acortes la duración por debajo de la calculada: tiene que dar tiempo a leerlo.' },
   ],
   a11y: [
     'Se anuncia en una región viva; los errores interrumpen y el resto espera su turno.',
     'F8 lleva el foco a la región de avisos.',
-    'Dura más cuanto más largo es el texto y no se va mientras el puntero o el foco están encima; con una acción, no se va solo.',
+    'El temporal dura más cuanto más largo es el texto y se pausa mientras el puntero o el foco están encima o la ventana no tiene el foco (FR-012a).',
+    'Con «reducir movimiento» la barra de tiempo no se muestra; el aviso se va igual.',
   ],
   tokens: ['toast-bg', 'toast-border', 'color-text-primary', 'toast-shadow', 'toast-radius', 'z-toast'],
 }

@@ -17,7 +17,13 @@ export function Stepper({ steps, current, className, ...rest }: StepperProps) {
   const strings = useUiStrings().stepper
   return (
     <div {...rest} className={cx(styles.stepper, className)}>
-      <p className={styles.position}>{format(strings.position, { current, total: steps.length })}</p>
+      <p className={styles.position}>
+        {format(strings.position, { current, total: steps.length })}
+        {/* On narrow screens only the markers show, so the current step is named here. */}
+        <span className={styles.currentLabel} aria-hidden>
+          {steps[current - 1]?.label}
+        </span>
+      </p>
       <ol className={styles.list}>
         {steps.map((step, index) => {
           const number = index + 1

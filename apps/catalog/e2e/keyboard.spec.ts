@@ -67,6 +67,32 @@ test.describe('teclado', () => {
     await expect(tab('Guion')).toBeFocused()
   })
 
+  test('el desplegable se abre, recorre y elige con teclado, y Escape cierra sin cambiar', async ({ page }) => {
+    await page.goto('/#/componentes/select')
+    const select = doc(page, 'select').getByRole('combobox', { name: 'Idioma del vídeo' }).first()
+    await expect(select).toHaveText('Español')
+
+    await select.focus()
+    await page.keyboard.press('Enter')
+    const listbox = page.getByRole('listbox')
+    await expect(listbox).toBeVisible()
+    await expect(page.getByRole('option', { name: 'Español' })).toBeFocused()
+    await page.keyboard.press('ArrowDown')
+    // Radix moves the focus on the next tick.
+    await expect(page.getByRole('option', { name: 'Inglés' })).toBeFocused()
+    await page.keyboard.press('Enter')
+    await expect(listbox).toBeHidden()
+    await expect(select).toHaveText('Inglés')
+    await expect(select).toBeFocused()
+
+    await page.keyboard.press('Enter')
+    await expect(listbox).toBeVisible()
+    await page.keyboard.press('ArrowDown')
+    await page.keyboard.press('Escape')
+    await expect(listbox).toBeHidden()
+    await expect(select).toHaveText('Inglés')
+  })
+
   test('el contenido de un plegable cerrado no recibe el foco (2.5)', async ({ page }) => {
     await page.goto('/#/componentes/disclosure')
     const section = doc(page, 'disclosure')

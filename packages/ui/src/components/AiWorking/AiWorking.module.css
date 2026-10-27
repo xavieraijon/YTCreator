@@ -5,18 +5,23 @@
     isolation: isolate;
     overflow: hidden;
     display: grid;
-    padding: var(--s-border-width-strong);
+    padding: var(--c-ai-working-ring);
     border-radius: var(--c-ai-working-radius);
+    box-shadow: var(--c-ai-working-glow);
   }
 
+  /* A square twice as wide as the box keeps the conic centre in the middle while it turns. */
   .aiWorking::before {
     position: absolute;
-    inset: -100%;
+    inset: 50% auto auto 50%;
+    inline-size: 200%;
+    aspect-ratio: 1;
+    translate: -50% -50%;
     background: var(--c-ai-working-aurora);
     content: '';
     animation:
       ytc-ai-turn var(--c-ai-working-cycle) linear infinite,
-      ytc-ai-rest var(--s-duration-slow) var(--s-easing-exit) calc(var(--c-ai-working-cycle) * 4) 1 forwards;
+      ytc-ai-rest var(--s-duration-slow) var(--s-easing-exit) calc(var(--c-ai-working-cycle) * 10) 1 forwards;
   }
 
   /* Positioned after the aurora, so it paints on top of it without a z-index. */
@@ -54,6 +59,7 @@
 
   @media (forced-colors: active) {
     .aiWorking {
+      box-shadow: none;
       border: var(--s-border-width-default) solid CanvasText;
     }
 

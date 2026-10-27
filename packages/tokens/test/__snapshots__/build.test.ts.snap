@@ -54,6 +54,9 @@ exports[`token build > matches the snapshot 1`] = `
     --p-color-scrim-dark: oklch(0 0 0 / 0.6);
     --p-color-gradient-brand: linear-gradient(135deg in oklch, var(--p-color-coral-500), var(--p-color-violet-500));
     --p-color-gradient-ai: linear-gradient(135deg in oklch, var(--p-color-violet-500), var(--p-color-blue-400), var(--p-color-coral-500));
+    --p-color-gradient-ai-vivid: conic-gradient(in oklch, var(--p-color-coral-400), var(--p-color-coral-500) 15%, var(--p-color-violet-500) 40%, var(--p-color-blue-400) 60%, var(--p-color-violet-400) 80%, var(--p-color-coral-400));
+    --p-color-gradient-ai-spark: conic-gradient(oklch(1 0 0 / 0) 0 62%, oklch(0.97 0.04 350 / 0.35) 80%, oklch(0.99 0.02 350 / 0.95) 88%, oklch(1 0 0 / 0) 90%);
+    --p-color-gradient-ai-ring: var(--p-color-gradient-ai-spark), var(--p-color-gradient-ai-vivid);
     --p-size-0: 0;
     --p-size-2: 0.125rem;
     --p-size-4: 0.25rem;
@@ -93,6 +96,7 @@ exports[`token build > matches the snapshot 1`] = `
     --p-radius-pill: 9999px;
     --p-border-width-1: 1px;
     --p-border-width-2: 2px;
+    --p-border-width-3: 3px;
     --p-shadow-low: 0 1px 2px oklch(0 0 0 / 0.08), 0 1px 3px oklch(0 0 0 / 0.06);
     --p-shadow-mid: 0 2px 4px oklch(0 0 0 / 0.08), 0 8px 24px oklch(0 0 0 / 0.14);
     --p-shadow-high: 0 4px 12px oklch(0 0 0 / 0.12), 0 24px 56px oklch(0 0 0 / 0.28);
@@ -117,7 +121,7 @@ exports[`token build > matches the snapshot 1`] = `
     --p-duration-150: 150ms;
     --p-duration-240: 240ms;
     --p-duration-400: 400ms;
-    --p-duration-8000: 8s;
+    --p-duration-3000: 3s;
     --p-curve-standard: cubic-bezier(0.2, 0, 0, 1);
     --p-curve-enter: cubic-bezier(0.05, 0.7, 0.1, 1);
     --p-curve-exit: cubic-bezier(0.3, 0, 0.8, 0.15);
@@ -145,6 +149,8 @@ exports[`token build > matches the snapshot 1`] = `
     --s-color-accent-subtle: light-dark(var(--p-color-coral-100), var(--p-color-coral-900));
     --s-gradient-brand: var(--p-color-gradient-brand);
     --s-gradient-ai: var(--p-color-gradient-ai);
+    --s-gradient-ai-vivid: var(--p-color-gradient-ai-vivid);
+    --s-gradient-ai-ring: var(--p-color-gradient-ai-ring);
     --s-color-success-fg: light-dark(var(--p-color-green-700), var(--p-color-green-400));
     --s-color-success-bg: light-dark(var(--p-color-green-100), var(--p-color-green-950));
     --s-color-success-border: light-dark(var(--p-color-green-400), var(--p-color-green-700));
@@ -204,6 +210,7 @@ exports[`token build > matches the snapshot 1`] = `
     --s-radius-full: var(--p-radius-pill);
     --s-border-width-default: var(--p-border-width-1);
     --s-border-width-strong: var(--p-border-width-2);
+    --s-border-width-heavy: var(--p-border-width-3);
     --s-focus-ring-width: var(--p-border-width-2);
     --s-focus-ring-offset: var(--p-border-width-2);
     --s-z-base: var(--p-layer-0);
@@ -216,7 +223,7 @@ exports[`token build > matches the snapshot 1`] = `
     --s-duration-fast: var(--p-duration-150);
     --s-duration-normal: var(--p-duration-240);
     --s-duration-slow: var(--p-duration-400);
-    --s-duration-ai-cycle: var(--p-duration-8000);
+    --s-duration-ai-cycle: var(--p-duration-3000);
     --s-easing-standard: var(--p-curve-standard);
     --s-easing-enter: var(--p-curve-enter);
     --s-easing-exit: var(--p-curve-exit);
@@ -248,6 +255,13 @@ exports[`token build > matches the snapshot 1`] = `
     --c-field-border-hover: var(--s-color-text-primary);
     --c-field-radius: var(--s-radius-md);
     --c-field-padding-inline: var(--s-space-4);
+    --c-select-menu-bg: var(--s-color-surface-raised);
+    --c-select-menu-border: var(--s-color-border-subtle);
+    --c-select-menu-shadow: var(--s-shadow-2);
+    --c-select-menu-radius: var(--s-radius-lg);
+    --c-select-option-radius: var(--s-radius-md);
+    --c-select-option-highlight: var(--s-color-accent-subtle);
+    --c-select-option-check: var(--s-color-text-accent);
     --c-spinner-color: var(--s-color-text-accent);
     --c-tooltip-bg: var(--s-color-surface-inverse);
     --c-tooltip-text: var(--s-color-text-inverse);
@@ -345,7 +359,9 @@ exports[`token build > matches the snapshot 1`] = `
     --c-glass-panel-blur: var(--s-glass-blur);
     --c-glass-panel-radius: var(--s-radius-xl);
     --c-glass-panel-padding: var(--s-space-5);
-    --c-ai-working-aurora: var(--s-gradient-ai);
+    --c-ai-working-aurora: var(--s-gradient-ai-ring);
+    --c-ai-working-ring: var(--s-border-width-heavy);
+    --c-ai-working-glow: var(--s-glow-ai);
     --c-ai-working-cycle: var(--s-duration-ai-cycle);
     --c-ai-working-bg: var(--s-color-surface-raised);
     --c-ai-working-text: var(--s-color-text-primary);

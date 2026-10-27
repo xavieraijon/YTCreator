@@ -6,7 +6,7 @@ export const duration = primitives('motion', 'duration', {
   150: '150ms',
   240: '240ms',
   400: '400ms',
-  8000: '8s',
+  3000: '3s',
 })
 
 export const easing = primitives('motion', 'curve', {

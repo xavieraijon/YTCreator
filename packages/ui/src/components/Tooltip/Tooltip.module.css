@@ -10,6 +10,13 @@
     font-size: var(--s-font-size-xs);
     font-weight: var(--s-font-weight-medium);
     line-height: var(--s-line-height-ui);
+  }
+
+  /*
+   * Only while open: Radix keeps closed content mounted until a running animation ends, and while mounted its
+   * layer swallows Escape, so a modal dialog behind it would not close.
+   */
+  .tooltip:not([data-state='closed']) {
     animation: ytc-tooltip-in var(--s-duration-fast) var(--s-easing-enter);
   }
 

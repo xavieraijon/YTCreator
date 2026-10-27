@@ -15,6 +15,12 @@ export const borderTokens: readonly SemanticToken[] = [
     description: 'Grosor de borde marcado: elemento seleccionado.',
   }),
   semantic({
+    name: 'border-width-heavy',
+    category: 'border',
+    value: borderWidth[3],
+    description: 'Grosor de borde destacado: el anillo de la firma de la IA.',
+  }),
+  semantic({
     name: 'focus-ring-width',
     category: 'border',
     value: borderWidth[2],

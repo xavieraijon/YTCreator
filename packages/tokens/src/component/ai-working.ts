@@ -5,8 +5,20 @@ export const aiWorkingTokens: readonly ComponentToken[] = [
   component({
     name: 'ai-working-aurora',
     category: 'color',
-    value: sem('gradient-ai'),
-    description: 'Degradado de la aurora que indica que la IA trabaja.',
+    value: sem('gradient-ai-ring'),
+    description: 'Degradado de la aurora que indica que la IA trabaja, con el destello que recorre el anillo.',
+  }),
+  component({
+    name: 'ai-working-ring',
+    category: 'border',
+    value: sem('border-width-heavy'),
+    description: 'Grosor del anillo de color alrededor del texto.',
+  }),
+  component({
+    name: 'ai-working-glow',
+    category: 'shadow',
+    value: sem('glow-ai'),
+    description: 'Brillo exterior que acompaña al anillo.',
   }),
   component({
     name: 'ai-working-cycle',

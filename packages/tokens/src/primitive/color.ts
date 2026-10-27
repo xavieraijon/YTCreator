@@ -59,4 +59,12 @@ export const color = primitives('color', 'color', {
 export const gradient = primitives('color', 'color-gradient', {
   brand: 'linear-gradient(135deg in oklch, var(--p-color-coral-500), var(--p-color-violet-500))',
   ai: 'linear-gradient(135deg in oklch, var(--p-color-violet-500), var(--p-color-blue-400), var(--p-color-coral-500))',
+  /* A closed circle of colour: turning it reads as a comet running around the edge. */
+  'ai-vivid':
+    'conic-gradient(in oklch, var(--p-color-coral-400), var(--p-color-coral-500) 15%, var(--p-color-violet-500) 40%, var(--p-color-blue-400) 60%, var(--p-color-violet-400) 80%, var(--p-color-coral-400))',
+  /* A short bright tail over the colour circle: it is what makes the turn visible. */
+  'ai-spark':
+    'conic-gradient(oklch(1 0 0 / 0) 0 62%, oklch(0.97 0.04 350 / 0.35) 80%, oklch(0.99 0.02 350 / 0.95) 88%, oklch(1 0 0 / 0) 90%)',
+  /* Both layers as one value, so a single token paints the whole ring. */
+  'ai-ring': 'var(--p-color-gradient-ai-spark), var(--p-color-gradient-ai-vivid)',
 })

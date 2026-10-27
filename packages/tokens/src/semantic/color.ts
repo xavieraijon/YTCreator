@@ -174,6 +174,19 @@ const colorAccent = [
     value: gradient.ai,
     description: 'Degradado que señala trabajo de la IA en curso. Uso decorativo, nunca detrás de texto.',
   }),
+  semantic({
+    name: 'gradient-ai-vivid',
+    category: 'color',
+    value: gradient['ai-vivid'],
+    description: 'Círculo de color intenso que gira en el anillo de «la IA está trabajando». Nunca detrás de texto.',
+  }),
+  semantic({
+    name: 'gradient-ai-ring',
+    category: 'color',
+    value: gradient['ai-ring'],
+    description:
+      'Círculo de color intenso con un destello y su estela encima, que hace visible el giro del anillo de la IA. Nunca detrás de texto.',
+  }),
 ]
 
 // States

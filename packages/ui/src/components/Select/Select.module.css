@@ -1,17 +1,143 @@
 @layer components {
-  .select {
-    appearance: none;
-    padding-inline-end: var(--s-space-7);
+  /* The trigger fills the whole box, so the menu lines up with the field's edges. */
+  .box {
+    padding-inline: 0;
+  }
+
+  .trigger {
+    display: flex;
+    padding-inline: var(--c-field-padding-inline);
+    align-items: center;
+    gap: var(--s-space-2);
+    text-align: start;
     cursor: pointer;
   }
 
-  .select:disabled {
+  .trigger:disabled {
     cursor: not-allowed;
   }
 
+  .value {
+    flex: 1;
+    min-inline-size: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .trigger[data-placeholder] .value {
+    color: var(--s-color-text-tertiary);
+  }
+
   .chevron {
-    position: absolute;
-    inset-inline-end: var(--c-field-padding-inline);
-    pointer-events: none;
+    display: inline-flex;
+    transition: rotate var(--s-duration-fast) var(--s-easing-standard);
+  }
+
+  .trigger[data-state='open'] .chevron {
+    rotate: 180deg;
+  }
+
+  .menu {
+    z-index: var(--s-z-popover);
+    overflow: hidden;
+    min-inline-size: var(--radix-select-trigger-width);
+    max-block-size: var(--radix-select-content-available-height);
+    border: var(--s-border-width-default) solid var(--c-select-menu-border);
+    border-radius: var(--c-select-menu-radius);
+    background: var(--c-select-menu-bg);
+    box-shadow: var(--c-select-menu-shadow);
+    color: var(--s-color-text-primary);
+    transform-origin: var(--radix-select-content-transform-origin);
+    animation: ytc-select-in var(--s-duration-fast) var(--s-easing-enter);
+  }
+
+  @keyframes ytc-select-in {
+    from {
+      opacity: 0;
+      scale: 0.97;
+    }
+  }
+
+  .viewport {
+    padding: var(--s-space-2);
+  }
+
+  .option {
+    display: flex;
+    align-items: center;
+    gap: var(--s-space-3);
+    min-block-size: var(--s-control-height-md);
+    padding-block: var(--s-space-2);
+    padding-inline: var(--s-space-3);
+    border-radius: var(--c-select-option-radius);
+    font-size: var(--s-font-size-base);
+    line-height: var(--s-line-height-ui);
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .option:focus-visible {
+    outline: none;
+  }
+
+  .option[data-highlighted] {
+    background: var(--c-select-option-highlight);
+  }
+
+  .option[data-state='checked'] {
+    font-weight: var(--s-font-weight-medium);
+  }
+
+  .option[data-disabled] {
+    color: var(--s-color-text-disabled);
+    cursor: not-allowed;
+  }
+
+  .optionText {
+    display: grid;
+    flex: 1;
+    gap: var(--s-space-1);
+    min-inline-size: 0;
+  }
+
+  .optionDescription {
+    color: var(--s-color-text-secondary);
+    font-size: var(--s-font-size-sm);
+    font-weight: var(--s-font-weight-regular);
+    line-height: var(--s-line-height-reading);
+  }
+
+  .check {
+    display: inline-flex;
+    color: var(--c-select-option-check);
+  }
+
+  .scroll {
+    display: flex;
+    justify-content: center;
+    padding-block: var(--s-space-1);
+    color: var(--s-color-text-secondary);
+    cursor: default;
+  }
+
+  @media (pointer: coarse) {
+    .option {
+      min-block-size: var(--s-control-height-lg);
+    }
+  }
+
+  @media (forced-colors: active) {
+    .menu {
+      border-color: CanvasText;
+    }
+
+    .option[data-highlighted] {
+      outline: var(--s-border-width-default) solid Highlight;
+    }
+
+    .option[data-disabled] {
+      color: GrayText;
+    }
   }
 }

@@ -16,6 +16,8 @@
   }
 
   .toast {
+    position: relative;
+    overflow: hidden;
     display: grid;
     grid-template-columns: auto 1fr auto;
     gap: var(--s-space-4);
@@ -78,6 +80,28 @@
     margin-block-start: var(--s-space-2);
   }
 
+  /* Empties from full to nothing over the toast's own duration. */
+  .timer {
+    position: absolute;
+    inset-block-end: 0;
+    inset-inline: 0;
+    block-size: var(--s-border-width-strong);
+    background: var(--c-toast-tone);
+    opacity: 0.6;
+    transform-origin: left;
+    animation: ytc-toast-timer var(--toast-duration) linear forwards;
+  }
+
+  .toast[data-paused] .timer {
+    animation-play-state: paused;
+  }
+
+  @keyframes ytc-toast-timer {
+    to {
+      transform: scaleX(0);
+    }
+  }
+
   .toast[data-state='open'] {
     animation: ytc-toast-in var(--s-duration-normal) var(--s-easing-enter);
   }
@@ -110,6 +134,10 @@
   @media (prefers-reduced-motion: reduce) {
     .toast[data-state='open'] {
       animation: none;
+    }
+
+    .timer {
+      display: none;
     }
   }
 }

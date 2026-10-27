@@ -33,8 +33,8 @@ export const motionTokens: readonly SemanticToken[] = [
   semantic({
     name: 'duration-ai-cycle',
     category: 'motion',
-    value: duration[8000],
-    description: 'Ciclo de la animación de la IA trabajando.',
+    value: duration[3000],
+    description: 'Una vuelta de la animación de la IA trabajando: lo bastante rápida para notarse en una espera corta.',
     reducedMotion: duration[0],
   }),
   semantic({ name: 'easing-standard', category: 'motion', value: easing.standard, description: 'Curva por defecto.' }),

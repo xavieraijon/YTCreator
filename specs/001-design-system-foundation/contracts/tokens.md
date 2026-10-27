@@ -40,7 +40,7 @@ Lo que el resto del monorepo puede usar del paquete de tokens. Lo que no aparece
 | Radios | `radius-sm` (4), `radius-md` (8), `radius-lg` (12), `radius-xl` (16), `radius-full` |
 | Bordes | `border-width-default` (1px), `border-width-strong` (2px), `focus-ring-width` (2px), `focus-ring-offset` (2px) |
 | Capas | `z-base`, `z-raised`, `z-sticky`, `z-overlay`, `z-popover`, `z-toast` |
-| Movimiento | `duration-instant` (80ms), `duration-fast` (150ms), `duration-normal` (240ms), `duration-slow` (400ms), `duration-ai-cycle` (8s); `easing-standard`, `easing-enter`, `easing-exit` |
+| Movimiento | `duration-instant` (80ms), `duration-fast` (150ms), `duration-normal` (240ms), `duration-slow` (400ms), `duration-ai-cycle` (3s); `easing-standard`, `easing-enter`, `easing-exit` |
 | Controles | `control-height-sm/md/lg` (32/40/44), `icon-size-sm/md/lg` (16/20/24), `target-min` (24) |
 
 - Con `prefers-reduced-motion: reduce`, todas las duraciones pasan a `0ms`, salvo `duration-fast`, que se queda solo

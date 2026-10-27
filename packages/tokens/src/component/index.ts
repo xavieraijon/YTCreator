@@ -12,6 +12,7 @@ import { fieldTokens } from './field.ts'
 import { glassPanelTokens } from './glass-panel.ts'
 import { progressBarTokens } from './progress-bar.ts'
 import { radioGroupTokens } from './radio-group.ts'
+import { selectTokens } from './select.ts'
 import { skeletonTokens } from './skeleton.ts'
 import { spinnerTokens } from './spinner.ts'
 import { stepperTokens } from './stepper.ts'
@@ -25,6 +26,7 @@ import { tooltipTokens } from './tooltip.ts'
 export const componentTokens: readonly ComponentToken[] = [
   ...themeSwitcherTokens,
   ...fieldTokens,
+  ...selectTokens,
   ...spinnerTokens,
   ...tooltipTokens,
   ...badgeTokens,

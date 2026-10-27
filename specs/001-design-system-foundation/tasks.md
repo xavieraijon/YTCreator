@@ -302,6 +302,19 @@ componentes de US2–US4 nacen vigilados. Esta fase añade el test que fija los 
 
 ---
 
+## Phase 9: Ajustes de la revisión estética (feedback de T104, 2026-10-27)
+
+**Objetivo**: corregir lo que el creador señaló al revisar `#/muestra` antes de volver a pedir la aprobación (T104).
+
+- [X] T106 [P] Rehacer el `Stepper` con marcadores sobre una línea continua que une sus centros, nombres debajo sin recortar (hasta dos líneas) y, en móvil, el nombre del paso actual junto a «Paso N de M», en `packages/ui/src/components/Stepper/`
+- [X] T107 [P] Hacer más visible la aurora de `AiWorking`: borde más grueso (token `ai-working-ring`) y un degradado más vivo (token `gradient-ai-vivid`), y que el giro se note: ciclo de 3 s en vez de 8 s y una chispa clara con estela sobre el degradado (token `gradient-ai-ring`), sin tocar el texto ni romper «reducir movimiento», en `packages/tokens/src/` y `packages/ui/src/components/AiWorking/`
+- [X] T108 [P] Avisos temporales o persistentes según FR-012a: opción `duration`, valores por defecto por tono y acción, barra de tiempo que se pausa con el puntero, el foco o la ventana sin foco, en `packages/ui/src/components/Toast/`; documentar las reglas en `apps/catalog/src/docs/toast.doc.tsx` y probarlas en `packages/ui/src/components/Toast/Toast.test.tsx`
+- [X] T109 [P] Alinear las tarjetas de `RadioGroup`: radio, icono y marca centrados con la primera línea del título y la descripción debajo del título a todo el ancho, en `packages/ui/src/components/RadioGroup/RadioGroup.module.css`
+- [X] T110 Cambiar `Select` a Radix Select con desplegable propio (superficie elevada, opción marcada con check, descripción opcional, teclado y búsqueda por letras), manteniendo la API de campo (`label`, `description`, `error`, `optional`), en `packages/ui/src/components/Select/`; actualizar su doc y los usos de la muestra y los e2e
+- [X] T111 Puerta de calidad completa y capturas nuevas de `#/muestra` (claro, oscuro y móvil) para repetir T104
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies

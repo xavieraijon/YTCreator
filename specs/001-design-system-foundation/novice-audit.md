@@ -32,14 +32,14 @@ Hecha por un agente nuevo, sin contexto de la ronda 1, con 12 capturas del tama�
 | 3 | Media | No hay forma visible de volver al paso anterior. | Abierto. La muestra es un único paso con datos de prueba. La navegación entre pasos es del flujo real (features de onboarding en adelante). |
 
 **Menores abiertas (pulido, no bloquean):**
-- el Stepper recorta «El enfoque» en escritorio y en móvil no nombra los pasos 4 y 5;
 - el botón en carga solo muestra el indicador y no hay cancelar;
-- el borde del panel de trabajo parece cortado;
-- columnas estrechas en las tarjetas de enfoque;
 - «Modo experto» no anticipa qué contiene;
 - el «?» flotante roza bordes;
 - los avisos apilados ocupan mucho en móvil;
 - el estado apagado del interruptor se lee poco.
+
+**Corregidas en la revisión estética (T106–T110, 2026-10-27):** el Stepper ya no recorta etiquetas y en móvil nombra el
+paso actual; el borde del panel de trabajo es continuo y más grueso; las tarjetas de enfoque usan todo el ancho.
 
 **Fuera del producto (menores):** la barra lateral del catálogo, el selector de tema sin rótulo en móvil y el aviso «Fin de la muestra».
 

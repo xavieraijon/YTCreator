@@ -123,14 +123,14 @@ Cada decisión sigue el formato Decisión / Motivo / Alternativas. Todas las dep
   |---|---|---|
   | Botón, campos, área de texto, casilla, grupo de opciones | nativo | Accesibles de serie |
   | Interruptor | `<input type="checkbox" role="switch">` | Nativo con el rol correcto |
-  | Selector | `<select>` nativo estilizado | El mejor en móvil y con lectores de pantalla. El *listbox* a medida queda fuera |
+  | Selector | Radix Select (revisado 2026-10-27) | El desplegable nativo no se puede diseñar y desentona con el sistema (revisión estética de T104). Radix da el *listbox* accesible: teclado, búsqueda por letras, `aria-*`, colocación y un `<select>` oculto para formularios. Coste: en móvil se pierde la rueda nativa |
   | Sección plegable | `<details>/<summary>` | Cerrada no recibe foco y anuncia su estado (escenario 2.5) |
   | Diálogo | `<dialog>` + `showModal()` | Capa superior, contenido de fuera inerte, Escape. El componente guarda y devuelve el foco por su cuenta (escenario 2.3) |
   | Pestañas | Radix Tabs | Foco itinerante y activación por flechas |
   | Tooltip | Radix Tooltip | Posicionamiento y retardos. Radix no lo abre en táctil, así que su contenido va también en el nombre accesible del disparador o en texto visible |
   | Aviso flotante | Radix Toast | Región viva, pausa al pasar el ratón o con foco, atajo F8, apilado |
 
-  Se usa el paquete unificado `radix-ui`, del que solo se importan esas tres primitivas.
+  Se usa el paquete unificado `radix-ui`, del que solo se importan esas cuatro primitivas.
 - **Motivo:** la constitución permite primitivas *headless*. Usarlas solo donde ahorran código delicado de
   accesibilidad es lo más simple (X).
 - **Alternativas:**
@@ -172,8 +172,9 @@ Cada decisión sigue el formato Decisión / Motivo / Alternativas. Todas las dep
     elevada. Limitación: hoy esa media query solo la reconocen los navegadores Chromium; en los demás el cristal se
     mantiene, pero ya cumple AA por diseño.
   - **Firma de la IA:** una aurora hecha con un pseudo-elemento con degradado cónico de marca. Se anima solo
-    `transform` y `opacity`, para que trabaje en el compositor y no repinte. Va en un ciclo lento de 8 s y con
-    opacidad baja en reposo largo (caso «indicador sin fin»). Siempre la acompaña un texto visible dentro de
+    `transform` y `opacity`, para que trabaje en el compositor y no repinte. Da una vuelta cada 3 s, lo que dura
+    una espera típica, con una chispa clara y su estela (`gradient-ai-ring`) sobre el degradado para que el giro se
+    note. Baja la opacidad tras un reposo largo (caso «indicador sin fin»). Siempre la acompaña un texto visible dentro de
     `role="status"`.
   - **Movimiento reducido (FR-014, SC-009):** con `prefers-reduced-motion: reduce`, los tokens de duración pasan a
     0 ms, salvo las opacidades breves (≤ 150 ms). La aurora se vuelve un degradado estático y el spinner un icono

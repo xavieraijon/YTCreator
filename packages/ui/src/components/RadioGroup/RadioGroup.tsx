@@ -1,4 +1,4 @@
-import { Check, type LucideIcon } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import { useId, type ChangeEvent, type ComponentProps, type ReactNode } from 'react'
 import { Icon } from '../../icons/index.ts'
 import { cx } from '../../utils/cx.ts'
@@ -81,7 +81,11 @@ export function RadioGroup({
                 onChange={handleChange}
                 className={styles.input}
               />
-              {option.icon && <Icon icon={option.icon} size="md" className={styles.icon} />}
+              {option.icon && (
+                <span className={styles.icon}>
+                  <Icon icon={option.icon} size="md" />
+                </span>
+              )}
               <label htmlFor={optionId} className={styles.label}>
                 {option.label}
               </label>
@@ -90,7 +94,6 @@ export function RadioGroup({
                   {option.description}
                 </p>
               )}
-              {appearance === 'cards' && <Icon icon={Check} size="sm" className={styles.selectedMark} />}
             </div>
           )
         })}

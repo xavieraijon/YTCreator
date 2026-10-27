@@ -102,39 +102,65 @@
     display: none;
   }
 
-  .selectedMark {
-    position: absolute;
-    inset-block-start: var(--s-space-5);
-    inset-inline-end: var(--s-space-5);
-    color: var(--c-radio-checked);
-    visibility: hidden;
-  }
-
-  /* Cards: the whole card is the target; the radio stays visible for the keyboard and for clarity. */
+  /*
+   * Cards: the whole card is the target. The top row holds the icon and the radio, centred on the same line; the
+   * title and the description run below at the full width of the card. Without an icon the title takes that row.
+   */
   .group[data-appearance='cards'] .options {
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
     gap: var(--s-space-4);
   }
 
   .group[data-appearance='cards'] .option {
-    grid-template-columns: auto auto 1fr;
-    align-items: start;
+    grid-template-areas:
+      'label radio'
+      'hint hint';
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: auto 1fr;
+    column-gap: var(--s-space-3);
+    row-gap: var(--s-space-2);
+    align-content: start;
     padding: var(--s-space-5);
-    padding-inline-end: var(--s-space-9);
     border: var(--s-border-width-default) solid var(--c-radio-card-border);
     border-radius: var(--c-radio-card-radius);
     background: var(--c-radio-card-bg);
     transition: border-color var(--s-duration-fast) var(--s-easing-standard);
   }
 
+  .group[data-appearance='cards'] .option:has(.icon) {
+    grid-template-areas:
+      'icon radio'
+      'label label'
+      'hint hint';
+    grid-template-rows: auto auto 1fr;
+  }
+
+  .group[data-appearance='cards'] .input {
+    grid-area: radio;
+    margin: 0;
+  }
+
   .group[data-appearance='cards'] .icon {
-    display: block;
+    display: inline-grid;
+    grid-area: icon;
+    place-items: center;
+    justify-self: start;
+    inline-size: var(--s-control-height-md);
+    block-size: var(--s-control-height-md);
+    margin-block-end: var(--s-space-1);
+    border-radius: var(--s-radius-md);
+    background: var(--s-color-surface-sunken);
     color: var(--c-field-description);
+    transition:
+      background-color var(--s-duration-fast) var(--s-easing-standard),
+      color var(--s-duration-fast) var(--s-easing-standard);
   }
 
   .group[data-appearance='cards'] .label {
+    grid-area: label;
     font-size: var(--s-font-size-base);
     font-weight: var(--s-font-weight-semibold);
+    line-height: var(--s-line-height-ui);
   }
 
   /* Stretch the label so the whole card picks the option. */
@@ -145,7 +171,7 @@
   }
 
   .group[data-appearance='cards'] .hint {
-    grid-column: 3;
+    grid-area: hint;
   }
 
   .group[data-appearance='cards'] .option:has(.input:not(:disabled):hover) {
@@ -156,12 +182,9 @@
     border-color: var(--c-radio-checked);
   }
 
-  .group[data-appearance='cards'] .option:has(:checked) .selectedMark {
-    visibility: visible;
-  }
-
   .group[data-appearance='cards'] .option:has(:checked) .icon {
-    color: var(--c-radio-checked);
+    background: var(--s-color-accent-subtle);
+    color: var(--s-color-text-accent);
   }
 }
 

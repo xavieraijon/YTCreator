@@ -26,7 +26,7 @@ error se asocian con `useId` mediante `aria-describedby`. El error añade `aria-
 |---|---|---|
 | `TextField` | `<input>` | `type` (text, email, url, search, number, password), `iconStart?` |
 | `TextArea` | `<textarea>` | `rows`, `autoResize?` (con `field-sizing: content` cuando esté soportado) |
-| `Select` | `<select>` | `options: { value; label; disabled? }[]` o `children` |
+| `Select` | Radix Select (desplegable propio) | `options: { value; label; description?; disabled? }[]`, `value`/`defaultValue`, `onValueChange`, `placeholder?`, `name?` |
 | `Switch` | `<input type="checkbox" role="switch">` | `checked`, `onCheckedChange` |
 | `Checkbox` | `<input type="checkbox">` | `indeterminate?` |
 | `RadioGroup` | `<fieldset>` + `<input type="radio">` | `appearance: 'list' \| 'cards'`; las tarjetas admiten `title`, `description` e `icon` (las usa la página de muestra) |
@@ -45,7 +45,7 @@ error se asocian con `useId` mediante `aria-describedby`. El error añade `aria-
 
 | Componente | Props clave | Garantías |
 |---|---|---|
-| `ToastProvider` + `useToast()` | `toast({ title, description?, tone?: 'neutral' \| 'success' \| 'warning' \| 'danger', action?: { label; onClick } })` | Radix Toast arriba (ver research R15), 3 visibles como mucho. Con `action` no se cierra solo. Siempre lleva botón de cerrar |
+| `ToastProvider` + `useToast()` | `toast({ title, description?, tone?: 'neutral' \| 'success' \| 'warning' \| 'danger', action?: { label; onClick }, duration?: number \| 'persistent' })` | Radix Toast arriba (ver research R15), 3 visibles como mucho. Temporal o persistente según FR-012a; `duration` lo fuerza. El temporal muestra una barra de tiempo. Siempre lleva botón de cerrar |
 | `Badge` | `tone`, `children` | Una línea. Si el texto es largo se recorta con elipsis y el texto completo va en `title` y en el nombre accesible |
 | `Tooltip` | `content: string`, `children` (disparador enfocable) | Aparece con el ratón encima y con el foco. En táctil no se garantiza que aparezca, así que su contenido DEBE estar también disponible por otra vía (nombre accesible del disparador o texto visible). Nunca lleva información esencial |
 | `EmptyState` | `icon?`, `title`, `description`, `action?` | Una sola acción principal |
