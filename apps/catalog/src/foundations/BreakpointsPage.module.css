@@ -1,0 +1,9 @@
+.notes {
+  display: grid;
+  gap: var(--s-space-3);
+  max-inline-size: 60ch;
+  padding-inline-start: var(--s-space-5);
+  color: var(--s-color-text-secondary);
+  line-height: var(--s-line-height-reading);
+  list-style: disc;
+}

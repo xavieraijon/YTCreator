@@ -1,0 +1,83 @@
+@layer components {
+  /* The aurora turns behind a solid surface, so only a ring of it shows around the text. */
+  .aiWorking {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    display: grid;
+    padding: var(--c-ai-working-ring);
+    border-radius: var(--c-ai-working-radius);
+    box-shadow: var(--c-ai-working-glow);
+  }
+
+  /* A square twice as wide as the box keeps the conic centre in the middle while it turns. */
+  .aiWorking::before {
+    position: absolute;
+    inset: 50% auto auto 50%;
+    inline-size: 200%;
+    aspect-ratio: 1;
+    translate: -50% -50%;
+    background: var(--c-ai-working-aurora);
+    content: '';
+    animation:
+      ytc-ai-turn var(--c-ai-working-cycle) linear infinite,
+      ytc-ai-rest var(--s-duration-slow) var(--s-easing-exit) calc(var(--c-ai-working-cycle) * 10) 1 forwards;
+  }
+
+  /* Positioned after the aurora, so it paints on top of it without a z-index. */
+  .content {
+    position: relative;
+    display: grid;
+    align-content: center;
+    padding: var(--s-space-3) var(--s-space-4);
+    border-radius: var(--s-radius-md);
+    background: var(--c-ai-working-bg);
+    color: var(--c-ai-working-text);
+  }
+
+  .aiWorking[data-variant='panel'] .content {
+    min-block-size: var(--s-space-12);
+    padding: var(--s-space-6);
+    text-align: center;
+  }
+
+  .label {
+    font-size: var(--s-font-size-sm);
+    font-weight: var(--s-font-weight-medium);
+    line-height: var(--s-line-height-ui);
+  }
+
+  .aiWorking[data-variant='panel'] .label {
+    font-size: var(--s-font-size-md);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .aiWorking::before {
+      animation: none;
+    }
+  }
+
+  @media (forced-colors: active) {
+    .aiWorking {
+      box-shadow: none;
+      border: var(--s-border-width-default) solid CanvasText;
+    }
+
+    .aiWorking::before {
+      display: none;
+    }
+  }
+
+  @keyframes ytc-ai-turn {
+    to {
+      transform: rotate(1turn);
+    }
+  }
+
+  /* After a long wait the aurora calms down, so it does not tire the eye. */
+  @keyframes ytc-ai-rest {
+    to {
+      opacity: 0.5;
+    }
+  }
+}

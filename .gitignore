@@ -7,6 +7,7 @@ dist/
 build/
 .vite/
 coverage/
+.tsbuild/
 *.tsbuildinfo
 
 # Secrets and environment

@@ -1,0 +1,19 @@
+@layer components {
+  .box {
+    align-items: stretch;
+    padding-block: var(--s-space-3);
+  }
+
+  .textarea {
+    min-block-size: var(--s-control-height-lg);
+    line-height: var(--s-line-height-reading);
+    resize: vertical;
+  }
+
+  @supports (field-sizing: content) {
+    .textarea[data-auto-resize] {
+      field-sizing: content;
+      resize: none;
+    }
+  }
+}

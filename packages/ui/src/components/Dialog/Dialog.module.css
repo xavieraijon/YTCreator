@@ -1,0 +1,95 @@
+@layer components {
+  .dialog {
+    position: fixed;
+    inline-size: min(36rem, calc(100% - var(--s-space-7) * 2));
+    max-block-size: calc(100dvh - var(--s-space-7) * 2);
+    margin: auto;
+    padding: var(--c-dialog-padding);
+    overflow-y: auto;
+    border: var(--s-border-width-default) solid var(--c-dialog-border);
+    border-radius: var(--c-dialog-radius);
+    background: var(--c-dialog-bg);
+    color: var(--s-color-text-primary);
+    box-shadow: var(--c-dialog-shadow);
+    backdrop-filter: var(--s-glass-blur);
+  }
+
+  .dialog[data-size='sm'] {
+    inline-size: min(28rem, calc(100% - var(--s-space-7) * 2));
+  }
+
+  .dialog[open] {
+    display: grid;
+    gap: var(--s-space-6);
+    animation: ytc-dialog-in var(--s-duration-normal) var(--s-easing-enter);
+  }
+
+  .dialog::backdrop {
+    background: var(--s-color-surface-overlay);
+  }
+
+  .header {
+    display: grid;
+    gap: var(--s-space-3);
+    padding-inline-end: var(--s-space-9);
+  }
+
+  .title {
+    font-size: var(--s-font-size-lg);
+    font-weight: var(--s-font-weight-semibold);
+    line-height: var(--s-line-height-tight);
+  }
+
+  .description {
+    color: var(--s-color-text-secondary);
+    font-size: var(--s-font-size-sm);
+    line-height: var(--s-line-height-reading);
+  }
+
+  .body {
+    min-inline-size: 0;
+  }
+
+  .footer {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: var(--s-space-3);
+  }
+
+  .close {
+    position: absolute;
+    inset-block-start: var(--s-space-5);
+    inset-inline-end: var(--s-space-5);
+  }
+
+  @keyframes ytc-dialog-in {
+    from {
+      opacity: 0;
+      scale: 0.97;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .dialog[open] {
+      animation: none;
+    }
+  }
+
+  @media (max-width: 40rem) {
+    .footer {
+      flex-direction: column-reverse;
+      align-items: stretch;
+    }
+  }
+}
+
+/* Forced colors: system colors only, no shadows or gradients. */
+@layer components {
+  @media (forced-colors: active) {
+    .dialog {
+      border-color: CanvasText;
+      box-shadow: none;
+    }
+  }
+}

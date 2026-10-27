@@ -1,0 +1,130 @@
+@layer components {
+  .stepper {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--s-space-3);
+  }
+
+  .position {
+    color: var(--s-color-text-secondary);
+    font-size: var(--s-font-size-sm);
+  }
+
+  .currentLabel {
+    display: none;
+  }
+
+  /* Equal columns: each marker sits centred on top of its name, and the line joins the centres. */
+  .list {
+    display: grid;
+    grid-auto-columns: minmax(0, 1fr);
+    grid-auto-flow: column;
+    padding: 0;
+    list-style: none;
+  }
+
+  .step {
+    position: relative;
+    display: grid;
+    justify-items: center;
+    gap: var(--s-space-2);
+    padding-inline: var(--s-space-1);
+    color: var(--s-color-text-secondary);
+    font-size: var(--s-font-size-sm);
+    text-align: center;
+  }
+
+  /* The line to the next step: from the right edge of this marker to the left edge of the next one. */
+  .step:not(:last-child)::after {
+    position: absolute;
+    inset-block-start: calc((var(--c-stepper-marker-size) - var(--s-border-width-strong)) / 2);
+    inset-inline: calc(50% + var(--c-stepper-marker-size) / 2) calc(-50% + var(--c-stepper-marker-size) / 2);
+    block-size: var(--s-border-width-strong);
+    background: var(--c-stepper-line);
+    content: '';
+  }
+
+  .step[data-state='done']::after {
+    background: var(--c-stepper-done);
+  }
+
+  .marker {
+    display: inline-grid;
+    place-items: center;
+    inline-size: var(--c-stepper-marker-size);
+    block-size: var(--c-stepper-marker-size);
+    border: var(--s-border-width-strong) solid var(--c-stepper-marker-border);
+    border-radius: var(--s-radius-full);
+    background: var(--s-color-surface);
+    font-variant-numeric: tabular-nums;
+    font-weight: var(--s-font-weight-semibold);
+  }
+
+  /* Up to two lines, then an ellipsis; the full name is still read by assistive technology. */
+  .label {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-height: var(--s-line-height-ui);
+    overflow-wrap: anywhere;
+  }
+
+  .step[data-state='done'] .marker {
+    border-color: var(--c-stepper-done);
+    background: var(--c-stepper-done);
+    color: var(--s-color-text-on-accent);
+  }
+
+  .step[data-state='current'] {
+    color: var(--s-color-text-primary);
+    font-weight: var(--s-font-weight-semibold);
+  }
+
+  /* A halo, not only a colour, tells the current step apart from the pending ones. */
+  .step[data-state='current'] .marker {
+    border-color: var(--c-stepper-done);
+    outline: var(--s-border-width-strong) solid var(--c-stepper-done);
+    outline-offset: var(--s-border-width-strong);
+    color: var(--s-color-text-accent);
+  }
+
+  @media (max-width: 40rem) {
+    .label {
+      display: none;
+    }
+
+    .currentLabel {
+      display: inline;
+      color: var(--s-color-text-primary);
+      font-weight: var(--s-font-weight-semibold);
+    }
+
+    .currentLabel::before {
+      content: ' · ';
+    }
+  }
+}
+
+/* Forced colors: system colors only, no shadows or gradients. */
+@layer components {
+  @media (forced-colors: active) {
+    .marker {
+      border-color: CanvasText;
+    }
+
+    .step:not(:last-child)::after {
+      background: CanvasText;
+    }
+
+    .step[data-state='done'] .marker {
+      border-color: Highlight;
+      background: Highlight;
+      color: HighlightText;
+    }
+
+    .step[data-state='current'] .marker {
+      outline-color: Highlight;
+    }
+  }
+}

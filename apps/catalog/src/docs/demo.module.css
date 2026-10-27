@@ -1,0 +1,52 @@
+/* Layout helpers for the component demos. */
+
+.narrow {
+  max-inline-size: 10rem;
+}
+
+.column {
+  display: grid;
+  gap: var(--s-space-4);
+  inline-size: 100%;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-space-3);
+}
+
+.muted {
+  color: var(--s-color-text-secondary);
+  font-size: var(--s-font-size-sm);
+}
+
+/* A detailed background (gradient plus text behind), so glass can be judged. */
+.busy {
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  inline-size: 100%;
+  min-block-size: 12rem;
+  padding: var(--s-space-6);
+  border-radius: var(--s-radius-lg);
+  background: var(--s-gradient-brand);
+}
+
+.busy > * {
+  grid-area: 1 / 1;
+}
+
+.backdropText {
+  color: var(--s-color-text-inverse);
+  font-size: var(--s-font-size-xl);
+  font-weight: var(--s-font-weight-semibold);
+  line-height: var(--s-line-height-tight);
+}
+
+.narrowPanel {
+  display: grid;
+  gap: var(--s-space-1);
+  max-inline-size: 18rem;
+}

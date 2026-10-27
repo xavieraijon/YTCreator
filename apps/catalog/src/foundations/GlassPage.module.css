@@ -1,0 +1,49 @@
+.rules {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+  gap: var(--s-space-6);
+}
+
+.ruleTitle {
+  margin-block-end: var(--s-space-2);
+  font-size: var(--s-font-size-md);
+  font-weight: var(--s-font-weight-semibold);
+}
+
+.list {
+  display: grid;
+  gap: var(--s-space-1);
+  padding-inline-start: var(--s-space-5);
+  color: var(--s-color-text-secondary);
+  list-style: disc;
+}
+
+.doubt {
+  margin-block-start: var(--s-space-5);
+  font-weight: var(--s-font-weight-medium);
+}
+
+/* A busy background, so the blur and the translucency can be judged. */
+.stage {
+  display: grid;
+  place-items: center;
+  min-block-size: 16rem;
+  padding: var(--s-space-6);
+  border-radius: var(--s-radius-lg);
+  background: var(--s-gradient-brand);
+}
+
+.panel {
+  display: grid;
+  gap: var(--s-space-2);
+  max-inline-size: 20rem;
+}
+
+.panelTitle {
+  font-size: var(--s-font-size-md);
+  font-weight: var(--s-font-weight-semibold);
+}
+
+.demo {
+  margin-block-end: var(--s-space-8);
+}

@@ -1,0 +1,28 @@
+.sample {
+  display: block;
+  min-inline-size: 14rem;
+  max-inline-size: 28rem;
+}
+
+.sample[data-property='font-family'] {
+  font-family: var(--preview);
+}
+
+.sample[data-property='font-size'] {
+  font-size: var(--preview);
+  line-height: var(--s-line-height-tight);
+}
+
+.sample[data-property='font-weight'] {
+  font-size: var(--s-font-size-md);
+  font-weight: var(--preview);
+}
+
+.sample[data-property='line-height'] {
+  line-height: var(--preview);
+}
+
+.sample[data-property='letter-spacing'] {
+  font-size: var(--s-font-size-2xl);
+  letter-spacing: var(--preview);
+}

@@ -1,0 +1,153 @@
+@layer components {
+  .viewport {
+    position: fixed;
+    inset-block-start: 0;
+    inset-inline-end: 0;
+    z-index: var(--s-z-toast);
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-space-3);
+    inline-size: min(24rem, 100%);
+    max-block-size: 100dvh;
+    margin: 0;
+    padding: var(--s-space-5);
+    list-style: none;
+    outline: none;
+  }
+
+  .toast {
+    position: relative;
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: var(--s-space-4);
+    align-items: start;
+    padding: var(--s-space-5);
+    border: var(--s-border-width-default) solid var(--c-toast-border);
+    border-inline-start: var(--s-border-width-strong) solid var(--c-toast-tone);
+    border-radius: var(--c-toast-radius);
+    background: var(--c-toast-bg);
+    color: var(--s-color-text-primary);
+    box-shadow: var(--c-toast-shadow);
+  }
+
+  .toast:focus-visible {
+    outline: var(--s-focus-ring-width) solid var(--s-color-border-focus);
+    outline-offset: var(--s-focus-ring-offset);
+  }
+
+  .toast[data-tone='success'] {
+    --c-toast-tone: var(--s-color-success-fg);
+  }
+
+  .toast[data-tone='warning'] {
+    --c-toast-tone: var(--s-color-warning-fg);
+  }
+
+  .toast[data-tone='danger'] {
+    --c-toast-tone: var(--s-color-danger-fg);
+  }
+
+  .toast[data-tone='info'] {
+    --c-toast-tone: var(--s-color-info-fg);
+  }
+
+  .icon {
+    margin-block-start: var(--s-space-1);
+    color: var(--c-toast-tone);
+  }
+
+  .text {
+    display: grid;
+    gap: var(--s-space-2);
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .title {
+    font-size: var(--s-font-size-sm);
+    font-weight: var(--s-font-weight-semibold);
+  }
+
+  .description {
+    color: var(--s-color-text-secondary);
+    font-size: var(--s-font-size-sm);
+    line-height: var(--s-line-height-reading);
+  }
+
+  .action {
+    justify-self: start;
+    margin-block-start: var(--s-space-2);
+  }
+
+  /* Empties from full to nothing over the toast's own duration. */
+  .timer {
+    position: absolute;
+    inset-block-end: 0;
+    inset-inline: 0;
+    block-size: var(--s-border-width-strong);
+    background: var(--c-toast-tone);
+    opacity: 0.6;
+    transform-origin: left;
+    animation: ytc-toast-timer var(--toast-duration) linear forwards;
+  }
+
+  .toast[data-paused] .timer {
+    animation-play-state: paused;
+  }
+
+  @keyframes ytc-toast-timer {
+    to {
+      transform: scaleX(0);
+    }
+  }
+
+  .toast[data-state='open'] {
+    animation: ytc-toast-in var(--s-duration-normal) var(--s-easing-enter);
+  }
+
+  .toast[data-state='closed'] {
+    animation: ytc-toast-out var(--s-duration-fast) var(--s-easing-exit);
+  }
+
+  .toast[data-swipe='move'] {
+    translate: var(--radix-toast-swipe-move-x) 0;
+  }
+
+  .toast[data-swipe='end'] {
+    animation: ytc-toast-out var(--s-duration-fast) var(--s-easing-exit);
+  }
+
+  @keyframes ytc-toast-in {
+    from {
+      opacity: 0;
+      translate: var(--s-space-7) 0;
+    }
+  }
+
+  @keyframes ytc-toast-out {
+    to {
+      opacity: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .toast[data-state='open'] {
+      animation: none;
+    }
+
+    .timer {
+      display: none;
+    }
+  }
+}
+
+/* Forced colors: system colors only, no shadows or gradients. */
+@layer components {
+  @media (forced-colors: active) {
+    .toast {
+      border-color: CanvasText;
+      box-shadow: none;
+    }
+  }
+}

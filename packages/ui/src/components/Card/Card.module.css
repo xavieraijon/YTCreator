@@ -1,0 +1,56 @@
+@layer components {
+  .card {
+    position: relative;
+    display: grid;
+    gap: var(--s-space-3);
+    padding: var(--c-card-padding);
+    border: var(--s-border-width-default) solid var(--c-card-border);
+    border-radius: var(--c-card-radius);
+    background: var(--c-card-bg);
+    box-shadow: var(--c-card-shadow);
+    color: var(--s-color-text-primary);
+  }
+
+  .card[data-interactive] {
+    cursor: pointer;
+    transition-property: border-color, box-shadow, transform;
+    transition-duration: var(--s-duration-fast);
+    transition-timing-function: var(--s-easing-standard);
+  }
+
+  .card[data-interactive]:is(:hover, [data-force-state='hover']) {
+    border-color: var(--c-card-border-hover);
+    box-shadow: var(--c-card-shadow-hover);
+  }
+
+  .card[data-interactive]:is(:has(:focus-visible), [data-force-state='focus']) {
+    outline: var(--s-focus-ring-width) solid var(--s-color-border-focus);
+    outline-offset: var(--s-focus-ring-offset);
+  }
+
+  .card[data-interactive]:is(:active, [data-force-state='active']) {
+    box-shadow: var(--c-card-shadow);
+    transform: translateY(1px);
+  }
+
+  /* The inner link or button stretches over the card, so the whole surface is one target. */
+  .card[data-interactive] :is(a, button):only-of-type::after {
+    position: absolute;
+    inset: 0;
+    content: '';
+  }
+
+  .card[data-interactive] :is(a, button):focus-visible {
+    outline: none;
+  }
+}
+
+/* Forced colors: system colors only, no shadows or gradients. */
+@layer components {
+  @media (forced-colors: active) {
+    .card {
+      border-color: CanvasText;
+      box-shadow: none;
+    }
+  }
+}

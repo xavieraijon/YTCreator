@@ -1,0 +1,23 @@
+@layer components {
+  .panel {
+    padding: var(--c-glass-panel-padding);
+    border: var(--s-border-width-default) solid var(--c-glass-panel-border);
+    border-block-start-color: var(--c-glass-panel-highlight);
+    border-radius: var(--c-glass-panel-radius);
+    background: var(--c-glass-panel-bg);
+    box-shadow: var(--s-shadow-2);
+    color: var(--s-color-text-primary);
+    backdrop-filter: var(--c-glass-panel-blur);
+  }
+
+  .panel[data-elevation='3'] {
+    box-shadow: var(--s-shadow-3);
+  }
+
+  @media (forced-colors: active) {
+    .panel {
+      border-color: CanvasText;
+      box-shadow: none;
+    }
+  }
+}

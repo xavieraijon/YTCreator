@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+  <!-- Provisional mark: a rounded screen with a play cut-out and a spark. Replace this file to change the logo. -->
+  <path fill-rule="evenodd" d="M6 4h9.5a1 1 0 0 1 .7 1.7A5 5 0 0 0 20 10.6V16a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8a4 4 0 0 1 4-4Zm3.5 4.6v6.8a.8.8 0 0 0 1.2.7l5.4-3.4a.8.8 0 0 0 0-1.4l-5.4-3.4a.8.8 0 0 0-1.2.7Z"/>
+  <path d="M20 1.5l.8 1.7 1.7.8-1.7.8-.8 1.7-.8-1.7-1.7-.8 1.7-.8Z"/>
+</svg>

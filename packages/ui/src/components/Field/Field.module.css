@@ -1,0 +1,105 @@
+@layer components {
+  .field {
+    display: grid;
+    gap: var(--c-field-gap);
+    min-inline-size: 0;
+  }
+
+  .label {
+    color: var(--c-field-label);
+    font-size: var(--s-font-size-sm);
+    font-weight: var(--s-font-weight-medium);
+  }
+
+  .optional {
+    color: var(--c-field-description);
+    font-weight: var(--s-font-weight-regular);
+  }
+
+  .description {
+    color: var(--c-field-description);
+    font-size: var(--s-font-size-sm);
+    line-height: var(--s-line-height-reading);
+  }
+
+  .error {
+    display: flex;
+    gap: var(--s-space-2);
+    align-items: flex-start;
+    color: var(--c-field-error);
+    font-size: var(--s-font-size-sm);
+    font-weight: var(--s-font-weight-medium);
+  }
+
+  .errorIcon {
+    margin-block-start: var(--s-space-1);
+  }
+
+  /* The visual box of text-like controls: it holds the control and its icons. */
+  .box {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var(--s-space-2);
+    min-block-size: var(--s-control-height-md);
+    padding-inline: var(--c-field-padding-inline);
+    border: var(--s-border-width-default) solid var(--c-field-border);
+    border-radius: var(--c-field-radius);
+    background: var(--c-field-bg);
+    color: var(--c-field-text);
+    transition-property: border-color, box-shadow;
+    transition-duration: var(--s-duration-fast);
+    transition-timing-function: var(--s-easing-standard);
+  }
+
+  .box:is(:hover, :has([data-force-state='hover'])) {
+    border-color: var(--c-field-border-hover);
+  }
+
+  .box:has(:focus-visible, [data-force-state='focus']) {
+    outline: var(--s-focus-ring-width) solid var(--s-color-border-focus);
+    outline-offset: var(--s-focus-ring-offset);
+    border-color: var(--c-field-border-hover);
+  }
+
+  .box:has([aria-invalid='true']) {
+    border-color: var(--c-field-error);
+  }
+
+  .box:has(:disabled) {
+    border-color: var(--s-color-border-subtle);
+    background: var(--s-color-surface-sunken);
+    color: var(--s-color-text-disabled);
+    cursor: not-allowed;
+  }
+
+  /* The native control fills the box and leaves the look to it. */
+  .control {
+    flex: 1;
+    min-inline-size: 0;
+    align-self: stretch;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+  }
+
+  .control:focus-visible {
+    outline: none;
+  }
+
+  .control::placeholder {
+    color: var(--s-color-text-tertiary);
+  }
+
+  .icon {
+    color: var(--c-field-description);
+  }
+
+  @media (pointer: coarse) {
+    .box {
+      min-block-size: var(--s-control-height-lg);
+    }
+  }
+}

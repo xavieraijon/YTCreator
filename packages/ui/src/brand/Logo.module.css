@@ -1,0 +1,25 @@
+.logo {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-space-3);
+  color: currentColor;
+}
+
+.mark {
+  inline-size: 1.5em;
+  block-size: 1.5em;
+  flex-shrink: 0;
+  background: var(--s-gradient-brand);
+  mask: url('./logo.svg') center / contain no-repeat;
+}
+
+.wordmark {
+  font-weight: var(--s-font-weight-semibold);
+  letter-spacing: var(--s-letter-spacing-tight);
+}
+
+@media (forced-colors: active) {
+  .mark {
+    background: CanvasText;
+  }
+}

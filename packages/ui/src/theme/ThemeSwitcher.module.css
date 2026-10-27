@@ -1,0 +1,81 @@
+.switcher {
+  display: inline-flex;
+  gap: var(--c-theme-switcher-padding);
+  padding: var(--c-theme-switcher-padding);
+  border: var(--s-border-width-default) solid var(--c-theme-switcher-border);
+  border-radius: var(--c-theme-switcher-radius);
+  background: var(--c-theme-switcher-bg);
+}
+
+.option {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-space-2);
+  min-inline-size: var(--c-theme-switcher-option-height);
+  min-block-size: var(--c-theme-switcher-option-height);
+  padding-inline: var(--s-space-2);
+  border-radius: var(--c-theme-switcher-radius);
+  color: var(--c-theme-switcher-option-text);
+  font-size: var(--s-font-size-sm);
+  font-weight: var(--s-font-weight-medium);
+  cursor: pointer;
+  transition-property: background-color, color, box-shadow;
+  transition-duration: var(--s-duration-fast);
+  transition-timing-function: var(--s-easing-standard);
+}
+
+.option:is(:hover, [data-force-state='hover']) {
+  color: var(--c-theme-switcher-option-text-selected);
+}
+
+.option:has(:checked) {
+  background: var(--c-theme-switcher-option-bg-selected);
+  box-shadow: var(--c-theme-switcher-option-shadow-selected);
+  color: var(--c-theme-switcher-option-text-selected);
+}
+
+.option:is(:has(:focus-visible), [data-force-state='focus']) {
+  outline: var(--s-focus-ring-width) solid var(--s-color-border-focus);
+  outline-offset: var(--s-focus-ring-offset);
+}
+
+/* The native radio stays in the accessibility tree and takes the clicks over the whole option. */
+.input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: inherit;
+}
+
+/* Below 40rem only the icons show; the names stay for screen readers. */
+.text {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (min-width: 40rem) {
+  .option {
+    padding-inline: var(--c-theme-switcher-option-padding-inline);
+  }
+
+  .text {
+    position: static;
+    inline-size: auto;
+    block-size: auto;
+    overflow: visible;
+    clip-path: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .option:has(:checked) {
+    outline: var(--s-border-width-strong) solid Highlight;
+  }
+}

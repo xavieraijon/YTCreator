@@ -1,0 +1,19 @@
+.icon {
+  flex-shrink: 0;
+  color: currentColor;
+}
+
+.sm {
+  inline-size: var(--s-icon-size-sm);
+  block-size: var(--s-icon-size-sm);
+}
+
+.md {
+  inline-size: var(--s-icon-size-md);
+  block-size: var(--s-icon-size-md);
+}
+
+.lg {
+  inline-size: var(--s-icon-size-lg);
+  block-size: var(--s-icon-size-lg);
+}

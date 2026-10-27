@@ -1,0 +1,79 @@
+.page {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--s-space-7);
+  max-inline-size: 44rem;
+  margin-inline: auto;
+}
+
+.intro {
+  display: grid;
+  gap: var(--s-space-3);
+}
+
+.title {
+  font-size: var(--s-font-size-2xl);
+  font-weight: var(--s-font-weight-semibold);
+  line-height: var(--s-line-height-tight);
+}
+
+.why {
+  color: var(--s-color-text-secondary);
+  line-height: var(--s-line-height-reading);
+}
+
+.expert {
+  display: grid;
+  gap: var(--s-space-5);
+  padding-block-start: var(--s-space-4);
+}
+
+.proposalHeading {
+  font-size: var(--s-font-size-lg);
+  font-weight: var(--s-font-weight-semibold);
+}
+
+.result:empty {
+  display: none;
+}
+
+.again {
+  display: grid;
+  justify-items: start;
+  gap: var(--s-space-2);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* The assistant floats bottom right; the toasts live top right, so they never meet. */
+.assistant {
+  position: fixed;
+  inset-block-end: var(--s-space-5);
+  inset-inline-end: var(--s-space-5);
+  z-index: var(--s-z-sticky);
+  padding: var(--s-space-1);
+  border-radius: var(--s-radius-full);
+}
+
+/* On a phone the main action stays at hand, fixed at the bottom; the assistant rises above it. */
+@media (max-width: 48rem) {
+  .actions {
+    position: sticky;
+    inset-block-end: 0;
+    z-index: var(--s-z-sticky);
+    padding-block: var(--s-space-4);
+    border-block-start: var(--s-border-width-default) solid var(--s-color-border-subtle);
+    background: var(--s-color-surface);
+  }
+
+  .actions > * {
+    flex: 1;
+  }
+
+  .assistant {
+    inset-block-end: calc(var(--s-control-height-lg) + var(--s-space-8));
+  }
+}
