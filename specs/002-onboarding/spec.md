@@ -125,8 +125,9 @@ la pantalla de inicio con la IA marcada como «conectada».
    claro y ofrece pedir un enlace nuevo con un botón.
 5. **Given** que el creador elige «Pagar solo lo que uso» y pega una clave, **When** la app la comprueba, **Then**
    dice si es válida sin gastar nada. Una vez guardada, la clave no vuelve a mostrarse entera en ningún sitio.
-6. **Given** una clave no válida, sin saldo o sin permiso, **When** la app la comprueba, **Then** el error dice cuál
-   de esos casos es, qué hacer y ofrece un botón para hacerlo (p. ej. «Abrir la página de claves»).
+6. **Given** una clave no válida, sin permiso o sin conexión, **When** la app la comprueba, **Then** el error dice
+   cuál de esos casos es, qué hacer y ofrece un botón para hacerlo (p. ej. «Abrir la página de claves»). Antes de
+   pegar la clave, la app avisa de que hace falta saldo en la cuenta de Anthropic, con un enlace para añadirlo.
 7. **Given** que el creador elige «Gratis», **When** completa el paso, **Then** puede usar la app de punta a punta sin
    introducir ningún medio de pago. La app le explica en una frase cómo conseguir el acceso gratuito, con el enlace.
 8. **Given** una IA conectada, **When** termina el asistente, **Then** el creador llega a la pantalla de inicio. Su
@@ -302,15 +303,20 @@ versión más nueva y comprobar que los datos y la conexión se conservan y que 
   otra suscripción después debe consistir en registrar un adaptador nuevo (principio IV).
 - **FR-016**: El inicio de sesión en una suscripción DEBE hacerse **desde la app, sin terminal**: la app da un enlace,
   el creador aprueba el acceso en su cuenta y pega en la app el código que recibe. La app DEBE comprobar la sesión al
-  terminar y, si el código no vale o ha caducado, ofrecer un enlace nuevo.
-- **FR-016b**: El creador DEBE poder añadir varias cuentas de suscripción, ordenarlas (la primera es la favorita) y
-  borrarlas. Cada cuenta DEBE mostrar su último estado real («funciona», «sin cupo hasta…», «sesión caducada»),
-  anotado a partir de cada llamada.
+  terminar y, si el código no vale o ha caducado, ofrecer un enlace nuevo. Si la sesión de una cuenta ya añadida
+  caduca, el creador DEBE poder volver a entrar en esa misma cuenta por el mismo camino, sin borrarla ni perder su
+  nombre ni su posición. Si entra con otra cuenta, la app lo dice y no cambia nada.
+- **FR-016b**: El creador DEBE poder añadir varias cuentas de suscripción, **hasta 5**, ordenarlas (la primera es la
+  favorita) y borrarlas. Si intenta añadir una sexta, la app explica que es el máximo. Cada cuenta DEBE mostrar su
+  último estado real («funciona», «sin cupo hasta…», «sesión caducada»), anotado a partir de cada llamada.
 - **FR-016c**: Si la cuenta en uso agota su cupo, la operación DEBE pasar a la siguiente cuenta con sesión válida, una
   sola vez por cuenta, y avisar al creador. Un tiempo agotado NO DEBE provocar ese cambio. Si no queda ninguna cuenta
   con cupo, la app DEBE parar y decir cuándo vuelve el primero.
 - **FR-017**: Para la opción de pago por uso, la app DEBE permitir pegar una clave, limpiarla de espacios, comprobarla
-  sin coste y distinguir en el error entre clave no válida, sin saldo, sin permiso y sin conexión.
+  sin coste y distinguir en el error entre clave no válida, sin permiso y sin conexión. La falta de saldo no se
+  puede comprobar sin gastar: la app DEBE avisar **antes** de que hace falta saldo, con un enlace para añadirlo, y,
+  si al usarla falta saldo, DEBE decirlo en la primera operación con coste. Si la comprobación gratuita permite
+  detectarlo (spike S4), se avisa ya al conectar.
 - **FR-018**: DEBE existir la opción **gratuita**, con el nivel gratuito de Gemini, que permita recorrer la app de
   punta a punta sin medio de pago. La app DEBE explicar cómo conseguir el acceso gratuito, con el enlace, y avisar de
   que sus resultados son más modestos y su cupo, limitado.
@@ -323,8 +329,8 @@ versión más nueva y comprobar que los datos y la conexión se conservan y que 
 
 - **FR-021**: Si la opción conectada cobra por uso, el asistente DEBE proponer límites de gasto por defecto (por
   operación, por día y por mes) en euros y permitir aceptarlos o cambiarlos.
-- **FR-022**: Los límites DEBEN validarse (positivos; diario ≤ mensual; por operación ≤ diario) y poder cambiarse
-  después desde Ajustes.
+- **FR-022**: Los límites DEBEN validarse (positivos; diario ≤ mensual; por operación ≤ diario; mensual ≤ 1000 €) y
+  poder cambiarse después desde Ajustes.
 - **FR-023**: Si la opción conectada no cobra por uso, la app DEBE decirlo en claro en lugar del paso de límites.
 - **FR-024**: Ninguna operación de esta feature DEBE tener coste para el creador.
 
@@ -368,7 +374,8 @@ versión más nueva y comprobar que los datos y la conexión se conservan y que 
 
 - **Instalación**: el YTCreator de un creador en su ordenador. Atributos: versión instalada, carpeta de trabajo y
   fecha de la última actualización. Hay una por equipo.
-- **Estado del primer arranque**: si el asistente se ha completado y, si no, en qué paso está y qué se ha hecho ya.
+- **Estado del asistente (primer arranque)**: si el asistente se ha completado y, si no, en qué paso está y qué se ha
+  hecho ya.
 - **Conexión de IA**: una opción configurada por el creador (suscripción, pago por uso o gratis). Atributos: tipo de
   opción, si es la activa, estado (conectada o uno de los fallos tipados) y fecha de la última comprobación. La de
   pago por uso y la gratuita tienen una credencial, de la que solo se muestra una referencia parcial. La de
@@ -427,6 +434,6 @@ versión más nueva y comprobar que los datos y la conexión se conservan y que 
 - **Un creador por instalación:** no hay registro de usuarios ni identificación, porque la app solo atiende al propio
   ordenador.
 - **Pantalla de inicio vacía:** «Crear mi primer canal» lleva a la feature siguiente. Hasta que exista, la acción
-  explica que llegará pronto.
+  abre un diálogo: «Crear canales llegará en la próxima versión. Mientras, puedes revisar tu IA en Ajustes».
 - **Desinstalar:** queda fuera de esta feature. La documentación explica qué carpetas borrar.
 - **Idioma:** la interfaz va en español. Los textos del instalador también, con el mismo tono que la app.
