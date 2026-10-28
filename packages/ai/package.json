@@ -1,0 +1,17 @@
+{
+  "name": "@ytcreator/ai",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^1.3.0",
+    "@ytcreator/core": "workspace:*",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@ytcreator/knowledge": "workspace:*"
+  }
+}

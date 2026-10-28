@@ -223,9 +223,13 @@ primeras tareas de `/speckit-tasks` y bloquean las pantallas que dependen de ell
 ## R10. Llamar a Claude Code con la suscripción
 
 - **Decisión:** el adaptador ejecuta el binario con `execFile` (sin *shell*):
-  `claude -p <prompt> --output-format json --model <id del perfil> …`, con:
-  - **entorno limpio:** solo `PATH`, `HOME`, `LANG`, más `CLAUDE_CODE_OAUTH_TOKEN` (el de la cuenta) y
-    `CLAUDE_CONFIG_DIR=APP_HOME/claude-accounts/<id>`. Se eliminan expresamente `ANTHROPIC_API_KEY`,
+  `claude -p --output-format json --model <id del perfil> …` (*flags* exactos en el resultado de S1; el *prompt*
+  va por la entrada estándar), con:
+  - **entorno limpio:** solo `PATH`, `HOME`, `LANG`, más `CLAUDE_CODE_OAUTH_TOKEN` (el de la cuenta),
+    `CLAUDE_CONFIG_DIR=APP_HOME/claude-accounts/<id>`, `CLAUDE_CODE_MAX_RETRIES=0`,
+    `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1`, `DISABLE_TELEMETRY=1` y `DISABLE_AUTOUPDATER=1` (S1: sin las dos
+    de telemetría la CLI envía eventos; sin la de reintentos, un fallo de red tarda más de 3 minutos). Se eliminan
+    expresamente `ANTHROPIC_API_KEY`,
     `ANTHROPIC_AUTH_TOKEN`, `ANTHROPIC_BASE_URL`, `CLAUDE_CODE_USE_BEDROCK`, `CLAUDE_CODE_USE_VERTEX`,
     `CLAUDE_CODE_USE_FOUNDRY`, `CLAUDE_EFFORT` y `MAX_THINKING_TOKENS`, para que nunca se cobre por uso a escondidas
     ni cambie el modelo fijado;
@@ -529,3 +533,69 @@ Cada *spike* es una tarea corta, con resultado anotado en este fichero, y bloque
 | **S4** | ¿`countTokens` (gratuito) devuelve el error de falta de saldo con una cuenta sin saldo? | comprobación de la API de Anthropic | Mantener el aviso previo de R12 |
 | **S5** | `node:sqlite` en el Node 24 fijado: transacciones, WAL y que el empaquetado de Vite lo deje como módulo del sistema | capa de datos | Plan B `better-sqlite3` |
 | **S6** | Modelo vigente del nivel gratuito de Gemini y la forma de su error de región | perfil de Gemini, `classify.ts` | Elegir el modelo gratuito más ligero que liste `models` |
+
+### Resultados
+
+- **S5 (2026-10-28) ✅** Node v24.22.1, SQLite 3.53.4. Vite SSR (`noExternal: true`) deja `import … from
+  "node:sqlite"` intacto en `dist/server.mjs`, y Node lo carga sin *flags* ni avisos, tanto en `production` como en
+  `development`. Probado en fichero: `PRAGMA journal_mode = WAL` devuelve `wal`; `BEGIN IMMEDIATE … COMMIT` y
+  `ROLLBACK` se comportan como se espera; una violación de `NOT NULL` lanza `ERR_SQLITE_ERROR` con `errcode` 1299.
+  **Nota:** las filas de `get()`/`all()` tienen prototipo `null`; se validan con Zod antes de salir de la capa de
+  datos. No hace falta el plan B.
+- **S1 (2026-10-28) ✅ con dos casos pendientes.** Claude Code 2.1.312. Orden que usará `command.ts` (`execFile`,
+  sin *shell*, `cwd` vacío propio, *prompt* por la entrada estándar):
+
+  ```text
+  claude -p --output-format json --model <perfil> --effort <perfil> --tools "" --strict-mcp-config
+         --setting-sources "" --no-session-persistence --disable-slash-commands
+         --system-prompt <prompt del sistema> [--json-schema <JSON Schema del Zod>]
+  ```
+
+  - **No vale `--bare`:** en ese modo la CLI ignora OAuth y solo acepta `ANTHROPIC_API_KEY`, que es justo lo que
+    no queremos.
+  - Con `--tools ""` el contexto fijo baja a ~600 *tokens*.
+  - **Entorno:** además del de R10, hacen falta `CLAUDE_CODE_MAX_RETRIES=0` (sin él, un fallo de red tarda 3 min
+    18 s; con él, ~18 s), y `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1` + `DISABLE_TELEMETRY=1` (sin ellas, la CLI
+    intenta enviar eventos: comprobado porque deja `telemetry/1p_failed_events.*` cuando no hay red; con ellas, no).
+  - La CLI escribe en `CLAUDE_CONFIG_DIR` (`.claude.json`, `backups/`, `plugins/`, `sessions/`) aunque no guarde la
+    sesión: la carpeta de cada cuenta es suya y desechable.
+  - **Salida:** siempre un único JSON en stdout, también con error; stderr vacío. **El fallo se lee de
+    `is_error`**, no de `subtype` (vale `"success"` incluso con error). Campos útiles: `result` (texto),
+    `structured_output` (objeto, con `--json-schema`), `api_error_status`, `terminal_reason`, `usage`.
+    `total_cost_usd` es precio de lista (`costBasis: "list"`), no un cobro: con suscripción no se muestra como gasto.
+  - **Clasificación grabada** (`packages/ai/test/fixtures/claude-code/`):
+
+    | Fixture | Salida | Clasificación |
+    |---|---|---|
+    | `ok.json` | código 0, `is_error: false`, `result: "OK"` | éxito |
+    | `structured.json` | código 0, `structured_output: {ok: true}` | éxito con esquema |
+    | `not-logged-in.json` | código 1, `api_error_status: null`, `result: "Not logged in · Please run /login"` | `sin_sesion` / `sesion_caducada` |
+    | `invalid-token.json` | código 1, `api_error_status: 401`, `result: "Failed to authenticate…"` | `sin_sesion` / `sesion_caducada` |
+    | `offline.json` | código 1, `api_error_status: null`, `result` con `ECONNREFUSED` | `no_disponible` / `sin_conexion` |
+
+  - **Pendientes (no se pueden provocar a voluntad):** plan sin acceso y límite de uso. Hasta grabarlos, se
+    clasifican por `api_error_status` (403 → `plan_sin_acceso`, 429 → `cupo_agotado` / `limite_de_uso`, 5xx/529 →
+    `servicio_caido`), sin `resetsAt`. Cuando aparezca uno real, se graba su salida y se afina la tabla.
+- **S2 (2026-10-28) ✅ en macOS; Linux sin probar.** `script -q <log> claude setup-token` (Claude Code 2.1.312)
+  muestra el enlace, acepta el código pegado por la entrada estándar y termina con código 0. No hace falta el plan
+  B (`node-pty`). La salida es la de una interfaz de terminal, no texto plano, y el analizador tiene que saberlo
+  (*fixture* con *token* inventado en `packages/ai/test/fixtures/claude-code/setup-token/success.log`):
+  - el enlace llega como hipervínculo OSC 8 (`ESC]8;id=…;<url>ESC\`), repetido en trozos por el ajuste de línea:
+    se toma la **primera URL completa** del destino OSC 8 (`https://claude.com/cai/oauth/authorize?…`);
+  - los espacios del texto se pintan con movimientos de cursor, así que el texto visible sale pegado
+    (`Pastecodehereifprompted>`): no se busca por frases, sino por patrones;
+  - **el *token* sale partido en varias líneas** con `\r ESC[1C ESC[1B` entre trozos, dentro de un color
+    (`ESC[38;2;255;193;7m … ESC[39m`). Para evitarlo, el proceso se lanza con un ancho de terminal grande
+    (`stty cols 1000` antes de `exec claude setup-token`), y el analizador además quita las secuencias de control
+    y une los trozos tras `sk-ant-oat01-` hasta `ESC[39m`;
+  - el *token* dura **1 año** («valid for 1 year»): la caducidad de R11 se puede mostrar al creador;
+  - por lo mismo, **copiarlo a mano de la terminal falla**: en la prueba, el *token* pegado perdió parte y la CLI
+    respondió 401. La app nunca pide copiar el *token*; lo lee de la salida.
+- **S3 (2026-10-28) ❌ no hay identidad oficial → plan B.** Con un *token* de `setup-token` válido (la llamada
+  mínima devuelve `OK`): `claude auth status --json` solo da `loggedIn`, `authMethod: "oauth_token"`,
+  `apiProvider` y carpetas (no comprueba el *token* ni da correo ni id de cuenta); `.claude.json` no tiene
+  `oauthAccount` ni tras `setup-token` ni tras una llamada (su `userID` es local de la carpeta, no de la cuenta);
+  la salida de `setup-token` tampoco la incluye. **Decisión:** huella = SHA-256 del *token*. **Alcance reducido**
+  (**aceptado por el creador el 2026-10-28**; spec.md, contratos y tareas ajustados): solo detecta el mismo *token* pegado dos veces; dos `setup-token` de la
+  misma cuenta dan *tokens* distintos y no se detectan como duplicado, y al volver a entrar no se puede saber si es
+  otra cuenta. Se avisa con un texto en la pantalla de cuentas.

@@ -1,0 +1,15 @@
+.screen {
+  display: grid;
+  gap: var(--s-space-5);
+  inline-size: min(100%, 40rem);
+  margin-inline: auto;
+}
+
+.title {
+  font-size: var(--s-font-size-2xl);
+  font-weight: var(--s-font-weight-semibold);
+}
+
+.title:focus {
+  outline: none;
+}

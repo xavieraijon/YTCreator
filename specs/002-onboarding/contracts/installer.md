@@ -18,6 +18,7 @@ La misma línea instala, reanuda y actualiza (FR-003). No pide argumentos.
 | `YTCREATOR_INSTALL_TEST` | `1` activa los ganchos de prueba | Tests |
 | `YTCREATOR_INSTALL_FAIL_STEP` | `1`–`8`: termina con error justo después de hacer el trabajo de ese paso. Ignorada sin `YTCREATOR_INSTALL_TEST=1` | Tests (SC-003) |
 | `YTCREATOR_ASSUME_YES` | `1` responde «sí» a las preguntas (poco disco). Solo con `YTCREATOR_INSTALL_TEST=1` | Tests |
+| `YTCREATOR_PORT` | Fija el puerto del servidor en lugar de buscar uno libre en 4310–4329 (si está ocupado, no arranca). Solo en compilaciones de desarrollo (`__YTC_ALLOW_FAKE_AI__`) | e2e (Playwright) |
 
 Ninguna se documenta para el creador.
 

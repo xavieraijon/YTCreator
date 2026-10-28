@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# Thin launcher (R6, contracts/installer.md Lanzador): finds APP_HOME from its own path (it always runs as
+# "$APP_HOME/current/bin/ytcreator"), picks up the Node runtime installed there, and hands off to server.mjs.
+# Compatible with bash 3.2 (macOS's default bash); no step here needs sudo.
+set -euo pipefail
+
+script_dir="$(cd "$(dirname "$0")" && pwd)"
+app_home="$(cd "${script_dir}/../.." && pwd)"
+server="${script_dir}/../server.mjs"
+command_arg="${1:-open}"
+
+node_bin=""
+for candidate in "${app_home}/runtime"/node-*/bin/node; do
+  if [ -x "$candidate" ]; then
+    node_bin="$candidate"
+    break
+  fi
+done
+
+if [ -z "$node_bin" ]; then
+  echo "No se encuentra el motor de YTCreator en ${app_home}/runtime" >&2
+  exit 1
+fi
+
+exec "$node_bin" --disable-warning=ExperimentalWarning "$server" "$command_arg"

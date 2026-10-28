@@ -126,7 +126,7 @@ Reglas:
 | `id` | `TEXT` PK | UUID; también nombra su carpeta en `claude-accounts/` |
 | `provider_id` | `TEXT` NOT NULL | `claude-code` en la v1 |
 | `label` | `TEXT` NOT NULL | Nombre que pone el creador; por defecto «Cuenta 1», «Cuenta 2»…; 1–40 caracteres |
-| `identity_fingerprint` | `TEXT` NOT NULL | `UNIQUE (provider_id, identity_fingerprint)`; detecta la cuenta duplicada (R11, S3) |
+| `identity_fingerprint` | `TEXT` NOT NULL | `UNIQUE (provider_id, identity_fingerprint)`; detecta el mismo *token* pegado dos veces (R11, S3) |
 | `position` | `INTEGER` NOT NULL | Orden de uso; 1..n sin huecos |
 | `status` | `TEXT` NOT NULL | Igual que en `ai_connection` |
 | `status_reason` | `TEXT` NULL | |
@@ -143,8 +143,8 @@ Reglas:
   `guard: 'maximo_de_cuentas'` ([http-api.md](./contracts/http-api.md));
 - borrar una cuenta borra su secreto, su carpeta en `claude-accounts/` y recompone `position`; si era la última,
   la conexión `suscripcion` pasa a `sin_sesion` / `sesion_caducada` y, si estaba activa, deja de estarlo;
-- la huella **nunca** es el *token* ni un fragmento: es un *hash* SHA-256 de la identidad (o del *token*, si S3
-  falla).
+- la huella **nunca** es el *token* ni un fragmento: es un *hash* SHA-256 del *token* (S3: Claude no da
+  identidad de cuenta). Solo detecta el mismo *token* pegado dos veces.
 
 ### `spending_limits` — Límites de gasto
 

@@ -1,0 +1,22 @@
+{
+  "name": "@ytcreator/server",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite build --mode development && node --enable-source-maps dist/server.mjs serve",
+    "build": "vite build",
+    "start": "node dist/server.mjs serve"
+  },
+  "dependencies": {
+    "@hono/node-server": "^2.1.5",
+    "@ytcreator/ai": "workspace:*",
+    "@ytcreator/core": "workspace:*",
+    "@ytcreator/knowledge": "workspace:*",
+    "hono": "^4.13.14",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "vite": "^8.3.5"
+  }
+}

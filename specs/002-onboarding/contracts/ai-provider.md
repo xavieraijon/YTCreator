@@ -101,7 +101,7 @@ interface ProviderDeps { fetch: typeof fetch; now(): Date; logger: Logger; claud
 // packages/core/src/ai/port.ts
 interface LoginStart { loginId: string; url: string; expiresAt: string }
 type LoginResult =
-  | { ok: true; token: Secret; identity: string }   // identity: lo que se convierte en huella (S3)
+  | { ok: true; token: Secret }   // huella = SHA-256 del token (S3: no hay identidad de cuenta)
   | { ok: false; failure: AiFailure };              // codigo_no_valido, sin_conexion, tiempo_agotado…
 
 interface SubscriptionLogin {
@@ -154,8 +154,7 @@ Reglas (R14, FR-016c):
 | `cuentas:<s1>,<s2>,…` | por cuenta, en orden (p. ej. `cupo,ok`) | — |
 | `lento` | no responde hasta el tiempo máximo | — |
 | `login:codigo_malo` | — | `codigo_no_valido` con cualquier código |
-| `login:duplicada` | — | siempre la misma identidad |
-| `login:otra_cuenta` | — | identidad distinta de la cuenta que vuelve a entrar (FR-016) |
+| `login:duplicada` | — | siempre el mismo *token* (misma huella) |
 
 Las claves aceptadas por los adaptadores falsos de pago por uso y gratis son `sk-ant-api03-FAKE…` y
 `AIzaFAKE…`: reconocibles para el test de fuga (SC-006).
@@ -186,7 +185,7 @@ Solo `claude-code`:
 
 | # | Caso | Esperado |
 |---|---|---|
-| CC1 | Entorno del proceso | sin `ANTHROPIC_API_KEY`, `ANTHROPIC_AUTH_TOKEN`, `ANTHROPIC_BASE_URL`, `CLAUDE_CODE_USE_*`, `CLAUDE_EFFORT`, `MAX_THINKING_TOKENS`; con `CLAUDE_CODE_OAUTH_TOKEN` y `CLAUDE_CONFIG_DIR` de la cuenta |
+| CC1 | Entorno del proceso | sin `ANTHROPIC_API_KEY`, `ANTHROPIC_AUTH_TOKEN`, `ANTHROPIC_BASE_URL`, `CLAUDE_CODE_USE_*`, `CLAUDE_EFFORT`, `MAX_THINKING_TOKENS`; con `CLAUDE_CODE_OAUTH_TOKEN` y `CLAUDE_CONFIG_DIR` de la cuenta, `CLAUDE_CODE_MAX_RETRIES=0`, `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1`, `DISABLE_TELEMETRY=1` y `DISABLE_AUTOUPDATER=1` (S1) |
 | CC2 | Binario ausente | `no_disponible` / `programa_no_instalado` |
 | CC3 | El *token* no aparece en los argumentos del proceso | `argv` sin el *token* |
 | CC4 | Inicio de sesión: enlace → código → *token* | `LoginResult` ok con la salida grabada |

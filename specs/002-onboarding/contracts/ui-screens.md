@@ -34,7 +34,7 @@ Al volver a la pestaña (`visibilitychange`) y tras un `409`, la web vuelve a pe
 
 ## Estructura común
 
-- **Cabecera** (`AppHeader`): logotipo; `Badge` con la IA en uso («Tu suscripción de Claude», «API de Anthropic»,
+- **Cabecera** (`AppHeader`): logotipo; `Badge` con la IA en uso («Tu suscripción de Claude», «Pago por uso de Anthropic»,
   «Gemini gratis» o «Sin IA conectada»); enlace a Ajustes; botón «Cerrar YTCreator», que abre un `Dialog` de
   confirmación y, tras `POST /api/app/shutdown`, muestra «YTCreator se ha cerrado. Puedes cerrar esta pestaña.»
   (FR-006). Durante el asistente solo se muestran el logotipo y «Cerrar YTCreator».
@@ -59,7 +59,7 @@ Título, una frase sobre qué hace YTCreator y qué va a pasar ahora («Vamos a 
 | Opción | Qué dice | Etiquetas |
 |---|---|---|
 | **Usar mi suscripción de Claude** | Para quien ya paga Claude Pro o Max. Sin coste extra | «Recomendado», «Usa tu suscripción, bajo tu responsabilidad» (con un `Tooltip` que lo explica en una frase) |
-| **Pagar solo lo que uses** | Con una clave de la API de Anthropic; pagas por cada uso, con límites que tú pones | — |
+| **Pagar solo lo que uses** | Con una clave de Anthropic; pagas por cada uso, con límites que tú pones | — |
 | **Probar gratis** | Con Gemini de Google; resultados más modestos y uso limitado | «Gratis» |
 
 Debajo, una línea fija: «Tus ideas y guiones se envían al servicio de IA que elijas.» (FR-030).
@@ -77,7 +77,8 @@ Estados internos de la pantalla:
    «Continuar».
 
 Un código no válido muestra el mensaje y vuelve al estado 2 con «Pedir un enlace nuevo» como acción principal.
-Una cuenta duplicada: «Esta cuenta ya está conectada».
+Una cuenta duplicada (mismo acceso pegado dos veces): «Esta cuenta ya está conectada». Bajo la lista, una nota:
+«YTCreator no puede saber si dos accesos son de la misma cuenta de Claude. Añade cada cuenta una sola vez.» (S3)
 
 ### ConnectApiKey (FR-017, FR-019)
 - frase de qué es una clave y enlace «Conseguir mi clave» (consola de Anthropic, abre en otra pestaña);
@@ -117,8 +118,9 @@ lleva a `/ajustes/ia`.
   Cuenta 2.»;
 - **Cuentas de suscripción** (si hay): lista ordenada; por cada una, nombre editable, estado, «Subir»/«Bajar»
   (botones, no arrastrar), «Comprobar» y «Borrar» (con `Dialog`). Con `sesion_caducada`, «Volver a conectar»
-  (enlace + código, como al añadir; conserva nombre y posición). Si se entra con otra cuenta (`409`): «Has entrado
-  con otra cuenta de Claude. Entra con la de esta fila o añádela como cuenta nueva.» «Añadir otra cuenta» (hasta 5;
+  (enlace + código, como al añadir; conserva nombre y posición), con el aviso «Entra con la misma cuenta de Claude:
+  YTCreator no puede comprobarlo». Si el acceso ya es de otra fila (`409`): «Ese acceso ya está en otra cuenta de
+  la lista.» Bajo la lista, la nota de S3 de `ConnectSubscription`. «Añadir otra cuenta» (hasta 5;
   con 5, el botón explica que es el máximo) (FR-016);
 - **Claves guardadas**: «••••abcd» con «Sustituir» y «Borrar»;
 - **Otras opciones**: las no activas, con «Usar esta opción» (si están conectadas) o «Configurar» (→

@@ -242,7 +242,10 @@ versión más nueva y comprobar que los datos y la conexión se conservan y que 
   gratuito), se le dice en claro y se le ofrecen las otras opciones.
 - **Claude Code no instalado:** el instalador lo deja instalado. Si falta igualmente al abrir la app (borrado a
   mano, instalación con fallo), la app lo detecta y ofrece repararlo con un botón.
-- **La misma cuenta añadida dos veces:** la app la reconoce y no la duplica.
+- **La misma cuenta añadida dos veces:** si el creador pega el mismo acceso dos veces, la app lo reconoce y no lo
+  duplica. Claude no dice a qué cuenta pertenece un acceso, así que dos inicios de sesión de la misma cuenta no se
+  pueden distinguir de dos cuentas distintas: la pantalla de cuentas avisa de ello (decisión del creador,
+  2026-10-28).
 - **Linux sin entorno gráfico:** si no se puede abrir el navegador solo, el instalador dice la dirección que hay que
   abrir.
 - **Opción gratuita sin cupo:** si el nivel gratuito se agota, la app no reintenta a ciegas. Explica el motivo y
@@ -305,7 +308,9 @@ versión más nueva y comprobar que los datos y la conexión se conservan y que 
   el creador aprueba el acceso en su cuenta y pega en la app el código que recibe. La app DEBE comprobar la sesión al
   terminar y, si el código no vale o ha caducado, ofrecer un enlace nuevo. Si la sesión de una cuenta ya añadida
   caduca, el creador DEBE poder volver a entrar en esa misma cuenta por el mismo camino, sin borrarla ni perder su
-  nombre ni su posición. Si entra con otra cuenta, la app lo dice y no cambia nada.
+  nombre ni su posición. La app no puede saber si vuelve a entrar con la misma cuenta u otra (Claude no lo dice):
+  la pantalla avisa de que debe usar la misma cuenta. Si el acceso nuevo ya pertenece a otra fila, la app lo dice y
+  no cambia nada.
 - **FR-016b**: El creador DEBE poder añadir varias cuentas de suscripción, **hasta 5**, ordenarlas (la primera es la
   favorita) y borrarlas. Si intenta añadir una sexta, la app explica que es el máximo. Cada cuenta DEBE mostrar su
   último estado real («funciona», «sin cupo hasta…», «sesión caducada»), anotado a partir de cada llamada.

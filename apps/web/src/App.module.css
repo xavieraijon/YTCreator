@@ -1,0 +1,38 @@
+.app {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  min-block-size: 100dvh;
+  background: var(--s-color-bg);
+  color: var(--s-color-text-primary);
+}
+
+.skip {
+  position: absolute;
+  inset-block-start: var(--s-space-2);
+  inset-inline-start: var(--s-space-2);
+  z-index: var(--s-z-toast);
+  padding: var(--s-space-3) var(--s-space-5);
+  border-radius: var(--s-radius-md);
+  background: var(--s-color-surface-inverse);
+  color: var(--s-color-text-inverse);
+  transform: translateY(-200%);
+}
+
+.skip:focus-visible {
+  transform: none;
+}
+
+.main {
+  min-inline-size: 0;
+  padding: var(--s-space-7) var(--s-space-5);
+}
+
+.main:focus {
+  outline: none;
+}
+
+@media (min-width: 64rem) {
+  .main {
+    padding: var(--s-space-9) var(--s-space-10);
+  }
+}

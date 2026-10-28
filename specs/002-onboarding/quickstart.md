@@ -24,7 +24,7 @@ contratos antes de seguir.
 |---|---|---|
 | S1 | Los flags de `claude -p` del adaptador | Ajustar el adaptador y CC1 |
 | S2 | `claude setup-token` bajo `script` da enlace y acepta el código | Plan B/C de R11 (el C rompe SC-011: hay que decidirlo con el creador) |
-| S3 | De dónde sale la identidad de la cuenta | Cambiar la huella de `subscription_account` |
+| S3 | De dónde sale la identidad de la cuenta | Hecho: huella = SHA-256 del *token* (alcance reducido, aceptado) |
 | S4 | Si `countTokens` (gratuito) detecta la falta de saldo | Mantener solo el aviso previo de saldo de R12 (nunca una llamada de pago) |
 | S5 | `node:sqlite` con el empaquetado de Vite | Cambiar el empaquetado del servidor |
 | S6 | Modelo gratuito de Gemini y su error de región | Ajustar el perfil y la clasificación de `region_no_soportada` |

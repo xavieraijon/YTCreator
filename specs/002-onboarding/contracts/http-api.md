@@ -111,7 +111,7 @@ type UpdateInfo = { current: string; latest: string | null; show: boolean };
 | `POST /api/ai/subscription/login/:loginId/complete` | `{code: string, label?: string}` | `AccountView` (`201`) | Limpia espacios. Código malo → `422 ia` con `codigo_no_valido` (la web ofrece enlace nuevo). Duplicada → `409 conflicto` (si el inicio viene de `accounts/:id/login`, se aplica esa ruta). Sexta cuenta → `400` con `guard: 'maximo_de_cuentas'`. Crea la conexión `suscripcion` si no existía |
 | `DELETE /api/ai/subscription/login/:loginId` | — | `204` | |
 | `POST /api/ai/subscription/accounts/:id/check` | `{}` | `AccountView` | Comprueba esa cuenta, sin rotar |
-| `POST /api/ai/subscription/accounts/:id/login` | `{}` | `{loginId, url, expiresAt}` | Volver a entrar en una cuenta (FR-016). El inicio queda ligado a esa cuenta: al completarlo, si la huella coincide, sustituye su *token* y responde `200 AccountView` `conectada`, con el mismo nombre y posición; con otra cuenta → `409 conflicto` y no cambia nada |
+| `POST /api/ai/subscription/accounts/:id/login` | `{}` | `{loginId, url, expiresAt}` | Volver a entrar en una cuenta (FR-016). El inicio queda ligado a esa cuenta: al completarlo, sustituye su *token* y su huella y responde `200 AccountView` `conectada`, con el mismo nombre y posición (no se puede saber si es la misma cuenta, S3); si la huella nueva ya es de otra fila → `409 conflicto` y no cambia nada |
 | `PATCH /api/ai/subscription/accounts/order` | `{ids: string[]}` | `AccountView[]` | `ids` debe ser una permutación exacta de las existentes |
 | `PATCH /api/ai/subscription/accounts/:id` | `{label}` | `AccountView` | 1–40 caracteres |
 | `DELETE /api/ai/subscription/accounts/:id` | — | `204` | Borra secreto y carpeta (FR-029) |

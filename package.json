@@ -9,8 +9,9 @@
   "scripts": {
     "lint": "eslint . && stylelint \"**/*.css\"",
     "typecheck": "tsc -b",
-    "test": "vitest run",
-    "test:e2e": "pnpm --filter @ytcreator/catalog test:e2e",
+    "test": "vitest run --project '!installer'",
+    "test:e2e": "pnpm --filter @ytcreator/catalog test:e2e && pnpm --filter @ytcreator/web test:e2e",
+    "test:installer": "vitest run --project installer",
     "format": "prettier --write ."
   },
   "devDependencies": {
