@@ -27,9 +27,10 @@ export const es = {
     close: 'Cerrar YTCreator',
     closeTitle: '¿Cerrar YTCreator?',
     closeBody: 'Lo que hayas guardado se queda guardado. Puedes volver a abrirlo cuando quieras.',
-    closeConfirm: 'Cerrar',
+    closeConfirm: 'Sí, cerrar',
     closeCancel: 'Seguir usándolo',
     closed: 'YTCreator se ha cerrado. Puedes cerrar esta pestaña.',
+    closeRetry: 'Volver a intentarlo',
   },
 
   wizard: {

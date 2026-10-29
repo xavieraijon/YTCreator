@@ -17,9 +17,10 @@ export default defineConfig({
   reporter: process.env.CI ? 'github' : 'list',
   use: { baseURL, trace: 'retain-on-failure' },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  // The SPA goes in web/ next to server.mjs, as in the release package (T154).
   webServer: {
     command:
-      'pnpm build && pnpm --filter @ytcreator/server exec vite build --mode development && node ../server/dist/server.mjs serve',
+      'pnpm build && pnpm --filter @ytcreator/server exec vite build --mode development && cp -R dist ../server/dist/web && node ../server/dist/server.mjs serve',
     url: `${baseURL}/api/health`,
     reuseExistingServer: false,
     timeout: 180_000,

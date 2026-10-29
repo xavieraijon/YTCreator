@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import styles from './App.module.css'
 import { type Route, usePathname, useRoute } from './router.ts'
 import { AppHeader } from './shell/AppHeader.tsx'
@@ -51,6 +51,7 @@ export function App() {
   const route = useRoute()
   const mainRef = useRef<HTMLElement>(null)
   const firstRender = useRef(true)
+  const [closed, setClosed] = useState(false)
 
   // On every screen change (not on the first load) the focus goes to the new h1 (contracts/ui-screens.md).
   useEffect(() => {
@@ -61,7 +62,7 @@ export function App() {
     const main = mainRef.current
     const title = main?.querySelector<HTMLElement>('h1')
     ;(title ?? main)?.focus()
-  }, [pathname])
+  }, [pathname, closed])
 
   const inWizard = route.page === 'welcome' || route.page === 'wizard'
 
@@ -70,9 +71,9 @@ export function App() {
       <a className={styles.skip} href="#main">
         {es.app.skipToContent}
       </a>
-      <AppHeader inWizard={inWizard} />
+      <AppHeader inWizard={inWizard} closed={closed} onClosed={() => setClosed(true)} />
       <main id="main" ref={mainRef} className={styles.main} tabIndex={-1}>
-        <Page route={route} />
+        {closed ? <Screen title={es.header.closed} /> : <Page route={route} />}
       </main>
     </div>
   )

@@ -11,3 +11,5 @@ export const dismissBodySchema = z.object({ version: z.string().min(1) })
 
 export const healthSchema = z.object({ app: z.literal('ytcreator'), version: z.string(), instanceId: z.string() })
 export type Health = z.infer<typeof healthSchema>
+
+export const shutdownResponseSchema = z.object({})

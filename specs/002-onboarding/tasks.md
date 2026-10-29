@@ -161,10 +161,10 @@ abre `http://127.0.0.1:<puerto>`, y cortar en cualquier paso y repetir deja el m
 - [X] T070 [US1] Implementar en `installer/install.sh` el paso 7 «Creando el acceso directo» (macOS: `~/Applications/YTCreator.app` mínima que llama al lanzador; Linux: `~/.local/share/applications/ytcreator.desktop`; si falla, aviso 71 y sigue) y el paso 8 «Abriendo YTCreator» (`ytcreator open`; sin entorno gráfico, muestra la dirección local, no es error); escribir `install.json`
 - [X] T071 [US1] Implementar en `installer/install.sh` la reinstalación de la misma versión: si `install.json` ya tiene `<v>` completa, solo se ejecutan los pasos 1, 6, 7 y 8
 - [X] T072 [P] [US1] Escribir `installer/stamp.sh`: sustituye en `install.sh` la versión de Node, la versión de YTCreator y las 4 sumas SHA-256 (Node darwin-arm64, darwin-x64, linux-x64 y la release) leídas de `SHA256SUMS`
-- [ ] T011 [US1] Ampliar `.github/workflows/ci.yml` (requiere T047, T063, T064 y T072): en `quality`, instalar Playwright también en `apps/web` y ejecutar `pnpm test:e2e`; nuevo paso `shellcheck installer/install.sh installer/stamp.sh apps/server/bin/ytcreator`; nuevo job `installer` con matriz `ubuntu-latest` y `macos-latest` que ejecuta `pnpm test:installer`
-- [ ] T073 [US1] Ampliar `apps/web/test/glossary.test.ts` para extraer y revisar también los textos visibles de `installer/install.sh` (líneas `Paso N de 8 · …`, avisos y errores)
-- [ ] T074 [US1] Añadir a `AppHeader` el botón «Cerrar YTCreator» con `Dialog` de confirmación de `@ytcreator/ui`, que llama a `POST /api/app/shutdown` y muestra la pantalla final «Puedes cerrar esta pestaña» en `apps/web/src/shell/AppHeader.tsx`
-- [ ] T075 [US1] e2e en `apps/web/e2e/shutdown.spec.ts`: «Cerrar YTCreator» → confirmar → mensaje final y `GET /api/health` deja de responder
+- [X] T011 [US1] Ampliar `.github/workflows/ci.yml` (requiere T047, T063, T064 y T072): en `quality`, instalar Playwright también en `apps/web` y ejecutar `pnpm test:e2e`; nuevo paso `shellcheck installer/install.sh installer/stamp.sh apps/server/bin/ytcreator`; nuevo job `installer` con matriz `ubuntu-latest` y `macos-latest` que ejecuta `pnpm test:installer`
+- [X] T073 [US1] Ampliar `apps/web/test/glossary.test.ts` para extraer y revisar también los textos visibles de `installer/install.sh` (líneas `Paso N de 8 · …`, avisos y errores)
+- [X] T074 [US1] Añadir a `AppHeader` el botón «Cerrar YTCreator» con `Dialog` de confirmación de `@ytcreator/ui`, que llama a `POST /api/app/shutdown` y muestra la pantalla final «Puedes cerrar esta pestaña» en `apps/web/src/shell/AppHeader.tsx`
+- [X] T075 [US1] e2e en `apps/web/e2e/shutdown.spec.ts`: «Cerrar YTCreator» → confirmar → mensaje final y `GET /api/health` deja de responder
 
 **Checkpoint**: la línea instala, abre y cierra la app; los tests 1–5 y 8 del instalador pasan en CI (ubuntu y
 macOS).

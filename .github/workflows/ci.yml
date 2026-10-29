@@ -17,8 +17,29 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @ytcreator/tokens build
       - run: pnpm lint
+      # shellcheck comes preinstalled on the GitHub runners.
+      - run: shellcheck installer/install.sh installer/stamp.sh apps/server/bin/ytcreator
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm exec playwright install --with-deps
         working-directory: apps/catalog
+      - run: pnpm exec playwright install --with-deps
+        working-directory: apps/web
       - run: pnpm test:e2e
+
+  # The installer runs on the creator's machine, so it is tested on both systems it supports (bash 3.2 on macOS).
+  installer:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test:installer
