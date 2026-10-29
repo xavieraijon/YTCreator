@@ -13,7 +13,7 @@ import { resolveProfile } from '../profiles.ts'
 import type { FakeOutcome, FakeScenario } from './scenarios.ts'
 
 // Recognisable fake credentials, so the leak test (SC-006) can look for them.
-const ACCEPTED = /^(sk-ant-api03-FAKE|AIzaFAKE|sk-ant-oat-FAKE)/
+const ACCEPTED = /^(sk-ant-api03-FAKE|sk-ant-oat-FAKE)/
 // Tokens of the fake login carry the account number: `cuentas:` gives each account its own outcome.
 const ACCOUNT_NUMBER = /^sk-ant-oat-FAKE-(\d+)-/
 
@@ -90,7 +90,7 @@ export function createFakeProvider(
   return {
     id: 'fake',
     capabilities: { text: true, structured: true, streaming: false, vision: false },
-    billing: options.billing ?? 'gratis',
+    billing: options.billing ?? 'suscripcion',
 
     async check(signal) {
       const result = await call('check', signal)

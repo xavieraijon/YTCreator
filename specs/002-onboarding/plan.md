@@ -19,9 +19,9 @@ piezas:
 - **`packages/core`:** el puerto `AiProvider` con capacidades declaradas, los fallos tipados con su motivo, el
   registro de adaptadores, la rotación de cuentas de suscripción, la máquina de estados del asistente, los límites de
   gasto y los esquemas Zod compartidos con la web (R9, R13, R14, R17, R18).
-- **`packages/ai`:** tres adaptadores — suscripción de Claude (Claude Code CLI, con inicio de sesión desde la app),
-  API de Anthropic (SDK oficial, sin reintentos) y Gemini gratis (`fetch`, sin SDK) — más un proveedor falso
-  determinista y la batería de contrato común (R10–R12, R15, R16, R23).
+- **`packages/ai`:** dos adaptadores — suscripción de Claude (Claude Code CLI, con inicio de sesión desde la app) y
+  API de Anthropic (SDK oficial, sin reintentos) — más un proveedor falso determinista y la batería de contrato común
+  (R10–R12, R15, R23). Sin opción gratuita (constitución 2.0.0; R16 retirada el 2026-10-29).
 - **`apps/web`:** el asistente de primer arranque, la pantalla «conecta tu IA», la pantalla de inicio y Ajustes (IA y
   General), construidos solo con componentes de `@ytcreator/ui` y textos en catálogo (R18, R19).
 
@@ -35,7 +35,7 @@ documentados (R11).
 macOS) solo para el instalador y el lanzador (ver Complexity Tracking).
 
 **Primary Dependencies**: Hono + `@hono/node-server`, Zod 4, `@anthropic-ai/sdk`, React 19 + Vite (ya en el repo),
-`@ytcreator/ui` y `@ytcreator/tokens`. Sin ORM, sin router, sin librería de llavero ni SDK de Gemini. Detalle y
+`@ytcreator/ui` y `@ytcreator/tokens`. Sin ORM, sin router ni librería de llavero. Detalle y
 justificación en [research.md](./research.md) y en «Dependencias nuevas».
 
 **Storage**: SQLite (`node:sqlite`) en la carpeta de trabajo (`~/YTCreator/ytcreator.db`) con migraciones SQL
@@ -57,7 +57,7 @@ pnpm.
 - instalación completa ≤ 15 min con conexión doméstica (SC-001); la descarga total ronda 60–70 MB (Node + app);
 - el acceso directo abre el navegador en ≤ 5 s si la app estaba apagada y en ≤ 1 s si ya estaba en marcha;
 - el servidor arranca en ≤ 2 s (migraciones incluidas en una base vacía);
-- comprobación de IA con tiempo máximo: 30 s para API y Gemini, 60 s para Claude Code (arranque del programa).
+- comprobación de IA con tiempo máximo: 30 s para la API, 60 s para Claude Code (arranque del programa).
 
 **Constraints**:
 
@@ -84,14 +84,14 @@ justificar en «Complexity Tracking»).
 |---|--------|--------|------|
 | I | Una acción principal por pantalla, sin jerga (test de glosario), lo avanzado plegado tras «Modo experto», errores para personas | ✅ | Cada paso del asistente y cada pantalla tiene una sola acción principal y su frase de «por qué» ([ui-screens](./contracts/ui-screens.md)). El test de glosario de la 001 se extiende a los catálogos de `apps/web` y a los textos del instalador. El tiempo máximo de la IA vive en «Modo experto». Cada fallo tipado + motivo tiene su mensaje con acción (R13) |
 | II | Todo lo generado se puede aprobar, editar y regenerar, con versiones; nada externo sin una acción explícita; dato ≠ opinión | ✅ | No hay generación de contenido. Las comprobaciones de IA y la reparación de Claude Code solo ocurren tras una acción del creador. La consulta de versiones está aclarada en la spec (FR-009b): no envía datos y se puede desactivar |
-| III | Coste estimado en euros antes de gastar, dentro de los límites de gasto, con un camino sin coste | ✅ | Todo cuesta 0 € (R12): la API y Gemini se comprueban listando modelos; la suscripción con una llamada mínima que no se factura en euros. Los límites se guardan ya (R17). La tabla de precios y el registro de consumo llegan con la primera operación con coste (feature 003+); aquí no hay nada que registrar. Suscripción y Gratis son el camino sin coste |
+| III | Coste estimado en euros antes de gastar, dentro de los límites de gasto, con un camino sin coste adicional | ✅ | Todo cuesta 0 € (R12): la API se comprueba listando modelos; la suscripción con una llamada mínima que no se factura en euros. Los límites se guardan ya (R17). La tabla de precios y el registro de consumo llegan con la primera operación con coste (feature 003+); aquí no hay nada que registrar. La suscripción que el creador ya paga es el camino sin coste adicional; README, instalador y bienvenida avisan de que hace falta (FR-001b, FR-018) |
 | IV | La IA solo a través del puerto `AiProvider`; prompts versionados que valen para cualquier modelo; salida validada con Zod; errores tipados; uso explícito | ✅ | Puerto con capacidades, registro de adaptadores (añadir uno = adaptador + una línea), fallos tipados con motivo, `maxRetries: 0`, perfil de modelo y tiempo por uso (`comprobacion`), prompt de comprobación en `packages/knowledge` (R9–R16) |
 | V | Conocimiento en paquetes versionados con fuente y fecha; datos de mercado reales y citados; reglas de escritura humana | ➖ | Sin conocimiento de YouTube. `packages/knowledge` nace solo con el prompt versionado de la comprobación |
 | VI | Solo tokens (ningún valor suelto), `@layer` + CSS Modules, temas claro y oscuro, WCAG 2.2 AA, 375 px, componente documentado | ✅ | Pantallas compuestas con componentes de `@ytcreator/ui`; los estilos de `apps/web` pasan el mismo Stylelint. Si hiciera falta un componente nuevo, se añade a `packages/ui` con su ficha en el catálogo antes de usarlo |
 | VII | Datos en local y exportables, secretos protegidos, autenticación en VPS, sin telemetría por defecto | ✅ | `127.0.0.1` + guardia de `Host`/`Origin` (R5); secretos en llavero o `0600`, fuera de la carpeta de trabajo (R8); tipo `Secret` que no se serializa y redactor en registros (R22); sin telemetría; instalación de una línea, repetible y reanudable (R2). VPS fuera de alcance (spec) |
 | VIII | Dentro del alcance de la v1; lo que surja va al backlog | ✅ | Fuera: servidor/VPS, Windows, desinstalador, binarios de YouTube y transcripción (el instalador queda preparado para añadir pasos) |
-| IX | Tests unitarios, de contrato de los adaptadores con IA falsa, e2e + axe y auditoría de novato prevista | ✅ | Batería de contrato común para los tres adaptadores y el falso; e2e + axe del asistente y Ajustes en ambos temas; test de fuga de secretos; test del instalador interrumpiendo en cada paso; auditoría de novato del recorrido completo (R23, quickstart) |
-| X | La opción más simple; cada dependencia nueva justificada | ✅ | `node:sqlite`, CLIs del sistema para el llavero, `fetch` para Gemini, router propio y Vite para empaquetar el servidor evitan cinco dependencias. Las que entran se justifican abajo. Desviaciones en Complexity Tracking |
+| IX | Tests unitarios, de contrato de los adaptadores con IA falsa, e2e + axe y auditoría de novato prevista | ✅ | Batería de contrato común para los dos adaptadores y el falso; e2e + axe del asistente y Ajustes en ambos temas; test de fuga de secretos; test del instalador interrumpiendo en cada paso; auditoría de novato del recorrido completo (R23, quickstart) |
+| X | La opción más simple; cada dependencia nueva justificada | ✅ | `node:sqlite`, CLIs del sistema para el llavero, router propio y Vite para empaquetar el servidor evitan cuatro dependencias. Las que entran se justifican abajo. Desviaciones en Complexity Tracking |
 
 **Re-evaluación tras la Fase 1:** sin cambios en las puertas. El diseño añade dos abstracciones, ambas con caso de
 uso real en esta feature: el puerto `SecretStore` (tres implementaciones: llavero de macOS, Secret Service de Linux y
@@ -110,7 +110,7 @@ que todos los mensajes vivan en el catálogo de la web.
 | `@playwright/test`, `@axe-core/playwright` | Ya están en el repo (001); `apps/web` los reutiliza | — | — |
 
 **Descartadas a propósito** (X): `better-sqlite3` (plan B de R7), `keytar`/`@napi-rs/keyring` (plan B de R8),
-`node-pty` (plan B de R11), `@google/genai` (R16), `react-router` y TanStack Query (R19), `pino` (R22), `esbuild`
+`node-pty` (plan B de R11), `react-router` y TanStack Query (R19), `pino` (R22), `esbuild`
 directo (R24, Vite ya lo trae).
 
 ## Project Structure
@@ -171,7 +171,7 @@ apps/web/                    # @ytcreator/web
 │   ├── shell/               # AppHeader (indicador de IA, Ajustes, Cerrar), UpdateNotice, AiFailureMessage
 │   ├── onboarding/          # useOnboarding.ts (hook de redirección y recarga del estado)
 │   └── screens/
-│       ├── onboarding/      # Welcome, ChooseAi, ConnectSubscription, ConnectApiKey, ConnectFree, Limits, Done
+│       ├── onboarding/      # Welcome, ChooseAi, ConnectSubscription, ConnectApiKey, Limits, Done
 │       ├── connect-later/   # ConnectAi (pantalla de «lo haré más tarde»)
 │       ├── home/            # Home («Crear mi primer canal»)
 │       └── settings/        # Settings (Tabs IA | General), AiSettings, AccountList, LimitsForm, GeneralSettings,
@@ -194,7 +194,6 @@ packages/ai/                 # @ytcreator/ai (adaptadores)
 ├── src/
 │   ├── claude-code/         # adapter.ts, command.ts (perfil por uso, entorno limpio), classify.ts, login.ts
 │   ├── anthropic/           # adapter.ts, classify.ts
-│   ├── gemini/              # adapter.ts, classify.ts
 │   ├── fake/                # fake-provider.ts, fake-login.ts, scenarios.ts
 │   ├── profiles.ts          # modelo, esfuerzo y tiempo por uso y adaptador
 │   └── registry.ts          # registro de los adaptadores de la v1

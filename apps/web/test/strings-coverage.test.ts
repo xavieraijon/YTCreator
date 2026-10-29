@@ -6,7 +6,7 @@ import { es } from '../src/strings/es.ts'
 import { failuresEs } from '../src/strings/failures.es.ts'
 
 // Mirrors the `label` keys of packages/ai/src/registry.ts.
-const PROVIDER_LABELS = ['ai.provider.claude_code', 'ai.provider.anthropic', 'ai.provider.gemini']
+const PROVIDER_LABELS = ['ai.provider.claude_code', 'ai.provider.anthropic']
 
 const sorted = (values: readonly string[]) => [...values].sort()
 

@@ -4,7 +4,7 @@
 
 Cada decisión sigue el formato Decisión / Motivo / Alternativas. Las dependencias nuevas se justifican aquí
 (constitución, principio X) y se resumen en [plan.md](./plan.md#dependencias-nuevas). Lo que no se puede dar por
-seguro sin probarlo en una máquina real queda como **spike** (S1–S6, al final), con su plan B. Los *spikes* son las
+seguro sin probarlo en una máquina real queda como **spike** (S1–S5, al final; S6 retirado), con su plan B. Los *spikes* son las
 primeras tareas de `/speckit-tasks` y bloquean las pantallas que dependen de ellos.
 
 ---
@@ -193,7 +193,7 @@ primeras tareas de `/speckit-tasks` y bloquean las pantallas que dependen de ell
   disponible (p. ej. llavero bloqueado en una sesión SSH), el fallo es `no_disponible` con motivo
   `llavero_no_disponible`, nunca un cambio silencioso a otro almacén. La base de datos solo guarda la referencia
   (`secret_ref`) y los 4 últimos caracteres (`secret_hint`).
-- **Motivo:** FR-028b literalmente, sin dependencias nativas. Las tres opciones quedan fuera de la carpeta de
+- **Motivo:** FR-028b literalmente, sin dependencias nativas. Las dos opciones quedan fuera de la carpeta de
   trabajo.
 - **Alternativas:**
   - *`keytar`*: abandonado. *`@napi-rs/keyring`*: binario nativo por plataforma. Queda como **plan B** si las
@@ -204,7 +204,7 @@ primeras tareas de `/speckit-tasks` y bloquean las pantallas que dependen de ell
 
 - **Decisión** (detalle en [contracts/ai-provider.md](./contracts/ai-provider.md)):
   - `AiProvider` declara `id`, `capabilities` (`text`, `structured`, `streaming`, `vision`), `billing`
-    (`por_uso` | `suscripcion` | `gratis`) y dos operaciones: `check()` (comprobación sin coste, **nunca lanza**:
+    (`por_uso` | `suscripcion`) y dos operaciones: `check()` (comprobación sin coste, **nunca lanza**:
     devuelve `conectada` o un `AiFailure`) y `generate(request)` (devuelve `AiResult<T>`, también sin lanzar);
   - cada petición lleva un `use` (`AiUse`). En esta feature solo existe `'comprobacion'`. El perfil (modelo,
     esfuerzo, tiempo máximo) sale de `packages/ai/src/profiles.ts` según el uso y el adaptador, nunca del entorno
@@ -292,7 +292,6 @@ primeras tareas de `/speckit-tasks` y bloquean las pantallas que dependen de ell
   |---|---|---|---|
   | Suscripción de Claude | `claude --version` → llamada mínima con el perfil `comprobacion` (el prompt versionado pide una sola palabra) | programa ausente, sesión caducada, plan sin Claude Code, cupo agotado, sin conexión, tiempo agotado | 0 € (consume una fracción mínima del cupo de la suscripción) |
   | API de Anthropic | `client.models.list()` | clave no válida, sin permiso, sin conexión, servicio caído | 0 € (no se factura) |
-  | Gemini gratis | `GET https://generativelanguage.googleapis.com/v1beta/models` con la cabecera `x-goog-api-key` | clave no válida, sin permiso, región no soportada, sin conexión, servicio caído | 0 € |
 
   **La falta de saldo** de la API de Anthropic no se ve al listar modelos. Para mantener 0 € (principio III y supuesto
   de la spec), la pantalla avisa **antes**: «Para usar esta opción necesitas saldo en tu cuenta de Anthropic», con el
@@ -315,7 +314,7 @@ primeras tareas de `/speckit-tasks` y bloquean las pantallas que dependen de ell
   | `cupo_agotado` | `sin_saldo`, `limite_de_uso` |
   | `tiempo_agotado` | `respuesta_lenta` |
   | `contenido_filtrado` | `rechazo_del_modelo` |
-  | `no_disponible` | `sin_conexion`, `servicio_caido`, `programa_no_instalado`, `llavero_no_disponible`, `region_no_soportada` |
+  | `no_disponible` | `sin_conexion`, `servicio_caido`, `programa_no_instalado`, `llavero_no_disponible` |
 
   Cada adaptador traduce sus errores en `classify.ts`:
   - **Anthropic** (clases de error del SDK, en este orden porque heredan unas de otras):
@@ -324,10 +323,6 @@ primeras tareas de `/speckit-tasks` y bloquean las pantallas que dependen de ell
     (`billing_error`) o 400 con «credit balance» → `sin_saldo`; `RateLimitError` (429) → `limite_de_uso` con
     `resetsAt` de las cabeceras `anthropic-ratelimit-*-reset` o `retry-after`; 529 y 5xx → `servicio_caido`;
     `stop_reason: 'refusal'` → `contenido_filtrado`;
-  - **Gemini** (`error.status` y `error.details[].reason` del cuerpo): `API_KEY_INVALID` → `clave_no_valida`; 403
-    `PERMISSION_DENIED` → `sin_permiso`; `FAILED_PRECONDITION` de ubicación → `region_no_soportada`; 429
-    `RESOURCE_EXHAUSTED` → `limite_de_uso`; 5xx → `servicio_caido`; `promptFeedback.blockReason` o
-    `finishReason: 'SAFETY'` → `contenido_filtrado`;
   - **Claude Code** (código de salida + campos del JSON + texto de error, con *fixtures* grabados en S1): sesión
     no válida o caducada → `sesion_caducada`; plan sin acceso → `plan_sin_acceso`; límite de uso → `limite_de_uso`
     con la hora de vuelta si aparece; `ENOENT` → `programa_no_instalado`; aborto por tiempo → `tiempo_agotado`.
@@ -372,19 +367,14 @@ primeras tareas de `/speckit-tasks` y bloquean las pantallas que dependen de ell
 - **Alternativas:**
   - *`fetch` a mano*: perderíamos los tipos de error y tendríamos que seguir los cambios de la API por nuestra cuenta.
 
-## R16. Adaptador de Gemini gratis
+## R16. ~~Adaptador de Gemini gratis~~ (retirada el 2026-10-29)
 
-- **Decisión:** `fetch` directo contra la API REST `v1beta` (`models` para la comprobación y `generateContent` para
-  generar), con la clave en la cabecera `x-goog-api-key` (nunca en la URL, que acabaría en registros). El modelo se
-  fija en `profiles.ts` tras confirmar el catálogo vigente del nivel gratuito (**S6**). La UI enlaza a
-  `https://aistudio.google.com/apikey` para conseguir la clave y avisa, en una frase, de que con el nivel gratuito
-  Google puede usar el contenido para mejorar sus productos (FR-030), además de que los resultados son más modestos
-  y el cupo limitado (FR-018).
-- **Motivo:** dos rutas REST no justifican un SDK (X), y así el adaptador no depende de los cambios de nombre del
-  SDK de Google.
-- **Alternativas:**
-  - *`@google/genai`*: oficial, pero más superficie de la que usamos.
-  - *Ollama en local*: la constitución lo permite, pero la spec eligió Gemini (sesión de aclaraciones).
+- **Decisión:** no hay opción gratuita en la v1 (constitución 2.0.0, spec, sesión 2026-10-29). Se retiran el
+  adaptador, su perfil, su clasificación de errores, el motivo `region_no_soportada`, el patrón de claves `AIza…` y
+  el *spike* S6.
+- **Motivo:** el creador da por hecho que todo usuario tiene una suscripción de IA o una cuenta de pago por uso.
+- **Futuro:** la suscripción de Gemini (Google AI Pro, con su CLI) será la primera suscripción de otro proveedor, en
+  una feature posterior: un descriptor más en el registro (FR-015), con su propio inicio de sesión sin terminal.
 
 ## R17. Límites de gasto
 
@@ -408,7 +398,7 @@ primeras tareas de `/speckit-tasks` y bloquean las pantallas que dependen de ell
   - cada petición lleva `expectedRevision`. Si no coincide (otra pestaña avanzó), el servidor responde `409` con el
     estado actual y la web navega a él (caso límite de las dos pestañas). La web vuelve a pedir el estado al
     recuperar la visibilidad (`visibilitychange`);
-  - con suscripción o gratis, el paso `limites` se salta y `listo` muestra la nota «Con esta opción no pagas nada
+  - con suscripción, el paso `limites` se salta y `listo` muestra la nota «Con esta opción no pagas nada
     extra en YTCreator» (FR-023);
   - `aplazar` («Lo haré más tarde») lleva a `/conectar-ia`, cuya única acción es `retomar` (FR-010).
 
@@ -471,7 +461,7 @@ primeras tareas de `/speckit-tasks` y bloquean las pantallas que dependen de ell
     llama en tres sitios: el adaptador al construir la petición, el `SecretStore` al guardar y la entrada estándar
     del proceso de Claude;
   - un redactor que se aplica a cada línea antes de escribirla, por si algo se escapa: `sk-ant-[A-Za-z0-9_-]+`
-    (cubre las claves de API y los *tokens* `sk-ant-oat…`) y `AIza[0-9A-Za-z_-]{35}`;
+    (cubre las claves de API y los *tokens* `sk-ant-oat…`);
   - los errores de los proveedores se registran por tipo y código, nunca con el cuerpo ni las cabeceras.
 - **Motivo:** FR-028 y SC-006 con defensa en dos capas: un tipo que no se serializa y un filtro final.
 - **Alternativas:**
@@ -482,8 +472,8 @@ primeras tareas de `/speckit-tasks` y bloquean las pantallas que dependen de ell
 - **Decisión:**
   - **Unitarios (Vitest):** máquina del asistente, rotación, validación de límites, comparación de versiones,
     clasificadores de errores, `Secret` y redactor;
-  - **Batería de contrato** (`packages/ai/test/contract/battery.ts`): la misma para el proveedor falso y los tres
-    adaptadores. Los adaptadores se prueban con transporte falso: `fetch` inyectado para Anthropic y Gemini, y el
+  - **Batería de contrato** (`packages/ai/test/contract/battery.ts`): la misma para el proveedor falso y los dos
+    adaptadores. Los adaptadores se prueban con transporte falso: `fetch` inyectado para Anthropic, y el
     ejecutable `fake-claude` (con salidas grabadas) para Claude Code. Casos en
     [contracts/ai-provider.md](./contracts/ai-provider.md#batería-de-contrato);
   - **Servidor:** rutas con `app.request()` de Hono, SQLite en memoria, `SecretStore` de fichero en carpeta
@@ -532,7 +522,7 @@ Cada *spike* es una tarea corta, con resultado anotado en este fichero, y bloque
 | **S3** | ¿Hay una forma oficial de conocer la identidad de la cuenta a partir del *token* (estado de la sesión de la CLI)? | detección de cuenta duplicada | Huella = *hash* del *token*, y avisar al creador del alcance reducido |
 | **S4** | ¿`countTokens` (gratuito) devuelve el error de falta de saldo con una cuenta sin saldo? | comprobación de la API de Anthropic | Mantener el aviso previo de R12 |
 | **S5** | `node:sqlite` en el Node 24 fijado: transacciones, WAL y que el empaquetado de Vite lo deje como módulo del sistema | capa de datos | Plan B `better-sqlite3` |
-| **S6** | Modelo vigente del nivel gratuito de Gemini y la forma de su error de región | perfil de Gemini, `classify.ts` | Elegir el modelo gratuito más ligero que liste `models` |
+| ~~**S6**~~ | Retirado el 2026-10-29 junto con la opción gratuita (R16) | — | — |
 
 ### Resultados
 

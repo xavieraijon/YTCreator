@@ -14,7 +14,7 @@ glosario de la 001 (FR-032) y se escriben de tú.
 | `/` | Redirige según el estado (abajo) | — |
 | `/bienvenida` | Welcome | «Empezar» |
 | `/bienvenida/elegir` | ChooseAi | «Continuar» (con una opción elegida) |
-| `/bienvenida/conectar` | ConnectSubscription · ConnectApiKey · ConnectFree, según `chosenKind` | Depende del paso interno (abajo) |
+| `/bienvenida/conectar` | ConnectSubscription · ConnectApiKey, según `chosenKind` | Depende del paso interno (abajo) |
 | `/bienvenida/limites` | Limits | «Guardar límites» |
 | `/bienvenida/listo` | Done | «Ir al inicio» |
 | `/conectar-ia` | ConnectAi | «Conectar ahora» |
@@ -34,12 +34,12 @@ Al volver a la pestaña (`visibilitychange`) y tras un `409`, la web vuelve a pe
 
 ## Estructura común
 
-- **Cabecera** (`AppHeader`): logotipo; `Badge` con la IA en uso («Tu suscripción de Claude», «Pago por uso de Anthropic»,
-  «Gemini gratis» o «Sin IA conectada»); enlace a Ajustes; botón «Cerrar YTCreator», que abre un `Dialog` de
+- **Cabecera** (`AppHeader`): logotipo; `Badge` con la IA en uso («Tu suscripción de Claude», «Pago por uso de Anthropic»
+  o «Sin IA conectada»); enlace a Ajustes; botón «Cerrar YTCreator», que abre un `Dialog` de
   confirmación y, tras `POST /api/app/shutdown`, muestra «YTCreator se ha cerrado. Puedes cerrar esta pestaña.»
   (FR-006). Durante el asistente solo se muestran el logotipo y «Cerrar YTCreator».
-- **Progreso del asistente**: `Stepper` con 4 pasos visibles (Elegir, Conectar, Límites, Listo). Con suscripción o
-  gratis, Límites aparece como «no hace falta». La bienvenida no cuenta.
+- **Progreso del asistente**: `Stepper` con 4 pasos visibles (Elegir, Conectar, Límites, Listo). Con suscripción,
+  Límites aparece como «no hace falta». La bienvenida no cuenta.
 - **«Lo haré más tarde»**: enlace secundario en elegir y conectar (FR-010).
 - **«Volver»**: botón secundario en elegir, conectar, límites y listo.
 - **Aviso de versión nueva** (`UpdateNotice`): banda discreta encima del contenido, fuera del asistente, con la
@@ -49,18 +49,19 @@ Al volver a la pestaña (`visibilitychange`) y tras un `409`, la web vuelve a pe
 
 ## Pantallas del asistente
 
-### Welcome
+### Welcome (FR-018)
 Título, una frase sobre qué hace YTCreator y qué va a pasar ahora («Vamos a conectar una IA. Son unos minutos.»),
-«Empezar».
+la nota de lo que hace falta («Necesitas una suscripción de Claude o una cuenta de Anthropic con saldo. YTCreator no
+incluye una IA gratuita.»), con un enlace a los planes de Claude (`claude.ai/pricing`) y otro a la consola de
+Anthropic (`console.anthropic.com`), y «Empezar».
 
-### ChooseAi (FR-013–FR-015, FR-018, FR-030)
+### ChooseAi (FR-013–FR-015, FR-030)
 `RadioGroup` con tarjetas, en este orden y con la primera marcada (FR-014):
 
 | Opción | Qué dice | Etiquetas |
 |---|---|---|
 | **Usar mi suscripción de Claude** | Para quien ya paga Claude Pro o Max. Sin coste extra | «Recomendado», «Usa tu suscripción, bajo tu responsabilidad» (con un `Tooltip` que lo explica en una frase) |
 | **Pagar solo lo que uses** | Con una clave de Anthropic; pagas por cada uso, con límites que tú pones | — |
-| **Probar gratis** | Con Gemini de Google; resultados más modestos y uso limitado | «Gratis» |
 
 Debajo, una línea fija: «Tus ideas y guiones se envían al servicio de IA que elijas.» (FR-030).
 
@@ -86,18 +87,13 @@ Una cuenta duplicada (mismo acceso pegado dos veces): «Esta cuenta ya está con
 - `TextField` de tipo contraseña «Tu clave» con botón de mostrar/ocultar y «Comprobar y guardar»;
 - tras guardar: «Clave guardada ••••abcd · Funciona» y «Continuar».
 
-### ConnectFree (FR-018, FR-030)
-Como ConnectApiKey, con enlace a `https://aistudio.google.com/apikey`, la nota «Los resultados son más modestos y
-el uso diario es limitado» y la frase «Con la opción gratuita, Google puede usar lo que envíes para mejorar sus
-productos.» Sin aviso de saldo.
-
 ### Limits (FR-021–FR-023)
 Tres `TextField` en euros con dos decimales (`inputmode="decimal"`, admite coma), con los valores propuestos de R17
 ya escritos y una frase por campo («Lo máximo que puede costar una sola operación»). Errores por campo
 (`fields` de la API). «Guardar límites».
 
 ### Done (FR-020, FR-023)
-«Todo listo», resumen de la opción elegida y, con suscripción o gratis, «Con esta opción no pagas nada extra en
+«Todo listo», resumen de la opción elegida y, con suscripción, «Con esta opción no pagas nada extra en
 YTCreator». «Ir al inicio».
 
 ## Otras pantallas
@@ -166,7 +162,6 @@ SC-007). `AiFailureMessage` los muestra con `ErrorMessage` de la 001. Ninguna ac
 | `no_disponible` / `servicio_caido` | El servicio de IA no está funcionando ahora | Suele arreglarse solo. Prueba más tarde | «Comprobar ahora» |
 | `no_disponible` / `programa_no_instalado` | Falta Claude Code en tu ordenador | YTCreator puede instalarlo por ti | «Reparar» |
 | `no_disponible` / `llavero_no_disponible` | No se puede abrir el llavero del sistema | Desbloquea tu sesión y vuelve a probar | «Comprobar ahora» |
-| `no_disponible` / `region_no_soportada` | La opción gratuita no está disponible en tu país | Elige otra opción | «Elegir otra opción» |
 
 Los errores de API que no son de IA (`validacion`, `conflicto`, `interno`) tienen sus propios textos en `es.ts`.
 
@@ -184,15 +179,14 @@ En `apps/web/e2e/`, con `YTCREATOR_FAKE_AI`, ambos temas y 375 px:
 
 1. `wizard-subscription`: elegir → reparar Claude Code → enlace → código → añadir segunda cuenta → listo → inicio;
 2. `wizard-api-key`: clave no válida, sin conexión, válida; límites con errores y válidos;
-3. `wizard-free`: clave válida → listo con la nota de 0 €;
-4. `wizard-resume`: recargar en cada paso y volver al mismo (SC-003 en la app);
-5. `wizard-postpone`: «Lo haré más tarde» → `/conectar-ia` → retomar;
-6. `two-tabs`: avanzar en una pestaña, actuar en la otra → `409` → la otra se coloca en el paso real;
-7. `failures`: cada fila de la tabla de mensajes muestra su texto y su acción (SC-007);
-8. `rotation`: `cuentas:cupo,ok` → «Comprobar ahora» → aviso de cambio; `cuentas:cupo,cupo` → «Sin cupo hasta…»
+3. `wizard-resume`: recargar en cada paso y volver al mismo (SC-003 en la app);
+4. `wizard-postpone`: «Lo haré más tarde» → `/conectar-ia` → retomar;
+5. `two-tabs`: avanzar en una pestaña, actuar en la otra → `409` → la otra se coloca en el paso real;
+6. `failures`: cada fila de la tabla de mensajes muestra su texto y su acción (SC-007);
+7. `rotation`: `cuentas:cupo,ok` → «Comprobar ahora» → aviso de cambio; `cuentas:cupo,cupo` → «Sin cupo hasta…»
    con la primera fecha y sin llamadas (SC-012);
-9. `settings`: reordenar, renombrar, borrar cuenta, sustituir y borrar clave, cambiar de opción conservando la
+8. `settings`: reordenar, renombrar, borrar cuenta, sustituir y borrar clave, cambiar de opción conservando la
    anterior, límites, interruptor de versiones y Modo experto;
-10. `shutdown`: «Cerrar YTCreator» → confirmación → mensaje final y servidor parado;
-11. `secrets-leak` ([secrets.md](./secrets.md#test-de-fuga-de-secretos-sc-006));
-12. `a11y`: axe en cada pantalla y estado de error, ambos temas, 375 px y zoom 200 % (SC-010).
+9. `shutdown`: «Cerrar YTCreator» → confirmación → mensaje final y servidor parado;
+10. `secrets-leak` ([secrets.md](./secrets.md#test-de-fuga-de-secretos-sc-006));
+11. `a11y`: axe en cada pantalla y estado de error, ambos temas, 375 px y zoom 200 % (SC-010).

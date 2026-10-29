@@ -87,7 +87,7 @@ Una sola fila, creada por la migración en `bienvenida`.
 |---|---|---|
 | `id` | `INTEGER` PK | `CHECK (id = 1)` |
 | `step` | `TEXT` NOT NULL | `bienvenida` \| `elegir` \| `conectar` \| `limites` \| `listo` \| `completado` |
-| `chosen_kind` | `TEXT` NULL | `suscripcion` \| `pago_por_uso` \| `gratis`; NULL hasta elegir |
+| `chosen_kind` | `TEXT` NULL | `suscripcion` \| `pago_por_uso`; NULL hasta elegir |
 | `postponed` | `INTEGER` NOT NULL DEFAULT 0 | 1 tras «Lo haré más tarde» |
 | `completed_at` | `TEXT` NULL | Se fija al pasar a `completado` |
 | `revision` | `INTEGER` NOT NULL DEFAULT 0 | Sube en cada cambio (R18) |
@@ -100,14 +100,14 @@ solo una esté activa (FR-026).
 
 | Columna | Tipo | Regla |
 |---|---|---|
-| `kind` | `TEXT` PK | `suscripcion` \| `pago_por_uso` \| `gratis` |
-| `provider_id` | `TEXT` NOT NULL | `claude-code` \| `anthropic` \| `gemini` (registro, R9) |
+| `kind` | `TEXT` PK | `suscripcion` \| `pago_por_uso` |
+| `provider_id` | `TEXT` NOT NULL | `claude-code` \| `anthropic` (registro, R9) |
 | `is_active` | `INTEGER` NOT NULL DEFAULT 0 | Índice único parcial `WHERE is_active = 1`: como mucho una activa |
 | `status` | `TEXT` NOT NULL | `sin_comprobar` \| `conectada` \| `sin_sesion` \| `cupo_agotado` \| `tiempo_agotado` \| `contenido_filtrado` \| `no_disponible` |
 | `status_reason` | `TEXT` NULL | Motivo de R13; NULL si `conectada` o `sin_comprobar` |
 | `resets_at` | `TEXT` NULL | Solo con `cupo_agotado` |
 | `last_checked_at` | `TEXT` NULL | Última comprobación, con éxito o no (FR-025) |
-| `secret_ref` | `TEXT` NULL | Clave guardada (pago por uso, gratis). NULL en suscripción: las credenciales están en cada cuenta |
+| `secret_ref` | `TEXT` NULL | Clave guardada (pago por uso). NULL en suscripción: las credenciales están en cada cuenta |
 | `secret_hint` | `TEXT` NULL | 4 últimos caracteres de la clave |
 | `created_at`, `updated_at` | `TEXT` NOT NULL | |
 
@@ -116,7 +116,7 @@ Reglas:
 - en `suscripcion`, `status` es el **resumen** de las cuentas: `conectada` si alguna lo está; si no, el fallo de
   la primera cuenta en orden, y con `cupo_agotado` en todas, el `resets_at` más próximo (US4-7);
 - una clave solo se guarda si la comprobación termina en `conectada` (FR-017). Por eso una fila de `pago_por_uso`
-  o `gratis` siempre tiene `secret_ref`;
+  siempre tiene `secret_ref`;
 - activar `pago_por_uso` exige que `spending_limits` exista (FR-021, R17).
 
 ### `subscription_account` — Cuenta de suscripción
@@ -187,7 +187,7 @@ activa `conectada`, si hay límites).
 bienvenida ──continuar──▶ elegir ──elegir(k)──▶ conectar ──continuar──▶ limites ──continuar──▶ listo ──continuar──▶ completado
      ▲                     ▲  │                   │  ▲                      │ (solo pago_por_uso)  ▲
      └──────volver─────────┘  └──────volver───────┘  └────────volver────────┘                      │
-                                                    └──────────continuar (suscripcion, gratis)─────┘
+                                                    └──────────continuar (suscripcion)─────────────┘
 
 postponed = 1  ──retomar──▶  postponed = 0, mismo step
 ```
@@ -236,7 +236,7 @@ sin_comprobar ───────────────▶ conectada ◀─�
 Definición completa en [contracts/ai-provider.md](./contracts/ai-provider.md).
 
 ```ts
-type ConnectionKind = 'suscripcion' | 'pago_por_uso' | 'gratis';
+type ConnectionKind = 'suscripcion' | 'pago_por_uso';
 type FailureKind = 'sin_sesion' | 'cupo_agotado' | 'tiempo_agotado' | 'contenido_filtrado' | 'no_disponible';
 type ConnectionStatus = 'sin_comprobar' | 'conectada' | FailureKind;
 type WizardStep = 'bienvenida' | 'elegir' | 'conectar' | 'limites' | 'listo' | 'completado';

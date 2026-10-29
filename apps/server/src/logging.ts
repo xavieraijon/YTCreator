@@ -3,8 +3,8 @@ import { join } from 'node:path'
 import type { Logger } from '@ytcreator/core'
 
 const HIDDEN = '[oculto]'
-const KEY_PATTERNS = [/sk-ant-[A-Za-z0-9_-]{8,}/g, /AIza[0-9A-Za-z_-]{35}/g]
-const SENSITIVE_FIELDS = new Set(['apikey', 'token', 'code', 'authorization', 'x-api-key', 'x-goog-api-key'])
+const KEY_PATTERNS = [/sk-ant-[A-Za-z0-9_-]{8,}/g]
+const SENSITIVE_FIELDS = new Set(['apikey', 'token', 'code', 'authorization', 'x-api-key'])
 
 const FILE = 'server.log'
 const KEEP = 3

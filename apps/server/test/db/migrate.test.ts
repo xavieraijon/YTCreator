@@ -63,7 +63,6 @@ describe('migrate', () => {
 
   it('allows at most one active connection', () => {
     insertConnection(db, 'suscripcion', 1)
-    insertConnection(db, 'gratis', 0)
     expect(() => insertConnection(db, 'pago_por_uso', 1)).toThrow()
   })
 
@@ -84,7 +83,7 @@ describe('migrate', () => {
     expect(() => db.prepare(`UPDATE onboarding_state SET step = 'otro'`).run()).toThrow()
     expect(() => db.prepare(`UPDATE onboarding_state SET chosen_kind = 'otro'`).run()).toThrow()
     expect(() => insertConnection(db, 'otro', 0)).toThrow()
-    expect(() => insertConnection(db, 'gratis', 0, 'otro')).toThrow()
+    expect(() => insertConnection(db, 'pago_por_uso', 0, 'otro')).toThrow()
   })
 
   it('refuses a database migrated by a newer version', () => {

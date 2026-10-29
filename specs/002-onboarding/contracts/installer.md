@@ -24,6 +24,14 @@ Ninguna se documenta para el creador.
 
 ## Pasos y salida
 
+Antes del paso 1, siempre (instalación, reanudación y actualización), el instalador muestra lo que hace falta
+(FR-001b) con `MSG_NEEDS_AI_1` y `MSG_NEEDS_AI_2`, sin preguntar nada:
+
+```text
+YTCreator necesita una suscripción de Claude que incluya Claude Code (Pro o Max)
+o una cuenta de Anthropic con saldo. No incluye una IA gratuita.
+```
+
 Cada paso se anuncia como `Paso N de 8 · <texto>` (FR-002) y termina con `✓` o con un error. Los textos son los
 del bloque `MSG_*`; los siguientes son orientativos y los fija la implementación con el test de glosario.
 
@@ -109,4 +117,6 @@ el `PATH`:
 6. actualización de `v1` a `v2` con datos → datos y secretos de prueba intactos, `current` → `v2`, `v1` conservada;
 7. migración que falla → 60, base restaurada byte a byte, `current` → `v1`;
 8. fallo al instalar Claude Code → aviso, código 0;
-9. `shellcheck` sin avisos (CI).
+9. `shellcheck` sin avisos (CI);
+10. la salida empieza por `MSG_NEEDS_AI_1` y `MSG_NEEDS_AI_2`, antes de `Paso 1 de 8`, en instalación, reinstalación
+    y actualización (FR-001b).

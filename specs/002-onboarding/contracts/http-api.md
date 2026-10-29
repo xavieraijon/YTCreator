@@ -116,11 +116,11 @@ type UpdateInfo = { current: string; latest: string | null; show: boolean };
 | `PATCH /api/ai/subscription/accounts/:id` | `{label}` | `AccountView` | 1–40 caracteres |
 | `DELETE /api/ai/subscription/accounts/:id` | — | `204` | Borra secreto y carpeta (FR-029) |
 
-### Claves: pago por uso y gratis
+### Claves: pago por uso
 
 | Método y ruta | Cuerpo | Respuesta | Notas |
 |---|---|---|---|
-| `PUT /api/ai/connections/:kind/credential` | `{key: string}` | `ConnectionView` | `kind` ∈ `pago_por_uso`, `gratis`. Limpia espacios; comprueba sin coste; **solo guarda si queda `conectada`**. Si no, `422 ia` con el fallo y la clave no se guarda (FR-017) |
+| `PUT /api/ai/connections/:kind/credential` | `{key: string}` | `ConnectionView` | `kind` = `pago_por_uso`. Limpia espacios; comprueba sin coste; **solo guarda si queda `conectada`**. Si no, `422 ia` con el fallo y la clave no se guarda (FR-017) |
 | `DELETE /api/ai/connections/:kind/credential` | — | `204` | Borra la clave del almacén y la fila. Si estaba activa, ya no hay opción activa |
 | `POST /api/ai/connections/:kind/check` | `{}` | `ConnectionView` | «Comprobar ahora» (FR-025). Para `suscripcion`, pasa por la rotación (R14) y la respuesta añade `switched?: AccountSwitched[]` |
 

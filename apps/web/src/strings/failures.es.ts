@@ -129,11 +129,5 @@ export const failuresEs: FailureCatalog = {
       todo: 'Desbloquea tu sesión y vuelve a probar.',
       actions: [comprobar],
     },
-    region_no_soportada: {
-      status: 'No disponible en tu país',
-      what: 'La opción gratuita no está disponible en tu país.',
-      todo: 'Elige otra opción.',
-      actions: [elegirOtra],
-    },
   },
 }

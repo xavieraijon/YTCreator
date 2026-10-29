@@ -11,8 +11,8 @@ Los tipos viven en `packages/core/src/ai/`; las implementaciones, en `packages/a
 ```ts
 // packages/core/src/ai/capabilities.ts
 interface AiCapabilities { text: boolean; structured: boolean; streaming: boolean; vision: boolean }
-type Billing = 'por_uso' | 'suscripcion' | 'gratis';
-type ConnectionKind = 'suscripcion' | 'pago_por_uso' | 'gratis';
+type Billing = 'por_uso' | 'suscripcion';
+type ConnectionKind = 'suscripcion' | 'pago_por_uso';
 
 // packages/core/src/ai/uses.ts
 type AiUse = 'comprobacion'; // crece con cada feature que llame a la IA
@@ -24,7 +24,7 @@ type FailureReason =
   | 'sin_saldo' | 'limite_de_uso'
   | 'respuesta_lenta'
   | 'rechazo_del_modelo'
-  | 'sin_conexion' | 'servicio_caido' | 'programa_no_instalado' | 'llavero_no_disponible' | 'region_no_soportada';
+  | 'sin_conexion' | 'servicio_caido' | 'programa_no_instalado' | 'llavero_no_disponible';
 interface AiFailure { kind: FailureKind; reason: FailureReason; resetsAt?: string /* ISO */ }
 
 // packages/core/src/ai/port.ts
@@ -40,7 +40,7 @@ interface AiUsage { inputTokens?: number; outputTokens?: number }
 type AiResult<T> = { ok: true; value: T; usage: AiUsage } | { ok: false; failure: AiFailure };
 
 interface AiProvider {
-  readonly id: string;                 // 'claude-code' | 'anthropic' | 'gemini' | 'fake'
+  readonly id: string;                 // 'claude-code' | 'anthropic' | 'fake'
   readonly capabilities: AiCapabilities;
   readonly billing: Billing;
   check(signal?: AbortSignal): Promise<CheckResult>;
@@ -72,7 +72,6 @@ const PROFILES: Record<ProviderId, Record<AiUse, AiProfile>>;
 |---|---|
 | `claude-code` | `claude-haiku-5-5`, 60 s, 16 tokens, esfuerzo bajo |
 | `anthropic` | `claude-haiku-5-5`, 30 s, 16 tokens (solo si S4 añade una llamada; hoy no genera) |
-| `gemini` | el modelo gratuito más ligero (S6), 30 s, 16 tokens |
 | `fake` | `fake`, 1 s |
 
 `ai_timeout_seconds` de los ajustes (Modo experto) sustituye `timeoutMs` si existe.
@@ -92,8 +91,7 @@ interface ProviderDescriptor {
 interface ProviderDeps { fetch: typeof fetch; now(): Date; logger: Logger; claudeBin?: string; accountDir?: string }
 ```
 
-`packages/ai/src/registry.ts` exporta la lista: `claude-code` (suscripción), `anthropic` (pago por uso), `gemini`
-(gratis) y, solo si `__YTC_ALLOW_FAKE_AI__`, `fake`. Añadir una suscripción nueva = un descriptor más (FR-015).
+`packages/ai/src/registry.ts` exporta la lista: `claude-code` (suscripción), `anthropic` (pago por uso) y, solo si `__YTC_ALLOW_FAKE_AI__`, `fake`. Añadir una suscripción nueva = un descriptor más (FR-015).
 
 ## Inicio de sesión de suscripción
 
@@ -156,13 +154,13 @@ Reglas (R14, FR-016c):
 | `login:codigo_malo` | — | `codigo_no_valido` con cualquier código |
 | `login:duplicada` | — | siempre el mismo *token* (misma huella) |
 
-Las claves aceptadas por los adaptadores falsos de pago por uso y gratis son `sk-ant-api03-FAKE…` y
-`AIzaFAKE…`: reconocibles para el test de fuga (SC-006).
+La clave aceptada por el adaptador falso de pago por uso es `sk-ant-api03-FAKE…`: reconocible para el test de fuga
+(SC-006).
 
 ## Batería de contrato
 
 `packages/ai/test/contract/battery.ts` exporta `runProviderContract(name, factory)`. Se ejecuta contra `fake`,
-`claude-code` (con `fake-claude`), `anthropic` y `gemini` (con `fetch` inyectado). Cada adaptador aporta el
+`claude-code` (con `fake-claude`) y `anthropic` (con `fetch` inyectado). Cada adaptador aporta el
 *stub* que provoca cada caso.
 
 | # | Caso | Esperado |
@@ -193,7 +191,7 @@ Solo `claude-code`:
 | CC6 | Caducidad del inicio de sesión | proceso terminado, `codigo_no_valido` |
 
 Solo `anthropic`: el cliente se crea con `maxRetries: 0` (AN1); un 429 con cabeceras de reinicio da `resetsAt`
-(AN2). Solo `gemini`: la clave va en `x-goog-api-key` y nunca en la URL (GE1).
+(AN2).
 
 La rotación tiene sus propios tests unitarios en `packages/core` (casos R1–R6: orden, una vez por cuenta, no rota con
 `tiempo_agotado`, todas agotadas sin llamar, `resetsAt` más próximo, `resetsAt` pasado vuelve a ser candidata).

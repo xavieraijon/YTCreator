@@ -1,10 +1,15 @@
 <!--
 Sync Impact Report
-- Versión: (plantilla) → 1.0.0 (ratificación inicial)
-- Principios creados: I–X (todos nuevos)
-- Secciones añadidas: Restricciones técnicas, Flujo de desarrollo, Gobierno
-- Plantillas: ✅ plan-template.md (Constitution Check con las 10 puertas); spec-template.md y tasks-template.md
-  sin cambios necesarios
+- Versión: 1.0.0 → 2.0.0 (MAJOR: se redefine el principio III y cambia el alcance de la v1)
+- Principios modificados:
+  - III. Nunca se gasta sin avisar: el camino sin coste pasa a ser «sin coste adicional», con la suscripción que el
+    creador ya paga. Se da por hecho que todo creador tiene una suscripción de IA o una cuenta de pago por uso.
+  - IV. La IA, detrás de un puerto: se quita de la v1 la opción gratuita (Gemini gratis u Ollama). Las suscripciones
+    de otros proveedores (la primera, Gemini con Google AI Pro) quedan para una feature posterior.
+- Secciones añadidas: ninguna
+- Plantillas: sin cambios necesarios
+- Afecta a: specs/002-onboarding (spec, plan, research, data-model, contracts, quickstart, tasks) y al código de
+  la rama 002 que preveía la opción gratuita
 - TODOs: ninguno
 -->
 
@@ -47,8 +52,9 @@ Esta constitución define lo que **no se negocia**. Las specs, los planes y el c
   salvo que el creador haya fijado antes un presupuesto que la cubra.
 - DEBE haber límites de gasto (por operación, por día y por mes) y un registro del consumo real, legible por
   personas.
-- DEBE existir siempre un camino **sin coste** para probar la app de punta a punta: proveedor gratuito o local,
-  o la suscripción que el creador ya tenga.
+- DEBE existir siempre un camino **sin coste adicional** para usar la app de punta a punta: la suscripción de IA
+  que el creador ya paga. La app da por hecho que el creador tiene una suscripción o una cuenta de pago por uso, y
+  lo DEBE decir antes de instalar y al empezar.
 
 ### IV. La IA, detrás de un puerto
 
@@ -58,7 +64,9 @@ Esta constitución define lo que **no se negocia**. Las specs, los planes y el c
   - **Claude Code CLI**, con la suscripción del creador. Se etiqueta como «usa tu suscripción, bajo tu
     responsabilidad».
   - **API de Anthropic**, la vía recomendada en un VPS.
-  - **Una opción gratuita** (Gemini con su nivel gratuito, u Ollama en local).
+
+  La v1 NO incluye ninguna opción gratuita. Las suscripciones de otros proveedores (la primera, Gemini con Google
+  AI Pro) llegarán como adaptadores nuevos en una feature posterior.
 
   Añadir un proveedor DEBE consistir en escribir un adaptador y registrarlo, sin tocar el dominio.
 - Los prompts DEBEN vivir en ficheros versionados, separados del código, y ser **agnósticos del modelo**: nada
@@ -187,4 +195,4 @@ Esta constitución define lo que **no se negocia**. Las specs, los planes y el c
   - **PATCH**: aclaraciones de redacción.
 - Cada revisión de código DEBE comprobar el cumplimiento de la constitución.
 
-**Versión**: 1.0.0 | **Ratificada**: 2026-10-26 | **Última enmienda**: 2026-10-26
+**Versión**: 2.0.0 | **Ratificada**: 2026-10-26 | **Última enmienda**: 2026-10-29

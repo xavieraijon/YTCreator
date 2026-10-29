@@ -12,11 +12,11 @@ Cómo comprobar que la feature cumple la spec de punta a punta. No contiene cód
 - para las pruebas del instalador: un usuario nuevo de macOS (o una máquina virtual) y una máquina virtual de Linux
   con escritorio (Ubuntu LTS) y otra sin entorno gráfico;
 - para las comprobaciones manuales: una suscripción de Claude Pro o Max, una clave de la API de Anthropic con algo
-  de saldo y otra sin saldo, y una clave de Gemini gratuita.
+  de saldo y otra sin saldo.
 
 ## 0. Verificación previa: spikes
 
-Antes de implementar las piezas afectadas, se cierran los spikes S1–S6 de [research.md](./research.md#spikes-verificación-antes-de-construir). Cada
+Antes de implementar las piezas afectadas, se cierran los spikes S1–S5 de [research.md](./research.md#spikes-verificación-antes-de-construir). Cada
 uno deja su resultado anotado en `research.md`; si alguno cambia una decisión, se actualizan el plan y los
 contratos antes de seguir.
 
@@ -27,7 +27,6 @@ contratos antes de seguir.
 | S3 | De dónde sale la identidad de la cuenta | Hecho: huella = SHA-256 del *token* (alcance reducido, aceptado) |
 | S4 | Si `countTokens` (gratuito) detecta la falta de saldo | Mantener solo el aviso previo de saldo de R12 (nunca una llamada de pago) |
 | S5 | `node:sqlite` con el empaquetado de Vite | Cambiar el empaquetado del servidor |
-| S6 | Modelo gratuito de Gemini y su error de región | Ajustar el perfil y la clasificación de `region_no_soportada` |
 
 ## 1. Automático
 
@@ -101,8 +100,8 @@ Una sola vez por proveedor, antes de cerrar la feature:
 | API: clave sin saldo | Antes de pegarla, aviso de que hace falta saldo con enlace a facturación; si S4 lo confirma, además «Tu cuenta de Anthropic no tiene saldo» al conectar (FR-017) |
 | Suscripción: sesión caducada | «Volver a conectar» en esa cuenta; tras el código, vuelve a «Funciona» sin duplicarse (FR-016) |
 | API: clave revocada | «La clave no es válida» |
-| API y Gemini: Wi-Fi apagada | «No hay conexión a internet» (no «clave no válida») |
-| Gemini: clave válida | Funciona sin introducir ningún medio de pago (SC-005) |
+| API: Wi-Fi apagada | «No hay conexión a internet» (no «clave no válida») |
+| README, instalador y bienvenida | Los tres dicen que hace falta una suscripción de Claude o saldo en Anthropic, sin opción gratuita (FR-001b, FR-018, SC-005) |
 | Consola de Anthropic tras todo el recorrido | 0 € gastados por comprobaciones (SC-004) |
 
 ## 6. Fuga de secretos (SC-006)
@@ -138,7 +137,7 @@ medios** (duda o se equivoca y se recupera sola). Los textos se revisan con el g
 | SC-002 | §5, suscripción |
 | SC-003 | §4 y e2e `wizard-resume` |
 | SC-004 | §5, consola de Anthropic; perfil de `comprobacion` sin coste |
-| SC-005 | §5, Gemini |
+| SC-005 | §5 (README, instalador y bienvenida) y §9 |
 | SC-006 | §6 y e2e `secrets-leak` |
 | SC-007 | e2e `failures` y §5 |
 | SC-008 | §9 |

@@ -5,7 +5,7 @@ export interface AiCapabilities {
   vision: boolean
 }
 
-export type Billing = 'por_uso' | 'suscripcion' | 'gratis'
+export type Billing = 'por_uso' | 'suscripcion'
 
-export const CONNECTION_KINDS = ['suscripcion', 'pago_por_uso', 'gratis'] as const
+export const CONNECTION_KINDS = ['suscripcion', 'pago_por_uso'] as const
 export type ConnectionKind = (typeof CONNECTION_KINDS)[number]

@@ -6,7 +6,6 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { createLogger, redactLine } from '../src/logging.ts'
 
 const FAKE_KEY = 'sk-ant-api03-FAKEfakeFAKEfake1234'
-const FAKE_GEMINI = 'AIza' + 'F'.repeat(35)
 const NOW = new Date('2026-10-28T10:00:00.000Z')
 
 function lines(dir: string, file = 'server.log') {
@@ -39,10 +38,9 @@ describe('logging', () => {
 
   it('hides key patterns anywhere in the line', () => {
     const logger = createLogger(dir, { now: () => NOW })
-    logger.error('provider.failed', { message: `bad ${FAKE_KEY} and ${FAKE_GEMINI}` })
+    logger.error('provider.failed', { message: `bad ${FAKE_KEY} and ${FAKE_KEY}` })
     const raw = readFileSync(join(dir, 'server.log'), 'utf8')
     expect(raw).not.toContain('FAKEfake')
-    expect(raw).not.toContain(FAKE_GEMINI)
     expect(lines(dir)[0]?.message).toBe('bad [oculto] and [oculto]')
   })
 
@@ -50,7 +48,7 @@ describe('logging', () => {
     const logger = createLogger(dir, { now: () => NOW })
     logger.info('request', {
       apiKey: 'plain-1',
-      headers: { authorization: 'Bearer plain-2', 'x-api-key': 'plain-3', 'X-Goog-Api-Key': 'plain-4' },
+      headers: { Authorization: 'Bearer plain-2', 'x-api-key': 'plain-3' },
       nested: [{ token: 'plain-5', code: 'plain-6' }],
       credential: Secret.from('plain-7'),
     })
@@ -58,7 +56,7 @@ describe('logging', () => {
     expect(raw).not.toMatch(/plain-\d/)
     expect(lines(dir)[0]).toMatchObject({
       apiKey: '[oculto]',
-      headers: { authorization: '[oculto]', 'x-api-key': '[oculto]', 'X-Goog-Api-Key': '[oculto]' },
+      headers: { Authorization: '[oculto]', 'x-api-key': '[oculto]' },
       nested: [{ token: '[oculto]', code: '[oculto]' }],
       credential: '[oculto]',
     })

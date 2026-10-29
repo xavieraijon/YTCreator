@@ -44,7 +44,7 @@ function Page({ route }: { route: Route }) {
   }
 }
 
-const providerOf = { suscripcion: 'claude_code', pago_por_uso: 'anthropic', gratis: 'gemini' } as const
+const providerOf = { suscripcion: 'claude_code', pago_por_uso: 'anthropic' } as const
 
 export function App() {
   const pathname = usePathname()

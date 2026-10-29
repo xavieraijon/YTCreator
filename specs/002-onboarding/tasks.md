@@ -14,6 +14,10 @@ description: "Lista de tareas de la feature 002: onboarding"
 **Organization**: las tareas se agrupan por historia de usuario para que cada una se pueda implementar y probar
 por separado.
 
+**Revisión 2026-10-29** (constitución 2.0.0): sin opción gratuita. T018, T082, T096, T109 y T114 quedan retiradas
+(conservan su número); T161–T163 son nuevas (aviso de FR-001b en el instalador y `README.md`). El código ya hecho
+se ha limpiado de la opción gratuita en esa misma revisión.
+
 ## Formato: `[ID] [P?] [Story] Descripción`
 
 - **[P]**: se puede hacer en paralelo (ficheros distintos, sin depender de tareas pendientes);
@@ -70,7 +74,7 @@ por separado.
 - [X] T015 [P] Spike S3 (lo ejecuta el creador): averiguar de dónde sale la identidad de la cuenta tras `setup-token` (salida, fichero en `CLAUDE_CONFIG_DIR` o llamada) para la huella; si no hay identidad, la huella es el SHA-256 del *token*. Anotar en `specs/002-onboarding/research.md`
 - [ ] T016 [P] Spike S4: comprobar si `countTokens` (gratuito) devuelve un error distinto con una clave sin saldo; si no, se mantiene solo el aviso previo de saldo de R12 (nunca una llamada de pago). Anotar en `specs/002-onboarding/research.md`
 - [X] T017 [P] Spike S5 (**bloquea la base de datos**): compilar con Vite SSR un `server.mjs` que importa `node:sqlite`, abrirlo con Node 24 sin flags y ejecutar una consulta; si falla, cambiar el empaquetado en `apps/server/vite.config.ts`. Anotar en `specs/002-onboarding/research.md`
-- [ ] T018 [P] Spike S6: elegir el modelo gratuito más ligero de Gemini para `comprobacion` y grabar la respuesta de región no soportada y de clave mala en `packages/ai/test/fixtures/gemini/`. Anotar en `specs/002-onboarding/research.md`
+- ~~T018~~ Retirada el 2026-10-29 (constitución 2.0.0: la v1 no incluye opción gratuita)
 
 ### Tipos del dominio y secretos (packages/core)
 
@@ -85,13 +89,13 @@ por separado.
 
 - [X] T025 Test de migraciones en `apps/server/test/db/migrate.test.ts` (SQLite en memoria): aplica `0001` una sola vez (segunda ejecución sin cambios); la fila de `onboarding_state` nace en `bienvenida` con `revision = 0`; falla insertar `id = 2` en tablas de fila única; falla una segunda `ai_connection` con `is_active = 1`; falla una `subscription_account` duplicada en `(provider_id, identity_fingerprint)`; fallan los `CHECK` de `spending_limits` (`per_operation_cents > 0`, `daily_cents >= per_operation_cents`, `monthly_cents >= daily_cents AND monthly_cents <= 100000`); falla un `step`, `kind` o `status` fuera de su lista
 - [X] T026 [P] Implementar `openDatabase(path | ':memory:')` con `node:sqlite`, `PRAGMA journal_mode = WAL`, `foreign_keys = ON` y `busy_timeout = 5000` en `apps/server/src/db/open.ts`
-- [X] T027 [P] Escribir `apps/server/src/db/migrations/0001_onboarding.sql` según `data-model.md`: `schema_migrations(version INTEGER PK, applied_at TEXT NOT NULL)`; `onboarding_state` con `id INTEGER PK CHECK (id = 1)`, `step` ∈ `bienvenida | elegir | conectar | limites | listo | completado`, `chosen_kind` NULL o ∈ `suscripcion | pago_por_uso | gratis`, `postponed INTEGER NOT NULL DEFAULT 0`, `completed_at`, `revision INTEGER NOT NULL DEFAULT 0`, `updated_at` y la fila inicial; `ai_connection` con `kind TEXT PK`, `provider_id`, `is_active INTEGER NOT NULL DEFAULT 0` + «Índice único parcial `WHERE is_active = 1`: como mucho una activa», `status` ∈ `sin_comprobar | conectada | sin_sesion | cupo_agotado | tiempo_agotado | contenido_filtrado | no_disponible`, `status_reason`, `resets_at`, `last_checked_at`, `secret_ref`, `secret_hint`, `created_at`, `updated_at`; `subscription_account` con `id TEXT PK`, `provider_id`, `label TEXT NOT NULL` (1–40 caracteres), `identity_fingerprint TEXT NOT NULL` + `UNIQUE (provider_id, identity_fingerprint)`, `position INTEGER NOT NULL`, `status`, `status_reason`, `resets_at`, `last_checked_at`, `last_call_at`, `secret_ref TEXT NOT NULL`, `secret_hint TEXT NOT NULL`, `created_at`; `spending_limits` con los tres `CHECK` literales y `accepted_at TEXT NOT NULL`; `app_settings(key TEXT PK, value TEXT NOT NULL)`
+- [X] T027 [P] Escribir `apps/server/src/db/migrations/0001_onboarding.sql` según `data-model.md`: `schema_migrations(version INTEGER PK, applied_at TEXT NOT NULL)`; `onboarding_state` con `id INTEGER PK CHECK (id = 1)`, `step` ∈ `bienvenida | elegir | conectar | limites | listo | completado`, `chosen_kind` NULL o ∈ `suscripcion | pago_por_uso`, `postponed INTEGER NOT NULL DEFAULT 0`, `completed_at`, `revision INTEGER NOT NULL DEFAULT 0`, `updated_at` y la fila inicial; `ai_connection` con `kind TEXT PK`, `provider_id`, `is_active INTEGER NOT NULL DEFAULT 0` + «Índice único parcial `WHERE is_active = 1`: como mucho una activa», `status` ∈ `sin_comprobar | conectada | sin_sesion | cupo_agotado | tiempo_agotado | contenido_filtrado | no_disponible`, `status_reason`, `resets_at`, `last_checked_at`, `secret_ref`, `secret_hint`, `created_at`, `updated_at`; `subscription_account` con `id TEXT PK`, `provider_id`, `label TEXT NOT NULL` (1–40 caracteres), `identity_fingerprint TEXT NOT NULL` + `UNIQUE (provider_id, identity_fingerprint)`, `position INTEGER NOT NULL`, `status`, `status_reason`, `resets_at`, `last_checked_at`, `last_call_at`, `secret_ref TEXT NOT NULL`, `secret_hint TEXT NOT NULL`, `created_at`; `spending_limits` con los tres `CHECK` literales y `accepted_at TEXT NOT NULL`; `app_settings(key TEXT PK, value TEXT NOT NULL)`
 - [X] T028 Implementar `migrate(db, migrations)` (ficheros `NNNN_*.sql` incrustados con `import.meta.glob('./migrations/*.sql', { query: '?raw', eager: true })`, cada uno en su transacción, anota `schema_migrations`) en `apps/server/src/db/migrate.ts` hasta que pase T025
 
 ### Servidor mínimo (apps/server/src)
 
 - [X] T029 [P] Test y `appPaths({platform, env, homedir})` en `apps/server/test/paths.test.ts` y `apps/server/src/paths.ts`: `APP_HOME` = `~/Library/Application Support/YTCreator` en macOS y `${XDG_DATA_HOME:-~/.local/share}/ytcreator` en Linux, con `runtime/`, `versions/`, `current`, `install.json`, `instance.json`, `secrets/`, `claude-accounts/`, `logs/`, `backups/`; carpeta de trabajo `~/YTCreator` con `ytcreator.db` y `.ytcreator`
-- [X] T030 [P] Test del registro y del redactor en `apps/server/test/logging.test.ts`: una línea JSON por evento con `ts`, `level`, `event`; sustituye por `[oculto]` `sk-ant-[A-Za-z0-9_-]{8,}`, `AIza[0-9A-Za-z_-]{35}` y el valor de los campos `apiKey`, `token`, `code`, `authorization`, `x-api-key`, `x-goog-api-key` (también anidados); un `Secret` se escribe como `[oculto]`; rota a los 5 MB y conserva 3 ficheros
+- [X] T030 [P] Test del registro y del redactor en `apps/server/test/logging.test.ts`: una línea JSON por evento con `ts`, `level`, `event`; sustituye por `[oculto]` `sk-ant-[A-Za-z0-9_-]{8,}` y el valor de los campos `apiKey`, `token`, `code`, `authorization`, `x-api-key` (también anidados); un `Secret` se escribe como `[oculto]`; rota a los 5 MB y conserva 3 ficheros
 - [X] T031 Implementar `createLogger(dir)` con redactor y rotación en `apps/server/src/logging.ts` hasta que pase T030
 - [X] T032 [P] Test de la guardia en `apps/server/test/http/guard.test.ts`: `403 {error: {code: 'prohibido'}}` con `Host` ajeno; con `Origin` ajeno o ausente en `POST`/`PUT`/`PATCH`/`DELETE`; con `Content-Type` distinto de `application/json` en mutaciones con cuerpo; acepta `127.0.0.1:<puerto>` y `localhost:<puerto>`; `GET /api/health` pasa sin `Origin`
 - [X] T033 Implementar el middleware de la guardia (R5) en `apps/server/src/http/guard.ts` hasta que pase T032
@@ -104,12 +108,12 @@ por separado.
 ### IA: perfiles, proveedor falso y batería de contrato (packages/ai)
 
 - [X] T039 [P] Escribir el prompt mínimo de comprobación (respuesta de una palabra) en `packages/knowledge/prompts/comprobacion/v1.md` y exportarlo como `{id: 'comprobacion', version: 1, text}` desde `packages/knowledge/src/index.ts`
-- [X] T040 [P] Implementar `AiProfile{model, timeoutMs, maxOutputTokens, effort?}` y `PROFILES` (claude-code: `claude-haiku-5-5`, 60 s, 16 tokens, esfuerzo bajo; anthropic: `claude-haiku-5-5`, 30 s, 16; gemini: modelo de S6, 30 s, 16; fake: `fake`, 1 s) y `resolveProfile(provider, use, settings)` que sustituye `timeoutMs` por `ai_timeout_seconds` si existe, en `packages/ai/src/profiles.ts`
+- [X] T040 [P] Implementar `AiProfile{model, timeoutMs, maxOutputTokens, effort?}` y `PROFILES` (claude-code: `claude-haiku-5-5`, 60 s, 16 tokens, esfuerzo bajo; anthropic: `claude-haiku-5-5`, 30 s, 16; fake: `fake`, 1 s) y `resolveProfile(provider, use, settings)` que sustituye `timeoutMs` por `ai_timeout_seconds` si existe, en `packages/ai/src/profiles.ts`
 - [X] T041 Escribir la batería de contrato C1–C13 de `contracts/ai-provider.md` como `runProviderContract(name, factory)` en `packages/ai/test/contract/battery.ts`; cada adaptador aporta los *stubs* que provocan cada caso (para C11: «primera salida inválida y segunda válida» y «dos salidas inválidas») y un contador de llamadas al transporte
 - [X] T042 [P] Implementar los escenarios del proveedor falso (`ok`, `<kind>:<reason>`, `cupo:<resetsAt>`, `cuentas:<s1>,<s2>,…`, `lento`, `login:codigo_malo`, `login:duplicada`) en `packages/ai/src/fake/scenarios.ts`
-- [X] T043 Implementar `createFakeProvider(scenario, credentials)` (acepta `sk-ant-api03-FAKE…`, `AIzaFAKE…` y `sk-ant-oat-FAKE…`) en `packages/ai/src/fake/fake-provider.ts` y `createFakeLogin(scenario)` (enlace fijo; código `ABCD-1234` → *token* `sk-ant-oat-FAKE…`; un inicio a la vez; caducidad a los 10 min) en `packages/ai/src/fake/fake-login.ts`
+- [X] T043 Implementar `createFakeProvider(scenario, credentials)` (acepta `sk-ant-api03-FAKE…` y `sk-ant-oat-FAKE…`) en `packages/ai/src/fake/fake-provider.ts` y `createFakeLogin(scenario)` (enlace fijo; código `ABCD-1234` → *token* `sk-ant-oat-FAKE…`; un inicio a la vez; caducidad a los 10 min) en `packages/ai/src/fake/fake-login.ts`
 - [X] T044 Ejecutar la batería contra el falso en `packages/ai/test/contract/fake.contract.test.ts` hasta que pase con T042–T043
-- [X] T045 [P] Test del registro en `packages/ai/test/registry.test.ts`: con `__YTC_ALLOW_FAKE_AI__ = false` la lista no contiene `fake` aunque exista `YTCREATOR_FAKE_AI`; con `true` y `YTCREATOR_FAKE_AI` definido, los tres descriptores reales usan el falso; hay exactamente un descriptor por `ConnectionKind`
+- [X] T045 [P] Test del registro en `packages/ai/test/registry.test.ts`: con `__YTC_ALLOW_FAKE_AI__ = false` la lista no contiene `fake` aunque exista `YTCREATOR_FAKE_AI`; con `true` y `YTCREATOR_FAKE_AI` definido, los dos descriptores reales usan el falso; hay exactamente un descriptor por `ConnectionKind`
 - [X] T046 Implementar `createRegistry({env})` en `packages/ai/src/registry.ts` con solo el descriptor falso por ahora (los reales llegan en US2), hasta que pase T045
 
 ### Arranque mínimo y base de la web
@@ -135,7 +139,8 @@ la línea continúa donde se quedó.
 
 **Independent Test**: en un `HOME` temporal con `curl`, `uname`, `script` y el instalador de Claude falsos, ejecutar
 `installer/install.sh` contra una release local: termina con código 0, la estructura de R3 existe, `ytcreator open`
-abre `http://127.0.0.1:<puerto>`, y cortar en cualquier paso y repetir deja el mismo árbol.
+abre `http://127.0.0.1:<puerto>`, y cortar en cualquier paso y repetir deja el mismo árbol. La salida empieza por el
+aviso de lo que hace falta (FR-001b), que también está en `README.md`.
 
 ### Tests para User Story 1 ⚠️
 
@@ -165,31 +170,34 @@ abre `http://127.0.0.1:<puerto>`, y cortar en cualquier paso y repetir deja el m
 - [X] T073 [US1] Ampliar `apps/web/test/glossary.test.ts` para extraer y revisar también los textos visibles de `installer/install.sh` (líneas `Paso N de 8 · …`, avisos y errores)
 - [X] T074 [US1] Añadir a `AppHeader` el botón «Cerrar YTCreator» con `Dialog` de confirmación de `@ytcreator/ui`, que llama a `POST /api/app/shutdown` y muestra la pantalla final «Puedes cerrar esta pestaña» en `apps/web/src/shell/AppHeader.tsx`
 - [X] T075 [US1] e2e en `apps/web/e2e/shutdown.spec.ts`: «Cerrar YTCreator» → confirmar → mensaje final y `GET /api/health` deja de responder
+- [ ] T161 [US1] Test en `installer/test/install.test.ts`: la salida del instalador empieza por el aviso de lo que hace falta (FR-001b), antes de `Paso 1 de 8`, sin pedir respuesta; también al reinstalar y al actualizar
+- [ ] T162 [US1] Añadir a `installer/install.sh` los textos `MSG_NEEDS_AI_1` y `MSG_NEEDS_AI_2` de `contracts/installer.md` y mostrarlos antes del paso 1 hasta que pase T161 (el test de glosario de T073 los revisa)
+- [ ] T163 [P] [US1] Crear `README.md` en la raíz: qué es YTCreator, la línea de instalación de `contracts/installer.md`, el aviso de FR-001b (suscripción de Claude con Claude Code o cuenta de Anthropic con saldo; sin IA gratuita) con un enlace a `claude.ai/pricing` y otro a `console.anthropic.com`, sistemas compatibles y cómo desinstalar a mano
 
-**Checkpoint**: la línea instala, abre y cierra la app; los tests 1–5 y 8 del instalador pasan en CI (ubuntu y
-macOS).
+**Checkpoint**: la línea instala, abre y cierra la app, y antes de empezar avisa de qué IA hace falta; los tests
+1–5, 8 y 10 del instalador pasan en CI (ubuntu y macOS).
 
 ---
 
 ## Phase 4: User Story 2 — Elegir y conectar la IA en el primer arranque (Priority: P1) 🎯 MVP
 
-**Goal**: en el primer arranque, un asistente guía al creador para elegir suscripción, pago por uso o gratis y
-conectarla sin tocar Terminal; la comprobación no cuesta nada; si sale y vuelve, sigue en el mismo paso; con
+**Goal**: en el primer arranque, un asistente guía al creador para elegir suscripción de Claude o pago por uso (API de Anthropic)
+y conectarla sin tocar Terminal; la comprobación no cuesta nada; si sale y vuelve, sigue en el mismo paso; con
 suscripción puede añadir varias cuentas.
 
 **Independent Test**: con `YTCREATOR_FAKE_AI=ok`, abrir la app nueva, recorrer `/bienvenida` → elegir suscripción →
-pegar `ABCD-1234` → «Funciona» → `/bienvenida/listo` → `/inicio`; repetir con gratis y una clave `AIzaFAKE…`; cerrar
-la pestaña a mitad y volver al mismo paso. El recorrido de pago por uso termina en US3 (límites).
+pegar `ABCD-1234` → «Funciona» → `/bienvenida/listo` → `/inicio`; cerrar la pestaña a mitad y volver al mismo paso. El recorrido
+de pago por uso termina en US3 (límites).
 
 ### Tests para User Story 2 ⚠️
 
 - [ ] T076 [P] [US2] Test de la máquina del asistente en `packages/core/test/onboarding/wizard.test.ts` con cada fila de la tabla de `data-model.md` (Estado del asistente): transiciones válidas; `continuar` en `conectar` sin conexión `conectada` → `validacion` con `sin_conexion`; `continuar` en `limites` sin límites → `sin_limites`; desde `listo` sin límites `volver` va a `conectar`; `aplazar` desde cualquier paso salvo `completado`; `retomar` conserva el paso; cada acción válida sube `revision`; `expectedRevision` distinto → `conflicto` con el estado actual; `pago_por_uso` nunca queda activa sin límites
-- [ ] T077 [P] [US2] Test de rutas del asistente en `apps/server/test/http/onboarding.test.ts`: `GET /api/onboarding`; `POST /api/onboarding/step` con cuerpo válido, inválido (`elegir` sin `kind` → 400), cada guarda (400 con `guard`), `409` con `current` al usar una revisión antigua, y activación de la conexión en la misma transacción al salir de `conectar` (suscripción, gratis)
-- [ ] T078 [P] [US2] Test de rutas de conexión en `apps/server/test/http/ai-connections.test.ts`: `GET /api/ai` (`AiOverview`, solo conexiones configuradas, cuentas en orden, sin secretos, `hint` de 4 caracteres); `PUT /api/ai/connections/gratis/credential` con clave buena → `conectada` y secreto guardado; con clave mala (`sin_sesion:clave_no_valida`) → `422 ia` y **ni fila ni secreto**; clave con espacios → se limpia; login → complete con `ABCD-1234` → `201 AccountView` y conexión `suscripcion` creada; código malo → `422` con `codigo_no_valido`; cuenta duplicada (`login:duplicada`) → `409 conflicto`; sexta cuenta → `400` con `guard: 'maximo_de_cuentas'`; un login nuevo cancela el anterior; ninguna respuesta contiene la credencial de prueba
+- [ ] T077 [P] [US2] Test de rutas del asistente en `apps/server/test/http/onboarding.test.ts`: `GET /api/onboarding`; `POST /api/onboarding/step` con cuerpo válido, inválido (`elegir` sin `kind` → 400), cada guarda (400 con `guard`), `409` con `current` al usar una revisión antigua, y activación de la conexión en la misma transacción al salir de `conectar` (suscripción)
+- [ ] T078 [P] [US2] Test de rutas de conexión en `apps/server/test/http/ai-connections.test.ts`: `GET /api/ai` (`AiOverview`, solo conexiones configuradas, cuentas en orden, sin secretos, `hint` de 4 caracteres); `PUT /api/ai/connections/pago_por_uso/credential` con clave buena → `conectada` y secreto guardado (la conexión queda inactiva hasta aceptar los límites de US3); con clave mala (`sin_sesion:clave_no_valida`) → `422 ia` y **ni fila ni secreto**; clave con espacios → se limpia; login → complete con `ABCD-1234` → `201 AccountView` y conexión `suscripcion` creada; código malo → `422` con `codigo_no_valido`; cuenta duplicada (`login:duplicada`) → `409 conflicto`; sexta cuenta → `400` con `guard: 'maximo_de_cuentas'`; un login nuevo cancela el anterior; ninguna respuesta contiene la credencial de prueba
 - [ ] T079 [P] [US2] Crear el ejecutable `packages/ai/test/fixtures/fake-claude` (Node) que reproduce las salidas grabadas en S1/S2 según variables de entorno (éxito, cada error, `setup-token` con enlace, código válido o no, cuelgue) y anota `argv` y entorno en un fichero para CC1/CC3
 - [ ] T080 [P] [US2] Ejecutar la batería C1–C13 y los casos CC1–CC6 contra `claude-code` con `fake-claude` en `packages/ai/test/contract/claude-code.contract.test.ts`: CC1 entorno sin `ANTHROPIC_API_KEY`, `ANTHROPIC_AUTH_TOKEN`, `ANTHROPIC_BASE_URL`, `CLAUDE_CODE_USE_*`, `CLAUDE_EFFORT`, `MAX_THINKING_TOKENS` y con `CLAUDE_CODE_OAUTH_TOKEN` y `CLAUDE_CONFIG_DIR` de la cuenta; CC2 binario ausente → `programa_no_instalado`; CC3 el *token* no está en `argv`; CC4 enlace → código → *token*; CC5 `codigo_no_valido`; CC6 caducidad → proceso terminado y `codigo_no_valido`
 - [ ] T081 [P] [US2] Ejecutar la batería contra `anthropic` con `fetch` inyectado en `packages/ai/test/contract/anthropic.contract.test.ts`, más AN1 (cliente con `maxRetries: 0`) y AN2 (429 con cabeceras de reinicio → `resetsAt`); `check()` solo usa `models.list()` (y `countTokens` si S4 lo confirma), nunca `messages.create`
-- [ ] T082 [P] [US2] Ejecutar la batería contra `gemini` con `fetch` inyectado en `packages/ai/test/contract/gemini.contract.test.ts`, más GE1 (la clave va en `x-goog-api-key` y nunca en la URL) y el caso de región no soportada → `no_disponible / region_no_soportada`
+- ~~T082~~ Retirada el 2026-10-29 (constitución 2.0.0: la v1 no incluye opción gratuita)
 - [ ] T083 [P] [US2] Test de almacenes del sistema en `apps/server/test/secrets/select.test.ts` y `apps/server/test/secrets/system-stores.test.ts` con `security` y `secret-tool` falsos en el `PATH`: el valor llega por la entrada estándar y nunca en `argv`; `select` elige keychain en macOS, secret-service si la prueba guardar-leer-borrar termina en ≤ 3 s, y si no `file`; anota `secret_store` y después siempre usa ese, devolviendo `llavero_no_disponible` si deja de funcionar; los errores se registran por código de salida, sin salida estándar
 
 ### Implementation para User Story 2
@@ -206,31 +214,31 @@ la pestaña a mitad y volver al mismo paso. El recorrido de pago por uso termina
 - [ ] T093 [US2] Implementar el adaptador `claude-code` (`check()` = `claude --version` + llamada mínima con el perfil `comprobacion`; `generate()` con validación Zod y **un reintento** si no valida; tiempo máximo con `AbortSignal`; no registra la salida del proceso) en `packages/ai/src/claude-code/adapter.ts`
 - [ ] T094 [US2] Implementar `createClaudeLogin(deps)` en `packages/ai/src/claude-code/login.ts`: `claude setup-token` bajo `script` (o el plan de S2), extrae el enlace, un solo inicio a la vez, caducidad a los 10 min con el proceso terminado, `complete(loginId, code: Secret)` escribe el código por la entrada estándar y devuelve `{token: Secret, identity}` según S3; hasta que pase T080
 - [ ] T095 [P] [US2] Implementar el adaptador `anthropic` (`new Anthropic({apiKey, maxRetries: 0, fetch})`, `check()` = `client.models.list()`, `generate()` con perfil, Zod y **un reintento** si no valida) y su clasificación de errores del SDK en `packages/ai/src/anthropic/adapter.ts` y `packages/ai/src/anthropic/classify.ts` hasta que pase T081
-- [ ] T096 [P] [US2] Implementar el adaptador `gemini` (`check()` = `GET https://generativelanguage.googleapis.com/v1beta/models` con cabecera `x-goog-api-key`; `generate()` con el modelo de S6, Zod y **un reintento** si no valida) y su clasificación en `packages/ai/src/gemini/adapter.ts` y `packages/ai/src/gemini/classify.ts` hasta que pase T082
-- [ ] T097 [US2] Añadir al registro los descriptores reales `claude-code` (suscripción, con `login`), `anthropic` (pago por uso) y `gemini` (gratis) en `packages/ai/src/registry.ts`, manteniendo T045 en verde
+- ~~T096~~ Retirada el 2026-10-29 (constitución 2.0.0: la v1 no incluye opción gratuita)
+- [ ] T097 [US2] Añadir al registro los descriptores reales `claude-code` (suscripción, con `login`), y `anthropic` (pago por uso) en `packages/ai/src/registry.ts`, manteniendo T045 en verde
 - [ ] T098 [US2] Implementar `apps/server/src/services/ai-connections.ts`: `overview()`; `saveKey(kind, key)` (comprueba sin coste y solo guarda secreto + fila si queda `conectada`; si no, `ApiError` `ia` con el fallo); `startLogin()` / `completeLogin(loginId, code, label?)` (huella SHA-256 del *token*, duplicada → `conflicto`, sexta → `maximo_de_cuentas`, guarda el *token* en `ytcreator:cuenta:<uuid>`, crea `claude-accounts/<id>/` con `0700`, crea la conexión `suscripcion` si no existía, comprueba la cuenta) / `cancelLogin()`; el registro de errores sigue `{provider, kind, reason, status?, errorType?}`
 - [ ] T099 [US2] Implementar `GET /api/onboarding` y `POST /api/onboarding/step` en `apps/server/src/http/routes/onboarding.ts` hasta que pase T077
-- [ ] T100 [US2] Implementar `GET /api/ai`, `POST /api/ai/subscription/login`, `POST /api/ai/subscription/login/:loginId/complete`, `DELETE /api/ai/subscription/login/:loginId` y `PUT /api/ai/connections/:kind/credential` (`kind` ∈ `pago_por_uso`, `gratis`) en `apps/server/src/http/routes/ai.ts` hasta que pase T078
+- [ ] T100 [US2] Implementar `GET /api/ai`, `POST /api/ai/subscription/login`, `POST /api/ai/subscription/login/:loginId/complete`, `DELETE /api/ai/subscription/login/:loginId` y `PUT /api/ai/connections/:kind/credential` (`kind` = `pago_por_uso`) en `apps/server/src/http/routes/ai.ts` hasta que pase T078
 - [ ] T101 [US2] Implementar la redirección del asistente en `apps/web/src/router.ts` y `apps/web/src/onboarding/useOnboarding.ts`: sin `completado` y sin `postponed` → paso del servidor; con `postponed` → `/conectar-ia`; recarga el estado en `visibilitychange` y tras un `409` (se coloca en `current` sin perder nada)
 - [ ] T102 [US2] Crear el armazón del asistente en `apps/web/src/screens/onboarding/WizardShell.tsx`: `Stepper` de `@ytcreator/ui`, acción principal única, «Volver», «Lo haré más tarde», y `AiWorking` durante una comprobación con «Cancelar» si pasa de 5 s (aborta la petición)
 - [ ] T103 [P] [US2] Crear `AiFailureMessage` (usa `ErrorMessage` de `@ytcreator/ui` y `failures.es.ts`: qué ha pasado, por qué y qué hacer; con `resetsAt`, la hora local) en `apps/web/src/shell/AiFailureMessage.tsx`
 - [ ] T104 [P] [US2] Añadir a `AppHeader` el indicador de IA (`Badge` con la opción activa y su estado, enlace a `/ajustes/ia`) leyendo `GET /api/ai` en `apps/web/src/shell/AppHeader.tsx`
-- [ ] T105 [P] [US2] Crear la pantalla `Welcome` (`/bienvenida`) en `apps/web/src/screens/onboarding/Welcome.tsx` según `contracts/ui-screens.md`
-- [ ] T106 [P] [US2] Crear la pantalla `ChooseAi` (`/bienvenida/elegir`, `RadioGroup` con las tres opciones, coste y requisitos de cada una, aviso de la nube de FR-030) en `apps/web/src/screens/onboarding/ChooseAi.tsx`
+- [ ] T105 [P] [US2] Crear la pantalla `Welcome` (`/bienvenida`), con la nota de lo que hace falta y sus enlaces (FR-018), en `apps/web/src/screens/onboarding/Welcome.tsx` según `contracts/ui-screens.md`
+- [ ] T106 [P] [US2] Crear la pantalla `ChooseAi` (`/bienvenida/elegir`, `RadioGroup` con las dos opciones, coste y requisitos de cada una, aviso de la nube de FR-030) en `apps/web/src/screens/onboarding/ChooseAi.tsx`
 - [ ] T107 [P] [US2] Crear `ConnectSubscription` (`/bienvenida/conectar` con suscripción): «Abrir la página de Claude» con el enlace del login, campo para pegar el código, lista de cuentas conectadas, «Añadir otra cuenta» (hasta 5), nota de S3 bajo la lista («no puede saber si dos accesos son de la misma cuenta»), y con `codigo_no_valido` ofrece un enlace nuevo, en `apps/web/src/screens/onboarding/ConnectSubscription.tsx`
 - [ ] T108 [P] [US2] Crear `ConnectApiKey` (`/bienvenida/conectar` con pago por uso): enlace a la consola de Anthropic, aviso previo de saldo con enlace a facturación (R12), campo de clave tipo contraseña, tras guardar solo el `hint`, en `apps/web/src/screens/onboarding/ConnectApiKey.tsx`
-- [ ] T109 [P] [US2] Crear `ConnectFree` (`/bienvenida/conectar` con gratis): pasos para obtener la clave de Gemini sin medio de pago, campo de clave, `hint` tras guardar, en `apps/web/src/screens/onboarding/ConnectFree.tsx`
+- ~~T109~~ Retirada el 2026-10-29 (constitución 2.0.0: la v1 no incluye opción gratuita)
 - [ ] T110 [P] [US2] Crear `Done` (`/bienvenida/listo`, resumen de la opción conectada y «Empezar») en `apps/web/src/screens/onboarding/Done.tsx`
 - [ ] T111 [P] [US2] Crear `ConnectAi` (`/conectar-ia`, explica qué no funcionará sin IA y ofrece «Conectar ahora» → `retomar`) en `apps/web/src/screens/connect-later/ConnectAi.tsx`
 - [ ] T112 [P] [US2] Crear `Home` (`/inicio`, `EmptyState` con «Crear mi primer canal» **habilitado** como acción principal; abre un `Dialog`: «Crear canales llegará en la próxima versión. Mientras, puedes revisar tu IA en Ajustes») en `apps/web/src/screens/home/Home.tsx`
-- [ ] T113 [P] [US2] e2e `apps/web/e2e/wizard-subscription.spec.ts` (`ok`): bienvenida → suscripción → enlace → `ABCD-1234` → «Funciona» → añadir segunda cuenta → listo → inicio, y el indicador de la cabecera muestra la suscripción; en inicio, «Crear mi primer canal» abre el diálogo de «llegará en la próxima versión» y se cierra con teclado
-- [ ] T114 [P] [US2] e2e `apps/web/e2e/wizard-free.spec.ts` (`ok`): recorrido gratis con `AIzaFAKE…` (con espacios al principio y al final) hasta inicio
+- [ ] T113 [P] [US2] e2e `apps/web/e2e/wizard-subscription.spec.ts` (`ok`): bienvenida con la nota de FR-018 y sus dos enlaces (a los planes de Claude y a la consola de Anthropic) → suscripción → enlace → `ABCD-1234` → «Funciona» → añadir segunda cuenta → listo → inicio, y el indicador de la cabecera muestra la suscripción; en inicio, «Crear mi primer canal» abre el diálogo de «llegará en la próxima versión» y se cierra con teclado
+- ~~T114~~ Retirada el 2026-10-29 (constitución 2.0.0: la v1 no incluye opción gratuita)
 - [ ] T115 [P] [US2] e2e `apps/web/e2e/wizard-resume.spec.ts`: cerrar la pestaña y reiniciar el servidor en cada paso; al volver aparece el mismo paso con lo ya hecho (FR-012)
 - [ ] T116 [P] [US2] e2e `apps/web/e2e/wizard-postpone.spec.ts`: «Lo haré más tarde» en cada paso → `/conectar-ia`; «Conectar ahora» vuelve al mismo paso
 - [ ] T117 [P] [US2] e2e `apps/web/e2e/two-tabs.spec.ts`: avanzar en una pestaña y pulsar en la otra → la segunda se coloca en el paso real sin error visible
 - [ ] T118 [P] [US2] e2e `apps/web/e2e/failures.spec.ts`: con `sin_sesion:clave_no_valida`, `sin_sesion:plan_sin_acceso`, `no_disponible:sin_conexion`, `cupo:<fecha>`, `login:codigo_malo`, `login:duplicada` y `lento`, cada fallo muestra su mensaje y su acción (no «clave no válida» cuando no hay conexión), y `lento` ofrece «Cancelar» a los 5 s (SC-007)
 
-**Checkpoint**: MVP completo (US1 + US2). Se instala y se conecta por suscripción o gratis sin Terminal. El pago por
+**Checkpoint**: MVP completo (US1 + US2). Se instala y se conecta por suscripción sin Terminal. El pago por
 uso guarda la clave, pero solo se activa al terminar US3.
 
 ---
@@ -257,7 +265,7 @@ propuestos (0,50 €, 3,00 €, 20,00 €), probar valores inválidos, aceptar y
 - [ ] T125 [US3] Crear la pantalla `Limits` (`/bienvenida/limites`, usa `LimitsForm`, «Aceptar estos límites» → `PUT` y `continuar`) en `apps/web/src/screens/onboarding/Limits.tsx`
 - [ ] T126 [US3] e2e `apps/web/e2e/wizard-api-key.spec.ts`: pago por uso → clave con espacios → aviso de saldo visible → límites propuestos → valores inválidos con su mensaje → aceptar → listo → inicio con pago por uso activo
 
-**Checkpoint**: los tres recorridos del asistente funcionan de punta a punta.
+**Checkpoint**: los dos recorridos del asistente funcionan de punta a punta.
 
 ---
 
@@ -268,7 +276,7 @@ sin perder las demás, ordena y renombra cuentas, repara Claude Code, y con vari
 siguiente cuando una agota su cupo.
 
 **Independent Test**: con `YTCREATOR_FAKE_AI=cuentas:cupo,ok`, «Comprobar ahora» en suscripción → pasa a la segunda
-cuenta y lo avisa; cambiar a gratis y volver a suscripción sin reconectar; borrar la última cuenta desactiva la
+cuenta y lo avisa; cambiar a pago por uso y volver a suscripción sin reconectar; borrar la última cuenta desactiva la
 suscripción.
 
 ### Tests para User Story 4 ⚠️
@@ -286,10 +294,10 @@ suscripción.
 - [ ] T134 [US4] Crear `Settings` (`/ajustes`, `Tabs` «IA» | «General») en `apps/web/src/screens/settings/Settings.tsx`
 - [ ] T135 [US4] Crear `AiSettings` (`/ajustes/ia`): una `Card` por opción con estado real, última comprobación, «Comprobar ahora», «Usar esta opción», «Cambiar clave», «Quitar», límites (con `LimitsForm`) para pago por uso, `AiFailureMessage` con su acción, y aviso con `Toast` cuando hay `switched`, en `apps/web/src/screens/settings/AiSettings.tsx`
 - [ ] T136 [P] [US4] Crear `AccountList` (orden con botones subir/bajar accesibles por teclado, renombrar 1–40 caracteres, comprobar, quitar con `Dialog`, estado y `resetsAt` por cuenta, «Volver a conectar» en las cuentas con `sesion_caducada` (enlace → código, reutiliza la parte de código de `ConnectSubscription`; aviso «Entra con la misma cuenta de Claude»; con `409`, el texto de «acceso ya en otra fila» de `contracts/ui-screens.md`; nota de S3 bajo la lista), «Añadir otra cuenta») en `apps/web/src/screens/settings/AccountList.tsx`
-- [ ] T137 [US4] Crear la ruta `/ajustes/ia/cambiar/:kind` que reutiliza `ConnectSubscription`, `ConnectApiKey` o `ConnectFree` fuera del asistente, con la acción final «Usar esta opción» (`POST /api/ai/active`) y sin tocar `onboarding_state`, en `apps/web/src/screens/settings/ChangeAi.tsx`
+- [ ] T137 [US4] Crear la ruta `/ajustes/ia/cambiar/:kind` que reutiliza `ConnectSubscription` o `ConnectApiKey` fuera del asistente, con la acción final «Usar esta opción» (`POST /api/ai/active`) y sin tocar `onboarding_state`, en `apps/web/src/screens/settings/ChangeAi.tsx`
 - [ ] T138 [US4] Añadir «Reparar Claude Code» (visible con `programa_no_instalado`) con `ProgressBar` y consulta de `GET /api/ai/repair-claude-code` cada 2 s mientras está `en_curso` en `apps/web/src/screens/settings/AiSettings.tsx`
 - [ ] T139 [P] [US4] e2e `apps/web/e2e/rotation.spec.ts` (`cuentas:cupo,ok`): «Comprobar ahora» → aviso de cambio de cuenta, primera cuenta con su hora de reinicio, segunda «Funciona» (SC-012)
-- [ ] T140 [P] [US4] e2e `apps/web/e2e/settings.spec.ts` (pestaña IA): cambiar de suscripción a gratis y volver sin reconectar; renombrar y reordenar cuentas; una cuenta con `sesion_caducada` muestra «Volver a conectar» y, tras pegar `ABCD-1234`, vuelve a «Funciona» sin duplicarse; quitar la última cuenta → la cabecera indica que no hay IA activa
+- [ ] T140 [P] [US4] e2e `apps/web/e2e/settings.spec.ts` (pestaña IA): cambiar de suscripción a pago por uso y volver sin reconectar; renombrar y reordenar cuentas; una cuenta con `sesion_caducada` muestra «Volver a conectar» y, tras pegar `ABCD-1234`, vuelve a «Funciona» sin duplicarse; quitar la última cuenta → la cabecera indica que no hay IA activa
 
 **Checkpoint**: la IA se gestiona entera desde Ajustes y la rotación funciona sin intervención.
 
@@ -329,13 +337,13 @@ arranca `v2` con todo intacto; con una migración que falla, código 60 y la bas
 
 **Purpose**: garantías transversales, publicación y validación final.
 
-- [ ] T152 [P] e2e de fuga de secretos en `apps/web/e2e/secrets-leak.spec.ts` según `contracts/secrets.md`: conectar las tres opciones con `sk-ant-oat-FAKE…`, `sk-ant-api03-FAKE…` y `AIzaFAKE…`, recorrer comprobación, fallo, borrado y cambio de opción, y buscar las tres cadenas (completas y sin los 4 últimos caracteres) en `APP_HOME/logs/`, todo `~/YTCreator` (base en binario incluida), cuerpos HTTP capturados, DOM y `localStorage` de cada pantalla, y `git ls-files`: cero apariciones (SC-006)
+- [ ] T152 [P] e2e de fuga de secretos en `apps/web/e2e/secrets-leak.spec.ts` según `contracts/secrets.md`: conectar las dos opciones con `sk-ant-oat-FAKE…` y `sk-ant-api03-FAKE…`, recorrer comprobación, fallo, borrado y cambio de opción, y buscar las dos cadenas (completas y sin los 4 últimos caracteres) en `APP_HOME/logs/`, todo `~/YTCreator` (base en binario incluida), cuerpos HTTP capturados, DOM y `localStorage` de cada pantalla, y `git ls-files`: cero apariciones (SC-006)
 - [ ] T153 [P] e2e de accesibilidad en `apps/web/e2e/a11y.spec.ts`: axe sin violaciones en cada pantalla de `contracts/ui-screens.md`, en tema claro y oscuro, a 375 px y con zoom al 200 %; recorrido completo del asistente solo con teclado y foco visible (SC-010)
 - [ ] T154 [P] Crear `.github/workflows/release.yml`: en etiquetas `v*`, compila con `mode=production` (sin proveedor falso), empaqueta `ytcreator-<v>.tar.gz` (`server.mjs`, `web/`, `bin/ytcreator`, `VERSION`), genera `SHA256SUMS`, sella `install.sh` con `installer/stamp.sh` y publica los tres como recursos de la release; comprueba que `server.mjs` no contiene el proveedor falso
 - [ ] T155 Pasada final del glosario: ejecutar `apps/web/test/glossary.test.ts` y revisar a mano todos los textos de `apps/web/src/strings/` e `installer/install.sh` contra el glosario de la constitución
 - [ ] T156 Ejecutar `fnm exec --using=24 -- pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:installer` y `pnpm test:e2e` completos y corregir lo que falle
 - [ ] T157 Recorrer `specs/002-onboarding/quickstart.md` §2–§4 y §7–§8 (desarrollo local, instalador en macOS y Linux con y sin escritorio, cortes en cada paso, actualización, dos pestañas) y anotar el resultado en `specs/002-onboarding/checklists/validation.md`
-- [ ] T158 Pruebas manuales con proveedores reales de `quickstart.md` §5 y §6 (las hace el creador con sus cuentas): suscripción, clave con y sin saldo, clave revocada, sin Wi-Fi, Gemini sin medio de pago, 0 € en la consola de Anthropic, y búsqueda de las claves reales; anotar en `specs/002-onboarding/checklists/validation.md`
+- [ ] T158 Pruebas manuales con proveedores reales de `quickstart.md` §5 y §6 (las hace el creador con sus cuentas): suscripción, clave con y sin saldo, clave revocada, sin Wi-Fi, 0 € en la consola de Anthropic, y búsqueda de las claves reales; anotar en `specs/002-onboarding/checklists/validation.md`
 - [ ] T159 Auditoría de novato de `quickstart.md` §9 (0 problemas graves, ≤ 3 medios) con una persona que no ha usado nunca la terminal; anotar hallazgos y correcciones en `specs/002-onboarding/checklists/validation.md`
 - [ ] T160 Actualizar el estado de la feature 002 y los comandos nuevos (`test:installer`, dev de server y web) en `CLAUDE.md`
 
@@ -348,8 +356,8 @@ arranca `v2` con todo intacto; con una migración que falla, código 60 y la bas
 - **Setup (Phase 1)**: sin dependencias.
 - **Foundational (Phase 2)**: depende de Setup y **bloquea** todas las historias. Dentro de la fase:
   - S5 (T017) bloquea T025–T028 (base de datos);
-  - S1 (T013) y S2/S3 (T014–T015) no bloquean la fase, pero sí T091–T094 de US2; S4 (T016) bloquea T095; S6
-    (T018) bloquea T040 (perfil de Gemini) y T096.
+  - S1 (T013) y S2/S3 (T014–T015) no bloquean la fase, pero sí T091–T094 de US2; S4 (T016) bloquea T095.
+    S6 (T018) está retirado.
 - **US1 (Phase 3)**: depende de Foundational. T011 (CI) va después de T072 porque necesita el servidor compilado,
   `installer/stamp.sh` y el lanzador.
 - **US2 (Phase 4)**: depende de Foundational. Es independiente de US1 en desarrollo (se prueba con `pnpm dev` y
@@ -380,7 +388,7 @@ Setup → Foundational ─┬─▶ US1 ─────────────�
 ### Foundational
 
 ```text
-T013 S1 · T014 S2 · T015 S3 · T016 S4 · T017 S5 · T018 S6        (spikes en paralelo)
+T013 S1 · T014 S2 · T015 S3 · T016 S4 · T017 S5                  (spikes en paralelo)
 T019 tipos del puerto · T020 test de Secret · T022 SecretStore · T023 registro del core
 T029 paths · T030 logging · T032 guardia · T036 file-store · T038 ajustes
 T048 cliente · T049 textos · T050 glosario · T051 cobertura
@@ -390,15 +398,15 @@ T048 cliente · T049 textos · T050 glosario · T051 cobertura
 
 ```text
 T054 helpers del instalador · T055 make-release · T057 instancia · T058 rutas de app · T059 CLI
-T061 health/app · T072 stamp.sh
+T061 health/app · T072 stamp.sh · T163 README
 ```
 
 ### User Story 2
 
 ```text
-T076 wizard · T077 rutas del asistente · T078 rutas de conexión · T079 fake-claude · T081 anthropic · T082 gemini · T083 almacenes
+T076 wizard · T077 rutas del asistente · T078 rutas de conexión · T079 fake-claude · T081 anthropic · T083 almacenes
 T085 repo asistente · T086 repo conexiones · T087 repo cuentas · T088 keychain · T089 secret-service
-T091 command · T092 classify · T095 anthropic · T096 gemini
+T091 command · T092 classify · T095 anthropic
 T103–T112 pantallas y piezas de la cabecera
 T113–T118 e2e
 ```
@@ -431,8 +439,8 @@ T141 versión · T142 consulta · T143 rutas · T148 UpdateNotice · T149 Genera
 2. Phase 2 Foundational, con los spikes cerrados y anotados (S2 es el más arriesgado: si falla, parar y decidir con
    el creador antes de seguir con la suscripción).
 3. Phase 3 US1: la línea instala, abre y cierra la app.
-4. Phase 4 US2: el asistente conecta suscripción o gratis.
-5. **Parar y validar**: los recorridos de suscripción y gratis de punta a punta; el de pago por uso se completa en US3.
+4. Phase 4 US2: el asistente conecta la suscripción.
+5. **Parar y validar**: el recorrido de suscripción de punta a punta; el de pago por uso se completa en US3.
 6. Enseñarlo al creador para su aprobación.
 
 ### Entrega incremental

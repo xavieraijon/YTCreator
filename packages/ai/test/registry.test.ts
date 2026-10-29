@@ -19,7 +19,7 @@ describe('createRegistry', () => {
 
   it('backs the three real descriptors with the fake when allowed and asked for', () => {
     const registry = createRegistry({ env: { YTCREATOR_FAKE_AI: 'ok' }, allowFake: true })
-    expect(registry.map((d) => d.id).sort()).toEqual(['anthropic', 'claude-code', 'gemini'])
+    expect(registry.map((d) => d.id).sort()).toEqual(['anthropic', 'claude-code'])
     for (const descriptor of registry) {
       expect(descriptor.create(Secret.from('sk-ant-api03-FAKE-0123456789'), deps).id).toBe('fake')
     }

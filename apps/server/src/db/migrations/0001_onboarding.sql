@@ -3,7 +3,7 @@
 CREATE TABLE onboarding_state (
   id INTEGER PRIMARY KEY CHECK (id = 1),
   step TEXT NOT NULL CHECK (step IN ('bienvenida', 'elegir', 'conectar', 'limites', 'listo', 'completado')),
-  chosen_kind TEXT CHECK (chosen_kind IS NULL OR chosen_kind IN ('suscripcion', 'pago_por_uso', 'gratis')),
+  chosen_kind TEXT CHECK (chosen_kind IS NULL OR chosen_kind IN ('suscripcion', 'pago_por_uso')),
   postponed INTEGER NOT NULL DEFAULT 0 CHECK (postponed IN (0, 1)),
   completed_at TEXT,
   revision INTEGER NOT NULL DEFAULT 0,
@@ -14,7 +14,7 @@ INSERT INTO onboarding_state (id, step, updated_at)
 VALUES (1, 'bienvenida', strftime('%Y-%m-%dT%H:%M:%fZ', 'now'));
 
 CREATE TABLE ai_connection (
-  kind TEXT PRIMARY KEY CHECK (kind IN ('suscripcion', 'pago_por_uso', 'gratis')),
+  kind TEXT PRIMARY KEY CHECK (kind IN ('suscripcion', 'pago_por_uso')),
   provider_id TEXT NOT NULL,
   is_active INTEGER NOT NULL DEFAULT 0 CHECK (is_active IN (0, 1)),
   status TEXT NOT NULL CHECK (status IN ('sin_comprobar', 'conectada', 'sin_sesion', 'cupo_agotado',

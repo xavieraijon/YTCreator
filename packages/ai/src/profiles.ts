@@ -1,6 +1,6 @@
 import type { AiUse } from '@ytcreator/core'
 
-export type ProviderId = 'claude-code' | 'anthropic' | 'gemini' | 'fake'
+export type ProviderId = 'claude-code' | 'anthropic' | 'fake'
 
 export interface AiProfile {
   model: string
@@ -13,8 +13,6 @@ export interface AiProfile {
 export const PROFILES: Record<ProviderId, Record<AiUse, AiProfile>> = {
   'claude-code': { comprobacion: { model: 'claude-haiku-5-5', timeoutMs: 60_000, maxOutputTokens: 16, effort: 'low' } },
   anthropic: { comprobacion: { model: 'claude-haiku-5-5', timeoutMs: 30_000, maxOutputTokens: 16 } },
-  // Provisional until spike S6 confirms the lightest model of the free tier.
-  gemini: { comprobacion: { model: 'gemini-flash-lite-latest', timeoutMs: 30_000, maxOutputTokens: 16 } },
   fake: { comprobacion: { model: 'fake', timeoutMs: 1_000, maxOutputTokens: 16 } },
 }
 

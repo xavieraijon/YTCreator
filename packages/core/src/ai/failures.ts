@@ -4,13 +4,7 @@ export const FAILURE_REASONS = {
   cupo_agotado: ['sin_saldo', 'limite_de_uso'],
   tiempo_agotado: ['respuesta_lenta'],
   contenido_filtrado: ['rechazo_del_modelo'],
-  no_disponible: [
-    'sin_conexion',
-    'servicio_caido',
-    'programa_no_instalado',
-    'llavero_no_disponible',
-    'region_no_soportada',
-  ],
+  no_disponible: ['sin_conexion', 'servicio_caido', 'programa_no_instalado', 'llavero_no_disponible'],
 } as const
 
 export type FailureKind = keyof typeof FAILURE_REASONS

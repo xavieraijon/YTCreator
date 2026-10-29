@@ -55,7 +55,7 @@ describe('fake provider', () => {
 
   it('lento answers tiempo_agotado when aborted', async () => {
     const controller = new AbortController()
-    const pending = createFakeProvider(parseScenario('lento'), Secret.from('AIzaFAKE-0123456789'), {
+    const pending = createFakeProvider(parseScenario('lento'), Secret.from('sk-ant-api03-FAKE-0123456789'), {
       ...deps,
       aiTimeoutSeconds: 300,
     }).check(controller.signal)

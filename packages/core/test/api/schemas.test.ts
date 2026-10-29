@@ -5,10 +5,12 @@ import { Secret } from '../../src/secrets/secret.ts'
 describe('api schemas', () => {
   it('requires kind with elegir and drops it otherwise', () => {
     expect(stepBodySchema.safeParse({ expectedRevision: 0, action: 'elegir' }).success).toBe(false)
-    expect(stepBodySchema.parse({ expectedRevision: 0, action: 'elegir', kind: 'gratis' })).toMatchObject({
-      kind: 'gratis',
+    expect(stepBodySchema.parse({ expectedRevision: 0, action: 'elegir', kind: 'pago_por_uso' })).toMatchObject({
+      kind: 'pago_por_uso',
     })
-    expect(stepBodySchema.parse({ expectedRevision: 1, action: 'continuar', kind: 'gratis' }).kind).toBeUndefined()
+    expect(
+      stepBodySchema.parse({ expectedRevision: 1, action: 'continuar', kind: 'pago_por_uso' }).kind,
+    ).toBeUndefined()
   })
 
   it('rejects a reason that does not belong to its kind', () => {
@@ -17,10 +19,10 @@ describe('api schemas', () => {
   })
 
   it('turns a credential into a trimmed Secret and rejects a blank one', () => {
-    const { key } = credentialBodySchema.parse({ key: '  AIzaFAKEkey1234 \n' })
+    const { key } = credentialBodySchema.parse({ key: '  sk-ant-api03-FAKEkey1234 \n' })
     expect(key).toBeInstanceOf(Secret)
     expect(key.hint()).toBe('1234')
-    expect(JSON.stringify({ key })).not.toContain('AIza')
+    expect(JSON.stringify({ key })).not.toContain('sk-ant')
     expect(credentialBodySchema.safeParse({ key: '   ' }).success).toBe(false)
   })
 

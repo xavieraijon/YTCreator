@@ -75,8 +75,7 @@ interface Logger {
   | Patrón | Sustituye |
   |---|---|
   | `sk-ant-[A-Za-z0-9_-]{8,}` | claves de la API y *tokens* de suscripción |
-  | `AIza[0-9A-Za-z_-]{35}` | claves de Gemini |
-  | cualquier valor de un campo llamado `apiKey`, `token`, `code`, `authorization`, `x-api-key`, `x-goog-api-key` | por nombre |
+  | cualquier valor de un campo llamado `apiKey`, `token`, `code`, `authorization`, `x-api-key` | por nombre |
 
   Todo lo que encaja se sustituye por `[oculto]`;
 - los errores de los proveedores se registran como `{provider, kind, reason, status?, errorType?}`, nunca el cuerpo
@@ -87,9 +86,9 @@ interface Logger {
 
 `apps/web/e2e/secrets-leak.spec.ts`, con el servidor real y el proveedor falso:
 
-1. se conectan las tres opciones con credenciales de prueba reconocibles (`sk-ant-oat-FAKE…`,
-   `sk-ant-api03-FAKE…`, `AIzaFAKE…`) y se recorren comprobación, fallo, borrado y cambio de opción;
-2. se buscan las tres cadenas (completas y sin los 4 últimos caracteres) en:
+1. se conectan las dos opciones con credenciales de prueba reconocibles (`sk-ant-oat-FAKE…` y
+   `sk-ant-api03-FAKE…`) y se recorren comprobación, fallo, borrado y cambio de opción;
+2. se buscan las dos cadenas (completas y sin los 4 últimos caracteres) en:
    - todos los ficheros de `APP_HOME/logs/`;
    - todo `~/YTCreator` (incluida la base de datos, en binario);
    - el cuerpo de todas las respuestas HTTP capturadas por Playwright;

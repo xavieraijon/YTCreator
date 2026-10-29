@@ -20,7 +20,6 @@ interface Slot {
 const SLOTS: Slot[] = [
   { id: 'claude-code', connectionKind: 'suscripcion', billing: 'suscripcion', label: 'ai.provider.claude_code' },
   { id: 'anthropic', connectionKind: 'pago_por_uso', billing: 'por_uso', label: 'ai.provider.anthropic' },
-  { id: 'gemini', connectionKind: 'gratis', billing: 'gratis', label: 'ai.provider.gemini' },
 ]
 
 function fakeDescriptor(slot: Slot, scenario: FakeScenario, now: () => Date): ProviderDescriptor {

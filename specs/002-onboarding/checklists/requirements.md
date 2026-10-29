@@ -41,3 +41,6 @@
   con varias cuentas, y el diseño queda abierto a otras. La checklist queda completa.
 - Claude Code, Anthropic y los nombres de los fallos tipados aparecen porque los fija la constitución (principio IV);
   son decisiones de producto, no de implementación.
+- Iteración 4 (2026-10-29): el creador retira la opción gratuita (Gemini). Constitución 2.0.0. Se añaden FR-001b y
+  US1-8 (aviso en README e instalador), se reescriben FR-018, US2-7 y SC-005 (aviso en la bienvenida). Las
+  suscripciones de otros proveedores (primero Gemini) quedan para una feature posterior.

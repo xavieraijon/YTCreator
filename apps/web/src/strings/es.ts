@@ -17,7 +17,6 @@ export const es = {
     provider: {
       claude_code: 'Tu suscripción de Claude',
       anthropic: 'Pago por uso de Anthropic',
-      gemini: 'Gemini gratis',
     },
   },
 
@@ -45,6 +44,10 @@ export const es = {
     title: 'Te damos la bienvenida a YTCreator',
     intro: 'YTCreator te acompaña desde la idea hasta el vídeo listo para publicar.',
     next: 'Vamos a conectar una IA. Son unos minutos.',
+    needs:
+      'Necesitas una suscripción de Claude o una cuenta de Anthropic con saldo. YTCreator no incluye una IA gratuita.',
+    subscriptionLink: 'Ver las suscripciones de Claude',
+    apiLink: 'Crear una cuenta de Anthropic',
     start: 'Empezar',
   },
 
@@ -63,11 +66,6 @@ export const es = {
       pago_por_uso: {
         title: 'Pagar solo lo que uses',
         body: 'Con una clave de Anthropic. Pagas por cada uso, con límites que tú pones.',
-      },
-      gratis: {
-        title: 'Probar gratis',
-        body: 'Con Gemini de Google. Resultados más modestos y uso limitado.',
-        free: 'Gratis',
       },
     },
   },
@@ -104,15 +102,6 @@ export const es = {
     balanceLink: 'Ver mi saldo',
   },
 
-  connectFree: {
-    title: 'Conecta la opción gratuita',
-    why: 'La clave es como una contraseña que deja a YTCreator usar Gemini. Se guarda solo en tu ordenador.',
-    getKey: 'Conseguir mi clave gratis',
-    modest: 'Los resultados son más modestos y el uso diario es limitado.',
-    dataUse: 'Con la opción gratuita, Google puede usar lo que envíes para mejorar sus productos.',
-  },
-
-  // Shared by ConnectApiKey and ConnectFree.
   keyForm: {
     label: 'Tu clave',
     show: 'Mostrar la clave',

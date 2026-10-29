@@ -6,7 +6,7 @@ import { failuresEs } from '../src/strings/failures.es.ts'
 
 // The creator has to know which service each option uses (contracts/ui-screens.md), so the web may name the
 // three brands of this feature. Model names stay forbidden (principle I).
-const ALLOWED_BRANDS = ['Claude', 'Anthropic', 'Gemini']
+const ALLOWED_BRANDS = ['Claude', 'Anthropic']
 const MODEL_NAMES = ['Sonnet', 'Opus', 'Haiku', 'Flash']
 const webTerms = [...forbiddenTerms.filter((term) => !ALLOWED_BRANDS.includes(term)), ...MODEL_NAMES]
 

@@ -7,7 +7,8 @@
 **Status**: Draft
 
 **Input**: User description: "Feature 002 onboarding: instalación de YTCreator y elección de la IA (Claude Code CLI con
-la suscripción del creador, API de Anthropic y una opción gratuita)."
+la suscripción del creador, API de Anthropic y una opción gratuita)." Revisado el 2026-10-29: sin opción gratuita
+(ver Clarifications).
 
 ## Clarifications
 
@@ -16,7 +17,7 @@ la suscripción del creador, API de Anthropic y una opción gratuita)."
 - Q: ¿Qué sistemas soporta la v1 en local? → A: macOS y Linux. Windows queda fuera de esta feature.
 - Q: ¿La instalación en servidor entra en esta feature? → A: No. Va a una feature propia posterior; la 002 es solo
   local.
-- Q: ¿Cuál es la opción gratuita? → A: Gemini con su nivel gratuito.
+- ~~Q: ¿Cuál es la opción gratuita? → A: Gemini con su nivel gratuito.~~ Sustituida el 2026-10-29 (ver abajo).
 - Matiz del creador: la IA **por defecto** es la suscripción de Claude, pero puede ser cualquier suscripción que el
   creador ya tenga, al estilo de as-video-studio: el inicio de sesión se hace desde la propia app (sin terminal), se
   pueden tener varias cuentas en orden y se ve la salud de cada una.
@@ -31,13 +32,23 @@ la suscripción del creador, API de Anthropic y una opción gratuita)."
   enviar ningún dato del creador, y muestra un aviso discreto con la forma de actualizar. Viene activada y se puede
   desactivar en Ajustes. Nunca se actualiza sola.
 
+### Session 2026-10-29
+
+- Decisión del creador: **no hay opción gratuita**. Se da por hecho que todo creador tiene una suscripción de IA o una
+  cuenta de pago por uso. La v1 ofrece dos opciones: la suscripción de Claude (por defecto) y la API de Anthropic.
+  Constitución enmendada a 2.0.0 (principios III y IV).
+- Q: ¿Dónde se avisa de que hace falta una suscripción o saldo? → A: En la portada del proyecto (README), al empezar
+  el instalador y en la bienvenida del asistente.
+- Q: ¿Entran suscripciones de otros proveedores? → A: No en esta feature. Irán en una feature posterior; la primera,
+  Gemini (Google AI Pro). El diseño ya lo permite (FR-015).
+
 ## Contexto
 
 Es la primera experiencia del creador con YTCreator y la puerta de todo lo demás: sin la app instalada y sin una IA que
 responda, ninguna fase posterior (canal, nicho, ideas, guion…) puede funcionar.
 
 El objetivo es que **alguien que nunca ha abierto una terminal** pase de «no tengo nada» a «YTCreator está abierto y
-la IA me responde» en un solo recorrido, sin gastar dinero si no quiere, entendiendo qué ha elegido y por qué
+la IA me responde» en un solo recorrido, sin gastar nada más allá de lo que ya paga, entendiendo qué ha elegido y por qué
 (constitución, principios I, III, IV y VII).
 
 El recorrido tiene dos tramos:
@@ -83,20 +94,22 @@ abierta en el navegador. Cortar la conexión a mitad, volver a pegarla y comprob
    el navegador sin arrancar una segunda copia.
 7. **Given** YTCreator en marcha, **When** el creador elige «Cerrar YTCreator» en la app, **Then** la app se apaga y
    deja de ocupar recursos hasta que se vuelva a abrir.
+8. **Given** la portada del proyecto o el primer mensaje del instalador, **When** el creador los lee, **Then** sabe
+   antes de instalar nada que necesita una suscripción de Claude que incluya Claude Code o una cuenta de Anthropic
+   con saldo.
 
 ---
 
 ### User Story 2 - Elegir y conectar la IA en el primer arranque (Priority: P1)
 
 La primera vez que se abre la app, aparece un asistente. La bienvenida explica en una frase qué hace YTCreator. Luego
-presenta las formas de darle una IA, descritas por lo que le importan a una persona y no por su nombre técnico:
+recuerda qué hace falta (una suscripción de Claude o una cuenta de Anthropic con saldo) y presenta las formas de darle
+una IA, descritas por lo que le importan a una persona y no por su nombre técnico:
 
 - **Usar mi suscripción** (la opción **por defecto**, ya marcada): sin coste extra, usando una suscripción que el
   creador ya paga. En la v1 es la de Claude, con una o varias cuentas. Se etiqueta «usa tu suscripción, bajo tu
   responsabilidad».
 - **Pagar solo lo que uso**: con una clave de Anthropic.
-- **Gratis**: con el nivel gratuito de Gemini, para probar la app de punta a punta sin pagar nada, con resultados más
-  modestos.
 
 Cada opción dice qué necesitas, cuánto cuesta y a dónde viaja tu contenido. El creador elige y sigue los pasos para
 conectarla. Para la suscripción, **entra en su cuenta desde la propia app**, sin volver a la terminal: la app le da un
@@ -106,7 +119,7 @@ coste**. Si sale bien, lo celebra y sigue. Si sale mal, explica qué ha fallado 
 **Why this priority**: Es el principio IV hecho experiencia. Sin una IA conectada, YTCreator no aporta nada. Junto con
 la US1 forma el MVP de la feature.
 
-**Independent Test**: Con la app instalada y sin configurar, recorrer el asistente con cada una de las tres opciones
+**Independent Test**: Con la app instalada y sin configurar, recorrer el asistente con cada una de las dos opciones
 (contra un proveedor falso determinista en los tests automáticos y contra el real en la validación manual) y llegar a
 la pantalla de inicio con la IA marcada como «conectada».
 
@@ -128,8 +141,9 @@ la pantalla de inicio con la IA marcada como «conectada».
 6. **Given** una clave no válida, sin permiso o sin conexión, **When** la app la comprueba, **Then** el error dice
    cuál de esos casos es, qué hacer y ofrece un botón para hacerlo (p. ej. «Abrir la página de claves»). Antes de
    pegar la clave, la app avisa de que hace falta saldo en la cuenta de Anthropic, con un enlace para añadirlo.
-7. **Given** que el creador elige «Gratis», **When** completa el paso, **Then** puede usar la app de punta a punta sin
-   introducir ningún medio de pago. La app le explica en una frase cómo conseguir el acceso gratuito, con el enlace.
+7. **Given** la bienvenida del asistente, **When** el creador la lee, **Then** ve en una frase que necesita una
+   suscripción de Claude o una cuenta de Anthropic con saldo, con un enlace a cada una, y que YTCreator no ofrece
+   una opción gratuita.
 8. **Given** una IA conectada, **When** termina el asistente, **Then** el creador llega a la pantalla de inicio. Su
    única acción principal es «Crear mi primer canal» y un indicador discreto muestra qué IA está en uso.
 9. **Given** que el creador cierra la app a mitad del asistente, **When** la vuelve a abrir, **Then** el asistente
@@ -141,7 +155,7 @@ la pantalla de inicio con la IA marcada como «conectada».
 
 Si la IA elegida cobra por uso, el asistente incluye un paso que explica en una frase por qué conviene poner límites
 y propone unos por defecto (por operación, por día y por mes) en euros. El creador puede aceptarlos tal cual o
-cambiarlos. Si la opción elegida no cobra por uso (suscripción o gratis), el paso se sustituye por una nota que lo
+cambiarlos. Si la opción elegida no cobra por uso (la suscripción), el paso se sustituye por una nota que lo
 explica: «Con esta opción no pagas nada extra en YTCreator».
 
 **Why this priority**: El principio III exige límites y avisos, pero en esta feature la IA solo se usa para la
@@ -149,7 +163,7 @@ comprobación sin coste. Los límites cobran sentido en cuanto llegan las fases 
 fijados antes de que eso pase.
 
 **Independent Test**: Conectar la opción de pago por uso y comprobar que el asistente propone límites, que se
-guardan y que pueden cambiarse después desde Ajustes. Conectar la opción gratuita y comprobar que el paso se
+guardan y que pueden cambiarse después desde Ajustes. Conectar la suscripción y comprobar que el paso se
 sustituye por la nota.
 
 **Acceptance Scenarios**:
@@ -160,7 +174,7 @@ sustituye por la nota.
    en Ajustes.
 3. **Given** un límite introducido que no es válido (negativo, vacío o un límite diario mayor que el mensual),
    **When** el creador intenta seguir, **Then** se le explica el problema junto al campo y no se guarda.
-4. **Given** la opción de suscripción o la gratuita, **When** el asistente llegaría a los límites, **Then** muestra la
+4. **Given** la opción de suscripción, **When** el asistente llegaría a los límites, **Then** muestra la
    nota de «sin coste extra» y deja configurar límites desde Ajustes si el creador cambia de opción.
 
 ---
@@ -192,7 +206,7 @@ comprensible con su acción. Cambiar de opción en Ajustes y verificar que la nu
    volver a entrar en tu cuenta de Claude» con un botón para hacerlo.
 3. **Given** un cupo agotado sin otra cuenta disponible, **When** la app lo detecta, **Then** no reintenta sola:
    explica qué ha pasado, cuándo suele volver el cupo si se sabe y ofrece cambiar de opción.
-4. **Given** que el creador cambia de la opción gratuita a la de pago por uso, **When** termina el recorrido,
+4. **Given** que el creador cambia de la suscripción a la de pago por uso, **When** termina el recorrido,
    **Then** la nueva queda activa, se le piden los límites de gasto y sus datos siguen intactos.
 5. **Given** una clave ya guardada, **When** el creador vuelve a Ajustes → IA, **Then** solo ve una referencia
    parcial (p. ej. los últimos 4 caracteres) y puede sustituirla o borrarla, nunca leerla entera.
@@ -239,7 +253,7 @@ versión más nueva y comprobar que los datos y la conexión se conservan y que 
 - **Sin conexión durante el asistente:** la comprobación de la IA falla con el mensaje «no hay conexión a internet»,
   distinto de «la clave no vale».
 - **Suscripción de Claude sin Claude Code:** si la cuenta del creador no incluye Claude Code (p. ej. el plan
-  gratuito), se le dice en claro y se le ofrecen las otras opciones.
+  gratuito), se le dice en claro: necesita un plan que lo incluya o la opción de pago por uso.
 - **Claude Code no instalado:** el instalador lo deja instalado. Si falta igualmente al abrir la app (borrado a
   mano, instalación con fallo), la app lo detecta y ofrece repararlo con un botón.
 - **La misma cuenta añadida dos veces:** si el creador pega el mismo acceso dos veces, la app lo reconoce y no lo
@@ -248,8 +262,6 @@ versión más nueva y comprobar que los datos y la conexión se conservan y que 
   2026-10-28).
 - **Linux sin entorno gráfico:** si no se puede abrir el navegador solo, el instalador dice la dirección que hay que
   abrir.
-- **Opción gratuita sin cupo:** si el nivel gratuito se agota, la app no reintenta a ciegas. Explica el motivo y
-  ofrece esperar o cambiar de opción.
 - **Clave pegada con espacios o saltos de línea:** se limpian antes de comprobarla.
 - **Dos pestañas con el asistente abierto:** terminarlo en una no deja la otra en un estado incoherente. Al seguir en
   la otra, se pasa a la pantalla de inicio.
@@ -267,6 +279,9 @@ versión más nueva y comprobar que los datos y la conexión se conservan y que 
 
 - **FR-001**: La instalación local DEBE hacerse pegando **una sola línea** en la terminal, en **macOS y Linux**. En
   cualquier otro sistema, el instalador DEBE detenerse al principio con un mensaje claro.
+- **FR-001b**: La portada del proyecto (README) y el primer mensaje del instalador DEBEN decir, antes de instalar
+  nada, que YTCreator necesita una suscripción de Claude que incluya Claude Code o una cuenta de Anthropic con saldo,
+  y que no hay opción gratuita.
 - **FR-002**: El instalador DEBE mostrar en cada momento el paso actual, el total de pasos y qué hace cada uno, en
   lenguaje llano.
 - **FR-003**: El instalador DEBE ser **repetible y reanudable**: cada paso comprueba si ya está hecho y no lo repite.
@@ -322,9 +337,9 @@ versión más nueva y comprobar que los datos y la conexión se conservan y que 
   puede comprobar sin gastar: la app DEBE avisar **antes** de que hace falta saldo, con un enlace para añadirlo, y,
   si al usarla falta saldo, DEBE decirlo en la primera operación con coste. Si la comprobación gratuita permite
   detectarlo (spike S4), se avisa ya al conectar.
-- **FR-018**: DEBE existir la opción **gratuita**, con el nivel gratuito de Gemini, que permita recorrer la app de
-  punta a punta sin medio de pago. La app DEBE explicar cómo conseguir el acceso gratuito, con el enlace, y avisar de
-  que sus resultados son más modestos y su cupo, limitado.
+- **FR-018**: La bienvenida del asistente DEBE decir en una frase que hace falta una suscripción de Claude o una
+  cuenta de Anthropic con saldo, con un enlace a cada una, y que YTCreator no ofrece una opción gratuita. La v1 NO
+  DEBE incluir ninguna opción gratuita (constitución 2.0.0, principios III y IV).
 - **FR-019**: Toda conexión DEBE validarse con una **comprobación sin coste** antes de darse por buena. Su resultado
   se traduce a uno de los fallos tipados del principio IV o a «conectada».
 - **FR-020**: Al terminar el asistente, el creador DEBE llegar a la pantalla de inicio, con «Crear mi primer canal»
@@ -381,9 +396,9 @@ versión más nueva y comprobar que los datos y la conexión se conservan y que 
   fecha de la última actualización. Hay una por equipo.
 - **Estado del asistente (primer arranque)**: si el asistente se ha completado y, si no, en qué paso está y qué se ha
   hecho ya.
-- **Conexión de IA**: una opción configurada por el creador (suscripción, pago por uso o gratis). Atributos: tipo de
+- **Conexión de IA**: una opción configurada por el creador (suscripción o pago por uso). Atributos: tipo de
   opción, si es la activa, estado (conectada o uno de los fallos tipados) y fecha de la última comprobación. La de
-  pago por uso y la gratuita tienen una credencial, de la que solo se muestra una referencia parcial. La de
+  pago por uso tiene una credencial, de la que solo se muestra una referencia parcial. La de
   suscripción tiene una o varias cuentas.
 - **Cuenta de suscripción**: un inicio de sesión del creador en una suscripción. Atributos: proveedor, etiqueta
   legible, posición en el orden, último estado real (con la fecha de vuelta del cupo, si se conoce) y fecha de la
@@ -399,12 +414,13 @@ versión más nueva y comprobar que los datos y la conexión se conservan y que 
   termina con la app abierta en **15 minutos o menos**, sin que el creador tenga que escribir nada aparte de la línea
   de instalación y lo que se le pida explícitamente.
 - **SC-002**: Desde que se abre la app por primera vez, un creador novato conecta una IA y llega a la pantalla de
-  inicio en **5 minutos o menos** con cualquiera de las tres opciones (sin contar crear cuentas en servicios
+  inicio en **5 minutos o menos** con cualquiera de las dos opciones (sin contar crear cuentas en servicios
   externos).
 - **SC-003**: Cortar la instalación en cualquier paso y repetirla termina siempre en una instalación correcta, sin
   rehacer los pasos ya completados (comprobado interrumpiendo en cada paso).
-- **SC-004**: El recorrido completo, con cualquier opción, cuesta **0 €** al creador.
-- **SC-005**: El recorrido completo con la opción gratuita no pide en ningún momento un medio de pago.
+- **SC-004**: El recorrido completo, con cualquier opción, cuesta **0 €** al creador más allá de lo que ya paga.
+- **SC-005**: El creador sabe que necesita una suscripción o saldo antes de instalar (README e instalador) y lo vuelve
+  a ver en la bienvenida: el 100 % de los participantes de la auditoría de novato lo identifican sin ayuda.
 - **SC-006**: Ningún secreto aparece en registros, en el repositorio ni en la interfaz después de guardarse,
   comprobado por un test automático que busca las credenciales de prueba en todos esos sitios y en la carpeta de
   trabajo.
@@ -429,9 +445,12 @@ versión más nueva y comprobar que los datos y la conexión se conservan y que 
 - **Binarios de otras features:** la consulta de YouTube y la transcripción de audio se instalan con el mismo
   instalador, pero en las features que las necesitan (banco de ideas y subtítulos). Esta feature deja el instalador
   preparado para añadir pasos sin rehacerlo.
-- **Sin elección de modelo en la interfaz:** el creador elige una opción (suscripción, pago por uso o gratis), no un
+- **Sin elección de modelo en la interfaz:** el creador elige una opción (suscripción o pago por uso), no un
   modelo. La app fija el modelo según el uso, como pide el principio IV.
-- **Comprobación sin coste:** se da por hecho que las tres opciones permiten comprobar una credencial o sesión sin
+- **El creador ya tiene acceso a una IA:** se da por hecho que tiene una suscripción de Claude que incluye Claude
+  Code o una cuenta de Anthropic con saldo. YTCreator no ofrece una IA gratuita. Las suscripciones de otros
+  proveedores (la primera, Gemini con Google AI Pro) quedan para una feature posterior.
+- **Comprobación sin coste:** se da por hecho que las dos opciones permiten comprobar una credencial o sesión sin
   generar contenido facturable. Si alguna no lo permitiera, el plan DEBE proponer una alternativa que mantenga el
   coste en 0 € o avisar antes, como pide el principio III.
 - **Límites por defecto:** los importes por defecto los fija el plan, con valores prudentes para un creador que empieza

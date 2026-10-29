@@ -6,8 +6,8 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { createMemoryLogger } from '../../src/logging.ts'
 import { createFileStore } from '../../src/secrets/file-store.ts'
 
-const REF = 'ytcreator:gratis:gemini'
-const VALUE = 'AIzaFAKEvalue0000'
+const REF = 'ytcreator:pago_por_uso:anthropic'
+const VALUE = 'sk-ant-api03-FAKEvalue0000'
 
 const mode = (path: string) => statSync(path).mode & 0o777
 
