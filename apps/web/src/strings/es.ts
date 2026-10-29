@@ -118,12 +118,15 @@ export const es = {
     title: 'Pon tus límites de gasto',
     why: 'YTCreator nunca gastará más de lo que pongas aquí. Puedes cambiarlos cuando quieras.',
     perOperation: 'Por operación',
-    perOperationHelp: 'Lo máximo que puede costar una sola operación.',
+    perOperationHelp:
+      'Lo máximo que puede costar una sola operación. Si una fuese a costar más, YTCreator no la hace y te avisa.',
     daily: 'Por día',
-    dailyHelp: 'Lo máximo que puedes gastar en un día.',
+    dailyHelp: 'Lo máximo que puedes gastar en un día. Al llegar, YTCreator deja de usar la IA hasta el día siguiente.',
     monthly: 'Por mes',
-    monthlyHelp: 'Lo máximo que puedes gastar en un mes.',
+    monthlyHelp:
+      'Lo máximo que puedes gastar en un mes, hasta 1000 €. Al llegar, YTCreator deja de usar la IA hasta el mes siguiente.',
     euros: '€',
+    proposed: 'Te proponemos estos límites. Puedes aceptarlos tal cual o cambiarlos.',
     save: 'Guardar límites',
     saved: 'Límites guardados',
   },

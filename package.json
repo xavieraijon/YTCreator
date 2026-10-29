@@ -7,6 +7,7 @@
     "node": ">=24"
   },
   "scripts": {
+    "dev": "pnpm --parallel --filter @ytcreator/server --filter @ytcreator/web dev",
     "lint": "eslint . && stylelint \"**/*.css\"",
     "typecheck": "tsc -b",
     "test": "vitest run --project '!installer'",

@@ -3,12 +3,14 @@ import { readFileSync, statSync } from 'node:fs'
 import { extname, join, resolve, sep } from 'node:path'
 import type { Logger } from '@ytcreator/core'
 import { Hono } from 'hono'
+import type { LimitsRepo } from '../db/repos/limits.ts'
 import type { OnboardingRepo } from '../db/repos/onboarding.ts'
 import type { AiConnectionsService } from '../services/ai-connections.ts'
 import { ApiError } from './errors.ts'
 import { guard } from './guard.ts'
 import { aiRoutes } from './routes/ai.ts'
 import { onboardingRoutes } from './routes/onboarding.ts'
+import { settingsRoutes } from './routes/settings.ts'
 
 export interface AppDeps {
   port: number
@@ -22,6 +24,7 @@ export interface AppDeps {
   // The feature routes; absent in tests that only exercise the shell of the app.
   onboarding?: OnboardingRepo
   ai?: AiConnectionsService
+  limits?: LimitsRepo
 }
 
 const MIME: Record<string, string> = {
@@ -82,6 +85,7 @@ export function createApp(deps: AppDeps) {
 
   if (deps.onboarding) app.route('/api/onboarding', onboardingRoutes(deps.onboarding))
   if (deps.ai) app.route('/api/ai', aiRoutes(deps.ai))
+  if (deps.limits) app.route('/api/settings', settingsRoutes({ limits: deps.limits }))
 
   // Fallback after every route, so routes registered later still match: static files, else the SPA.
   app.notFound((c) => {

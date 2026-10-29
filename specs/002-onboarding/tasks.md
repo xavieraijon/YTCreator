@@ -253,17 +253,17 @@ propuestos (0,50 €, 3,00 €, 20,00 €), probar valores inválidos, aceptar y
 
 ### Tests para User Story 3 ⚠️
 
-- [ ] T119 [P] [US3] Test de `validateLimits` en `packages/core/test/spending/limits.test.ts`: propuestos 50, 300 y 2000 céntimos; `debe_ser_positivo` si `perOperationCents <= 0`; `mayor_que_diario` si `dailyCents < perOperationCents`; `mayor_que_mensual` si `monthlyCents < dailyCents`; `demasiado_alto` si `monthlyCents > 100000`; varios errores a la vez, uno por campo; solo enteros
-- [ ] T120 [P] [US3] Test de rutas de límites en `apps/server/test/http/limits.test.ts`: `GET /api/settings/limits` sin límites → propuestos con `accepted: false`; `PUT` válido → `accepted: true` y `accepted_at`; `PUT` inválido → `400 validacion` con `fields`; tras aceptar, `continuar` desde `limites` activa `pago_por_uso`
+- [X] T119 [P] [US3] Test de `validateLimits` en `packages/core/test/spending/limits.test.ts`: propuestos 50, 300 y 2000 céntimos; `debe_ser_positivo` si `perOperationCents <= 0`; `mayor_que_diario` si `dailyCents < perOperationCents`; `mayor_que_mensual` si `monthlyCents < dailyCents`; `demasiado_alto` si `monthlyCents > 100000`; varios errores a la vez, uno por campo; solo enteros
+- [X] T120 [P] [US3] Test de rutas de límites en `apps/server/test/http/limits.test.ts`: `GET /api/settings/limits` sin límites → propuestos con `accepted: false`; `PUT` válido → `accepted: true` y `accepted_at`; `PUT` inválido → `400 validacion` con `fields`; tras aceptar, `continuar` desde `limites` activa `pago_por_uso`
 
 ### Implementation para User Story 3
 
-- [ ] T121 [US3] Implementar `PROPOSED_LIMITS` y `validateLimits` (repite los `CHECK`: «`per_operation_cents > 0`», «`daily_cents >= per_operation_cents`», «`monthly_cents >= daily_cents AND monthly_cents <= 100000`») en `packages/core/src/spending/limits.ts` hasta que pase T119
-- [ ] T122 [P] [US3] Implementar el repositorio de límites (`get`, `save` con `accepted_at = now`) en `apps/server/src/db/repos/limits.ts`
-- [ ] T123 [US3] Implementar `GET /api/settings/limits` y `PUT /api/settings/limits` en `apps/server/src/http/routes/settings.ts` hasta que pase T120
-- [ ] T124 [P] [US3] Crear `LimitsForm` (tres `TextField` en euros con coma decimal, conversión exacta a céntimos, error por campo desde `fields`, explicación de qué pasa al llegar a cada límite) en `apps/web/src/screens/settings/LimitsForm.tsx`
-- [ ] T125 [US3] Crear la pantalla `Limits` (`/bienvenida/limites`, usa `LimitsForm`, «Aceptar estos límites» → `PUT` y `continuar`) en `apps/web/src/screens/onboarding/Limits.tsx`
-- [ ] T126 [US3] e2e `apps/web/e2e/wizard-api-key.spec.ts`: pago por uso → clave con espacios → aviso de saldo visible → límites propuestos → valores inválidos con su mensaje → aceptar → listo → inicio con pago por uso activo
+- [X] T121 [US3] Implementar `PROPOSED_LIMITS` y `validateLimits` (repite los `CHECK`: «`per_operation_cents > 0`», «`daily_cents >= per_operation_cents`», «`monthly_cents >= daily_cents AND monthly_cents <= 100000`») en `packages/core/src/spending/limits.ts` hasta que pase T119
+- [X] T122 [P] [US3] Implementar el repositorio de límites (`get`, `save` con `accepted_at = now`) en `apps/server/src/db/repos/limits.ts`
+- [X] T123 [US3] Implementar `GET /api/settings/limits` y `PUT /api/settings/limits` en `apps/server/src/http/routes/settings.ts` hasta que pase T120
+- [X] T124 [P] [US3] Crear `LimitsForm` (tres `TextField` en euros con coma decimal, conversión exacta a céntimos, error por campo desde `fields`, explicación de qué pasa al llegar a cada límite) en `apps/web/src/screens/settings/LimitsForm.tsx`
+- [X] T125 [US3] Crear la pantalla `Limits` (`/bienvenida/limites`, usa `LimitsForm`, «Aceptar estos límites» → `PUT` y `continuar`) en `apps/web/src/screens/onboarding/Limits.tsx`
+- [X] T126 [US3] e2e `apps/web/e2e/wizard-api-key.spec.ts`: pago por uso → clave con espacios → aviso de saldo visible → límites propuestos → valores inválidos con su mensaje → aceptar → listo → inicio con pago por uso activo
 
 **Checkpoint**: los dos recorridos del asistente funcionan de punta a punta.
 

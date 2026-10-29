@@ -1,0 +1,4 @@
+.limits {
+  display: grid;
+  gap: var(--s-space-5);
+}

@@ -51,9 +51,11 @@ Los tests nunca llaman a una IA real: usan el proveedor falso (`YTCREATOR_FAKE_A
 ## 2. Desarrollo local
 
 ```sh
-fnm exec --using=24 -- pnpm --filter @ytcreator/server dev
-fnm exec --using=24 -- pnpm --filter @ytcreator/web dev
+fnm exec --using=24 -- pnpm dev
 ```
+
+Arranca a la vez el servidor y la web. Por separado: `pnpm --filter @ytcreator/server dev` y
+`pnpm --filter @ytcreator/web dev`.
 
 Con `YTCREATOR_FAKE_AI=ok` se recorre el asistente sin cuentas reales. Probar al menos `cuentas:cupo,ok`,
 `sin_sesion:clave_no_valida`, `no_disponible:sin_conexion` y `lento`.

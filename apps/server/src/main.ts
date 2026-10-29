@@ -8,6 +8,7 @@ import { migrate, MIGRATIONS } from './db/migrate.ts'
 import { openDatabase } from './db/open.ts'
 import { createAccountsRepo } from './db/repos/accounts.ts'
 import { createConnectionsRepo } from './db/repos/connections.ts'
+import { createLimitsRepo } from './db/repos/limits.ts'
 import { createOnboardingRepo } from './db/repos/onboarding.ts'
 import { createSettingsRepo } from './db/repos/settings.ts'
 import { createApp } from './http/app.ts'
@@ -117,6 +118,7 @@ export async function startServer({
     claudeCode: claudeCodeStatus(env, claudeBin, fake),
   })
   const onboarding = createOnboardingRepo(db, connections, now)
+  const limits = createLimitsRepo(db, now)
 
   const instanceId = randomUUID()
   // The guard needs the port, known only once listening: requests reach the app after that.
@@ -137,7 +139,7 @@ export async function startServer({
     throw new NoFreePortError()
   }
 
-  app = createApp({ port, version, instanceId, logger, webDir, onShutdown, onboarding, ai })
+  app = createApp({ port, version, instanceId, logger, webDir, onShutdown, onboarding, ai, limits })
   logger.info('server_started', { port, version })
 
   return {

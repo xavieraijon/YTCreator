@@ -7,6 +7,7 @@ import { migrate, MIGRATIONS } from '../src/db/migrate.ts'
 import { openDatabase } from '../src/db/open.ts'
 import { createAccountsRepo } from '../src/db/repos/accounts.ts'
 import { createConnectionsRepo } from '../src/db/repos/connections.ts'
+import { createLimitsRepo } from '../src/db/repos/limits.ts'
 import { createOnboardingRepo } from '../src/db/repos/onboarding.ts'
 import { createSettingsRepo } from '../src/db/repos/settings.ts'
 import { createApp } from '../src/http/app.ts'
@@ -47,6 +48,7 @@ export function makeTestApp({ fakeAi, now = () => new Date() }: TestAppOptions =
   const connections = createConnectionsRepo(db, now)
   const accounts = createAccountsRepo(db, now)
   const onboarding = createOnboardingRepo(db, connections, now)
+  const limits = createLimitsRepo(db, now)
   const claudeAccountsDir = join(dir, 'claude-accounts')
   const ai = createAiConnectionsService({
     connections,
@@ -68,6 +70,7 @@ export function makeTestApp({ fakeAi, now = () => new Date() }: TestAppOptions =
     webDir: null,
     onboarding,
     ai,
+    limits,
   })
 
   // A request as the local SPA sends it: local Host and Origin, JSON body.
@@ -88,6 +91,7 @@ export function makeTestApp({ fakeAi, now = () => new Date() }: TestAppOptions =
     connections,
     accounts,
     onboarding,
+    limits,
     claudeAccountsDir,
     request,
     now,
