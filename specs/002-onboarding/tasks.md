@@ -170,9 +170,9 @@ aviso de lo que hace falta (FR-001b), que también está en `README.md`.
 - [X] T073 [US1] Ampliar `apps/web/test/glossary.test.ts` para extraer y revisar también los textos visibles de `installer/install.sh` (líneas `Paso N de 8 · …`, avisos y errores)
 - [X] T074 [US1] Añadir a `AppHeader` el botón «Cerrar YTCreator» con `Dialog` de confirmación de `@ytcreator/ui`, que llama a `POST /api/app/shutdown` y muestra la pantalla final «Puedes cerrar esta pestaña» en `apps/web/src/shell/AppHeader.tsx`
 - [X] T075 [US1] e2e en `apps/web/e2e/shutdown.spec.ts`: «Cerrar YTCreator» → confirmar → mensaje final y `GET /api/health` deja de responder
-- [ ] T161 [US1] Test en `installer/test/install.test.ts`: la salida del instalador empieza por el aviso de lo que hace falta (FR-001b), antes de `Paso 1 de 8`, sin pedir respuesta; también al reinstalar y al actualizar
-- [ ] T162 [US1] Añadir a `installer/install.sh` los textos `MSG_NEEDS_AI_1` y `MSG_NEEDS_AI_2` de `contracts/installer.md` y mostrarlos antes del paso 1 hasta que pase T161 (el test de glosario de T073 los revisa)
-- [ ] T163 [P] [US1] Crear `README.md` en la raíz: qué es YTCreator, la línea de instalación de `contracts/installer.md`, el aviso de FR-001b (suscripción de Claude con Claude Code o cuenta de Anthropic con saldo; sin IA gratuita) con un enlace a `claude.ai/pricing` y otro a `console.anthropic.com`, sistemas compatibles y cómo desinstalar a mano
+- [X] T161 [US1] Test en `installer/test/install.test.ts`: la salida del instalador empieza por el aviso de lo que hace falta (FR-001b), antes de `Paso 1 de 8`, sin pedir respuesta; también al reinstalar y al actualizar
+- [X] T162 [US1] Añadir a `installer/install.sh` los textos `MSG_NEEDS_AI_1` y `MSG_NEEDS_AI_2` de `contracts/installer.md` y mostrarlos antes del paso 1 hasta que pase T161 (el test de glosario de T073 los revisa)
+- [X] T163 [P] [US1] Crear `README.md` en la raíz: qué es YTCreator, la línea de instalación de `contracts/installer.md`, el aviso de FR-001b (suscripción de Claude con Claude Code o cuenta de Anthropic con saldo; sin IA gratuita) con un enlace a `claude.ai/pricing` y otro a `console.anthropic.com`, sistemas compatibles y cómo desinstalar a mano
 
 **Checkpoint**: la línea instala, abre y cierra la app, y antes de empezar avisa de qué IA hace falta; los tests
 1–5, 8 y 10 del instalador pasan en CI (ubuntu y macOS).

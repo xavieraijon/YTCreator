@@ -89,6 +89,23 @@ describe('installer/install.sh', () => {
     expect(withoutLogs(h.tree())).toEqual(withoutLogs(baseline.tree()))
   })
 
+  // FR-001b: what the creator needs is said before step 1, on every run, without asking anything. The update run is
+  // covered with the update cases (T144).
+  it('starts with the AI requirements notice before step 1, on install and on reinstall', () => {
+    const h = home('darwin-arm64')
+    const { script, cleanup } = stampFor(h)
+    cleanups.push(cleanup)
+    const notice =
+      'YTCreator necesita una suscripción de Claude que incluya Claude Code (Pro o Max)\n' +
+      'o una cuenta de Anthropic con saldo. No incluye una IA gratuita.\n'
+
+    for (const run of [runInstaller(script, h), runInstaller(script, h)]) {
+      expect(run.code).toBe(0)
+      expect(run.stdout.startsWith(notice)).toBe(true)
+      expect(run.stdout.indexOf(notice)).toBeLessThan(run.stdout.indexOf('Paso 1 de 8'))
+    }
+  })
+
   it('stops with code 10 on an unsupported system', () => {
     const h = home('freebsd')
     const { script, cleanup } = stampFor(h)

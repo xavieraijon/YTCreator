@@ -22,6 +22,8 @@ SHA_NODE_LINUX_ARM64="__SHA_NODE_LINUX_ARM64__"
 : "${YTCREATOR_ASSUME_YES:=0}"
 
 # --- Visible texts (checked by the glossary test, T073: plain words, no jargon, addressed as «tú») ---------
+MSG_NEEDS_AI_1="YTCreator necesita una suscripción de Claude que incluya Claude Code (Pro o Max)"
+MSG_NEEDS_AI_2="o una cuenta de Anthropic con saldo. No incluye una IA gratuita."
 MSG_STEP1="Comprobando tu ordenador"
 MSG_STEP2="Preparando las carpetas"
 MSG_STEP3="Descargando el motor"
@@ -457,6 +459,9 @@ run_step() {
 }
 
 main() {
+  echo "$MSG_NEEDS_AI_1"
+  echo "$MSG_NEEDS_AI_2"
+  echo ""
   run_step 1 "$MSG_STEP1"
   run_step 2 "$MSG_STEP2"
   run_step 3 "$MSG_STEP3"
