@@ -105,6 +105,7 @@ export function createConnectionsRepo(db: DatabaseSync, now: () => Date = () => 
   const clearActive = db.prepare('UPDATE ai_connection SET is_active = 0, updated_at = ? WHERE is_active = 1')
   const markActive = db.prepare('UPDATE ai_connection SET is_active = 1, updated_at = ? WHERE kind = ?')
   const limitsExist = db.prepare('SELECT 1 FROM spending_limits WHERE id = 1')
+  const deleteOne = db.prepare('DELETE FROM ai_connection WHERE kind = ?')
 
   const get = (kind: ConnectionKind): ConnectionRow | null => {
     const row = selectOne.get(kind) as Row | undefined
@@ -160,6 +161,11 @@ export function createConnectionsRepo(db: DatabaseSync, now: () => Date = () => 
         clearActive.run(at)
         markActive.run(at, kind)
       })
+    },
+
+    // If it was the active one, none is active afterwards.
+    remove(kind: ConnectionKind): void {
+      deleteOne.run(kind)
     },
 
     hasLimits: (): boolean => limitsExist.get() !== undefined,

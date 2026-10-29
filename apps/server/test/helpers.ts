@@ -14,6 +14,7 @@ import { createApp } from '../src/http/app.ts'
 import { createMemoryLogger } from '../src/logging.ts'
 import { createFileStore } from '../src/secrets/file-store.ts'
 import { createAiConnectionsService } from '../src/services/ai-connections.ts'
+import { createClaudeRepair, type InstallerRunner } from '../src/services/claude-repair.ts'
 
 export const TEST_PORT = 4310
 export const LOCAL_HEADERS = { host: `127.0.0.1:${TEST_PORT}`, origin: `http://127.0.0.1:${TEST_PORT}` }
@@ -21,6 +22,7 @@ export const LOCAL_HEADERS = { host: `127.0.0.1:${TEST_PORT}`, origin: `http://1
 export interface TestAppOptions {
   fakeAi?: string // a YTCREATOR_FAKE_AI scenario
   now?: () => Date
+  installer?: InstallerRunner // the Claude Code installer; by default it ends well at once
 }
 
 const cleanups: (() => void)[] = []
@@ -32,7 +34,7 @@ afterEach(() => {
 const offline = (() => Promise.reject(new Error('Los tests no salen a la red'))) as typeof fetch
 
 // The whole server in memory: migrated SQLite, file store in a temporary folder, logger in memory.
-export function makeTestApp({ fakeAi, now = () => new Date() }: TestAppOptions = {}) {
+export function makeTestApp({ fakeAi, now = () => new Date(), installer }: TestAppOptions = {}) {
   const dir = mkdtempSync(join(tmpdir(), 'ytc-server-'))
   const db = openDatabase(':memory:')
   migrate(db, MIGRATIONS)
@@ -50,6 +52,7 @@ export function makeTestApp({ fakeAi, now = () => new Date() }: TestAppOptions =
   const onboarding = createOnboardingRepo(db, connections, now)
   const limits = createLimitsRepo(db, now)
   const claudeAccountsDir = join(dir, 'claude-accounts')
+  const repair = createClaudeRepair({ run: installer ?? (async () => 0), logger })
   const ai = createAiConnectionsService({
     connections,
     accounts,
@@ -61,6 +64,7 @@ export function makeTestApp({ fakeAi, now = () => new Date() }: TestAppOptions =
     fetch: offline,
     claudeAccountsDir,
     claudeCode: async () => ({ installed: true, version: '2.1.312' }),
+    repairState: repair.state,
   })
   const app = createApp({
     port: TEST_PORT,
@@ -70,6 +74,7 @@ export function makeTestApp({ fakeAi, now = () => new Date() }: TestAppOptions =
     webDir: null,
     onboarding,
     ai,
+    repair,
     limits,
   })
 
@@ -93,6 +98,7 @@ export function makeTestApp({ fakeAi, now = () => new Date() }: TestAppOptions =
     onboarding,
     limits,
     claudeAccountsDir,
+    repair,
     request,
     now,
   }

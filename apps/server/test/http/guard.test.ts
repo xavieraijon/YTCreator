@@ -4,17 +4,17 @@ import { guard } from '../../src/http/guard.ts'
 
 const PORT = 4310
 
-function makeApp() {
+function makeApp(devOrigin?: string) {
   const app = new Hono()
-  app.use('/api/*', guard(PORT))
+  app.use('/api/*', guard(PORT, devOrigin))
   app.get('/api/health', (c) => c.json({ app: 'ytcreator' }))
   app.post('/api/thing', (c) => c.json({ ok: true }))
   app.delete('/api/thing', (c) => c.json({ ok: true }))
   return app
 }
 
-function send(method: string, headers: Record<string, string>, body?: string) {
-  return makeApp().request(`http://127.0.0.1:${PORT}/api/${method === 'GET' ? 'health' : 'thing'}`, {
+function send(method: string, headers: Record<string, string>, body?: string, devOrigin?: string) {
+  return makeApp(devOrigin).request(`http://127.0.0.1:${PORT}/api/${method === 'GET' ? 'health' : 'thing'}`, {
     method,
     headers,
     body,
@@ -60,5 +60,12 @@ describe('guard', () => {
 
   it('lets GET /api/health through without Origin', async () => {
     expect((await send('GET', { host: LOCAL.host })).status).toBe(200)
+  })
+
+  it('accepts the dev server Origin only when the app passes one', async () => {
+    const devOrigin = 'http://127.0.0.1:5174'
+    const headers = { ...LOCAL, origin: devOrigin }
+    expect((await send('POST', headers, '{}', devOrigin)).status).toBe(200)
+    await expectForbidden(await send('POST', headers, '{}'))
   })
 })

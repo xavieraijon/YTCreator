@@ -2,7 +2,6 @@ import type { OnboardingState } from '@ytcreator/core/api'
 import { ErrorMessage } from '@ytcreator/ui'
 import { useEffect, useRef, useState } from 'react'
 import styles from './App.module.css'
-import { kindLabel } from './ai/kindLabel.ts'
 import { reloadAi } from './ai/useAiOverview.ts'
 import { reloadOnboarding, useOnboarding, useOnboardingSync } from './onboarding/useOnboarding.ts'
 import { navigate, onboardingRedirect, type Route, usePathname, useRoute } from './router.ts'
@@ -14,6 +13,8 @@ import { ConnectSubscription } from './screens/onboarding/ConnectSubscription.ts
 import { Done } from './screens/onboarding/Done.tsx'
 import { Limits } from './screens/onboarding/Limits.tsx'
 import { Welcome } from './screens/onboarding/Welcome.tsx'
+import { ChangeAi } from './screens/settings/ChangeAi.tsx'
+import { Settings } from './screens/settings/Settings.tsx'
 import { AppHeader } from './shell/AppHeader.tsx'
 import { errorText } from './shell/errorText.ts'
 import { Link } from './shell/Link.tsx'
@@ -53,10 +54,11 @@ function Page({ route, state }: { route: Route; state: OnboardingState | null })
       return <Home />
     case 'settings':
     case 'aiSettings':
+      return <Settings tab="ia" />
     case 'generalSettings':
-      return <Screen title={es.settings.title} />
+      return <Settings tab="general" />
     case 'switchAi':
-      return <Screen title={kindLabel(route.kind)} />
+      return <ChangeAi key={route.kind} kind={route.kind} />
     case 'notFound':
       return (
         <Screen title={es.app.notFoundTitle}>

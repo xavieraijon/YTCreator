@@ -9,9 +9,11 @@ function hasBody(headers: Headers): boolean {
 }
 
 // R5: Host stops DNS rebinding; Origin stops CSRF from other sites; JSON-only bodies force a preflight.
-export function guard(port: number): MiddlewareHandler {
+// `devOrigin`: in development the browser talks to Vite (apps/web/vite.config.ts), which proxies to this server
+// without rewriting Origin, so its own origin must be allowed too; absent in production, where Vite serves nothing.
+export function guard(port: number, devOrigin?: string): MiddlewareHandler {
   const hosts = new Set([`127.0.0.1:${port}`, `localhost:${port}`])
-  const origins = new Set([...hosts].map((host) => `http://${host}`))
+  const origins = new Set([...[...hosts].map((host) => `http://${host}`), ...(devOrigin ? [devOrigin] : [])])
 
   return async (c, next) => {
     const headers = c.req.raw.headers

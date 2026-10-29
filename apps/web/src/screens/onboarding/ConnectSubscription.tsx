@@ -1,18 +1,20 @@
 import { MAX_ACCOUNTS, type AiFailure, type ConnectionKind } from '@ytcreator/core'
 import { accountViewSchema, loginStartSchema, repairStateSchema } from '@ytcreator/core/api'
-import { Button, Card, ErrorMessage, format, TextField } from '@ytcreator/ui'
+import { Button, Card, ErrorMessage, format } from '@ytcreator/ui'
 import { useEffect, useRef, useState } from 'react'
 import { reloadAi, useAiOverview } from '../../ai/useAiOverview.ts'
 import { apiClient, ApiClientError } from '../../api/client.ts'
+import { openPendingTab } from '../../links.ts'
 import { AiFailureMessage } from '../../shell/AiFailureMessage.tsx'
 import { AiWorkStatus, useAiWork } from '../../shell/AiWork.tsx'
 import { errorText, failureOf, wasCancelled } from '../../shell/errorText.ts'
-import { ExternalLink } from '../../shell/ExternalLink.tsx'
 import { statusText } from '../../shell/statusText.ts'
 import { es } from '../../strings/es.ts'
 import type { FailureActionId } from '../../strings/failures.es.ts'
 import styles from './onboarding.module.css'
-import { useWizardStep, WizardShell } from './WizardShell.tsx'
+import { ConnectShell, type OutsideWizard } from './ConnectShell.tsx'
+import { LoginCodeForm } from './LoginCodeForm.tsx'
+import { useWizardStep } from './WizardShell.tsx'
 
 interface Login {
   readonly id: string
@@ -22,7 +24,13 @@ interface Login {
 const NOT_INSTALLED: AiFailure = { kind: 'no_disponible', reason: 'programa_no_instalado' }
 
 // FR-014..FR-016: the creator signs in on Claude's page and pastes the code back; never a password here.
-export function ConnectSubscription({ chosenKind }: { chosenKind: ConnectionKind | null }) {
+export function ConnectSubscription({
+  chosenKind,
+  outside,
+}: {
+  chosenKind: ConnectionKind | null
+  outside?: OutsideWizard
+}) {
   const overview = useAiOverview()
   const accounts = overview?.accounts ?? []
   const [adding, setAdding] = useState(false)
@@ -62,22 +70,18 @@ export function ConnectSubscription({ chosenKind }: { chosenKind: ConnectionKind
     } else setError(errorText(caught))
   }
 
-  // The tab is opened on the click itself, or the browser blocks it; it gets its address once the server has one.
   const openPage = async () => {
     clearMessages()
     setStarting(true)
-    const tab = window.open('about:blank', '_blank')
+    const tab = openPendingTab()
     try {
       const started = await apiClient.post('/api/ai/subscription/login', {}, loginStartSchema)
       openLogin.current = started.loginId
       setLogin({ id: started.loginId, url: started.url })
       setCode('')
-      if (tab) {
-        tab.opener = null
-        tab.location.href = started.url
-      }
+      tab.go(started.url)
     } catch (caught) {
-      tab?.close()
+      tab.close()
       show(caught)
     } finally {
       setStarting(false)
@@ -117,9 +121,11 @@ export function ConnectSubscription({ chosenKind }: { chosenKind: ConnectionKind
     }
   }
 
+  const back = () => (outside ? outside.back() : void step.send('volver'))
+
   const onFailureAction = (id: FailureActionId) => {
     if (id === 'pedir_enlace' || id === 'volver_a_conectar' || id === 'anadir_cuenta') void openPage()
-    else if (id === 'elegir_otra_opcion' || id === 'cambiar_de_opcion') void step.send('volver')
+    else if (id === 'elegir_otra_opcion' || id === 'cambiar_de_opcion') back()
     else if (id === 'reparar') void repair()
     else if (id === 'comprobar') void reloadAi()
   }
@@ -135,22 +141,21 @@ export function ConnectSubscription({ chosenKind }: { chosenKind: ConnectionKind
       ? { label: es.connectSubscription.connect, onClick: () => void connect(), loading: !!work }
       : showAccounts
         ? anyConnected
-          ? {
+          ? (outside?.finish ?? {
               label: es.connectSubscription.continue,
               onClick: () => void step.send('continuar'),
               loading: !!step.pending,
-            }
+            })
           : undefined
         : failure
           ? undefined
           : { label: es.connectSubscription.openPage, onClick: () => void openPage(), loading: starting }
 
   return (
-    <WizardShell
-      step="conectar"
+    <ConnectShell
       title={es.connectSubscription.title}
       chosenKind={chosenKind}
-      later
+      outside={outside}
       stepError={step.error}
       primary={primary}
     >
@@ -196,29 +201,14 @@ export function ConnectSubscription({ chosenKind }: { chosenKind: ConnectionKind
           )}
         </>
       ) : login ? (
-        <form
-          className={styles.stack}
-          onSubmit={(event) => {
-            event.preventDefault()
-            void connect()
-          }}
-        >
-          <TextField
-            label={es.connectSubscription.codeLabel}
-            autoComplete="off"
-            spellCheck={false}
-            value={code}
-            onChange={(event) => setCode(event.target.value)}
-          />
-          <div className={styles.links}>
-            <ExternalLink className={styles.link} href={login.url}>
-              {es.connectSubscription.openPage}
-            </ExternalLink>
-            <Button type="button" variant="ghost" onClick={() => void openPage()} loading={starting}>
-              {es.connectSubscription.newLink}
-            </Button>
-          </div>
-        </form>
+        <LoginCodeForm
+          url={login.url}
+          code={code}
+          onCodeChange={setCode}
+          onSubmit={() => void connect()}
+          onNewLink={() => void openPage()}
+          starting={starting}
+        />
       ) : (
         <ol className={styles.steps}>
           <li>{es.connectSubscription.steps.open}</li>
@@ -237,6 +227,6 @@ export function ConnectSubscription({ chosenKind }: { chosenKind: ConnectionKind
         />
       )}
       {error && <ErrorMessage live title={error} action={{ label: es.app.retry, onClick: clearMessages }} />}
-    </WizardShell>
+    </ConnectShell>
   )
 }

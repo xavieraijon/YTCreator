@@ -99,15 +99,23 @@ export function createAccountsRepo(db: DatabaseSync, now: () => Date = () => new
     'UPDATE subscription_account SET status = ?, status_reason = ?, resets_at = ?, last_checked_at = ? WHERE id = ?',
   )
   const setLastCall = db.prepare('UPDATE subscription_account SET last_call_at = ? WHERE id = ?')
+  const setLabel = db.prepare('UPDATE subscription_account SET label = ? WHERE id = ?')
+  const setPosition = db.prepare('UPDATE subscription_account SET position = ? WHERE id = ?')
+  const setCredential = db.prepare(
+    `UPDATE subscription_account SET identity_fingerprint = ?, secret_hint = ?, status = 'sin_comprobar',
+       status_reason = NULL, resets_at = NULL WHERE id = ?`,
+  )
+  const deleteOne = db.prepare('DELETE FROM subscription_account WHERE id = ?')
 
   const get = (id: string): AccountRow | null => {
     const row = selectOne.get(id) as Row | undefined
     return row ? fromRow(row) : null
   }
   const count = (providerId: string): number => (countAll.get(providerId) as { n: number }).n
+  const list = (providerId: string): AccountRow[] => (selectAll.all(providerId) as unknown as Row[]).map(fromRow)
 
   return {
-    list: (providerId: string): AccountRow[] => (selectAll.all(providerId) as unknown as Row[]).map(fromRow),
+    list,
     get,
     count,
     findByFingerprint(providerId: string, fingerprint: string): AccountRow | null {
@@ -142,6 +150,33 @@ export function createAccountsRepo(db: DatabaseSync, now: () => Date = () => new
 
     updateLastCall(id: string): void {
       setLastCall.run(now().toISOString(), id)
+    },
+
+    rename(id: string, label: string): AccountRow | null {
+      setLabel.run(label, id)
+      return get(id)
+    },
+
+    // `ids` must be every account of the provider exactly once (checked by the service).
+    reorder(providerId: string, ids: string[]): AccountRow[] {
+      inTransaction(db, () => ids.forEach((id, index) => setPosition.run(index + 1, id)))
+      return list(providerId)
+    },
+
+    // A new login of the same account: the secret_ref stays, the fingerprint and hint change.
+    replaceCredential(id: string, fingerprint: string, hint: string): AccountRow | null {
+      setCredential.run(fingerprint, hint, id)
+      return get(id)
+    },
+
+    // Positions are packed again to 1..n.
+    remove(id: string): void {
+      inTransaction(db, () => {
+        const account = get(id)
+        if (!account) return
+        deleteOne.run(id)
+        list(account.providerId).forEach((a, index) => setPosition.run(index + 1, a.id))
+      })
     },
   }
 }

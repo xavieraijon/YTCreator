@@ -6,6 +6,7 @@ import { Hono } from 'hono'
 import type { LimitsRepo } from '../db/repos/limits.ts'
 import type { OnboardingRepo } from '../db/repos/onboarding.ts'
 import type { AiConnectionsService } from '../services/ai-connections.ts'
+import type { ClaudeRepair } from '../services/claude-repair.ts'
 import { ApiError } from './errors.ts'
 import { guard } from './guard.ts'
 import { aiRoutes } from './routes/ai.ts'
@@ -24,6 +25,7 @@ export interface AppDeps {
   // The feature routes; absent in tests that only exercise the shell of the app.
   onboarding?: OnboardingRepo
   ai?: AiConnectionsService
+  repair?: ClaudeRepair
   limits?: LimitsRepo
 }
 
@@ -73,7 +75,8 @@ export function createApp(deps: AppDeps) {
     c.header('X-Content-Type-Options', 'nosniff')
     c.header('Referrer-Policy', 'no-referrer')
   })
-  app.use('/api/*', guard(deps.port))
+  // The web dev server's own port (apps/web/vite.config.ts); only reachable when Vite serves the SPA (webDir null).
+  app.use('/api/*', guard(deps.port, deps.webDir === null ? 'http://127.0.0.1:5174' : undefined))
 
   app.get('/api/health', (c) => c.json({ app: 'ytcreator', version: deps.version, instanceId: deps.instanceId }))
 
@@ -84,7 +87,7 @@ export function createApp(deps: AppDeps) {
   })
 
   if (deps.onboarding) app.route('/api/onboarding', onboardingRoutes(deps.onboarding))
-  if (deps.ai) app.route('/api/ai', aiRoutes(deps.ai))
+  if (deps.ai) app.route('/api/ai', aiRoutes(deps.ai, deps.repair))
   if (deps.limits) app.route('/api/settings', settingsRoutes({ limits: deps.limits }))
 
   // Fallback after every route, so routes registered later still match: static files, else the SPA.

@@ -13,10 +13,12 @@ import { ExternalLink } from '../../shell/ExternalLink.tsx'
 import { es } from '../../strings/es.ts'
 import type { FailureActionId } from '../../strings/failures.es.ts'
 import styles from './onboarding.module.css'
-import { useWizardStep, WizardShell } from './WizardShell.tsx'
+import { ConnectShell, type OutsideWizard } from './ConnectShell.tsx'
+import { useWizardStep } from './WizardShell.tsx'
 
 // FR-017, FR-019: the key is checked for free before it is kept; afterwards only its last 4 characters come back.
-export function ConnectApiKey({ chosenKind }: { chosenKind: ConnectionKind | null }) {
+// Outside the wizard the form starts empty even with a key kept, so «Sustituir» can replace it.
+export function ConnectApiKey({ chosenKind, outside }: { chosenKind: ConnectionKind | null; outside?: OutsideWizard }) {
   const overview = useAiOverview()
   const stored = overview?.connections.find((c) => c.kind === 'pago_por_uso' && c.status === 'conectada')
   const [key, setKey] = useState('')
@@ -28,7 +30,7 @@ export function ConnectApiKey({ chosenKind }: { chosenKind: ConnectionKind | nul
   const field = useRef<HTMLInputElement>(null)
   const { work, run, cancel } = useAiWork()
   const step = useWizardStep()
-  const savedHint = hint ?? stored?.hint ?? null
+  const savedHint = hint ?? (outside ? null : (stored?.hint ?? null))
 
   const save = async () => {
     setFieldError(null)
@@ -52,21 +54,26 @@ export function ConnectApiKey({ chosenKind }: { chosenKind: ConnectionKind | nul
   }
 
   const onFailureAction = (id: FailureActionId) => {
-    if (id === 'elegir_otra_opcion' || id === 'cambiar_de_opcion') void step.send('volver')
-    else if (id === 'comprobar') void save()
+    if (id === 'elegir_otra_opcion' || id === 'cambiar_de_opcion') {
+      if (outside) outside.back()
+      else void step.send('volver')
+    } else if (id === 'comprobar') void save()
     else field.current?.focus()
   }
 
   return (
-    <WizardShell
-      step="conectar"
+    <ConnectShell
       title={es.connectApiKey.title}
       chosenKind={chosenKind}
-      later
+      outside={outside}
       stepError={step.error}
       primary={
         savedHint !== null
-          ? { label: es.keyForm.continue, onClick: () => void step.send('continuar'), loading: !!step.pending }
+          ? (outside?.finish ?? {
+              label: es.keyForm.continue,
+              onClick: () => void step.send('continuar'),
+              loading: !!step.pending,
+            })
           : { label: es.keyForm.save, onClick: () => void save(), loading: !!work }
       }
     >
@@ -114,6 +121,6 @@ export function ConnectApiKey({ chosenKind }: { chosenKind: ConnectionKind | nul
       <AiWorkStatus work={work} onCancel={cancel} />
       {failure && <AiFailureMessage failure={failure} onAction={onFailureAction} />}
       {error && <ErrorMessage live title={error} action={{ label: es.app.retry, onClick: () => void save() }} />}
-    </WizardShell>
+    </ConnectShell>
   )
 }

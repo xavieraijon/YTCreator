@@ -19,9 +19,9 @@ Spec-Driven Development with GitHub Spec Kit (`/speckit-*`).
   constitution 2.0.0): **design complete, branch `002-onboarding`** (revised 2026-10-29). spec, plan, research,
   data-model, contracts, quickstart and tasks (163 tasks: 5 withdrawn, 3 new) done; three `/speckit-analyze` passes
   with all findings fixed (0 critical/high). The free-Gemini code already written (adapter, registry, DB check,
-  UI) was removed in this revision. 124/163 tasks done (spikes, US1, US2 and US3 complete; US3 pending the
-  creator's approval and not committed yet). **To resume: `/speckit-implement`** with US4 (T127–T140: account
-  rotation, AI settings, repair of Claude Code). Creator's approval at each phase.
+  UI) was removed in this revision. 138/163 tasks done (spikes, US1–US4 complete; US4 pending the creator's
+  approval and not committed yet). **To resume: `/speckit-implement`** with US5 (T141…: updating without losing anything,
+  update notice). Creator's approval at each phase.
 - Provider subscriptions beyond Claude are a later feature, not part of 002. First one planned: Gemini
   (Google AI Pro, with its CLI).
 - Commands (Node 24, `fnm exec --using=24 --`): `pnpm dev` (server + web), `pnpm lint`, `pnpm typecheck`,

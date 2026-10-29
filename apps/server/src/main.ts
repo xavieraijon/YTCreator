@@ -18,6 +18,7 @@ import type { AppPaths } from './paths.ts'
 import { createFileStore } from './secrets/file-store.ts'
 import { selectSecretStore } from './secrets/select.ts'
 import { createAiConnectionsService, type ClaudeCodeStatus } from './services/ai-connections.ts'
+import { createClaudeRepair, officialInstaller } from './services/claude-repair.ts'
 
 export const HOST = '127.0.0.1'
 export const PORT_RANGE = { first: 4310, last: 4329 }
@@ -71,16 +72,24 @@ function candidatePorts(env: StartOptions['env'], allowFixedPort: boolean): numb
   return ports
 }
 
-// `claude --version` once per start; with the fake AI the CLI is never looked for.
-function claudeCodeStatus(env: StartOptions['env'], bin: string, fake: boolean): () => Promise<ClaudeCodeStatus> {
+// `claude --version` once per start, and again after a repair; with the fake AI the CLI is never looked for.
+function claudeCodeStatus(env: StartOptions['env'], bin: string, fake: boolean) {
   let status: Promise<ClaudeCodeStatus> | null = null
-  return () =>
-    (status ??= fake
-      ? Promise.resolve({ installed: true, version: null })
-      : claudeVersion(bin, env).then((r) =>
-          r.ok ? { installed: true, version: r.version } : { installed: false, version: null },
-        ))
+  return {
+    get: () =>
+      (status ??= fake
+        ? Promise.resolve({ installed: true, version: null })
+        : claudeVersion(bin, env).then((r) =>
+            r.ok ? { installed: true, version: r.version } : { installed: false, version: null },
+          )),
+    forget: () => {
+      status = null
+    },
+  }
 }
+
+// With the fake AI nothing is downloaded: the "installer" ends well after a moment.
+const fakeInstaller = () => new Promise<number>((resolve) => setTimeout(() => resolve(0), 1500))
 
 // Only on 127.0.0.1, never on 0.0.0.0 (FR-007, principle VII). Single instance and signals arrive with T060–T062.
 export async function startServer({
@@ -102,6 +111,12 @@ export async function startServer({
   const connections = createConnectionsRepo(db, now)
   const claudeBin = resolveClaudeBin(env)
   const fake = __YTC_ALLOW_FAKE_AI__ && Boolean(env.YTCREATOR_FAKE_AI)
+  const claudeCode = claudeCodeStatus(env, claudeBin, fake)
+  const repair = createClaudeRepair({
+    run: fake ? fakeInstaller : officialInstaller(env),
+    logger,
+    onFinished: claudeCode.forget,
+  })
   const ai = createAiConnectionsService({
     connections,
     accounts: createAccountsRepo(db, now),
@@ -115,7 +130,8 @@ export async function startServer({
     now,
     fetch: globalThis.fetch,
     claudeAccountsDir: paths.claudeAccounts,
-    claudeCode: claudeCodeStatus(env, claudeBin, fake),
+    claudeCode: claudeCode.get,
+    repairState: repair.state,
   })
   const onboarding = createOnboardingRepo(db, connections, now)
   const limits = createLimitsRepo(db, now)
@@ -139,7 +155,7 @@ export async function startServer({
     throw new NoFreePortError()
   }
 
-  app = createApp({ port, version, instanceId, logger, webDir, onShutdown, onboarding, ai, limits })
+  app = createApp({ port, version, instanceId, logger, webDir, onShutdown, onboarding, ai, repair, limits })
   logger.info('server_started', { port, version })
 
   return {

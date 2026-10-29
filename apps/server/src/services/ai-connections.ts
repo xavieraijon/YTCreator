@@ -3,8 +3,10 @@ import { mkdir, rm } from 'node:fs/promises'
 import { join } from 'node:path'
 import {
   MAX_ACCOUNTS,
+  runWithRotation,
   secretRef,
   type AiFailure,
+  type CheckResult,
   type ConnectionKind,
   type Logger,
   type ProviderDeps,
@@ -13,9 +15,9 @@ import {
   type SecretStore,
   type SubscriptionLogin,
 } from '@ytcreator/core'
-import type { AccountView, AiOverview, ConnectionView } from '@ytcreator/core/api'
-import { accountView, type AccountsRepo } from '../db/repos/accounts.ts'
-import { connectionView, type ConnectionsRepo } from '../db/repos/connections.ts'
+import type { AccountSwitched, AccountView, AiOverview, ConnectionView, RepairState } from '@ytcreator/core/api'
+import { accountView, type AccountRow, type AccountsRepo } from '../db/repos/accounts.ts'
+import { connectionView, LimitsRequiredError, type ConnectionsRepo } from '../db/repos/connections.ts'
 import type { SettingsRepo } from '../db/repos/settings.ts'
 import { ApiError } from '../http/errors.ts'
 import { secretFingerprint } from '../secrets/fingerprint.ts'
@@ -37,12 +39,15 @@ export interface AiConnectionsDeps {
   // APP_HOME/claude-accounts: one 0700 folder per account, the CLI's CLAUDE_CONFIG_DIR.
   claudeAccountsDir: string
   claudeCode: () => Promise<ClaudeCodeStatus>
+  repairState?: () => RepairState
 }
+
+const NO_SESSION: AiFailure = { kind: 'sin_sesion', reason: 'sesion_caducada' }
 
 export function createAiConnectionsService(deps: AiConnectionsDeps) {
   const { connections, accounts, secrets, logger } = deps
-  // One subscription login at a time, like `claude setup-token`.
-  let openLogin: string | null = null
+  // One subscription login at a time, like `claude setup-token`. A re-login is tied to its account.
+  let openLogin: { loginId: string; accountId: string | null } | null = null
 
   function descriptorFor(kind: ConnectionKind): ProviderDescriptor {
     const descriptor = deps.registry.find((d) => d.connectionKind === kind)
@@ -72,11 +77,48 @@ export function createAiConnectionsService(deps: AiConnectionsDeps) {
     if (!stored.ok) throw failed(provider, 'store_secret', stored.failure)
   }
 
-  async function checkAccount(descriptor: ProviderDescriptor, id: string, token: Secret) {
-    const provider = descriptor.create(token, providerDeps(join(deps.claudeAccountsDir, id)))
-    const outcome = await provider.check()
-    accounts.updateStatus(id, outcome)
+  function findAccount(id: string): AccountRow {
+    const account = accounts.get(id)
+    if (!account) throw new ApiError({ code: 'no_encontrado' })
+    return account
+  }
+
+  // A missing secret is a session to renew; a keychain that does not answer is its own failure.
+  async function checkWith(descriptor: ProviderDescriptor, ref: string | null, accountDir?: string) {
+    const stored = ref ? await secrets.get(ref) : { ok: true as const, value: null }
+    if (!stored.ok) return { ok: false as const, failure: stored.failure }
+    if (!stored.value) return { ok: false as const, failure: NO_SESSION }
+    return descriptor.create(stored.value, providerDeps(accountDir)).check()
+  }
+
+  const accountDir = (id: string) => join(deps.claudeAccountsDir, id)
+
+  async function checkStoredAccount(descriptor: ProviderDescriptor, account: AccountRow): Promise<CheckResult> {
+    const outcome = await checkWith(descriptor, account.secretRef, accountDir(account.id))
+    accounts.updateStatus(account.id, outcome)
     connections.syncSubscription(descriptor.id, accounts.list(descriptor.id))
+    return outcome
+  }
+
+  async function startSubscriptionLogin(accountId: string | null) {
+    const { descriptor, login } = subscriptionLogin()
+    if (openLogin) await login.cancel(openLogin.loginId)
+    openLogin = null
+    const started = await login.start()
+    if (!started.ok) throw failed(descriptor.id, 'login_start', started.failure)
+    openLogin = { loginId: started.value.loginId, accountId }
+    return started.value
+  }
+
+  // FR-016d: the same secret_ref, folder, label and position; another row with that access → conflicto.
+  async function replaceToken(descriptor: ProviderDescriptor, accountId: string, token: Secret, fingerprint: string) {
+    const account = findAccount(accountId)
+    const owner = accounts.findByFingerprint(descriptor.id, fingerprint)
+    if (owner && owner.id !== accountId) throw new ApiError({ code: 'conflicto' })
+    await storeOrFail(descriptor.id, account.secretRef, token)
+    accounts.replaceCredential(accountId, fingerprint, token.hint())
+    await checkStoredAccount(descriptor, findAccount(accountId))
+    return accountView(findAccount(accountId))
   }
 
   return {
@@ -87,7 +129,7 @@ export function createAiConnectionsService(deps: AiConnectionsDeps) {
         activeKind: all.find((c) => c.isActive)?.kind ?? null,
         connections: all.map(connectionView),
         accounts: subscription ? accounts.list(subscription.providerId).map(accountView) : [],
-        claudeCode: { ...(await deps.claudeCode()), repair: { state: 'inactivo' } },
+        claudeCode: { ...(await deps.claudeCode()), repair: deps.repairState?.() ?? { state: 'inactivo' } },
         hasLimits: connections.hasLimits(),
       }
     },
@@ -103,23 +145,30 @@ export function createAiConnectionsService(deps: AiConnectionsDeps) {
       return connectionView(connections.upsertKey(kind, descriptor.id, ref, key.hint()))
     },
 
-    async startLogin() {
-      const { descriptor, login } = subscriptionLogin()
-      if (openLogin) await login.cancel(openLogin)
-      openLogin = null
-      const started = await login.start()
-      if (!started.ok) throw failed(descriptor.id, 'login_start', started.failure)
-      openLogin = started.value.loginId
-      return started.value
+    startLogin: () => startSubscriptionLogin(null),
+
+    // Like startLogin, but `completeLogin` then renews the token of this account instead of adding one.
+    async startRelogin(accountId: string) {
+      findAccount(accountId)
+      return startSubscriptionLogin(accountId)
     },
 
-    async completeLogin(loginId: string, code: Secret, label?: string): Promise<AccountView> {
+    // `created` tells a new account (201) from a renewed one (200).
+    async completeLogin(
+      loginId: string,
+      code: Secret,
+      label?: string,
+    ): Promise<{ account: AccountView; created: boolean }> {
       const { descriptor, login } = subscriptionLogin()
-      if (openLogin === loginId) openLogin = null
+      const relogin = openLogin?.loginId === loginId ? openLogin.accountId : null
+      if (openLogin?.loginId === loginId) openLogin = null
       const result = await login.complete(loginId, code)
       if (!result.ok) throw failed(descriptor.id, 'login_complete', result.failure)
 
       const fingerprint = secretFingerprint(result.token)
+      if (relogin) {
+        return { account: await replaceToken(descriptor, relogin, result.token, fingerprint), created: false }
+      }
       if (accounts.findByFingerprint(descriptor.id, fingerprint)) throw new ApiError({ code: 'conflicto' })
       if (accounts.count(descriptor.id) >= MAX_ACCOUNTS) {
         throw new ApiError({ code: 'validacion', guard: 'maximo_de_cuentas' })
@@ -145,14 +194,90 @@ export function createAiConnectionsService(deps: AiConnectionsDeps) {
         throw error
       }
       connections.syncSubscription(descriptor.id, accounts.list(descriptor.id))
-      await checkAccount(descriptor, id, result.token)
-      return accountView(accounts.get(id)!)
+      await checkStoredAccount(descriptor, findAccount(id))
+      return { account: accountView(findAccount(id)), created: true }
     },
 
     async cancelLogin(loginId: string): Promise<void> {
       const { login } = subscriptionLogin()
-      if (openLogin === loginId) openLogin = null
+      if (openLogin?.loginId === loginId) openLogin = null
       await login.cancel(loginId)
+    },
+
+    // A failed check is a 200 with the new state; the subscription rotates (R14) and says which switches it made.
+    async checkConnection(kind: ConnectionKind): Promise<ConnectionView & { switched?: AccountSwitched[] }> {
+      const connection = connections.get(kind)
+      if (!connection) throw new ApiError({ code: 'no_encontrado' })
+      const descriptor = descriptorFor(kind)
+      if (kind === 'pago_por_uso') {
+        const outcome = await checkWith(descriptor, connection.secretRef)
+        return connectionView(connections.updateStatus(kind, outcome)!)
+      }
+
+      const run = await runWithRotation(
+        accounts.list(descriptor.id),
+        async (id) => checkWith(descriptor, findAccount(id).secretRef, accountDir(id)),
+        deps.now(),
+      )
+      for (const update of run.updates) accounts.updateStatus(update.id, update.outcome)
+      const view = connectionView(connections.syncSubscription(descriptor.id, accounts.list(descriptor.id)))
+      return run.switched.length > 0 ? { ...view, switched: run.switched } : view
+    },
+
+    // One account, without rotating.
+    async checkAccount(id: string): Promise<AccountView> {
+      const descriptor = descriptorFor('suscripcion')
+      await checkStoredAccount(descriptor, findAccount(id))
+      return accountView(findAccount(id))
+    },
+
+    // FR-026: the other connections are kept, only `is_active` moves.
+    async activate(kind: ConnectionKind): Promise<AiOverview> {
+      if (connections.get(kind)?.status !== 'conectada') {
+        throw new ApiError({ code: 'validacion', guard: 'sin_conexion' })
+      }
+      try {
+        connections.setActive(kind)
+      } catch (error) {
+        if (error instanceof LimitsRequiredError) throw new ApiError({ code: 'validacion', guard: 'sin_limites' })
+        throw error
+      }
+      return this.overview()
+    },
+
+    async deleteKey(kind: 'pago_por_uso'): Promise<void> {
+      const connection = connections.get(kind)
+      if (!connection) throw new ApiError({ code: 'no_encontrado' })
+      if (connection.secretRef) {
+        const deleted = await secrets.delete(connection.secretRef)
+        if (!deleted.ok) throw failed(connection.providerId, 'delete_secret', deleted.failure)
+      }
+      connections.remove(kind)
+    },
+
+    // An exact permutation of the accounts; anything else is `validacion`.
+    reorderAccounts(ids: string[]): AccountView[] {
+      const descriptor = descriptorFor('suscripcion')
+      const current = accounts.list(descriptor.id).map((a) => a.id)
+      const same =
+        ids.length === current.length && new Set(ids).size === ids.length && ids.every((id) => current.includes(id))
+      if (!same) throw new ApiError({ code: 'validacion', fields: { ids: 'no_valido' } })
+      return accounts.reorder(descriptor.id, ids).map(accountView)
+    },
+
+    renameAccount(id: string, label: string): AccountView {
+      findAccount(id)
+      return accountView(accounts.rename(id, label)!)
+    },
+
+    // Secret, CLAUDE_CONFIG_DIR folder and row; without accounts the subscription is no longer active.
+    async deleteAccount(id: string): Promise<void> {
+      const account = findAccount(id)
+      const deleted = await secrets.delete(account.secretRef)
+      if (!deleted.ok) throw failed(account.providerId, 'delete_secret', deleted.failure)
+      await rm(accountDir(id), { recursive: true, force: true })
+      accounts.remove(id)
+      connections.syncSubscription(account.providerId, accounts.list(account.providerId))
     },
   }
 }
