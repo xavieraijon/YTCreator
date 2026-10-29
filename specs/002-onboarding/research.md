@@ -589,3 +589,10 @@ Cada *spike* es una tarea corta, con resultado anotado en este fichero, y bloque
   (**aceptado por el creador el 2026-10-28**; spec.md, contratos y tareas ajustados): solo detecta el mismo *token* pegado dos veces; dos `setup-token` de la
   misma cuenta dan *tokens* distintos y no se detectan como duplicado, y al volver a entrar no se puede saber si es
   otra cuenta. Se avisa con un texto en la pantalla de cuentas.
+- **S4 (2026-10-29) ⚠️ no verificable → plan B.** La consola de Anthropic obliga a cargar un mínimo de 5 $ al crear
+  una organización, así que no se puede conseguir una clave con saldo 0 sin pagar y después gastar ese saldo.
+  **Decisión:** se mantiene R12 tal cual: `check()` solo usa `models.list()` (nunca `countTokens` ni una llamada de
+  pago) y la pantalla avisa **antes** de que hace falta saldo, con el enlace a facturación. La falta de saldo se
+  detecta en la primera llamada real (400 `invalid_request_error` con «credit balance», o `billing_error` →
+  `cupo_agotado` / `sin_saldo`, ya en la clasificación de R13). Si algún día una cuenta real se queda sin saldo, se
+  graba esa respuesta como *fixture* y se repite la prueba de `count_tokens`.
