@@ -1,4 +1,5 @@
 import { CONNECTION_KINDS, type ConnectionKind } from '@ytcreator/core'
+import type { OnboardingState } from '@ytcreator/core/api'
 import { useSyncExternalStore } from 'react'
 
 export const WIZARD_STEPS = ['elegir', 'conectar', 'limites', 'listo'] as const
@@ -63,6 +64,25 @@ export function href(route: Target): string {
     case 'generalSettings':
       return '/ajustes/general'
   }
+}
+
+// Where the server state says the creator is (contracts/ui-screens.md, «Redirección»).
+export function onboardingTarget(state: OnboardingState): Target {
+  if (state.completedAt) return { page: 'home' }
+  if (state.postponed) return { page: 'connectAi' }
+  if (state.step === 'bienvenida') return { page: 'welcome' }
+  if (state.step === 'completado') return { page: 'home' }
+  return { page: 'wizard', step: state.step }
+}
+
+// `/`, the wizard routes and /conectar-ia always follow the server: going by hand to another step goes back to the
+// real one. The rest of the app (home, settings) is reachable whatever the state.
+export function onboardingRedirect(route: Route, state: OnboardingState): Target | null {
+  const guarded =
+    route.page === 'root' || route.page === 'welcome' || route.page === 'wizard' || route.page === 'connectAi'
+  if (!guarded) return null
+  const target = onboardingTarget(state)
+  return href(target) === (route.page === 'root' ? null : href(route)) ? null : target
 }
 
 // pushState fires no event, so navigate() notifies the subscribers itself.

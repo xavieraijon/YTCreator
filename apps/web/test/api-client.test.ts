@@ -56,4 +56,17 @@ describe('apiClient', () => {
     expect((await caught(stub(200, '{"n":"tres"}').get('/api/x', numberSchema))).kind).toBe('respuesta')
     expect((await caught(stub(500, '<html>').get('/api/x', numberSchema))).kind).toBe('respuesta')
   })
+
+  it('an aborted request is `cancelada`, not a network failure', async () => {
+    const hanging = createApiClient({
+      fetch: ((_url: string, init: RequestInit) =>
+        new Promise((_resolve, reject) => {
+          init.signal?.addEventListener('abort', () => reject(new DOMException('aborted', 'AbortError')))
+        })) as unknown as typeof fetch,
+    })
+    const controller = new AbortController()
+    const pending = caught(hanging.post('/api/x', {}, numberSchema, { signal: controller.signal }))
+    controller.abort()
+    expect((await pending).kind).toBe('cancelada')
+  })
 })

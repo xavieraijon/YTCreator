@@ -1,0 +1,10 @@
+.failure {
+  display: grid;
+  gap: var(--s-space-2);
+}
+
+.others {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-space-2);
+}

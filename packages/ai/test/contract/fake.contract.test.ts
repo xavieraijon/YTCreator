@@ -25,12 +25,23 @@ runProviderContract('fake', (stub, deps) => {
   let calls = 0
   const outputs = [...(OUTPUTS[stub] ?? [])]
   const credential = stub === 'invalid_credential' ? 'sk-ant-api03-REAL-not-accepted-0123' : KEY
-  const provider = createFakeProvider(parseScenario(SCENARIOS[stub] ?? 'ok'), Secret.from(credential), deps, {
-    transport: async () => {
-      calls += 1
-      if (stub === 'unknown_error') throw new TypeError(`fallo raro con ${credential}`)
-      return outputs.shift() ?? 'listo'
+  const aiTimeoutSeconds = stub === 'timeout' ? 1 : undefined
+  const provider = createFakeProvider(
+    parseScenario(SCENARIOS[stub] ?? 'ok'),
+    Secret.from(credential),
+    { ...deps, aiTimeoutSeconds },
+    {
+      transport: async () => {
+        calls += 1
+        if (stub === 'unknown_error') throw new TypeError(`fallo raro con ${credential}`)
+        return outputs.shift() ?? 'listo'
+      },
     },
-  })
-  return { provider, calls: () => calls, credential, timeoutMs: resolveProfile('fake', 'comprobacion').timeoutMs }
+  )
+  return {
+    provider,
+    calls: () => calls,
+    credential,
+    timeoutMs: resolveProfile('fake', 'comprobacion', { aiTimeoutSeconds }).timeoutMs,
+  }
 })

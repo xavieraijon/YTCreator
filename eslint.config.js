@@ -80,7 +80,7 @@ export default tseslint.config(
     rules: { 'no-restricted-imports': ['error', { patterns: [aiSdks, coreBoundaries] }] },
   },
   {
-    files: ['**/*.js'],
+    files: ['**/*.{js,mjs}'],
     languageOptions: { globals: globals.node },
   },
 )

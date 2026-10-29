@@ -39,3 +39,9 @@
   background: var(--s-color-surface-sunken);
   color: var(--s-color-text-primary);
 }
+
+.badge {
+  display: inline-flex;
+  border-radius: var(--s-radius-md);
+  text-decoration: none;
+}

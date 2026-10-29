@@ -1,4 +1,7 @@
-import type { Billing, ConnectionKind, ProviderDescriptor } from '@ytcreator/core'
+import type { Billing, ConnectionKind, Logger, ProviderDescriptor } from '@ytcreator/core'
+import { createAnthropicProvider } from './anthropic/adapter.ts'
+import { createClaudeCodeProvider } from './claude-code/adapter.ts'
+import { createClaudeLogin } from './claude-code/login.ts'
 import { createFakeLogin } from './fake/fake-login.ts'
 import { createFakeProvider } from './fake/fake-provider.ts'
 import { parseScenario, type FakeScenario } from './fake/scenarios.ts'
@@ -8,6 +11,8 @@ export interface RegistryOptions {
   // Replaced at build time: false in the published build, so the fake can never be switched on there.
   allowFake?: boolean
   now?: () => Date
+  logger?: Logger // for the subscription login, which outlives a single request
+  claudeBin?: string // `claude` found at start-up; otherwise it is looked up in PATH
 }
 
 interface Slot {
@@ -36,12 +41,21 @@ export function createRegistry({
   env,
   allowFake = __YTC_ALLOW_FAKE_AI__,
   now = () => new Date(),
+  logger = { info() {}, warn() {}, error() {} },
+  claudeBin,
 }: RegistryOptions): ProviderDescriptor[] {
   const scenarioName = env.YTCREATOR_FAKE_AI
   if (allowFake && scenarioName) {
     const scenario = parseScenario(scenarioName)
     return SLOTS.map((slot) => fakeDescriptor(slot, scenario, now))
   }
-  // The real adapters arrive with US2 (T097).
-  return []
+  const [subscription, payPerUse] = SLOTS as [Slot, Slot]
+  return [
+    {
+      ...subscription,
+      create: (credentials, deps) => createClaudeCodeProvider(credentials, { claudeBin, ...deps }, { env }),
+      login: createClaudeLogin({ logger, now, claudeBin, env }),
+    },
+    { ...payPerUse, create: (credentials, deps) => createAnthropicProvider(credentials, deps) },
+  ]
 }

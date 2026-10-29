@@ -10,6 +10,8 @@ export const es = {
     skipToContent: 'Saltar al contenido',
     notFoundTitle: 'Esta página no existe',
     notFoundBack: 'Ir al inicio',
+    loadFailed: 'No se ha podido abrir YTCreator',
+    retry: 'Volver a intentarlo',
   },
 
   // Labels of the registry descriptors (`labelKey` = ai.provider.*).

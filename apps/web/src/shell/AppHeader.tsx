@@ -1,11 +1,15 @@
 import { shutdownResponseSchema } from '@ytcreator/core/api'
-import { Button, Dialog, ErrorMessage, Icon, Logo } from '@ytcreator/ui'
+import { Badge, Button, Dialog, ErrorMessage, Icon, Logo, type BadgeTone } from '@ytcreator/ui'
 import { Power, Settings } from 'lucide-react'
 import { useState } from 'react'
-import { apiClient, ApiClientError } from '../api/client.ts'
+import { kindLabel } from '../ai/kindLabel.ts'
+import { useAiOverview } from '../ai/useAiOverview.ts'
+import { apiClient } from '../api/client.ts'
 import { es } from '../strings/es.ts'
 import styles from './AppHeader.module.css'
+import { errorText } from './errorText.ts'
 import { Link } from './Link.tsx'
+import { statusText } from './statusText.ts'
 
 export interface AppHeaderProps {
   /** During the wizard only the logo and «Cerrar YTCreator» are shown. */
@@ -16,7 +20,6 @@ export interface AppHeaderProps {
   readonly onClosed: () => void
 }
 
-// The AI badge arrives with US2 (T104).
 export function AppHeader({ inWizard = false, closed = false, onClosed }: AppHeaderProps) {
   if (closed) {
     return (
@@ -36,6 +39,7 @@ export function AppHeader({ inWizard = false, closed = false, onClosed }: AppHea
         </Link>
       )}
       <div className={styles.actions}>
+        {!inWizard && <AiBadge />}
         {!inWizard && (
           <Link className={styles.link} to={{ page: 'settings' }}>
             <Icon icon={Settings} />
@@ -48,10 +52,24 @@ export function AppHeader({ inWizard = false, closed = false, onClosed }: AppHea
   )
 }
 
-function errorText(error: unknown): string {
-  if (error instanceof ApiClientError && error.body) return es.apiError[error.body.code]
-  if (error instanceof ApiClientError && error.kind === 'red') return es.clientError.red
-  return es.clientError.respuesta
+// The AI in use and how it is doing; it leads to the AI settings.
+function AiBadge() {
+  const overview = useAiOverview()
+  if (!overview) return null
+  const active = overview.connections.find((c) => c.isActive)
+  const text = active ? `${kindLabel(active.kind)} · ${statusText(active)}` : es.header.noAi
+  const tone: BadgeTone = !active
+    ? 'warning'
+    : active.status === 'conectada'
+      ? 'success'
+      : active.status === 'sin_comprobar'
+        ? 'neutral'
+        : 'warning'
+  return (
+    <Link className={styles.badge} to={{ page: 'aiSettings' }}>
+      <Badge tone={tone}>{text}</Badge>
+    </Link>
+  )
 }
 
 function CloseApp({ onClosed }: { onClosed: () => void }) {

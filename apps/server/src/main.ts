@@ -3,12 +3,20 @@ import { mkdirSync } from 'node:fs'
 import type { Server } from 'node:http'
 import type { AddressInfo } from 'node:net'
 import { createAdaptorServer } from '@hono/node-server'
+import { claudeVersion, createRegistry, resolveClaudeBin } from '@ytcreator/ai'
 import { migrate, MIGRATIONS } from './db/migrate.ts'
 import { openDatabase } from './db/open.ts'
+import { createAccountsRepo } from './db/repos/accounts.ts'
+import { createConnectionsRepo } from './db/repos/connections.ts'
+import { createOnboardingRepo } from './db/repos/onboarding.ts'
+import { createSettingsRepo } from './db/repos/settings.ts'
 import { createApp } from './http/app.ts'
 import { acquireInstance, releaseInstance } from './instance.ts'
 import { createLogger } from './logging.ts'
 import type { AppPaths } from './paths.ts'
+import { createFileStore } from './secrets/file-store.ts'
+import { selectSecretStore } from './secrets/select.ts'
+import { createAiConnectionsService, type ClaudeCodeStatus } from './services/ai-connections.ts'
 
 export const HOST = '127.0.0.1'
 export const PORT_RANGE = { first: 4310, last: 4329 }
@@ -62,6 +70,17 @@ function candidatePorts(env: StartOptions['env'], allowFixedPort: boolean): numb
   return ports
 }
 
+// `claude --version` once per start; with the fake AI the CLI is never looked for.
+function claudeCodeStatus(env: StartOptions['env'], bin: string, fake: boolean): () => Promise<ClaudeCodeStatus> {
+  let status: Promise<ClaudeCodeStatus> | null = null
+  return () =>
+    (status ??= fake
+      ? Promise.resolve({ installed: true, version: null })
+      : claudeVersion(bin, env).then((r) =>
+          r.ok ? { installed: true, version: r.version } : { installed: false, version: null },
+        ))
+}
+
 // Only on 127.0.0.1, never on 0.0.0.0 (FR-007, principle VII). Single instance and signals arrive with T060–T062.
 export async function startServer({
   paths,
@@ -76,6 +95,28 @@ export async function startServer({
   const logger = createLogger(paths.logs)
   const db = openDatabase(paths.database)
   migrate(db, MIGRATIONS)
+
+  const now = () => new Date()
+  const settings = createSettingsRepo(db)
+  const connections = createConnectionsRepo(db, now)
+  const claudeBin = resolveClaudeBin(env)
+  const fake = __YTC_ALLOW_FAKE_AI__ && Boolean(env.YTCREATOR_FAKE_AI)
+  const ai = createAiConnectionsService({
+    connections,
+    accounts: createAccountsRepo(db, now),
+    settings,
+    // With the fake AI the test credentials never reach the system keychain (nor wait for it to unlock).
+    secrets: fake
+      ? createFileStore(paths.secrets, logger)
+      : await selectSecretStore({ platform: process.platform, settings, logger, fileDir: paths.secrets }),
+    registry: createRegistry({ env, now, logger, claudeBin }),
+    logger,
+    now,
+    fetch: globalThis.fetch,
+    claudeAccountsDir: paths.claudeAccounts,
+    claudeCode: claudeCodeStatus(env, claudeBin, fake),
+  })
+  const onboarding = createOnboardingRepo(db, connections, now)
 
   const instanceId = randomUUID()
   // The guard needs the port, known only once listening: requests reach the app after that.
@@ -96,7 +137,7 @@ export async function startServer({
     throw new NoFreePortError()
   }
 
-  app = createApp({ port, version, instanceId, logger, webDir, onShutdown })
+  app = createApp({ port, version, instanceId, logger, webDir, onShutdown, onboarding, ai })
   logger.info('server_started', { port, version })
 
   return {
