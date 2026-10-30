@@ -19,6 +19,7 @@ import { AppHeader } from './shell/AppHeader.tsx'
 import { errorText } from './shell/errorText.ts'
 import { Link } from './shell/Link.tsx'
 import { Screen } from './shell/Screen.tsx'
+import { UpdateNotice } from './shell/UpdateNotice.tsx'
 import { es } from './strings/es.ts'
 
 // The routes that follow the server state wait for it; the rest of the app does not need it.
@@ -107,6 +108,7 @@ export function App() {
         {es.app.skipToContent}
       </a>
       <AppHeader inWizard={inWizard} closed={closed} onClosed={() => setClosed(true)} />
+      {!inWizard && !closed && <UpdateNotice />}
       <main id="main" ref={mainRef} className={styles.main} tabIndex={-1}>
         {closed ? (
           <Screen title={es.header.closed} />

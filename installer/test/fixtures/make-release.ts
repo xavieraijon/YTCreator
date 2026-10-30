@@ -26,7 +26,7 @@ export interface Release {
 }
 
 /** Builds a local "GitHub release" fixture (R1): the release tarball, the 4 Node runtimes and SHA256SUMS. */
-export function makeRelease(serveDir: string, version = '1.0.0'): Release {
+export function makeRelease(serveDir: string, version = '1.0.0', opts: { migrateFails?: boolean } = {}): Release {
   const work = mkdtempSync(join(tmpdir(), 'ytc-release-'))
   const sums: Record<string, string> = {}
 
@@ -40,7 +40,7 @@ export function makeRelease(serveDir: string, version = '1.0.0'): Release {
       '#!/usr/bin/env bash',
       'set -euo pipefail',
       'case "${1:-open}" in',
-      '  migrate) exit 0 ;;',
+      `  migrate) exit ${opts.migrateFails ? 1 : 0} ;;`,
       '  open) echo "YTCreator fake open http://127.0.0.1:4310" ;;',
       '  *) exit 2 ;;',
       'esac',

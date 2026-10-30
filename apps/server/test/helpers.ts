@@ -66,9 +66,10 @@ export function makeTestApp({ fakeAi, now = () => new Date(), installer }: TestA
     claudeCode: async () => ({ installed: true, version: '2.1.312' }),
     repairState: repair.state,
   })
+  const version = '0.1.0'
   const app = createApp({
     port: TEST_PORT,
-    version: '0.1.0',
+    version,
     instanceId: 'test-instance',
     logger,
     webDir: null,
@@ -76,6 +77,7 @@ export function makeTestApp({ fakeAi, now = () => new Date(), installer }: TestA
     ai,
     repair,
     limits,
+    settings,
   })
 
   // A request as the local SPA sends it: local Host and Origin, JSON body.
@@ -89,6 +91,7 @@ export function makeTestApp({ fakeAi, now = () => new Date(), installer }: TestA
     app,
     db,
     dir,
+    version,
     logger,
     secrets,
     settings,

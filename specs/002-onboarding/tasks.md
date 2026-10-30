@@ -18,6 +18,10 @@ por separado.
 (conservan su número); T161–T163 son nuevas (aviso de FR-001b en el instalador y `README.md`). El código ya hecho
 se ha limpiado de la opción gratuita en esa misma revisión.
 
+**Revisión 2026-10-29 (tarde)**: T164 es nueva — revisión visual contra la checklist de diseño
+`checklists/design.md`, creada a raíz de lo observado en `ConnectSubscription` (botones *ghost* poco visibles,
+enlace junto a un botón).
+
 ## Formato: `[ID] [P?] [Story] Descripción`
 
 - **[P]**: se puede hacer en paralelo (ficheros distintos, sin depender de tareas pendientes);
@@ -314,20 +318,20 @@ arranca `v2` con todo intacto; con una migración que falla, código 60 y la bas
 
 ### Tests para User Story 5 ⚠️
 
-- [ ] T141 [P] [US5] Test de `compareVersions` y `isNewer` (semver, prerelease menor que release) en `packages/core/test/updates/version.test.ts`
-- [ ] T142 [P] [US5] Test de la consulta de versiones en `apps/server/test/updates/version-check.test.ts` con `fetch` y reloj inyectados: como mucho una consulta cada 24 h (`last_update_check_at`); la petición no lleva cabeceras ni parámetros con datos del creador (ni `instanceId`, ni versión del sistema más allá de lo estándar); desactivada (`update_check_enabled = '0'`) → cero peticiones; un fallo de red se ignora en silencio y solo se registra. Cubre FR-031: es la única llamada saliente de toda la feature, y aquí se verifica que no lleva datos del creador
-- [ ] T143 [P] [US5] Test de rutas en `apps/server/test/http/updates.test.ts`: `GET /api/updates` no hace peticiones de red; `show` solo si hay versión nueva, el aviso está activado y no se ha descartado; `POST /api/updates/dismiss`; `GET`/`PATCH /api/settings/general` con `aiTimeoutSeconds` 10–300 o `null` (9 y 301 → 400)
-- [ ] T144 [US5] Añadir los casos 6 y 7 de `contracts/installer.md` a `installer/test/install.test.ts`: (6) actualización de `v1` a `v2` con datos → datos y secretos de prueba intactos, `current` → `v2`, `v1` conservada; (7) migración que falla → 60, base restaurada byte a byte, `current` → `v1`
+- [X] T141 [P] [US5] Test de `compareVersions` y `isNewer` (semver, prerelease menor que release) en `packages/core/test/updates/version.test.ts`
+- [X] T142 [P] [US5] Test de la consulta de versiones en `apps/server/test/updates/version-check.test.ts` con `fetch` y reloj inyectados: como mucho una consulta cada 24 h (`last_update_check_at`); la petición no lleva cabeceras ni parámetros con datos del creador (ni `instanceId`, ni versión del sistema más allá de lo estándar); desactivada (`update_check_enabled = '0'`) → cero peticiones; un fallo de red se ignora en silencio y solo se registra. Cubre FR-031: es la única llamada saliente de toda la feature, y aquí se verifica que no lleva datos del creador
+- [X] T143 [P] [US5] Test de rutas en `apps/server/test/http/updates.test.ts`: `GET /api/updates` no hace peticiones de red; `show` solo si hay versión nueva, el aviso está activado y no se ha descartado; `POST /api/updates/dismiss`; `GET`/`PATCH /api/settings/general` con `aiTimeoutSeconds` 10–300 o `null` (9 y 301 → 400)
+- [X] T144 [US5] Añadir los casos 6 y 7 de `contracts/installer.md` a `installer/test/install.test.ts`: (6) actualización de `v1` a `v2` con datos → datos y secretos de prueba intactos, `current` → `v2`, `v1` conservada; (7) migración que falla → 60, base restaurada byte a byte, `current` → `v1`
 
 ### Implementation para User Story 5
 
-- [ ] T145 [US5] Implementar `compareVersions` e `isNewer` en `packages/core/src/updates/version.ts` hasta que pase T141
-- [ ] T146 [US5] Implementar `createVersionCheck({fetch, now, settings, logger})` (consulta la última release pública una vez al día tras el arranque, guarda `latest_version` y `last_update_check_at`) en `apps/server/src/updates/version-check.ts` y lanzarlo desde `apps/server/src/main.ts`, hasta que pase T142
-- [ ] T147 [US5] Implementar `GET /api/updates`, `POST /api/updates/dismiss` en `apps/server/src/http/routes/updates.ts` y `GET`/`PATCH /api/settings/general` en `apps/server/src/http/routes/settings.ts`, hasta que pase T143; aplicar `ai_timeout_seconds` en `resolveProfile`
-- [ ] T148 [P] [US5] Crear `UpdateNotice` (aviso no intrusivo con la línea para copiar, botón «Copiar» y «Ahora no» → `dismiss`) en `apps/web/src/shell/UpdateNotice.tsx` y montarlo en `apps/web/src/App.tsx`
-- [ ] T149 [P] [US5] Crear `GeneralSettings` (`/ajustes/general`: `Switch` del aviso de versiones, versión actual, y `Disclosure` «Modo experto» con el tiempo máximo de la IA en segundos, 10–300 o vacío) en `apps/web/src/screens/settings/GeneralSettings.tsx`
-- [ ] T150 [US5] Implementar la actualización (R21) en el paso 6 de `installer/install.sh`: si `install.json` tiene otra versión, `SIGTERM` al `pid` de `instance.json` y espera; copia de la base en `backups/ytcreator-<anterior>-<fecha>.db` (se conservan 3); `migrate` con la versión nueva; cambio atómico de `current`; conserva la versión anterior en `versions/`; si falla, restaura la copia, `current` queda como estaba y sale con 60; hasta que pase T144
-- [ ] T151 [US5] Ampliar `apps/web/e2e/settings.spec.ts` con la pestaña General: desactivar el aviso, cambiar el tiempo máximo (valor fuera de rango con su mensaje) y comprobar que persiste tras recargar
+- [X] T145 [US5] Implementar `compareVersions` e `isNewer` en `packages/core/src/updates/version.ts` hasta que pase T141
+- [X] T146 [US5] Implementar `createVersionCheck({fetch, now, settings, logger})` (consulta la última release pública una vez al día tras el arranque, guarda `latest_version` y `last_update_check_at`) en `apps/server/src/updates/version-check.ts` y lanzarlo desde `apps/server/src/main.ts`, hasta que pase T142
+- [X] T147 [US5] Implementar `GET /api/updates`, `POST /api/updates/dismiss` en `apps/server/src/http/routes/updates.ts` y `GET`/`PATCH /api/settings/general` en `apps/server/src/http/routes/settings.ts`, hasta que pase T143; aplicar `ai_timeout_seconds` en `resolveProfile`
+- [X] T148 [P] [US5] Crear `UpdateNotice` (aviso no intrusivo con la línea para copiar, botón «Copiar» y «Ahora no» → `dismiss`) en `apps/web/src/shell/UpdateNotice.tsx` y montarlo en `apps/web/src/App.tsx`
+- [X] T149 [P] [US5] Crear `GeneralSettings` (`/ajustes/general`: `Switch` del aviso de versiones, versión actual, y `Disclosure` «Modo experto» con el tiempo máximo de la IA en segundos, 10–300 o vacío) en `apps/web/src/screens/settings/GeneralSettings.tsx`
+- [X] T150 [US5] Implementar la actualización (R21) en el paso 6 de `installer/install.sh`: si `install.json` tiene otra versión, `SIGTERM` al `pid` de `instance.json` y espera; copia de la base en `backups/ytcreator-<anterior>-<fecha>.db` (se conservan 3); `migrate` con la versión nueva; cambio atómico de `current`; conserva la versión anterior en `versions/`; si falla, restaura la copia, `current` queda como estaba y sale con 60; hasta que pase T144
+- [X] T151 [US5] Ampliar `apps/web/e2e/settings.spec.ts` con la pestaña General: desactivar el aviso, cambiar el tiempo máximo (valor fuera de rango con su mensaje) y comprobar que persiste tras recargar
 
 **Checkpoint**: todas las historias funcionan por separado y juntas.
 
@@ -339,6 +343,7 @@ arranca `v2` con todo intacto; con una migración que falla, código 60 y la bas
 
 - [ ] T152 [P] e2e de fuga de secretos en `apps/web/e2e/secrets-leak.spec.ts` según `contracts/secrets.md`: conectar las dos opciones con `sk-ant-oat-FAKE…` y `sk-ant-api03-FAKE…`, recorrer comprobación, fallo, borrado y cambio de opción, y buscar las dos cadenas (completas y sin los 4 últimos caracteres) en `APP_HOME/logs/`, todo `~/YTCreator` (base en binario incluida), cuerpos HTTP capturados, DOM y `localStorage` de cada pantalla, y `git ls-files`: cero apariciones (SC-006)
 - [ ] T153 [P] e2e de accesibilidad en `apps/web/e2e/a11y.spec.ts`: axe sin violaciones en cada pantalla de `contracts/ui-screens.md`, en tema claro y oscuro, a 375 px y con zoom al 200 %; recorrido completo del asistente solo con teclado y foco visible (SC-010)
+- [ ] T164 Revisión visual de todas las pantallas de `contracts/ui-screens.md` con una mirada de diseñador experto: capturas en tema claro y oscuro, revisadas contra `checklists/design.md`; corregir lo que la checklist señale (incluida la discrepancia de CHK002 entre enlace/botón secundario en `ConnectSubscription`/`LoginCodeForm` y el contrato) antes de marcar sus items; anotar el resultado en `specs/002-onboarding/checklists/validation.md`; necesita la aprobación del creador
 - [ ] T154 [P] Crear `.github/workflows/release.yml`: en etiquetas `v*`, compila con `mode=production` (sin proveedor falso), empaqueta `ytcreator-<v>.tar.gz` (`server.mjs`, `web/`, `bin/ytcreator`, `VERSION`), genera `SHA256SUMS`, sella `install.sh` con `installer/stamp.sh` y publica los tres como recursos de la release; comprueba que `server.mjs` no contiene el proveedor falso
 - [ ] T155 Pasada final del glosario: ejecutar `apps/web/test/glossary.test.ts` y revisar a mano todos los textos de `apps/web/src/strings/` e `installer/install.sh` contra el glosario de la constitución
 - [ ] T156 Ejecutar `fnm exec --using=24 -- pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:installer` y `pnpm test:e2e` completos y corregir lo que falle

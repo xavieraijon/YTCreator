@@ -3,6 +3,7 @@ import { navigate } from '../../router.ts'
 import { Screen } from '../../shell/Screen.tsx'
 import { es } from '../../strings/es.ts'
 import { AiSettings } from './AiSettings.tsx'
+import { GeneralSettings } from './GeneralSettings.tsx'
 
 export type SettingsTab = 'ia' | 'general'
 
@@ -16,7 +17,7 @@ export function Settings({ tab }: { tab: SettingsTab }) {
         onValueChange={(value) => navigate({ page: value === 'general' ? 'generalSettings' : 'aiSettings' })}
         items={[
           { id: 'ia', label: es.settings.tabs.ia, content: <AiSettings /> },
-          { id: 'general', label: es.settings.tabs.general, content: null },
+          { id: 'general', label: es.settings.tabs.general, content: <GeneralSettings /> },
         ]}
       />
     </Screen>

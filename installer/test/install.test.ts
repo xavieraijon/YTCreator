@@ -1,4 +1,4 @@
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
@@ -9,8 +9,12 @@ const TEMPLATE = join(import.meta.dirname, '..', 'install.sh')
 const STAMP_SCRIPT = join(import.meta.dirname, '..', 'stamp.sh')
 
 /** Builds a release fixture and stamps install.sh against it, serving the release from `home.serveDir`. */
-function stampFor(home: TestHome, version = '1.0.0'): { release: Release; script: string; cleanup: () => void } {
-  const release = makeRelease(home.serveDir, version)
+function stampFor(
+  home: TestHome,
+  version = '1.0.0',
+  opts: { migrateFails?: boolean } = {},
+): { release: Release; script: string; cleanup: () => void } {
+  const release = makeRelease(home.serveDir, version, opts)
   const workDir = mkdtempSync(join(tmpdir(), 'ytc-stamped-'))
   const script = join(workDir, 'install.sh')
   stampInstallScript(TEMPLATE, script, release, STAMP_SCRIPT)
@@ -139,6 +143,59 @@ describe('installer/install.sh', () => {
 
     expect(result.code).toBe(31)
     expect(h.tree().some((p) => p.endsWith('.partial'))).toBe(false)
+  })
+
+  it('updates from v1 to v2 keeping data and secrets, moving current to v2 and keeping v1 (R21)', () => {
+    const h = home('darwin-arm64')
+    const v1 = stampFor(h, '1.0.0')
+    cleanups.push(v1.cleanup)
+
+    const installed = runInstaller(v1.script, h)
+    expect(installed.code).toBe(0)
+
+    const dbPath = join(h.workspace, 'ytcreator.db')
+    const secretPath = join(h.appHome, 'secrets', 'test-secret.txt')
+    const accountPath = join(h.appHome, 'claude-accounts', 'test-account.json')
+    writeFileSync(dbPath, 'test-db-data')
+    writeFileSync(secretPath, 'test-secret-data')
+    writeFileSync(accountPath, '{"test":"account"}')
+
+    const v2 = stampFor(h, '2.0.0')
+    cleanups.push(v2.cleanup)
+
+    const updated = runInstaller(v2.script, h)
+
+    expect(updated.code).toBe(0)
+    expect(readFileSync(dbPath, 'utf8')).toBe('test-db-data')
+    expect(readFileSync(secretPath, 'utf8')).toBe('test-secret-data')
+    expect(readFileSync(accountPath, 'utf8')).toBe('{"test":"account"}')
+    expect(readFileSync(join(h.appHome, 'current', 'VERSION'), 'utf8')).toBe('2.0.0')
+    expect(h.tree()).toContain('app/versions/1.0.0/VERSION')
+    expect(h.tree()).toContain('app/versions/2.0.0/VERSION')
+  })
+
+  it('stops with code 60 on a failing migration, restoring the database byte for byte and keeping current on v1', () => {
+    const h = home('darwin-arm64')
+    const v1 = stampFor(h, '1.0.0')
+    cleanups.push(v1.cleanup)
+
+    const installed = runInstaller(v1.script, h)
+    expect(installed.code).toBe(0)
+
+    const dbPath = join(h.workspace, 'ytcreator.db')
+    writeFileSync(dbPath, 'before-the-failed-migration')
+    const originalDb = readFileSync(dbPath)
+
+    const v2 = stampFor(h, '2.0.0', { migrateFails: true })
+    cleanups.push(v2.cleanup)
+
+    const updated = runInstaller(v2.script, h)
+
+    expect(updated.code).toBe(60)
+    expect(updated.stderr).toContain('No se han podido preparar tus datos para la nueva versión')
+    expect(updated.stderr).toContain('Tus datos se han dejado como estaban: sigues con la versión anterior')
+    expect(readFileSync(dbPath)).toEqual(originalDb)
+    expect(readFileSync(join(h.appHome, 'current', 'VERSION'), 'utf8')).toBe('1.0.0')
   })
 
   it('warns and finishes with code 0 when the Claude Code installer fails', () => {

@@ -1,16 +1,34 @@
 import { PROPOSED_LIMITS, validateLimits } from '@ytcreator/core'
-import { limitsBodySchema, type LimitsView } from '@ytcreator/core/api'
+import { generalSettingsPatchSchema, limitsBodySchema, type GeneralSettings, type LimitsView } from '@ytcreator/core/api'
 import { Hono } from 'hono'
 import type { LimitsRepo } from '../../db/repos/limits.ts'
+import type { SettingsRepo } from '../../db/repos/settings.ts'
 import { ApiError } from '../errors.ts'
 import { parseBody } from '../validate.ts'
 
 export interface SettingsRoutesDeps {
   limits: LimitsRepo
+  settings: SettingsRepo
 }
 
-export function settingsRoutes({ limits }: SettingsRoutesDeps) {
+function generalView(settings: SettingsRepo): GeneralSettings {
+  return {
+    updateCheckEnabled: settings.get('update_check_enabled') ?? true,
+    aiTimeoutSeconds: settings.get('ai_timeout_seconds'),
+  }
+}
+
+export function settingsRoutes({ limits, settings }: SettingsRoutesDeps) {
   const routes = new Hono()
+
+  routes.get('/general', (c) => c.json(generalView(settings)))
+
+  routes.patch('/general', async (c) => {
+    const body = await parseBody(c, generalSettingsPatchSchema)
+    if ('updateCheckEnabled' in body) settings.set('update_check_enabled', body.updateCheckEnabled!)
+    if ('aiTimeoutSeconds' in body) settings.set('ai_timeout_seconds', body.aiTimeoutSeconds ?? null)
+    return c.json(generalView(settings))
+  })
 
   // Without saved limits, the proposed ones, not yet accepted (FR-021).
   routes.get('/limits', (c) => {

@@ -5,6 +5,7 @@ import type { Logger } from '@ytcreator/core'
 import { Hono } from 'hono'
 import type { LimitsRepo } from '../db/repos/limits.ts'
 import type { OnboardingRepo } from '../db/repos/onboarding.ts'
+import type { SettingsRepo } from '../db/repos/settings.ts'
 import type { AiConnectionsService } from '../services/ai-connections.ts'
 import type { ClaudeRepair } from '../services/claude-repair.ts'
 import { ApiError } from './errors.ts'
@@ -12,6 +13,7 @@ import { guard } from './guard.ts'
 import { aiRoutes } from './routes/ai.ts'
 import { onboardingRoutes } from './routes/onboarding.ts'
 import { settingsRoutes } from './routes/settings.ts'
+import { updatesRoutes } from './routes/updates.ts'
 
 export interface AppDeps {
   port: number
@@ -27,6 +29,7 @@ export interface AppDeps {
   ai?: AiConnectionsService
   repair?: ClaudeRepair
   limits?: LimitsRepo
+  settings?: SettingsRepo
 }
 
 const MIME: Record<string, string> = {
@@ -88,7 +91,8 @@ export function createApp(deps: AppDeps) {
 
   if (deps.onboarding) app.route('/api/onboarding', onboardingRoutes(deps.onboarding))
   if (deps.ai) app.route('/api/ai', aiRoutes(deps.ai, deps.repair))
-  if (deps.limits) app.route('/api/settings', settingsRoutes({ limits: deps.limits }))
+  if (deps.limits && deps.settings) app.route('/api/settings', settingsRoutes({ limits: deps.limits, settings: deps.settings }))
+  if (deps.settings) app.route('/api/updates', updatesRoutes({ settings: deps.settings, version: deps.version }))
 
   // Fallback after every route, so routes registered later still match: static files, else the SPA.
   app.notFound((c) => {

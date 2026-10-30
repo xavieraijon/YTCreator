@@ -19,6 +19,7 @@ import { createFileStore } from './secrets/file-store.ts'
 import { selectSecretStore } from './secrets/select.ts'
 import { createAiConnectionsService, type ClaudeCodeStatus } from './services/ai-connections.ts'
 import { createClaudeRepair, officialInstaller } from './services/claude-repair.ts'
+import { createVersionCheck } from './updates/version-check.ts'
 
 export const HOST = '127.0.0.1'
 export const PORT_RANGE = { first: 4310, last: 4329 }
@@ -136,6 +137,17 @@ export async function startServer({
   const onboarding = createOnboardingRepo(db, connections, now)
   const limits = createLimitsRepo(db, now)
 
+  // Only in the published build (R20): dev, test and e2e all build with __YTC_ALLOW_FAKE_AI__ true, so no test
+  // or local run ever reaches the network here, regardless of YTCREATOR_FAKE_AI.
+  let versionCheckTimer: NodeJS.Timeout | null = null
+  if (!__YTC_ALLOW_FAKE_AI__) {
+    const releaseBase = env.YTCREATOR_RELEASE_BASE || 'https://github.com/ytcreator/ytcreator/releases/latest/download'
+    const versionCheck = createVersionCheck({ fetch: globalThis.fetch, now, settings, logger, releaseBase })
+    void versionCheck.run()
+    versionCheckTimer = setInterval(() => void versionCheck.run(), 60 * 60 * 1000) // hourly; `run()` no-ops under 24h
+    versionCheckTimer.unref()
+  }
+
   const instanceId = randomUUID()
   // The guard needs the port, known only once listening: requests reach the app after that.
   let app: ReturnType<typeof createApp> | null = null
@@ -155,7 +167,7 @@ export async function startServer({
     throw new NoFreePortError()
   }
 
-  app = createApp({ port, version, instanceId, logger, webDir, onShutdown, onboarding, ai, repair, limits })
+  app = createApp({ port, version, instanceId, logger, webDir, onShutdown, onboarding, ai, repair, limits, settings })
   logger.info('server_started', { port, version })
 
   return {
@@ -163,6 +175,7 @@ export async function startServer({
     instanceId,
     close: () =>
       new Promise((resolve) => {
+        if (versionCheckTimer) clearInterval(versionCheckTimer)
         server.close(() => {
           db.close()
           resolve()

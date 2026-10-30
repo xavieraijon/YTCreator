@@ -10,6 +10,9 @@ import {
   type TestServer,
 } from './server.ts'
 
+// Outside 4310–4329, other than 4390–4399 which the other specs already use (server.ts's own comment).
+const GENERAL_TAB_PORT = 4389
+
 let server: TestServer
 
 test.beforeAll(async () => {
@@ -116,4 +119,48 @@ test('the AI settings: accounts, reconnecting, changing the option and back, and
   await removeAccount(page, 0, 'Cuenta 2')
   await expect(badge(page, 'Sin IA conectada')).toBeVisible()
   await expect(page.getByText('Sin IA conectada').last()).toBeVisible()
+})
+
+test('the General tab: disabling the update notice and the AI timeout override, both surviving a reload (US5)', async ({
+  page,
+  context,
+}) => {
+  // Its own server: the previous test ends with no AI connected, which would redirect this one out of /ajustes.
+  const local = await startServer({ port: GENERAL_TAB_PORT })
+  try {
+    await blockExternal(context)
+    await page.goto(local.baseURL)
+    await toConnect(page, 'Usar mi suscripción de Claude')
+    await connectAccount(page)
+    await page.getByRole('button', { name: 'Continuar' }).click()
+    await page.getByRole('button', { name: 'Ir al inicio' }).click()
+
+    await page.goto(`${local.baseURL}/ajustes/general`)
+    await expect(heading(page, 'Ajustes')).toBeVisible()
+    await expect(page.getByRole('tab', { name: 'General' })).toHaveAttribute('aria-selected', 'true')
+
+    const notice = page.getByLabel('Avisarme cuando haya una versión nueva')
+    await expect(notice).toBeChecked()
+    await notice.click()
+    await expect(notice).not.toBeChecked()
+    await page.reload()
+    await expect(page.getByLabel('Avisarme cuando haya una versión nueva')).not.toBeChecked()
+
+    await page.locator('summary', { hasText: 'Modo experto' }).click()
+    const timeout = page.getByLabel('Tiempo máximo de espera de la IA')
+
+    // Out of range (FR: 10 to 300 seconds): rejected with its field message, nothing saved.
+    await timeout.fill('5')
+    await page.getByRole('button', { name: 'Guardar' }).click()
+    await expect(page.getByText('Este valor no es válido.')).toBeVisible()
+
+    await timeout.fill('120')
+    await page.getByRole('button', { name: 'Guardar' }).click()
+    await expect(page.getByText('Guardado')).toBeVisible()
+    await page.reload()
+    await page.locator('summary', { hasText: 'Modo experto' }).click()
+    await expect(page.getByLabel('Tiempo máximo de espera de la IA')).toHaveValue('120')
+  } finally {
+    await local.stop()
+  }
 })

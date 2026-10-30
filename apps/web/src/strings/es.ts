@@ -195,12 +195,15 @@ export const es = {
   },
 
   generalSettings: {
+    version: 'Versión instalada: {version}',
     updates: 'Avisarme cuando haya una versión nueva',
     updatesHelp: 'YTCreator consulta una vez al día si hay versión nueva. No envía nada tuyo.',
     expert: 'Modo experto',
     timeout: 'Tiempo máximo de espera de la IA',
     timeoutHelp: 'En segundos, de 10 a 300. Déjalo vacío para usar el de la app.',
     seconds: 'segundos',
+    save: 'Guardar',
+    saved: 'Guardado',
   },
 
   updateNotice: {
