@@ -96,7 +96,7 @@ Una sola vez por proveedor, antes de cerrar la feature:
 |---|---|
 | Suscripción: conectar desde la app, sin Terminal | Cuenta «Funciona» en ≤ 5 min (SC-002, SC-011) |
 | Suscripción: código mal copiado | «El código no es válido…» y enlace nuevo |
-| Suscripción: añadir la misma cuenta | «Esta cuenta ya está conectada» |
+| Suscripción: añadir la misma cuenta con un inicio de sesión nuevo | Se añade como otra cuenta (Claude no dice de quién es un acceso, S3); la pantalla avisa de que no se puede distinguir |
 | Suscripción: desinstalar Claude Code y pulsar «Reparar» | Vuelve a «Funciona» |
 | API: clave con espacios al principio y al final | Se guarda y funciona |
 | API: clave sin saldo | Antes de pegarla, aviso de que hace falta saldo con enlace a facturación; si S4 lo confirma, además «Tu cuenta de Anthropic no tiene saldo» al conectar (FR-017) |

@@ -241,11 +241,19 @@ también dio `ok: true`.
 | Prueba de §5 | Resultado |
 |---|---|
 | Suscripción: conectar desde la app, sin Terminal | ✓ |
-| Suscripción: código mal copiado | pendiente |
-| Suscripción: añadir la misma cuenta | pendiente |
+| Suscripción: código mal copiado | ✓ |
+| Suscripción: añadir la misma cuenta | ✓ (alcance reducido de S3) |
 | Suscripción: desinstalar Claude Code y pulsar «Reparar» | pendiente |
 | Suscripción: sesión caducada | pendiente |
 | API: clave con espacios, sin saldo, revocada, sin Wi-Fi | pendiente |
 | README, instalador y bienvenida sin opción gratuita | pendiente |
 | Consola de Anthropic: 0 € por comprobaciones | pendiente |
 | §6: búsqueda de las claves reales | pendiente |
+
+**Código mal copiado y misma cuenta (2026-10-30, desde Ajustes → «Añadir otra cuenta»):**
+- Código con letras borradas: «El código no es válido o ha caducado.» al momento y enlace nuevo. En el registro,
+  `ai.login_failed` con `rejected: true, timedOut: false`.
+- Con el enlace nuevo y la misma suscripción, la app la añadió como «Cuenta 2», con otra huella. Es el comportamiento
+  aceptado en S3 (2026-10-28): dos `setup-token` de la misma cuenta dan *tokens* distintos y Claude no dice de quién
+  son, así que solo se detecta el mismo *token* pegado dos veces. La pantalla muestra el aviso
+  (`sameAccountNote`). La fila de `quickstart.md` §5 aún esperaba «Esta cuenta ya está conectada»; corregida.
