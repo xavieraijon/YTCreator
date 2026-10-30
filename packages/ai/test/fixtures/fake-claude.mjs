@@ -90,7 +90,10 @@ async function setupToken() {
   writeFileSync(join(dir, 'login.pid'), String(process.pid))
   writeFileSync(join(dir, 'login.dir'), process.env.CLAUDE_CONFIG_DIR ?? '')
   writeFileSync(join(dir, 'login.browser'), process.env.BROWSER ?? '')
-  const log = readFileSync(join(fixtures, 'setup-token', 'success.log'), 'latin1')
+  // Like the real CLI, no terminal type means no colours (T158).
+  const recorded = readFileSync(join(fixtures, 'setup-token', 'success.log'), 'latin1')
+  // eslint-disable-next-line no-control-regex -- it strips the colours of a terminal
+  const log = process.env.TERM ? recorded : recorded.replace(/\x1b\[[0-9;]*m/g, '')
   const cut = log.lastIndexOf('\x1b[?2026h', log.indexOf('Long-lived authentication token created'))
   process.stdout.write(Buffer.from(log.slice(0, cut), 'latin1'))
   if (state.login === 'hang') return hang()

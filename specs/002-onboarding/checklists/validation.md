@@ -200,3 +200,18 @@ reintentar, así que la app agotaba siempre los 30 s.
   código y sigue viva tras rechazarlo.
 - Dos pruebas nuevas en `claude-code.contract.test.ts`: código largo y rechazo sin esperar al tiempo máximo. Las dos
   fallan sin el arreglo.
+
+**Tercer fallo, en la siguiente prueba:** el código ya se enviaba y Claude lo aceptaba. El registro lo confirma:
+`exitCode: 0, rejected: false`. Aun así, la app respondió «código no válido». Causa: el servidor instalado se arranca
+sin `TERM`, y como `cleanEnv` solo pasa `PATH`, `HOME` y `LANG`, la CLI tampoco lo tenía. Sin tipo de terminal, la CLI
+no pinta colores, y el analizador busca el final del token en el código que cierra su color (`ESC[39m`). El token
+se creaba, pero la app no lo encontraba. El spike S2 se hizo en una terminal con colores, y la CLI falsa reproducía
+siempre esa grabación. Confirmado con la CLI real (2.1.314), por el mismo camino que la app: 0 secuencias de color
+sin `TERM` y 49 con `TERM=xterm-256color`.
+
+**Corregido:**
+- `login.ts` lanza `setup-token` con `TERM=xterm-256color` y `COLORTERM=truecolor`, igual que la terminal del spike.
+- La CLI falsa quita los colores de la grabación cuando no recibe `TERM`. Sin el arreglo, CC4 y la prueba del código
+  largo fallan como en la prueba real: la CLI termina bien y no se encuentra el token.
+- El token que se creó en ese intento no se guardó en ninguna parte: la carpeta temporal del inicio de sesión se
+  borra al terminar.
