@@ -85,7 +85,7 @@ test('the AI settings: accounts, reconnecting, changing the option and back, and
   await row.getByRole('button', { name: 'Volver a conectar' }).click()
   await (await popup).close()
   await expect(row.getByText(/Entra con la misma cuenta de Claude/)).toBeVisible()
-  await expect(row.getByRole('link', { name: /Abrir la página de Claude/ })).toBeVisible()
+  await expect(row.getByRole('link', { name: /Volver a abrir la página de Claude/ })).toBeVisible()
   await row.getByLabel('Código de Claude').fill(FAKE_CODE)
   await row.getByRole('button', { name: 'Conectar', exact: true }).click()
   // Renewed in place: still one account, with its name, working again.

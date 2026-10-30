@@ -8,7 +8,8 @@ import { parseScenario, type FakeScenario } from './fake/scenarios.ts'
 
 export interface RegistryOptions {
   env: Record<string, string | undefined>
-  // Replaced at build time: false in the published build, so the fake can never be switched on there.
+  // Only narrows what the build allows: `__YTC_ALLOW_FAKE_AI__` (false in the published build) is checked too, so
+  // there the fake branch is dead code and the bundler drops the whole fake provider.
   allowFake?: boolean
   now?: () => Date
   logger?: Logger // for the subscription login, which outlives a single request
@@ -39,14 +40,14 @@ function fakeDescriptor(slot: Slot, scenario: FakeScenario, now: () => Date): Pr
 // With `YTCREATOR_FAKE_AI` (and only in a build that allows it) every slot is backed by the fake provider.
 export function createRegistry({
   env,
-  allowFake = __YTC_ALLOW_FAKE_AI__,
+  allowFake = true,
   now = () => new Date(),
   logger = { info() {}, warn() {}, error() {} },
   claudeBin,
 }: RegistryOptions): ProviderDescriptor[] {
-  const scenarioName = env.YTCREATOR_FAKE_AI
-  if (allowFake && scenarioName) {
-    const scenario = parseScenario(scenarioName)
+  // `env` is only read inside the condition, so not even the variable's name is left in the published build.
+  if (__YTC_ALLOW_FAKE_AI__ && allowFake && env.YTCREATOR_FAKE_AI) {
+    const scenario = parseScenario(env.YTCREATOR_FAKE_AI)
     return SLOTS.map((slot) => fakeDescriptor(slot, scenario, now))
   }
   const [subscription, payPerUse] = SLOTS as [Slot, Slot]

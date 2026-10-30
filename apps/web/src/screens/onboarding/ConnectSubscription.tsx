@@ -8,6 +8,7 @@ import { openPendingTab } from '../../links.ts'
 import { AiFailureMessage } from '../../shell/AiFailureMessage.tsx'
 import { AiWorkStatus, useAiWork } from '../../shell/AiWork.tsx'
 import { errorText, failureOf, wasCancelled } from '../../shell/errorText.ts'
+import { StatusLine } from '../../shell/StatusLine.tsx'
 import { statusText } from '../../shell/statusText.ts'
 import { es } from '../../strings/es.ts'
 import type { FailureActionId } from '../../strings/failures.es.ts'
@@ -172,7 +173,13 @@ export function ConnectSubscription({
             {accounts.map((account) => (
               <li key={account.id}>
                 <Card>
-                  {format(es.connectSubscription.account, { nombre: account.label, estado: statusText(account) })}
+                  <StatusLine
+                    view={account}
+                    text={format(es.connectSubscription.account, {
+                      nombre: account.label,
+                      estado: statusText(account),
+                    })}
+                  />
                 </Card>
               </li>
             ))}

@@ -41,7 +41,10 @@ export function makeRelease(serveDir: string, version = '1.0.0', opts: { migrate
       'set -euo pipefail',
       'case "${1:-open}" in',
       `  migrate) exit ${opts.migrateFails ? 1 : 0} ;;`,
-      '  open) echo "YTCreator fake open http://127.0.0.1:4310" ;;',
+      // Real `open` never returns while the app runs (main.ts's serve() blocks on the listening socket): a
+      // stub that returned immediately would never have caught step 8 calling it synchronously, which hung
+      // install.sh forever once the entry-point guard that used to make `open` a silent no-op got fixed.
+      '  open) echo "YTCreator fake open http://127.0.0.1:4310"; sleep 300 ;;',
       '  *) exit 2 ;;',
       'esac',
       '',

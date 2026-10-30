@@ -104,12 +104,6 @@ function AccountRow({
       </form>
       <StatusLine view={account} />
       <div className={styles.row}>
-        <Button variant="ghost" disabled={first} onClick={() => onMove(-1)}>
-          {es.aiSettings.moveUp}
-        </Button>
-        <Button variant="ghost" disabled={last} onClick={() => onMove(1)}>
-          {es.aiSettings.moveDown}
-        </Button>
         <Button variant="secondary" loading={busy === 'check'} onClick={() => void check()}>
           {es.aiSettings.check}
         </Button>
@@ -117,6 +111,17 @@ function AccountRow({
           <Button variant="secondary" onClick={onLogin}>
             {es.aiSettings.reconnect}
           </Button>
+        )}
+        {/* With a single account there is no order to change. */}
+        {!(first && last) && (
+          <>
+            <Button variant="ghost" disabled={first} onClick={() => onMove(-1)}>
+              {es.aiSettings.moveUp}
+            </Button>
+            <Button variant="ghost" disabled={last} onClick={() => onMove(1)}>
+              {es.aiSettings.moveDown}
+            </Button>
+          </>
         )}
         <Button variant="ghost" onClick={() => setConfirming(true)}>
           {es.aiSettings.remove}
@@ -135,7 +140,7 @@ function AccountRow({
             <Button variant="ghost" onClick={() => setConfirming(false)}>
               {es.aiSettings.cancel}
             </Button>
-            <Button variant="primary" loading={busy === 'remove'} onClick={() => void remove()}>
+            <Button variant="danger" loading={busy === 'remove'} onClick={() => void remove()}>
               {es.aiSettings.remove}
             </Button>
           </>

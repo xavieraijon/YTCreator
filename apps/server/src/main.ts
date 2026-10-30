@@ -141,7 +141,8 @@ export async function startServer({
   // or local run ever reaches the network here, regardless of YTCREATOR_FAKE_AI.
   let versionCheckTimer: NodeJS.Timeout | null = null
   if (!__YTC_ALLOW_FAKE_AI__) {
-    const releaseBase = env.YTCREATOR_RELEASE_BASE || 'https://github.com/ytcreator/ytcreator/releases/latest/download'
+    const releaseBase =
+      env.YTCREATOR_RELEASE_BASE || 'https://github.com/xavieraijon/YTCreator/releases/latest/download'
     const versionCheck = createVersionCheck({ fetch: globalThis.fetch, now, settings, logger, releaseBase })
     void versionCheck.run()
     versionCheckTimer = setInterval(() => void versionCheck.run(), 60 * 60 * 1000) // hourly; `run()` no-ops under 24h

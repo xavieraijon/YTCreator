@@ -91,7 +91,8 @@ export function createApp(deps: AppDeps) {
 
   if (deps.onboarding) app.route('/api/onboarding', onboardingRoutes(deps.onboarding))
   if (deps.ai) app.route('/api/ai', aiRoutes(deps.ai, deps.repair))
-  if (deps.limits && deps.settings) app.route('/api/settings', settingsRoutes({ limits: deps.limits, settings: deps.settings }))
+  if (deps.limits && deps.settings)
+    app.route('/api/settings', settingsRoutes({ limits: deps.limits, settings: deps.settings }))
   if (deps.settings) app.route('/api/updates', updatesRoutes({ settings: deps.settings, version: deps.version }))
 
   // Fallback after every route, so routes registered later still match: static files, else the SPA.

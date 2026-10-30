@@ -43,7 +43,7 @@ export function AppHeader({ inWizard = false, closed = false, onClosed }: AppHea
         {!inWizard && (
           <Link className={styles.link} to={{ page: 'settings' }}>
             <Icon icon={Settings} />
-            {es.header.settings}
+            <span className={styles.label}>{es.header.settings}</span>
           </Link>
         )}
         <CloseApp onClosed={onClosed} />
@@ -100,7 +100,7 @@ function CloseApp({ onClosed }: { onClosed: () => void }) {
     <>
       <Button variant="ghost" onClick={() => setOpen(true)}>
         <Icon icon={Power} />
-        {es.header.close}
+        <span className={styles.label}>{es.header.close}</span>
       </Button>
       <Dialog
         open={open}

@@ -23,6 +23,12 @@ export function LoginCodeForm({ url, code, onCodeChange, onSubmit, onNewLink, st
         onSubmit()
       }}
     >
+      <p className={styles.text}>
+        {es.connectSubscription.codeHelp}{' '}
+        <ExternalLink className={styles.link} href={url}>
+          {es.connectSubscription.reopenPage}
+        </ExternalLink>
+      </p>
       <TextField
         label={es.connectSubscription.codeLabel}
         autoComplete="off"
@@ -30,11 +36,9 @@ export function LoginCodeForm({ url, code, onCodeChange, onSubmit, onNewLink, st
         value={code}
         onChange={(event) => onCodeChange(event.target.value)}
       />
-      <div className={styles.links}>
-        <ExternalLink className={styles.link} href={url}>
-          {es.connectSubscription.openPage}
-        </ExternalLink>
-        <Button type="button" variant="ghost" onClick={onNewLink} loading={starting}>
+      {/* A secondary action of its own, never in a row with the link (contracts/ui-screens.md). */}
+      <div>
+        <Button type="button" variant="secondary" onClick={onNewLink} loading={starting}>
           {es.connectSubscription.newLink}
         </Button>
       </div>

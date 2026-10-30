@@ -96,6 +96,17 @@ existir `APP_HOME` (paso 1), el registro va a un fichero temporal que se mueve a
 
 Tiempos: ≤ 1 s con la instancia en marcha; ≤ 5 s en frío (plan, Performance Goals).
 
+El lanzador deduce `APP_HOME` de su propia ruta asumiendo que corre como `$APP_HOME/current/bin/ytcreator`. El
+paso 6 es la única excepción: migra la versión nueva en `$APP_HOME/versions/<v>/bin/ytcreator` *antes* de mover
+`current`, una ruta con un nivel más de profundidad, así que para esa llamada pasa `YTC_APP_HOME=$APP_HOME` como
+variable de entorno y el lanzador la usa en vez de deducirla.
+
+`node server.mjs open` (y `serve`) no vuelve hasta que el servidor se apaga: si no hay instancia que reutilizar,
+este mismo proceso se convierte en la app en marcha (igual que al abrir el acceso directo). El paso 8 del
+instalador necesita que el propio script termine y devuelva la terminal, así que lanza el lanzador desacoplado
+(`setsid`, o `nohup` si no existe, y en segundo plano) en vez de esperarlo; el acceso directo no necesita este
+desacople porque el entorno gráfico ya no espera a que su proceso vuelva.
+
 ## Acceso directo
 
 | Sistema | Ruta | Contenido |

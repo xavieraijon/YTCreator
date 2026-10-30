@@ -40,12 +40,40 @@ Al volver a la pestaña (`visibilitychange`) y tras un `409`, la web vuelve a pe
   (FR-006). Durante el asistente solo se muestran el logotipo y «Cerrar YTCreator».
 - **Progreso del asistente**: `Stepper` con 4 pasos visibles (Elegir, Conectar, Límites, Listo). Con suscripción,
   Límites aparece como «no hace falta». La bienvenida no cuenta.
-- **«Lo haré más tarde»**: enlace secundario en elegir y conectar (FR-010).
-- **«Volver»**: botón secundario en elegir, conectar, límites y listo.
+- **«Lo haré más tarde»**: botón `ghost` en elegir y conectar (FR-010).
+- **«Volver»**: botón `ghost` en elegir, conectar, límites y listo.
 - **Aviso de versión nueva** (`UpdateNotice`): banda discreta encima del contenido, fuera del asistente, con la
-  línea de instalación, un botón «Copiar» y «Cerrar».
+  línea de instalación, un botón «Copiar» y «Cerrar». «Discreta» quiere decir: fondo `--s-color-surface-raised`,
+  borde inferior sutil, la altura de su contenido (nunca estirada), «Copiar» `secondary` y «Cerrar aviso» `ghost`.
 - **Trabajo de la IA**: cualquier espera de comprobación o inicio de sesión usa `AiWorking` con texto
   («Comprobando tu conexión…») y un botón «Cancelar» si la espera puede pasar de 5 s.
+
+### Jerarquía de acciones
+
+Cada acción usa una variante de `Button` de `@ytcreator/ui` (`primary`, `secondary`, `ghost`, `danger`) o el
+`ExternalLink` de la app. Si hiciera falta otra variante, se añade a `packages/ui`; nunca se imita con CSS local.
+
+| Variante | Cuándo | Ejemplos |
+|---|---|---|
+| `primary` | La acción que hace avanzar la pantalla. Una por pantalla, a la derecha de la fila de acciones (`WizardShell`, `ConnectShell`) | Empezar, Continuar, Comprobar y guardar, Guardar límites, Ir al inicio, Conectar |
+| `secondary` | Hace trabajo en la pantalla sin ser la acción principal | Añadir otra cuenta, Comprobar, Sustituir, Copiar, Pedir un enlace nuevo, Usar esta opción, Configurar, el «Cancelar» de `AiWorking` |
+| `ghost` | Navega o cancela sin hacer la tarea | Volver, Lo haré más tarde, Cerrar aviso, Cerrar YTCreator, el «Cancelar» de los diálogos, Borrar (abre la confirmación), Subir/Bajar |
+| `danger` | Confirma algo que no se puede deshacer, solo dentro de un `Dialog` | Borrar |
+| Enlace (`ExternalLink`) | Solo páginas fuera de YTCreator: abre otra pestaña, con el icono de enlace externo y el texto oculto «(se abre en otra pestaña)». Va dentro del texto o en su propia línea, nunca en una fila con botones | Ver las suscripciones de Claude, Conseguir mi clave, Volver a abrir su página |
+
+Reglas:
+
+- en una misma fila no conviven un enlace y un botón;
+- una acción que repite otra («Pedir un enlace nuevo», que repite «Abrir la página de Claude») es `secondary` y va
+  en su propia línea;
+- excepciones a «enlace solo para salir»: «Abrir la página de Claude» es `primary` porque pide al servidor el
+  enlace antes de abrirlo; las acciones de un `ErrorMessage` son siempre su botón, aunque lleven fuera;
+- con una sola cuenta, «Subir» y «Bajar» no se muestran;
+- el texto de los `ghost` y de los enlaces cumple 4.5:1 de contraste en los dos temas (lo comprueba axe en
+  `a11y.spec.ts`);
+- `ChangeAi` (`/ajustes/ia/cambiar/:kind`) reutiliza las pantallas de conectar y hereda estas reglas;
+- los mismos nombres en el asistente y en Ajustes para la misma acción (p. ej. «Añadir otra cuenta»,
+  «Comprobar»).
 
 ## Pantallas del asistente
 
@@ -72,7 +100,9 @@ Estados internos de la pantalla:
    /api/ai/repair-claude-code`) y `ProgressBar` indeterminada mientras está `en_curso`;
 2. **Inicio**: explicación en tres pasos numerados (abrir el enlace, aprobar, copiar el código). Acción principal
    «Abrir la página de Claude» (llama a `login`, abre `url` en otra pestaña y pasa al estado 3);
-3. **Pegar el código**: `TextField` «Código de Claude» y «Conectar». Enlace secundario «Pedir un enlace nuevo»;
+3. **Pegar el código**: una frase («Claude te muestra el código al aprobar el acceso.») con el enlace «Volver a
+   abrir su página», el `TextField` «Código de Claude» y, debajo, «Pedir un enlace nuevo» (`secondary`). Acción
+   principal «Conectar»;
 4. **Conectada**: `Card` con la cuenta («Cuenta 1 · Funciona»), botón secundario «Añadir otra cuenta» y una frase
    que explica para qué sirve («Si una se queda sin cupo, YTCreator usa la siguiente»). Acción principal
    «Continuar».

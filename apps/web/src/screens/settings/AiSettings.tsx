@@ -221,7 +221,7 @@ export function AiSettings() {
                 <Button variant="ghost" onClick={() => setConfirmKey(false)}>
                   {es.aiSettings.cancel}
                 </Button>
-                <Button variant="primary" loading={busy === 'removeKey'} onClick={() => void removeKey()}>
+                <Button variant="danger" loading={busy === 'removeKey'} onClick={() => void removeKey()}>
                   {es.aiSettings.remove}
                 </Button>
               </>
@@ -240,8 +240,9 @@ export function AiSettings() {
             const ready = connection?.status === 'conectada'
             return (
               <Card as="li" key={kind} className={`${styles.row} ${styles.spread}`}>
-                <span>
-                  <strong>{kindLabel(kind)}</strong> {connection && <StatusLine view={connection} />}
+                <span className={styles.option}>
+                  <strong>{kindLabel(kind)}</strong>
+                  {connection && <StatusLine view={connection} />}
                 </span>
                 {ready ? (
                   <Button variant="secondary" loading={busy === kind} onClick={() => void use(kind)}>

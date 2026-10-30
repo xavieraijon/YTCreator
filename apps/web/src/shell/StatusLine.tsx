@@ -15,12 +15,19 @@ const ICONS: Record<ConnectionStatus, LucideIcon> = {
   no_disponible: CircleAlert,
 }
 
-// The state of an option or an account: text and icon, never colour alone (contracts/ui-screens.md).
-export function StatusLine({ view }: { view: Pick<ConnectionView, 'status' | 'reason' | 'resetsAt'> }) {
+// The state of an option or an account: text and icon, never colour alone (contracts/ui-screens.md). `text`
+// replaces the status text, e.g. with the account's name in front.
+export function StatusLine({
+  view,
+  text,
+}: {
+  view: Pick<ConnectionView, 'status' | 'reason' | 'resetsAt'>
+  text?: string
+}) {
   return (
     <span className={styles.status}>
       <Icon icon={ICONS[view.status]} size="sm" />
-      {statusText(view)}
+      {text ?? statusText(view)}
     </span>
   )
 }

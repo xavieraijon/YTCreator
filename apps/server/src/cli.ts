@@ -1,6 +1,6 @@
 // Entry point of dist/server.mjs: serve | migrate | open (T063).
 import { spawn as nodeSpawn } from 'node:child_process'
-import { existsSync, mkdirSync, readFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, realpathSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -97,7 +97,19 @@ export async function runCli(argv: string[], overrides: Partial<CliDeps> = {}): 
 }
 
 // Runs for real only when this file is the process entry point; a test importing it never matches.
-if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
+// import.meta.url is Node's realpath of the entry module (symlinks resolved); bin/ytcreator always runs it
+// through "current", a symlink to versions/<v>, so argv[1] must be realpath'd too before the comparison —
+// otherwise it never matches and the launcher silently no-ops (migrate/serve/open all exit 0 doing nothing).
+function isEntryPoint(): boolean {
+  if (!process.argv[1]) return false
+  try {
+    return fileURLToPath(import.meta.url) === realpathSync(process.argv[1])
+  } catch {
+    return false
+  }
+}
+
+if (isEntryPoint()) {
   void runCli(process.argv.slice(2)).then((code) => {
     process.exitCode = code
   })

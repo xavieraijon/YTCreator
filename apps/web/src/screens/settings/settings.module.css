@@ -29,6 +29,11 @@
   gap: var(--s-space-3);
 }
 
+.option {
+  display: grid;
+  gap: var(--s-space-1);
+}
+
 .row {
   display: flex;
   flex-wrap: wrap;

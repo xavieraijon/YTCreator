@@ -19,13 +19,17 @@ Spec-Driven Development with GitHub Spec Kit (`/speckit-*`).
   constitution 2.0.0): **design complete, branch `002-onboarding`** (revised 2026-10-29). spec, plan, research,
   data-model, contracts, quickstart and tasks (164 tasks: 5 withdrawn, 4 new, including T164 — visual review
   against `checklists/design.md`) done; three `/speckit-analyze` passes with all findings fixed (0 critical/high).
-  The free-Gemini code already written (adapter, registry, DB check, UI) was removed in this revision. 151/164
-  tasks done (spikes, US1–US5 complete; not committed yet). **To resume: `/speckit-implement`** with Phase 8 Polish
-  (T152…: secrets e2e, a11y, visual review, release CI, glossary pass, full test run, manual checks). Creator's
-  approval at each phase.
+  The free-Gemini code already written (adapter, registry, DB check, UI) was removed in this revision. 156/164
+  tasks done (spikes, US1–US5, Phase 8 Polish T152–T157/T160/T164 complete; not committed yet). Validation in
+  `specs/002-onboarding/checklists/validation.md`: T157's pass found and fixed three real installer/launcher bugs
+  (`APP_HOME` path at `migrate`, `open`/`serve` silently no-op'ing through the `current` symlink, step 8 hanging
+  forever once `open` actually blocks), confirmed with a real Docker install. **Only T158 and T159 remain, and both
+  need the creator/an outside tester** (real-provider manual tests, novice audit) — the agent cannot do them.
+  Creator's approval at each phase.
 - Provider subscriptions beyond Claude are a later feature, not part of 002. First one planned: Gemini
   (Google AI Pro, with its CLI).
 - Commands (Node 24, `fnm exec --using=24 --`): `pnpm dev` (server + web), `pnpm lint`, `pnpm typecheck`,
-  `pnpm test`, `pnpm test:e2e`, `pnpm format`; catalog with `pnpm --filter @ytcreator/catalog dev`.
+  `pnpm test`, `pnpm test:installer`, `pnpm test:e2e`, `pnpm format`; catalog with
+  `pnpm --filter @ytcreator/catalog dev`.
 - Planned order after 001: onboarding (install + AI choice) → channel and niche → idea bank → script and outline →
   publishing package → subtitles.

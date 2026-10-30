@@ -92,7 +92,10 @@ interface Logger {
    - todos los ficheros de `APP_HOME/logs/`;
    - todo `~/YTCreator` (incluida la base de datos, en binario);
    - el cuerpo de todas las respuestas HTTP capturadas por Playwright;
-   - el DOM y `localStorage` al final de cada pantalla;
+   - el DOM y `localStorage` al final de cada pantalla. Única excepción: tras una comprobación fallida, el campo
+     «Tu clave» (tipo contraseña) conserva lo que escribió el creador mientras sigue en esa pantalla, para que
+     «Comprobar ahora» y «Reintentar» la reenvíen sin volver a pegarla (decisión del creador, 2026-10-30). Ese
+     campo, y solo él, queda fuera de la búsqueda en esa pantalla;
    - los ficheros versionados del repositorio (`git ls-files`);
 3. resultado esperado: cero apariciones. Solo puede aparecer el `hint` de 4 caracteres.
 

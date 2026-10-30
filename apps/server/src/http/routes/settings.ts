@@ -1,5 +1,10 @@
 import { PROPOSED_LIMITS, validateLimits } from '@ytcreator/core'
-import { generalSettingsPatchSchema, limitsBodySchema, type GeneralSettings, type LimitsView } from '@ytcreator/core/api'
+import {
+  generalSettingsPatchSchema,
+  limitsBodySchema,
+  type GeneralSettings,
+  type LimitsView,
+} from '@ytcreator/core/api'
 import { Hono } from 'hono'
 import type { LimitsRepo } from '../../db/repos/limits.ts'
 import type { SettingsRepo } from '../../db/repos/settings.ts'

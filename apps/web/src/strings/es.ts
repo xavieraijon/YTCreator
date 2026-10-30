@@ -12,6 +12,7 @@ export const es = {
     notFoundBack: 'Ir al inicio',
     loadFailed: 'No se ha podido abrir YTCreator',
     retry: 'Volver a intentarlo',
+    newTab: '(se abre en otra pestaña)',
   },
 
   // Labels of the registry descriptors (`labelKey` = ai.provider.*).
@@ -81,6 +82,8 @@ export const es = {
       copy: 'Copia el código que te muestra y pégalo aquí.',
     },
     openPage: 'Abrir la página de Claude',
+    codeHelp: 'Claude te muestra el código al aprobar el acceso.',
+    reopenPage: 'Volver a abrir la página de Claude',
     codeLabel: 'Código de Claude',
     connect: 'Conectar',
     newLink: 'Pedir un enlace nuevo',

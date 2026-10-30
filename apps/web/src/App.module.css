@@ -1,6 +1,7 @@
 .app {
-  display: grid;
-  grid-template-rows: auto 1fr;
+  /* A column, not a grid: the update band comes and goes, and only main takes the room left. */
+  display: flex;
+  flex-direction: column;
   min-block-size: 100dvh;
   background: var(--s-color-bg);
   color: var(--s-color-text-primary);
@@ -23,6 +24,7 @@
 }
 
 .main {
+  flex: 1;
   min-inline-size: 0;
   padding: var(--s-space-7) var(--s-space-5);
 }

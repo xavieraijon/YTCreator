@@ -3,8 +3,9 @@
   inset-block-start: 0;
   z-index: var(--s-z-sticky);
   display: flex;
+  flex-wrap: wrap; /* at 375 px or 200 % zoom the actions go below the logo instead of out of the screen */
   align-items: center;
-  gap: var(--s-space-4);
+  gap: var(--s-space-2) var(--s-space-4);
   padding: var(--s-space-3) var(--s-space-5);
   border-block-end: var(--s-border-width-default) solid var(--s-color-border-subtle);
   background: var(--s-color-surface);
@@ -18,6 +19,8 @@
 
 .actions {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   align-items: center;
   gap: var(--s-space-2);
   margin-inline-start: auto;
@@ -44,4 +47,16 @@
   display: inline-flex;
   border-radius: var(--s-radius-md);
   text-decoration: none;
+}
+
+/* Narrow screens: «Ajustes» and «Cerrar YTCreator» show only their icon; the name stays for screen readers. */
+@media (max-width: 40rem) {
+  .label {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
 }

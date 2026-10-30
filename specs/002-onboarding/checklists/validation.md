@@ -1,0 +1,150 @@
+# Validación: 002 Onboarding
+
+## Revisión visual (T164)
+
+Fecha: 2026-10-30. La hizo el agente de implementación y la aprobó el creador el mismo día.
+
+**Cómo:** capturas a página completa en tema claro y oscuro, a 1280 × 800 y a 375 px, de todas las pantallas de
+`contracts/ui-screens.md`: bienvenida, elegir, «Conecta una IA», las tres fases de la suscripción, la clave (vacía,
+rechazada y guardada), límites, listo con cada opción, inicio con el aviso de versión y con el diálogo, Ajustes (IA y
+General) y el cambio de opción desde Ajustes. Se revisaron contra `checklists/design.md`.
+
+**Fallos encontrados y corregidos:**
+
+- **Aviso de versión estirado:** el `UpdateNotice` ocupaba la fila `1fr` de la rejilla de `.app` y llegaba a media
+  pantalla. `App.module.css` pasa a una columna flex y `.main` se queda con el espacio libre.
+- **Logotipo invisible:** Vite incrustaba el SVG del logotipo como `data:` y la CSP del servidor lo bloqueaba. Ahora
+  `vite.config.ts` lo sirve como fichero (`assetsInlineLimit: 0`), sin relajar la CSP.
+- **Cabecera a 375 px:** se salía por la derecha (lo detectó `a11y.spec.ts`, T153). Ahora las acciones pasan a la
+  línea siguiente, y en pantallas estrechas «Ajustes» y «Cerrar YTCreator» muestran solo el icono, con el nombre
+  accesible (decisión del creador). La cabecera queda en 2 líneas.
+- **Enlace y botón en la misma fila (CHK002–CHK004):** en `LoginCodeForm`, «Abrir la página de Claude» (enlace) y
+  «Pedir un enlace nuevo» (`ghost`) compartían fila y estaban desalineados. Ahora el formulario lleva una frase con el
+  enlace «Volver a abrir su página», el campo del código y, en su propia línea, «Pedir un enlace nuevo» como
+  `secondary`.
+- **Enlaces externos (CHK005–CHK006):** `ExternalLink` añade el icono de enlace externo y el texto oculto «(se abre en
+  otra pestaña)».
+- **Confirmaciones de borrado:** «Borrar» dentro del diálogo pasa a `danger`.
+- **Otros:** con una sola cuenta no se muestran «Subir» y «Bajar». En «Otras opciones» el estado va debajo del nombre.
+  La tarjeta de cuenta del asistente lleva el icono de estado, como en Ajustes.
+
+**Contrato:** la nueva sección «Jerarquía de acciones» de `contracts/ui-screens.md` cubre CHK001–CHK012. Define cada
+variante con ejemplos, el enlace solo para salir de la app, las excepciones, el contraste de los `ghost`, qué es
+«discreta», la herencia en `ChangeAi`, la remisión a `@ytcreator/ui` y qué hacer si falta una variante. «Volver» y
+«Lo haré más tarde» figuran como `ghost`, que es lo que hace el código.
+
+**Comprobación:**
+
+- e2e de la web: 20 de 20, incluidos `a11y.spec.ts` (axe en los dos temas) y `secrets-leak.spec.ts`.
+- `pnpm test`: 444 pasan y 1 se omite.
+- `pnpm lint`, `pnpm typecheck` y prettier: limpios.
+
+**Pendiente:** el creador quiere una pasada de mejora de la interfaz con el modo Design cuando termine el desarrollo.
+No forma parte de 002.
+
+## Publicación (T154)
+
+**Hallazgo de seguridad, corregido:** la build de producción llevaba dentro el proveedor falso, con sus tokens
+`sk-ant-oat-FAKE…`, su página de inicio de sesión falsa y la variable `YTCREATOR_FAKE_AI`. La causa era que
+`createRegistry` tomaba `__YTC_ALLOW_FAKE_AI__` solo como valor por defecto de `allowFake`, así que el empaquetador
+no podía quitar la rama. Ahora la condición comprueba también la constante, y en la build publicada esa rama es código
+muerto y se elimina. En la build de producción ya no aparece ninguno de esos marcadores.
+
+**`release.yml`:**
+
+- se dispara con etiquetas `v*` y antes ejecuta `lint`, `typecheck` y `test`;
+- compila la web y el servidor con `mode=production`;
+- falla si `server.mjs` contiene el proveedor falso;
+- empaqueta `ytcreator-<v>.tar.gz`, con `server.mjs`, `web/`, `bin/ytcreator` y `VERSION` en la raíz;
+- genera `SHA256SUMS` (el tarball, los cuatro Node de nodejs.org e `install.sh`);
+- sella `install.sh` y falla si le queda algún marcador `__…__`;
+- publica el tarball, `install.sh`, `SHA256SUMS` y `VERSION`, que `version-check` lee.
+
+**URL de descarga:** el servidor (`main.ts`) y `install.sh` apuntaban a `github.com/ytcreator/ytcreator`. Ahora apuntan
+a `github.com/xavieraijon/YTCreator`, igual que la línea de instalación de `UpdateNotice`.
+
+**Comprobación local:**
+
+- se repitieron a mano el empaquetado y el sellado, con Node 24.22.1 y las sumas reales de nodejs.org;
+- el servidor, arrancado desde el tarball descomprimido, sirve la web y `/api/health` responde con la versión `0.1.0`
+  leída de `VERSION`;
+- `shellcheck` pasa sobre el instalador, el lanzador y los bloques del workflow;
+- `pnpm test` da 444 pasan y 1 se omite; e2e 97 (catálogo) y 20 (web); lint y typecheck limpios.
+
+**Sin probar:** el workflow en GitHub. Se verá con la primera etiqueta.
+
+## Glosario (T155)
+
+`apps/web/test/glossary.test.ts` pasa (4/4): ni `es.ts`/`failures.es.ts` ni los textos visibles de `install.sh`
+usan términos prohibidos ni nombres de modelo.
+
+**Revisión a mano:** se encontró una inconsistencia de tono en `connectSubscription.reopenPage`: «Volver a abrir
+su página» usaba un posesivo de tercera persona («su»), mientras el resto del glosario se dirige siempre al
+creador en «tú». Se cambió a «Volver a abrir la página de Claude» (sin ambigüedad sobre a qué página se refiere)
+y se actualizó la comprobación de `settings.spec.ts:88`. El resto de `es.ts`, `failures.es.ts` e `install.sh` es
+coherente: tono «tú», sin jerga técnica.
+
+## Instalador y actualización (T157)
+
+**Cómo:** recorrido manual de §3 y §4 de `quickstart.md` contra una build de producción real (`server.mjs` +
+`apps/web/dist`, empaquetados y sellados como lo hace `release.yml`), servida por HTTP local e instalada dentro de
+contenedores `ubuntu:24.04` limpios con la línea real (`curl -fsSL http://host.docker.internal:<puerto>/install.sh |
+bash`). Se encontraron y corrigieron tres fallos reales, ninguno relacionado con el manejo de credenciales.
+
+**Fallo 1 — `migrate` con la ruta de `APP_HOME` equivocada:** el paso 6 ejecuta `bin/ytcreator migrate` en
+`$APP_HOME/versions/<v>/bin/ytcreator` (tres niveles de profundidad) antes de que exista el enlace `current`, pero el
+lanzador deducía siempre `APP_HOME` asumiendo dos niveles (`current/bin/`). Corregido con la variable de entorno
+`YTC_APP_HOME`, que `install.sh` pasa solo en esa llamada del paso 6; documentado en `contracts/installer.md`
+(«Lanzador `bin/ytcreator`»).
+
+**Fallo 2 — `open`/`serve` no hacían nada, en silencio:** `cli.ts` comparaba `import.meta.url` (que Node resuelve
+siguiendo enlaces simbólicos) con `process.argv[1]` tal cual se pasó en la línea de comandos. Como `bin/ytcreator`
+siempre invoca el servidor a través de `current` (un enlace simbólico a `versions/<v>`), esa comparación nunca
+coincidía al entrar por `current` —el camino normal de `open`/`serve`—, así que `runCli` nunca se ejecutaba: el
+proceso terminaba con código 0 sin abrir nada ni escribir nada. `migrate` no se vio afectado porque el paso 6 lo
+invoca directamente en `versions/<v>/bin/`, sin enlace de por medio, lo que ocultó el fallo en las pruebas
+anteriores. Confirmado de forma aislada (dos scripts mínimos y dos disposiciones de enlaces) antes de tocar código.
+Corregido resolviendo también `process.argv[1]` con `realpathSync` antes de comparar (`isEntryPoint()` en `cli.ts`).
+`launcher.test.ts` tenía un `server.mjs` de prueba sin ninguna guarda de punto de entrada, así que no podía haber
+detectado este fallo; se reescribió para que imite la guarda real y se comprobó que, con la guarda antigua, la
+prueba falla.
+
+**Fallo 3 — el paso 8 colgaba el instalador para siempre:** al arreglar el Fallo 2, `open` pasó a arrancar de
+verdad un servidor que bloquea el proceso hasta que se apaga (como al abrir el acceso directo). El paso 8 lo
+invocaba de forma síncrona, así que el propio `install.sh` nunca volvía a dar la terminal. Esto se desvía de
+`research.md` R6 (el lanzador en bash debería arrancar el servidor desacoplado y esperar `instance.json`); la
+implementación real deja esa decisión dentro de Node (`main.ts`/`instance.ts`), que nunca se desacopla a sí mismo.
+Corregido en `install.sh`: el paso 8 lanza `ytcreator open` con `setsid` (o `nohup` si no existe) en segundo plano y
+`disown`, en vez de esperarlo. Documentado en `contracts/installer.md`, justo después de la tabla del lanzador.
+`installer/test/fixtures/make-release.ts` tenía un `bin/ytcreator` de prueba cuyo caso `open` terminaba al momento,
+así que tampoco podía haber detectado este fallo; se cambió para que, como el real, no vuelva (`sleep 300` tras
+imprimir la línea). Se comprobó revirtiendo el arreglo de `install.sh`: la suite entera, que con el arreglo tarda
+~70 s, pasados 11 minutos seguía sin terminar (cada prueba que llega al paso 8 se queda esperando hasta el límite de
+60 s de `spawnSync`), así que se dio por confirmado y se mató el proceso.
+
+**Verificación de extremo a extremo con los tres arreglos**, en un contenedor `ubuntu:24.04` nuevo: los 8 pasos
+terminan con `✓`, mensaje final «YTCreator está listo», código de salida 0 y la terminal vuelve enseguida. Dentro
+del contenedor, el proceso del servidor queda vivo y desacoplado del script de instalación
+(`.../current/bin/../server.mjs open`, escuchando en `127.0.0.1:4310`) y `/api/health` responde con la versión
+correcta.
+
+**Reanudación tras un corte:** cubierta por el caso ya existente en `install.test.ts`
+(`resumes after an interruption at step %i`, `N` de 1 a 8), que ahora sí ejercita el bloqueo real de `open` gracias
+al Fallo 3; antes de este arreglo, esas mismas pruebas habrían colgado en el paso 8 igual que el recorrido manual.
+No se encontró ninguna diferencia frente a una instalación sin cortes.
+
+**Actualización (§7):** cubierta por el caso `updates from v1 to v2 keeping data and secrets, moving current to v2
+and keeping v1` de `install.test.ts`: datos y secretos de prueba intactos, `current` pasa a `v2`, `v1` se conserva y
+las migraciones se aplican una sola vez.
+
+**§8 «dos pestañas»:** no se repitió a mano; el comportamiento (instancia ya en marcha → reutilizarla y abrir una
+pestaña) ya está cubierto por el e2e existente de la web, sin relación con el instalador.
+
+**Comprobación tras los tres arreglos:** `pnpm lint` y `pnpm typecheck` limpios; `pnpm test` 447 pasan y 1 se omite
+(448); `pnpm test:installer` 18/18 (~70 s, antes ~83 s); `shellcheck installer/install.sh` sin avisos.
+
+## Ejecución completa (T156)
+
+Todo verde: `pnpm lint` (eslint + stylelint), `pnpm typecheck` (`tsc -b`) y `pnpm format` sin cambios pendientes;
+`pnpm test` 444 pasan y 1 se omite; `pnpm test:installer` 18/18; `pnpm test:e2e` 97/99 en el catálogo (2 omitidos
+a propósito) y 20/20 en la web.

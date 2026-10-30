@@ -14,7 +14,7 @@ SHA_NODE_LINUX_X64="__SHA_NODE_LINUX_X64__"
 SHA_NODE_LINUX_ARM64="__SHA_NODE_LINUX_ARM64__"
 
 # --- Env vars (none of these are documented for the creator) ------------------------------------------------
-: "${YTCREATOR_RELEASE_BASE:=https://github.com/ytcreator/ytcreator/releases/latest/download}"
+: "${YTCREATOR_RELEASE_BASE:=https://github.com/xavieraijon/YTCreator/releases/latest/download}"
 : "${YTCREATOR_NODE_BASE:=https://nodejs.org/dist/v${NODE_VERSION}}"
 : "${YTCREATOR_CLAUDE_INSTALL_URL:=https://claude.ai/install.sh}"
 : "${YTCREATOR_INSTALL_TEST:=0}"
@@ -370,7 +370,9 @@ step6_run() {
     fi
   fi
 
-  if ! "${new_dir}/bin/ytcreator" migrate >>"${LOG_FILE}" 2>&1; then
+  # Runs at its real versions/<v> path, before "current" points at it: YTC_APP_HOME tells the launcher where
+  # APP_HOME actually is, since that can't be derived from this path's depth (bin/ytcreator).
+  if ! YTC_APP_HOME="$APP_HOME" "${new_dir}/bin/ytcreator" migrate >>"${LOG_FILE}" 2>&1; then
     [ -n "$backup" ] && [ -f "$backup" ] && cp "$backup" "$db"
     fail 60 "$MSG_MIGRATE_WHAT" "$MSG_MIGRATE_TODO"
   fi
@@ -439,7 +441,16 @@ step7_run() {
 step8_done() { return 1; }
 
 step8_run() {
-  "$APP_HOME/current/bin/ytcreator" open >>"${LOG_FILE}" 2>&1 || log "ytcreator open returned non-zero (non-fatal)"
+  # "open" (R6) IS the running app once started (serve() blocks on the listening socket until shutdown), the
+  # same way a double-clicked .app/.desktop launch works. Here the install script itself is the parent and
+  # must finish and hand the terminal back, so it is launched decoupled (setsid when available, else nohup)
+  # instead of waited on.
+  if command -v setsid >/dev/null 2>&1; then
+    setsid "$APP_HOME/current/bin/ytcreator" open >>"${LOG_FILE}" 2>&1 </dev/null &
+  else
+    nohup "$APP_HOME/current/bin/ytcreator" open >>"${LOG_FILE}" 2>&1 </dev/null &
+  fi
+  disown 2>/dev/null || true
 }
 
 # --- Driver ----------------------------------------------------------------------------------------------------
