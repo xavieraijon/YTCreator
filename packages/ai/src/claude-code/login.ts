@@ -93,7 +93,6 @@ export function codeRejected(output: string): boolean {
 export function createClaudeLogin(options: ClaudeLoginOptions): SubscriptionLogin {
   const { logger, now = () => new Date(), platform = process.platform } = options
   const env = options.env ?? process.env
-  const bin = options.claudeBin ?? resolveClaudeBin(env)
   const linkTimeoutMs = options.linkTimeoutMs ?? 20_000
   const tokenTimeoutMs = options.tokenTimeoutMs ?? 30_000
   const expiresMs = options.expiresMs ?? 10 * 60_000
@@ -134,6 +133,8 @@ export function createClaudeLogin(options: ClaudeLoginOptions): SubscriptionLogi
 
   function launch(): Session {
     const dir = mkdtempSync(join(tmpdir(), 'ytcreator-login-'))
+    // Looked up on each login: «Reparar» may have installed it after the server started (T158).
+    const bin = options.claudeBin ?? resolveClaudeBin(env)
     const child = spawn('sh', scriptArgs(platform), {
       cwd: dir,
       env: cleanEnv(env, { CLAUDE_CONFIG_DIR: dir, YTC_CLAUDE_BIN: bin, BROWSER: NO_BROWSER, ...TERMINAL }),

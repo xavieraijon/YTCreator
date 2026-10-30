@@ -13,7 +13,7 @@ export interface RegistryOptions {
   allowFake?: boolean
   now?: () => Date
   logger?: Logger // for the subscription login, which outlives a single request
-  claudeBin?: string // `claude` found at start-up; otherwise it is looked up in PATH
+  claudeBin?: string // a fixed `claude` (tests); otherwise it is looked up on each use
 }
 
 interface Slot {

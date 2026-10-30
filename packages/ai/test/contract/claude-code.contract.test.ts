@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, symlinkSync } from 'node:fs'
 import { join } from 'node:path'
 import { Secret, type Logger, type ProviderDeps } from '@ytcreator/core'
 import { describe, expect, it } from 'vitest'
@@ -150,6 +150,19 @@ describe('claude-code: inicio de sesión', () => {
     expect(result.ok).toBe(true)
     if (result.ok) expect(result.token.reveal()).toBe(RECORDED_TOKEN)
     await expect.poll(() => isAlive(fake.loginPid()!)).toBe(false)
+  }, 30_000)
+
+  // «Reparar» installs it while the server runs: the path is looked up again on each login, not once (T158).
+  it('encuentra Claude Code instalado después de crear el inicio de sesión', async () => {
+    const home = mkdtemp('ytc-home-')
+    const login = createClaudeLogin({ logger: silent, env: { PATH: '/usr/bin:/bin', HOME: home } })
+    const fake = createFakeClaude({ loginCode: LOGIN_CODE })
+    mkdirSync(join(home, '.local', 'bin'), { recursive: true })
+    symlinkSync(fake.bin, join(home, '.local', 'bin', 'claude'))
+
+    const started = await login.start()
+    expect(started.ok).toBe(true)
+    if (started.ok) await login.cancel(started.value.loginId)
   }, 30_000)
 
   // The CLI stays open after refusing a code: the answer comes from its message, not from the timeout (T158).

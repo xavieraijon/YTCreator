@@ -278,3 +278,13 @@ salida 20), pero el servidor no lo comprobaba, y puede correr donde el instalado
 está vacía y no tiene la marca, `serve`, `open` y `migrate` se paran con el mensaje del instalador y la salida 20, sin
 escribir nada. Si no existe o está vacía, la crea y le pone la marca. Pruebas nuevas en `paths.test.ts`,
 `main.test.ts` y `cli.test.ts`; fallan sin el arreglo.
+
+**Reparar, segunda vuelta (2026-10-30):** con la build anterior, «Reparar» terminó bien (`exitCode: 0`) y la
+comprobación posterior se hizo, pero siguió dando `programa_no_instalado` 45 ms después. Causa: el servidor buscaba la
+ruta de `claude` una sola vez, al arrancar. Como Claude Code no estaba, se quedó con `claude` del PATH, que no lo
+tiene, y no volvía a mirar `~/.local/bin/claude` después de instalarlo. La primera vuelta no lo destapó porque aquel
+servidor había arrancado con Claude Code aún instalado.
+
+**Corregido:** la ruta se busca en cada uso, en `claude --version`, en cada comprobación y en cada inicio de sesión.
+Prueba nueva en `claude-code.contract.test.ts` (Claude Code instalado después de crear el inicio de sesión); falla sin
+el arreglo.

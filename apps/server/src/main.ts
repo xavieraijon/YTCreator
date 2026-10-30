@@ -74,13 +74,14 @@ function candidatePorts(env: StartOptions['env'], allowFixedPort: boolean): numb
 }
 
 // `claude --version` once per start, and again after a repair; with the fake AI the CLI is never looked for.
-function claudeCodeStatus(env: StartOptions['env'], bin: string, fake: boolean) {
+// The path is looked up again each time too: a repair may install it where there was none at start-up (T158).
+function claudeCodeStatus(env: StartOptions['env'], fake: boolean) {
   let status: Promise<ClaudeCodeStatus> | null = null
   return {
     get: () =>
       (status ??= fake
         ? Promise.resolve({ installed: true, version: null })
-        : claudeVersion(bin, env).then((r) =>
+        : claudeVersion(resolveClaudeBin(env), env).then((r) =>
             r.ok ? { installed: true, version: r.version } : { installed: false, version: null },
           )),
     forget: () => {
@@ -110,9 +111,8 @@ export async function startServer({
   const now = () => new Date()
   const settings = createSettingsRepo(db)
   const connections = createConnectionsRepo(db, now)
-  const claudeBin = resolveClaudeBin(env)
   const fake = __YTC_ALLOW_FAKE_AI__ && Boolean(env.YTCREATOR_FAKE_AI)
-  const claudeCode = claudeCodeStatus(env, claudeBin, fake)
+  const claudeCode = claudeCodeStatus(env, fake)
   const repair = createClaudeRepair({
     run: fake ? fakeInstaller : officialInstaller(env),
     logger,
@@ -129,7 +129,7 @@ export async function startServer({
     secrets: fake
       ? createFileStore(paths.secrets, logger)
       : await selectSecretStore({ platform: process.platform, settings, logger, fileDir: paths.secrets }),
-    registry: createRegistry({ env, now, logger, claudeBin }),
+    registry: createRegistry({ env, now, logger }),
     logger,
     now,
     fetch: globalThis.fetch,
