@@ -8,8 +8,9 @@ export type InstallerRunner = () => Promise<number>
 export interface ClaudeRepairDeps {
   run: InstallerRunner
   logger: Logger
-  // Called after the installer ends, so `claude --version` is asked again.
-  onFinished?: () => void
+  // Called after the installer ends, so `claude --version` is asked again. The run stays `en_curso` until it
+  // settles, so whoever polls sees the accounts already checked again.
+  onFinished?: (exitCode: number) => void | Promise<void>
 }
 
 // The official installer (research R5): it leaves `claude` in ~/.local/bin without sudo. Its output is discarded:
@@ -39,10 +40,14 @@ export function createClaudeRepair({ run, logger, onFinished }: ClaudeRepairDeps
       if (state === 'en_curso') return { state }
       state = 'en_curso'
       logger.info('claude_repair.started', {})
-      running = run().then((exitCode) => {
-        state = exitCode === 0 ? 'hecho' : 'fallido'
+      running = run().then(async (exitCode) => {
         logger.info('claude_repair.finished', { exitCode })
-        onFinished?.()
+        try {
+          await onFinished?.(exitCode)
+        } catch {
+          // The repair itself is done; a failed recheck only leaves the accounts as they were.
+        }
+        state = exitCode === 0 ? 'hecho' : 'fallido'
       })
       return { state }
     },

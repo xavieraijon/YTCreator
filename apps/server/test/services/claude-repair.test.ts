@@ -1,3 +1,4 @@
+import { FAKE_LOGIN_CODE } from '@ytcreator/ai'
 import { aiOverviewSchema } from '@ytcreator/core/api'
 import { describe, expect, it, vi } from 'vitest'
 import { makeTestApp } from '../helpers.ts'
@@ -12,6 +13,20 @@ function controlledInstaller() {
       }),
   )
   return { run, finish: (exitCode: number) => finish(exitCode) }
+}
+
+const NOT_INSTALLED = {
+  ok: false as const,
+  failure: { kind: 'no_disponible' as const, reason: 'programa_no_instalado' as const },
+}
+
+// A connected subscription account whose last check found Claude Code missing.
+async function accountWithoutClaude(t: ReturnType<typeof makeTestApp>) {
+  const login = (await (await t.request('POST', '/api/ai/subscription/login', {})).json()) as { loginId: string }
+  await t.request('POST', `/api/ai/subscription/login/${login.loginId}/complete`, { code: FAKE_LOGIN_CODE })
+  const account = t.accounts.list('claude-code')[0]!
+  t.accounts.updateStatus(account.id, NOT_INSTALLED)
+  return account.id
 }
 
 const state = async (t: ReturnType<typeof makeTestApp>) => (await t.request('GET', '/api/ai/repair-claude-code')).json()
@@ -72,5 +87,27 @@ describe('POST/GET /api/ai/repair-claude-code', () => {
     expect(finished).toHaveLength(1)
     expect(Object.keys(finished[0]!).sort()).toEqual(['event', 'exitCode', 'level', 'ts'])
     expect(finished[0]!.exitCode).toBe(3)
+  })
+
+  it('once installed, the accounts that failed for its absence are checked again before it says hecho', async () => {
+    const installer = controlledInstaller()
+    const t = makeTestApp({ fakeAi: 'ok', installer: installer.run })
+    const id = await accountWithoutClaude(t)
+    await t.request('POST', '/api/ai/repair-claude-code', {})
+    installer.finish(0)
+    await t.repair.settled()
+    const overview = aiOverviewSchema.parse(await (await t.request('GET', '/api/ai')).json())
+    expect(overview.claudeCode.repair).toEqual({ state: 'hecho' })
+    expect(overview.accounts.find((a) => a.id === id)?.status).toBe('conectada')
+  })
+
+  it('a failed install leaves the accounts as they were', async () => {
+    const installer = controlledInstaller()
+    const t = makeTestApp({ fakeAi: 'ok', installer: installer.run })
+    const id = await accountWithoutClaude(t)
+    await t.request('POST', '/api/ai/repair-claude-code', {})
+    installer.finish(1)
+    await t.repair.settled()
+    expect(t.accounts.get(id)?.reason).toBe('programa_no_instalado')
   })
 })

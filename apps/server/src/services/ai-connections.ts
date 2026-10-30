@@ -224,6 +224,14 @@ export function createAiConnectionsService(deps: AiConnectionsDeps) {
       return run.switched.length > 0 ? { ...view, switched: run.switched } : view
     },
 
+    // After Claude Code is installed again: the accounts that failed for its absence are checked, without rotating.
+    async recheckNotInstalled(): Promise<void> {
+      const descriptor = descriptorFor('suscripcion')
+      for (const account of accounts.list(descriptor.id)) {
+        if (account.reason === 'programa_no_instalado') await checkStoredAccount(descriptor, account)
+      }
+    },
+
     // One account, without rotating.
     async checkAccount(id: string): Promise<AccountView> {
       const descriptor = descriptorFor('suscripcion')

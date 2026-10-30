@@ -243,7 +243,7 @@ también dio `ok: true`.
 | Suscripción: conectar desde la app, sin Terminal | ✓ |
 | Suscripción: código mal copiado | ✓ |
 | Suscripción: añadir la misma cuenta | ✓ (alcance reducido de S3) |
-| Suscripción: desinstalar Claude Code y pulsar «Reparar» | pendiente |
+| Suscripción: desinstalar Claude Code y pulsar «Reparar» | ✓ tras el arreglo (falta repetirla con la build nueva) |
 | Suscripción: sesión caducada | pendiente |
 | API: clave con espacios, sin saldo, revocada, sin Wi-Fi | pendiente |
 | README, instalador y bienvenida sin opción gratuita | pendiente |
@@ -257,3 +257,13 @@ también dio `ok: true`.
   aceptado en S3 (2026-10-28): dos `setup-token` de la misma cuenta dan *tokens* distintos y Claude no dice de quién
   son, así que solo se detecta el mismo *token* pegado dos veces. La pantalla muestra el aviso
   (`sameAccountNote`). La fila de `quickstart.md` §5 aún esperaba «Esta cuenta ya está conectada»; corregida.
+
+**Reparar Claude Code (2026-10-30):** con Claude Code apartado de la carpeta de pruebas, la comprobación dio
+`programa_no_instalado` y la app ofreció «Reparar». El instalador oficial terminó bien (`exitCode: 0`, 14 s), pero la
+cuenta siguió con «programa no instalado» hasta que el creador pulsó «Comprobar». Causa: al terminar, la reparación
+solo olvidaba el `claude --version` guardado; el estado de las cuentas era el de la última comprobación.
+
+**Corregido:** al terminar con código 0, el servidor vuelve a comprobar las cuentas que fallaron por
+`programa_no_instalado`, sin rotar, y solo después pasa a `hecho`. La pantalla, que pregunta mientras está
+`en_curso`, recibe ya las cuentas comprobadas. Si el instalador falla, las cuentas no se tocan. Dos pruebas nuevas en
+`claude-repair.test.ts`; la primera falla sin el arreglo.

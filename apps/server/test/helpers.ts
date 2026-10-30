@@ -52,7 +52,13 @@ export function makeTestApp({ fakeAi, now = () => new Date(), installer }: TestA
   const onboarding = createOnboardingRepo(db, connections, now)
   const limits = createLimitsRepo(db, now)
   const claudeAccountsDir = join(dir, 'claude-accounts')
-  const repair = createClaudeRepair({ run: installer ?? (async () => 0), logger })
+  const repair = createClaudeRepair({
+    run: installer ?? (async () => 0),
+    logger,
+    onFinished: async (exitCode) => {
+      if (exitCode === 0) await ai.recheckNotInstalled()
+    },
+  })
   const ai = createAiConnectionsService({
     connections,
     accounts,

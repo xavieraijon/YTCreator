@@ -116,7 +116,10 @@ export async function startServer({
   const repair = createClaudeRepair({
     run: fake ? fakeInstaller : officialInstaller(env),
     logger,
-    onFinished: claudeCode.forget,
+    onFinished: async (exitCode) => {
+      claudeCode.forget()
+      if (exitCode === 0) await ai.recheckNotInstalled()
+    },
   })
   const ai = createAiConnectionsService({
     connections,
