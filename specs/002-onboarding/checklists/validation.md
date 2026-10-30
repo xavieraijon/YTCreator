@@ -267,3 +267,14 @@ solo olvidaba el `claude --version` guardado; el estado de las cuentas era el de
 `programa_no_instalado`, sin rotar, y solo después pasa a `hecho`. La pantalla, que pregunta mientras está
 `en_curso`, recibe ya las cuentas comprobadas. Si el instalador falla, las cuentas no se tocan. Dos pruebas nuevas en
 `claude-repair.test.ts`; la primera falla sin el arreglo.
+
+**Carpeta `~/YTCreator` ajena (2026-10-30, hallazgo de rebote):** al repetir «Reparar», el creador abrió la app desde el
+atajo `YTCreator.app` de la carpeta de pruebas. macOS la lanzó con el HOME real, así que el servidor usó el APP_HOME
+real y la carpeta `~/YTCreator` del creador, que tiene un repositorio git suyo y no tiene la marca `.ytcreator`.
+Escribió ahí `ytcreator.db` sin avisar y empezó una bienvenida nueva. El instalador ya rechaza esa carpeta (paso 2,
+salida 20), pero el servidor no lo comprobaba, y puede correr donde el instalador nunca ha corrido.
+
+**Corregido:** `prepareWorkspace` hace en el servidor la misma comprobación que el paso 2: si la carpeta existe, no
+está vacía y no tiene la marca, `serve`, `open` y `migrate` se paran con el mensaje del instalador y la salida 20, sin
+escribir nada. Si no existe o está vacía, la crea y le pone la marca. Pruebas nuevas en `paths.test.ts`,
+`main.test.ts` y `cli.test.ts`; fallan sin el arreglo.

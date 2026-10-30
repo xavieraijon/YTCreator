@@ -1,3 +1,4 @@
+import { existsSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path/posix'
 
 export interface AppPaths {
@@ -45,4 +46,27 @@ export function appPaths({ platform, env, homedir }: PathsInput): AppPaths {
     database: join(workspace, 'ytcreator.db'),
     workspaceMarker: join(workspace, '.ytcreator'),
   }
+}
+
+export class ForeignWorkspaceError extends Error {
+  readonly workspace: string
+
+  constructor(workspace: string) {
+    super(
+      'La carpeta YTCreator de tu carpeta personal ya existe y no parece ser de YTCreator. ' +
+        'Mueve o renombra esa carpeta y vuelve a abrir YTCreator.',
+    )
+    this.name = 'ForeignWorkspaceError'
+    this.workspace = workspace
+  }
+}
+
+// The installer already refuses a ~/YTCreator that is not ours (step 2); the server checks it again, because it
+// can run where the installer never did (another HOME), and must never write its database into someone's folder.
+export function prepareWorkspace(paths: AppPaths): void {
+  if (existsSync(paths.workspace) && !existsSync(paths.workspaceMarker) && readdirSync(paths.workspace).length > 0) {
+    throw new ForeignWorkspaceError(paths.workspace)
+  }
+  mkdirSync(paths.workspace, { recursive: true })
+  if (!existsSync(paths.workspaceMarker)) writeFileSync(paths.workspaceMarker, '')
 }

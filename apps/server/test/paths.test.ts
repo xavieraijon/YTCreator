@@ -1,5 +1,20 @@
-import { describe, expect, it } from 'vitest'
-import { appPaths } from '../src/paths.ts'
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { afterEach, describe, expect, it } from 'vitest'
+import { appPaths, ForeignWorkspaceError, prepareWorkspace } from '../src/paths.ts'
+
+const homes: string[] = []
+
+afterEach(() => {
+  for (const home of homes.splice(0)) rmSync(home, { recursive: true, force: true })
+})
+
+function homePaths() {
+  const home = mkdtempSync(join(tmpdir(), 'ytc-paths-'))
+  homes.push(home)
+  return appPaths({ platform: 'linux', env: {}, homedir: home })
+}
 
 describe('appPaths', () => {
   it('uses Application Support on macOS', () => {
@@ -41,5 +56,37 @@ describe('appPaths', () => {
       const paths = appPaths({ platform, env: {}, homedir: '/h' })
       expect(paths.secrets.startsWith(paths.workspace + '/')).toBe(false)
     }
+  })
+})
+
+// Edge case «carpeta que no es de YTCreator»: the server guards it too, not only the installer (T158).
+describe('prepareWorkspace', () => {
+  it('creates the folder with its mark when it does not exist', () => {
+    const paths = homePaths()
+    prepareWorkspace(paths)
+    expect(existsSync(paths.workspaceMarker)).toBe(true)
+  })
+
+  it('takes an empty folder and marks it', () => {
+    const paths = homePaths()
+    mkdirSync(paths.workspace)
+    prepareWorkspace(paths)
+    expect(existsSync(paths.workspaceMarker)).toBe(true)
+  })
+
+  it('accepts its own folder', () => {
+    const paths = homePaths()
+    mkdirSync(paths.workspace)
+    writeFileSync(paths.workspaceMarker, '')
+    writeFileSync(paths.database, '')
+    expect(() => prepareWorkspace(paths)).not.toThrow()
+  })
+
+  it('refuses a folder with something else inside and leaves it untouched', () => {
+    const paths = homePaths()
+    mkdirSync(paths.workspace)
+    writeFileSync(join(paths.workspace, 'notas.txt'), 'mío')
+    expect(() => prepareWorkspace(paths)).toThrow(ForeignWorkspaceError)
+    expect(readdirSync(paths.workspace)).toEqual(['notas.txt'])
   })
 })

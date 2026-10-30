@@ -1,10 +1,10 @@
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { createServer, type Server } from 'node:net'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 import { HOST, NoFreePortError, PORT_RANGE, startServer, type RunningServer } from '../src/main.ts'
-import { appPaths } from '../src/paths.ts'
+import { appPaths, ForeignWorkspaceError } from '../src/paths.ts'
 
 const running: RunningServer[] = []
 const blockers: Server[] = []
@@ -50,6 +50,19 @@ describe('startServer', () => {
 
     const log = readFileSync(join(paths.logs, 'server.log'), 'utf8')
     expect(log).toContain('"event":"server_started"')
+  })
+
+  it('does not start on a YTCreator folder that is not its own, nor writes the database there', async () => {
+    const home = mkdtempSync(join(tmpdir(), 'ytc-main-'))
+    homes.push(home)
+    const paths = appPaths({ platform: 'linux', env: {}, homedir: home })
+    mkdirSync(paths.workspace)
+    writeFileSync(join(paths.workspace, 'notas.txt'), 'mío')
+
+    await expect(startServer({ paths, env: {}, version: '0.1.0', webDir: null })).rejects.toThrow(
+      ForeignWorkspaceError,
+    )
+    expect(existsSync(paths.database)).toBe(false)
   })
 
   it('skips a port taken by another program', async () => {

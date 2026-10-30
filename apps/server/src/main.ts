@@ -14,7 +14,7 @@ import { createSettingsRepo } from './db/repos/settings.ts'
 import { createApp } from './http/app.ts'
 import { acquireInstance, releaseInstance } from './instance.ts'
 import { createLogger } from './logging.ts'
-import type { AppPaths } from './paths.ts'
+import { prepareWorkspace, type AppPaths } from './paths.ts'
 import { createFileStore } from './secrets/file-store.ts'
 import { selectSecretStore } from './secrets/select.ts'
 import { createAiConnectionsService, type ClaudeCodeStatus } from './services/ai-connections.ts'
@@ -101,8 +101,8 @@ export async function startServer({
   allowFixedPort = __YTC_ALLOW_FAKE_AI__,
   onShutdown,
 }: StartOptions): Promise<RunningServer> {
+  prepareWorkspace(paths)
   mkdirSync(paths.appHome, { recursive: true, mode: 0o700 })
-  mkdirSync(paths.workspace, { recursive: true })
   const logger = createLogger(paths.logs)
   const db = openDatabase(paths.database)
   migrate(db, MIGRATIONS)

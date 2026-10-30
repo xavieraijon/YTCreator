@@ -8,7 +8,7 @@ import { migrate, MIGRATIONS } from './db/migrate.ts'
 import { openDatabase } from './db/open.ts'
 import { createLogger } from './logging.ts'
 import { serve, type StartOptions } from './main.ts'
-import { appPaths } from './paths.ts'
+import { appPaths, ForeignWorkspaceError, prepareWorkspace } from './paths.ts'
 
 const scriptDir = dirname(fileURLToPath(import.meta.url))
 
@@ -72,6 +72,13 @@ function openInBrowser(url: string, deps: CliDeps): void {
   deps.print(`YTCreator está en ${url}\n`)
 }
 
+// Same exit code as the installer's step 2 for the same case; any other error keeps failing as before.
+function foreignWorkspace(error: unknown, deps: CliDeps): number {
+  if (!(error instanceof ForeignWorkspaceError)) throw error
+  deps.print(`${error.message}\n`)
+  return 20
+}
+
 // serve | migrate | open; any other argument (including none) exits 2 (T059/T063).
 export async function runCli(argv: string[], overrides: Partial<CliDeps> = {}): Promise<number> {
   const deps = { ...defaultDeps(), ...overrides }
@@ -79,8 +86,12 @@ export async function runCli(argv: string[], overrides: Partial<CliDeps> = {}): 
   const [command] = argv
 
   if (command === 'migrate') {
+    try {
+      prepareWorkspace(paths)
+    } catch (error) {
+      return foreignWorkspace(error, deps)
+    }
     mkdirSync(paths.appHome, { recursive: true, mode: 0o700 })
-    mkdirSync(paths.workspace, { recursive: true })
     const db = openDatabase(paths.database)
     try {
       migrate(db, MIGRATIONS)
@@ -94,7 +105,12 @@ export async function runCli(argv: string[], overrides: Partial<CliDeps> = {}): 
   }
 
   if (command === 'serve' || command === 'open') {
-    const result = await deps.serve({ paths, env: deps.env, version: deps.version, webDir: deps.webDir })
+    let result
+    try {
+      result = await deps.serve({ paths, env: deps.env, version: deps.version, webDir: deps.webDir })
+    } catch (error) {
+      return foreignWorkspace(error, deps)
+    }
     if (command === 'open') openInBrowser(result.url, deps)
     return 0
   }

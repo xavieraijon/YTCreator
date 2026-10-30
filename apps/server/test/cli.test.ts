@@ -1,8 +1,9 @@
-import { mkdtempSync, rmSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { runCli, type CliDeps } from '../src/cli.ts'
+import { ForeignWorkspaceError } from '../src/paths.ts'
 
 const homes: string[] = []
 
@@ -69,6 +70,33 @@ describe('runCli', () => {
     expect(code).toBe(0)
     expect(spawn).not.toHaveBeenCalled()
     expect(print).toHaveBeenCalledWith('YTCreator está en http://127.0.0.1:4310\n')
+  })
+
+  it('migrate: exits 20, like the installer, on a YTCreator folder that is not its own', async () => {
+    const homedir = isolatedHome()
+    mkdirSync(join(homedir, 'YTCreator'))
+    writeFileSync(join(homedir, 'YTCreator', 'notas.txt'), 'mío')
+    const print = vi.fn()
+
+    const code = await runCli(['migrate'], deps({ homedir, print }))
+
+    expect(code).toBe(20)
+    expect(existsSync(join(homedir, 'YTCreator', 'ytcreator.db'))).toBe(false)
+    expect(print).toHaveBeenCalledWith(expect.stringContaining('no parece ser de YTCreator'))
+  })
+
+  it('open: says so and exits 20 instead of starting on a folder that is not its own', async () => {
+    const serveFn = vi.fn(async () => {
+      throw new ForeignWorkspaceError('/home/ana/YTCreator')
+    })
+    const spawn = vi.fn()
+    const print = vi.fn()
+
+    const code = await runCli(['open'], deps({ platform: 'darwin', serve: serveFn, spawn, print }))
+
+    expect(code).toBe(20)
+    expect(spawn).not.toHaveBeenCalled()
+    expect(print).toHaveBeenCalledWith(expect.stringContaining('Mueve o renombra esa carpeta'))
   })
 
   it('migrate: applies migrations and exits 0, without touching current', async () => {
