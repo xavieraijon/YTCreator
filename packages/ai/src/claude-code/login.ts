@@ -29,6 +29,11 @@ const TOKEN_END = '\x1b[39m'
 // eslint-disable-next-line no-control-regex -- likewise
 const CONTROL = /\x1b\[[0-9;?<>]*[A-Za-z]|[\r\n\s]/g
 const TOKEN = /^sk-ant-oat01-[\w-]+$/
+// A refused code: the CLI says `OAuth error: …` and waits for Enter to retry (T158). Whitespace is stripped, like above.
+const REJECTED_TEXT = 'OAutherror'
+const REJECTED = Symbol('rejected')
+// How long the masked code may take to show before Enter goes anyway.
+const ECHO_TIMEOUT_MS = 2_000
 
 export interface ClaudeLoginOptions {
   logger: Logger
@@ -71,6 +76,10 @@ export function extractToken(output: string): string | null {
   if (end < 0) return null
   const token = output.slice(start, end).replace(CONTROL, '')
   return TOKEN.test(token) ? token : null
+}
+
+export function codeRejected(output: string): boolean {
+  return output.replace(CONTROL, '').includes(REJECTED_TEXT)
 }
 
 // Claude subscription login without a terminal for the creator (FR-016). The output of the process is never
@@ -182,12 +191,23 @@ export function createClaudeLogin(options: ClaudeLoginOptions): SubscriptionLogi
       }
       // From here on the session is used up, whatever the result: a new attempt asks for a new link.
       open = null
-      session.child.stdin!.write(`${code.reveal()}\r`)
-      const token = await waitFor(session, extractToken, tokenTimeoutMs)
+      // A long code written at once is a paste to the CLI, and an Enter inside it is text: the code would never be
+      // sent (T158). Enter goes on its own, once the screen shows the masked code.
+      const shown = session.output.length
+      session.child.stdin!.write(code.reveal())
+      await waitFor(session, (output) => (output.includes('*', shown) ? true : null), ECHO_TIMEOUT_MS)
+      session.child.stdin!.write('\r')
+      const token = await waitFor(
+        session,
+        (output) => extractToken(output) ?? (codeRejected(output) ? REJECTED : null),
+        tokenTimeoutMs,
+      )
       const exitCode = session.exitCode
       end(session)
-      if (token.value === null) {
-        logger.warn('ai.login_failed', { provider: 'claude-code', stage: 'token', exitCode, timedOut: token.timedOut })
+      if (token.value === null || token.value === REJECTED) {
+        const timedOut = token.value === null && token.timedOut
+        const rejected = token.value === REJECTED
+        logger.warn('ai.login_failed', { provider: 'claude-code', stage: 'token', exitCode, timedOut, rejected })
         return { ok: false, failure: BAD_CODE }
       }
       logger.info('ai.login_completed', { provider: 'claude-code' })

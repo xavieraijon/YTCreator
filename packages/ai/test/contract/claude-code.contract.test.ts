@@ -138,12 +138,26 @@ describe('claude-code: inicio de sesión', () => {
     await expect.poll(() => isAlive(fake.loginPid()!)).toBe(false)
   }, 30_000)
 
-  it('CC5 código no válido → codigo_no_valido', async () => {
-    const { login } = loginFor({})
+  // The CLI stays open after refusing a code: the answer comes from its message, not from the timeout (T158).
+  it('CC5 código no válido → codigo_no_valido, sin esperar al tiempo máximo', async () => {
+    const { login } = loginFor({}, { tokenTimeoutMs: 60_000 })
     const started = await login.start()
     if (!started.ok) throw new Error('sin enlace')
+    const sent = Date.now()
     const result = await login.complete(started.value.loginId, Secret.from('otro-codigo'))
     expect(result).toEqual({ ok: false, failure: { kind: 'sin_sesion', reason: 'codigo_no_valido' } })
+    expect(Date.now() - sent).toBeLessThan(10_000)
+  }, 30_000)
+
+  // A real code is ~100 characters: written with its Enter at once, the CLI took it all as a paste and never sent it
+  // (found in T158).
+  it('un código largo como los reales se envía: el Enter va aparte', async () => {
+    const longCode = `${'c'.repeat(52)}#${'s'.repeat(43)}`
+    const { login } = loginFor({ loginCode: longCode }, { tokenTimeoutMs: 10_000 })
+    const started = await login.start()
+    if (!started.ok) throw new Error('sin enlace')
+    const result = await login.complete(started.value.loginId, Secret.from(longCode))
+    expect(result.ok).toBe(true)
   }, 30_000)
 
   it('CC6 al caducar se termina el proceso y el código ya no vale', async () => {

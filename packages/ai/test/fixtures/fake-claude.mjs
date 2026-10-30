@@ -21,15 +21,18 @@ function readStdin() {
   })
 }
 
-// One line of the pty: the code the adapter types, ended by Enter.
-function readLine() {
+// The code the adapter types, then Enter. Like the real CLI (T158), a chunk of several characters is a paste: the
+// screen shows it masked and an Enter inside it is text, so only an Enter of its own sends the code.
+function readCode() {
   return new Promise((resolve) => {
     let input = ''
+    // Raw like the real CLI, so each write arrives as it was sent, not a line at a time.
+    process.stdin.setRawMode?.(true)
     process.stdin.setEncoding('utf8')
     process.stdin.on('data', (chunk) => {
+      if (chunk === '\r' || chunk === '\n') return resolve(input)
       input += chunk
-      const end = input.search(/[\r\n]/)
-      if (end >= 0) resolve(input.slice(0, end))
+      process.stdout.write('*'.repeat(chunk.length))
     })
   })
 }
@@ -91,11 +94,12 @@ async function setupToken() {
   const cut = log.lastIndexOf('\x1b[?2026h', log.indexOf('Long-lived authentication token created'))
   process.stdout.write(Buffer.from(log.slice(0, cut), 'latin1'))
   if (state.login === 'hang') return hang()
-  const code = await readLine()
+  const code = await readCode()
   appendFileSync(join(dir, 'login.log'), `${JSON.stringify({ code })}\n`)
   if (code !== state.loginCode) {
-    process.stdout.write('\r\nOAuth error: Invalid code\r\n', () => process.exit(1))
-    return
+    // The real CLI stays open after this, waiting for Enter to retry.
+    process.stdout.write("\r\nOAuth error: That code wasn't accepted.\r\nPress Enter to retry.\r\n")
+    return hang()
   }
   process.stdout.write(Buffer.from(log.slice(cut), 'latin1'), () => process.exit(0))
 }

@@ -179,3 +179,24 @@ invoca con el `redirect_uri` de `localhost`.
 
 **Corregido:** `login.ts` lanza `setup-token` con `BROWSER=true`, así la CLI no abre nada y el único enlace es el de
 la app. Prueba nueva en `claude-code.contract.test.ts` (falla sin el arreglo).
+
+**Segundo fallo, en la siguiente prueba:** con el código recién generado, la app estuvo unos 30 s «pensando» y
+después respondió «El código no es válido o ha caducado». El registro solo mostraba `ai.login_failed` con
+`stage: token, timedOut: true`. Causa: el adaptador escribía el código y el Enter de una vez (`código\r`). La CLI
+real trata como un pegado una entrada larga que llega junta, y el Enter que viene dentro pasa a ser texto, así que
+el código se escribía pero nunca se enviaba. Los códigos reales tienen unos 100 caracteres (`código#estado`). Con un
+código corto inventado, la CLI sí respondía, y por eso el spike S2 no lo vio: allí el código se tecleó en la
+terminal. Además, cuando la CLI rechaza un código no termina: muestra `OAuth error: …` y espera un Enter para
+reintentar, así que la app agotaba siempre los 30 s.
+
+**Corregido:**
+- `login.ts` escribe el código, espera a que la pantalla lo muestre enmascarado (`*`, 2 s como máximo) y después
+  envía el Enter aparte.
+- Al ver `OAuth error` en la salida, responde «código no válido» al momento y lo anota en el registro con
+  `rejected: true`. Es solo un indicador: la salida nunca se registra.
+- Confirmado con la CLI real (2.1.314) y un código inventado de longitud real: antes, 30 s sin respuesta; ahora,
+  rechazo en 0,3 s.
+- La CLI falsa de los tests se comporta como la real: modo crudo, pegado enmascarado, solo un Enter suelto envía el
+  código y sigue viva tras rechazarlo.
+- Dos pruebas nuevas en `claude-code.contract.test.ts`: código largo y rechazo sin esperar al tiempo máximo. Las dos
+  fallan sin el arreglo.
