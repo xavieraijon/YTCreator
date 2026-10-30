@@ -38,6 +38,7 @@ export function createFakeClaude(state: FakeClaudeState = {}) {
         .map((line) => JSON.parse(line) as Call),
     loginPid: (): number | null => (read('login.pid') ? Number(read('login.pid')) : null),
     loginDir: (): string => read('login.dir'),
+    loginBrowser: (): string => read('login.browser'),
   }
 }
 

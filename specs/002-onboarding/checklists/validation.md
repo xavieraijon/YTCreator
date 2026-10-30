@@ -165,3 +165,17 @@ creador se borraron los `ytcreator.db*` que quedaron en su carpeta.
 real enlazado y sin `~/.local/bin` en el `PATH`), instalando con la línea real contra una release local. Se comprobó
 antes en una carpeta temporal: los 8 pasos con `✓`, Claude Code instalado dentro de esa carpeta y el del creador
 intacto.
+
+## Proveedores reales (T158)
+
+**Fallo encontrado en la primera prueba de la suscripción:** el creador autorizó en claude.ai, pero la web no le
+mostró ningún código para pegar. Causa: `claude setup-token` abre por su cuenta una pestaña con el flujo
+automático, cuyo `redirect_uri` es `http://localhost:<puerto>/callback`, además de dar el enlace del flujo manual
+(`platform.claude.com/oauth/code/callback`, el que sí muestra el código), que es el que enseña la app. Si se autoriza
+en la pestaña que abrió la CLI, no aparece ningún código y la app nunca se entera de que el inicio de sesión terminó.
+El spike S2 no lo vio porque se hizo desde la terminal, donde esa pestaña se confunde con la del enlace.
+Confirmado con la CLI real (2.1.314): con `BROWSER` apuntando a un script que solo anota la llamada, la CLI lo
+invoca con el `redirect_uri` de `localhost`.
+
+**Corregido:** `login.ts` lanza `setup-token` con `BROWSER=true`, así la CLI no abre nada y el único enlace es el de
+la app. Prueba nueva en `claude-code.contract.test.ts` (falla sin el arreglo).

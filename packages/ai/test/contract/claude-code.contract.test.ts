@@ -179,6 +179,16 @@ describe('claude-code: inicio de sesión', () => {
     })
   }, 30_000)
 
+  // Otherwise the CLI opens its own tab with the automatic flow (localhost callback): authorizing there shows no
+  // code to paste, and the app never learns the login finished (found in T158).
+  it('la CLI no abre el navegador por su cuenta: solo vale el enlace que da la app', async () => {
+    const { fake, login } = loginFor({})
+    const started = await login.start()
+    if (!started.ok) throw new Error('sin enlace')
+    expect(fake.loginBrowser()).toBe('true')
+    await login.cancel(started.value.loginId)
+  }, 30_000)
+
   it('no deja la carpeta temporal del inicio de sesión', async () => {
     const { fake, login } = loginFor({})
     const started = await login.start()

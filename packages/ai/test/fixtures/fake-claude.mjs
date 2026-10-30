@@ -86,6 +86,7 @@ async function print() {
 async function setupToken() {
   writeFileSync(join(dir, 'login.pid'), String(process.pid))
   writeFileSync(join(dir, 'login.dir'), process.env.CLAUDE_CONFIG_DIR ?? '')
+  writeFileSync(join(dir, 'login.browser'), process.env.BROWSER ?? '')
   const log = readFileSync(join(fixtures, 'setup-token', 'success.log'), 'latin1')
   const cut = log.lastIndexOf('\x1b[?2026h', log.indexOf('Long-lived authentication token created'))
   process.stdout.write(Buffer.from(log.slice(0, cut), 'latin1'))

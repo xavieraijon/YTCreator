@@ -12,6 +12,9 @@ const TIMED_OUT: AiFailure = { kind: 'tiempo_agotado', reason: 'respuesta_lenta'
 
 // A wide terminal keeps the link and the token on one line (spike S2); the parser copes with wrapping anyway.
 const SETUP_TOKEN = 'stty cols 1000 2>/dev/null; exec "$YTC_CLAUDE_BIN" setup-token'
+// The CLI opens a tab of its own (`$BROWSER <url>`, else `open`) with the automatic flow, whose callback goes to
+// localhost and never shows a code to paste. `true` makes that a no-op, so the only link is the app's (T158).
+const NO_BROWSER = 'true'
 // macOS `script` reads the terminal settings of its stdin and fails on the socket Node gives it (EOPNOTSUPP, not
 // ENOTTY), and on a FIFO too: `cat` hands it a shell pipe instead, and is killed when `script` ends so the exit shows.
 const WRAPPER =
@@ -118,7 +121,7 @@ export function createClaudeLogin(options: ClaudeLoginOptions): SubscriptionLogi
     const dir = mkdtempSync(join(tmpdir(), 'ytcreator-login-'))
     const child = spawn('sh', scriptArgs(platform), {
       cwd: dir,
-      env: cleanEnv(env, { CLAUDE_CONFIG_DIR: dir, YTC_CLAUDE_BIN: bin }),
+      env: cleanEnv(env, { CLAUDE_CONFIG_DIR: dir, YTC_CLAUDE_BIN: bin, BROWSER: NO_BROWSER }),
       stdio: ['pipe', 'pipe', 'ignore'],
       detached: true,
     })
