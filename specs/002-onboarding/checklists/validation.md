@@ -215,3 +215,18 @@ sin `TERM` y 49 con `TERM=xterm-256color`.
   largo fallan como en la prueba real: la CLI termina bien y no se encuentra el token.
 - El token que se creó en ese intento no se guardó en ninguna parte: la carpeta temporal del inicio de sesión se
   borra al terminar.
+
+**Cuarto fallo, en la siguiente prueba:** con colores, la CLI terminaba bien (`exitCode: 0, rejected: false`) y en
+la salida estaba el principio del token, pero la app seguía sin encontrarlo. Para averiguarlo se usó una build de
+prueba con un diagnóstico enmascarado: registraba la forma de la salida alrededor del token, con el token sustituido
+por su longitud. No se registró ni se copió ningún trozo del token, y el diagnóstico no se ha guardado en el repo.
+Causa: en la 2.1.314, detrás del token no viene `ESC[39m`, sino directamente el color de la línea siguiente
+(`<token>\r ESC[1C ESC[2B ESC[38;2;153;153;153m Store this token securely…`). La grabación del spike (2.1.312)
+sí cerraba el color, y el analizador dependía de eso. Tampoco hubo copia al portapapeles (OSC 52).
+
+**Corregido:**
+- `extractToken` ya no busca un código de cierre concreto. Desde `sk-ant-oat01-`, toma caracteres del token, saltos
+  de línea y movimientos del cursor, y para en la primera secuencia que no lo sea (por ejemplo, un color). Si lo
+  tomado llega hasta el final de la salida, aún no lo da por bueno, porque el token podría estar a medio llegar.
+- Dos pruebas nuevas en `claude-code.contract.test.ts`: la salida de la 2.1.314 sin cierre de color, que falla con
+  el analizador anterior, y un token a medio llegar. La prueba con la grabación de la 2.1.312 sigue pasando.

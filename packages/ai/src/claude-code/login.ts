@@ -27,8 +27,10 @@ const WRAPPER =
 // eslint-disable-next-line no-control-regex -- it parses the escape sequences of a terminal
 const LINK = /\x1b\]8;[^;\x07\x1b]*;(https:\/\/[^\x07\x1b]+)(?:\x07|\x1b\\)/
 const TOKEN_START = 'sk-ant-oat01-'
-// The token is painted in a colour: it ends where the colour is reset.
-const TOKEN_END = '\x1b[39m'
+// The token is painted in a colour and ends at the next colour change: a reset in 2.1.312, the colour of the next
+// line in 2.1.314 (T158). In between there are only its characters and the cursor moves of a line wrap.
+// eslint-disable-next-line no-control-regex -- it parses the escape sequences of a terminal
+const TOKEN_PIECES = /^(?:[\w-]|[\r\n]|\x1b\[[0-9;]*[A-DG])+/
 // eslint-disable-next-line no-control-regex -- likewise
 const CONTROL = /\x1b\[[0-9;?<>]*[A-Za-z]|[\r\n\s]/g
 const TOKEN = /^sk-ant-oat01-[\w-]+$/
@@ -71,13 +73,14 @@ export function extractLink(output: string): string | null {
   return LINK.exec(output)?.[1] ?? null
 }
 
-// The token comes split across lines by cursor moves (S2): the pieces are joined without the control sequences.
+// The token may come split across lines by cursor moves (S2): the pieces are joined without the control sequences.
 export function extractToken(output: string): string | null {
   const start = output.indexOf(TOKEN_START)
   if (start < 0) return null
-  const end = output.indexOf(TOKEN_END, start)
-  if (end < 0) return null
-  const token = output.slice(start, end).replace(CONTROL, '')
+  const pieces = TOKEN_PIECES.exec(output.slice(start))
+  // Without what follows the token, the output may still be arriving.
+  if (!pieces || start + pieces[0].length === output.length) return null
+  const token = pieces[0].replace(CONTROL, '')
   return TOKEN.test(token) ? token : null
 }
 

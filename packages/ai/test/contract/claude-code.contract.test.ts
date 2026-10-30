@@ -125,6 +125,20 @@ describe('claude-code: inicio de sesión', () => {
     expect(extractToken(log.toString('utf8'))).toBe(RECORDED_TOKEN)
   })
 
+  // The screen of 2.1.314, as the masked T158 diagnostic showed it: the token on one line and no colour reset after
+  // it, only the colour of the next line.
+  it('extrae el token de la salida de la 2.1.314, sin reset de color tras él', () => {
+    const token = `sk-ant-oat01-${'FAKE314-token_'.repeat(6)}AA`
+    const screen =
+      `\x1b[1C\x1b[1BYour\x1b[7GOAuth\x1b[13Gtoken\x1b[19G(valid\x1b[26Gfor\x1b[30G1\x1b[32Gyear):\r\x1b[1C\x1b[1B\x1b[K` +
+      `\r\x1b[1C\x1b[1B\x1b[38;2;255;193;7m${token}\r\x1b[1C\x1b[2B\x1b[38;2;153;153;153mStore this token securely.\x1b[39m`
+    expect(extractToken(screen)).toBe(token)
+  })
+
+  it('no da por bueno un token a medio llegar', () => {
+    expect(extractToken(`\x1b[38;2;255;193;7msk-ant-oat01-${'FAKEhalf'.repeat(4)}`)).toBeNull()
+  })
+
   it('CC4 enlace → código → token', async () => {
     const { fake, login } = loginFor({})
     const started = await login.start()
