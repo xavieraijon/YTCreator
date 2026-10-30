@@ -230,3 +230,22 @@ sí cerraba el color, y el analizador dependía de eso. Tampoco hubo copia al po
   tomado llega hasta el final de la salida, aún no lo da por bueno, porque el token podría estar a medio llegar.
 - Dos pruebas nuevas en `claude-code.contract.test.ts`: la salida de la 2.1.314 sin cierre de color, que falla con
   el analizador anterior, y un token a medio llegar. La prueba con la grabación de la 2.1.312 sigue pasando.
+
+**Quinta prueba, con los cuatro arreglos (2026-10-30, CLI 2.1.314):** la suscripción se conectó desde la app, sin
+Terminal. Instalación en la carpeta de pruebas a las 14:21:11; el inicio de sesión tardó 10 s
+(`ai.login_started` → `ai.login_completed`), la comprobación respondió `ok: true` y el asistente terminó a las
+14:22:50, menos de 2 min desde el final de la instalación (SC-002, SC-011: ≤ 5 min). En la base de datos: una cuenta
+`conectada`, la conexión `suscripcion` activa y el asistente en `completado`. Una segunda comprobación a las 14:23
+también dio `ok: true`.
+
+| Prueba de §5 | Resultado |
+|---|---|
+| Suscripción: conectar desde la app, sin Terminal | ✓ |
+| Suscripción: código mal copiado | pendiente |
+| Suscripción: añadir la misma cuenta | pendiente |
+| Suscripción: desinstalar Claude Code y pulsar «Reparar» | pendiente |
+| Suscripción: sesión caducada | pendiente |
+| API: clave con espacios, sin saldo, revocada, sin Wi-Fi | pendiente |
+| README, instalador y bienvenida sin opción gratuita | pendiente |
+| Consola de Anthropic: 0 € por comprobaciones | pendiente |
+| §6: búsqueda de las claves reales | pendiente |
