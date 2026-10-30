@@ -2,7 +2,7 @@
 import { spawn as nodeSpawn } from 'node:child_process'
 import { existsSync, mkdirSync, readFileSync, realpathSync } from 'node:fs'
 import { homedir } from 'node:os'
-import { dirname, join } from 'node:path'
+import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { migrate, MIGRATIONS } from './db/migrate.ts'
 import { openDatabase } from './db/open.ts'
@@ -37,11 +37,18 @@ export interface CliDeps {
   print: (line: string) => void
 }
 
+// `pnpm dev` points YTCREATOR_HOME at the repo's .dev-home, so a dev run never touches a real install's APP_HOME
+// nor a ~/YTCreator folder that isn't ours. Ignored (and dropped) in the published build.
+function appHomedir(): string {
+  const devHome = __YTC_ALLOW_FAKE_AI__ ? process.env.YTCREATOR_HOME : undefined
+  return devHome ? resolve(devHome) : homedir()
+}
+
 function defaultDeps(): CliDeps {
   return {
     env: process.env,
     platform: process.platform === 'darwin' ? 'darwin' : 'linux',
-    homedir: homedir(),
+    homedir: appHomedir(),
     version: readVersion(),
     webDir: defaultWebDir(),
     serve,

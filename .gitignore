@@ -20,6 +20,7 @@ coverage/
 *.db-journal
 *.sqlite
 data/
+.dev-home/
 
 # Logs
 *.log

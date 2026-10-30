@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite build --mode development && node --enable-source-maps dist/server.mjs serve",
+    "dev": "vite build --mode development && YTCREATOR_HOME=../../.dev-home node --enable-source-maps dist/server.mjs serve",
     "build": "vite build",
     "start": "node dist/server.mjs serve"
   },

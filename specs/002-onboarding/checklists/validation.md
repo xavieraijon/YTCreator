@@ -148,3 +148,20 @@ pestaña) ya está cubierto por el e2e existente de la web, sin relación con el
 Todo verde: `pnpm lint` (eslint + stylelint), `pnpm typecheck` (`tsc -b`) y `pnpm format` sin cambios pendientes;
 `pnpm test` 444 pasan y 1 se omite; `pnpm test:installer` 18/18; `pnpm test:e2e` 97/99 en el catálogo (2 omitidos
 a propósito) y 20/20 en la web.
+
+## Preparación de T158: `pnpm dev` escribía fuera del repo
+
+**Hallazgo:** el servidor de desarrollo usaba las mismas rutas que una instalación real. En el Mac del creador,
+`~/YTCreator` ya era una carpeta suya (un repo con enlaces a otro proyecto, sin la marca `.ytcreator`), y `pnpm dev`
+dejó dentro `ytcreator.db`. El instalador real sí la protege (para con el código 20), pero el modo de desarrollo no.
+Además, las pruebas de desarrollo con la IA falsa compartían `APP_HOME` con una futura instalación real.
+
+**Corregido:** `pnpm dev` pasa `YTCREATOR_HOME=../../.dev-home` y `cli.ts` toma esa carpeta como carpeta personal,
+solo en las builds de desarrollo (en la publicada la rama se elimina con `__YTC_ALLOW_FAKE_AI__`; comprobado que
+`YTCREATOR_HOME` no aparece en `server.mjs` de producción). `.dev-home/` está en `.gitignore`. Con el permiso del
+creador se borraron los `ytcreator.db*` que quedaron en su carpeta.
+
+**Cómo se hace T158:** en una carpeta de pruebas que hace de carpeta personal (`HOME` apuntando a ella, con el Llavero
+real enlazado y sin `~/.local/bin` en el `PATH`), instalando con la línea real contra una release local. Se comprobó
+antes en una carpeta temporal: los 8 pasos con `✓`, Claude Code instalado dentro de esa carpeta y el del creador
+intacto.
