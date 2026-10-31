@@ -16,6 +16,25 @@ Pantallas nuevas en `apps/web/src/screens/channel/`, con los componentes de `pac
 - Esperas largas: progreso por elemento («Midiendo 2 de 5 nichos»), se puede salir y volver.
 - Accesible: axe sin fallos, todo con teclado, semáforos con texto e icono.
 
+## Test de glosario (FR-034)
+
+Los textos nuevos de `apps/web/src/strings/` pasan el test de glosario que ya existe
+(`apps/web/test/glossary.test.ts`, con la lista de `packages/ui/test/forbidden-terms.ts`). Esta feature amplía la
+lista de términos prohibidos en la web con `RPM`, `YPP`, `CTR`, `handle` y `yt-dlp`. Se nombran así:
+
+| Término técnico | Texto en pantalla |
+|---|---|
+| RPM | «lo que ganas por cada 1.000 visitas» |
+| YPP | «programa de socios de YouTube» |
+| handle | «la @ de tu canal» |
+| yt-dlp | «el lector de YouTube» |
+| YouTube Data API | «clave de YouTube» (en «Modo experto») |
+| URL | «enlace» |
+| JSON / Markdown | «Descargar como documento» (`.md`) y «Descargar como datos» (`.json`). El formato solo se ve en la extensión del fichero |
+
+«Nicho» sí se puede usar, pero la primera pantalla que lo muestra lo explica en una frase. Esto lo comprueba una prueba
+de la pantalla Intereses, no el test de glosario. «YouTube» es una marca permitida.
+
 ## Componentes nuevos (catálogo)
 
 | Componente | Uso |
@@ -34,11 +53,11 @@ Pantallas nuevas en `apps/web/src/screens/channel/`, con los componentes de `pac
 | Ritmo | `ritmo` | «Seguir» | Horas por semana, cara/voz/ninguna, región del público |
 | Conceptos | `conceptos` | «Elegir este concepto» | Promesa, pilares, público, formato, ritmo, monetización en rangos, avisos |
 | Nombres | `nombres` | «Quedarme con este nombre» | Semáforo y razones por nombre; «Escribir el mío»; «Decidir más tarde» |
-| Enlace | `enlace` | «Buscar mi canal» | Acepta URL, @ o enlace de un vídeo |
+| Enlace | `enlace` | «Buscar mi canal» | Acepta el enlace del canal, su @ o el enlace de un vídeo |
 | Confirmar | `confirmar` | «Sí, es mi canal» | Foto, nombre, @ y suscriptores |
 | Lectura | `lectura` | «Ver mi perfil actual» | Progreso de lectura; con menos de 5 vídeos, ofrece el recorrido de canal nuevo |
 | Posicionamiento | `posicionamiento` | «Aprobar» | Perfil actual (con vídeos citados) y propuesta de cambios |
-| Perfil | `hecho` | «Exportar» | Perfil vigente, versiones, restaurar, editar; siguiente paso: banco de ideas (próximamente) |
+| Perfil | `hecho` | «Descargar como documento» | Perfil vigente, versiones, restaurar, editar; siguiente paso: banco de ideas (próximamente) |
 | Ajustes → YouTube | — | «Guardar» | Fuente, clave opcional (solo `hint`), cupo, actualizar el lector |
 | Ajustes → Consumo | — | — | Lista de llamadas y totales |
 

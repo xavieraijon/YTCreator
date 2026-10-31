@@ -35,7 +35,9 @@ fnm exec --using=24 -- pnpm test:installer
 fnm exec --using=24 -- pnpm test:e2e
 ```
 
-Todo en verde. `pnpm test:real-youtube` es opcional y queda fuera de CI.
+Todo en verde, incluido el test de glosario (`apps/web/test/glossary.test.ts`) con los términos nuevos de
+[ui-screens](./contracts/ui-screens.md#test-de-glosario-fr-034) (FR-034). `pnpm test:real-youtube` es opcional y queda
+fuera de CI.
 
 ## 2. Canal nuevo de punta a punta
 
@@ -45,7 +47,8 @@ Todo en verde. `pnpm test:real-youtube` es opcional y queda fuera de CI.
 4. Elegir uno, revisar los 2–4 canales de referencia, contestar el ritmo.
 5. Ver 2–3 conceptos con monetización en rangos y fuentes; elegir uno.
 6. Ver 6–8 nombres con semáforo; elegir uno verde.
-7. Llegar al perfil y exportarlo en Markdown y en JSON: las mismas secciones y «Fuentes» al final.
+7. Llegar al perfil y descargarlo «como documento» (Markdown) y «como datos» (JSON): las mismas secciones y «Fuentes»
+   al final.
 
 Esperado: cada botón de IA mostró el importe antes de pulsarlo; Ajustes → Consumo lista las llamadas.
 

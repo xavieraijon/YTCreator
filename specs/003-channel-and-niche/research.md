@@ -177,8 +177,10 @@ umbrales de mercado vienen de los conceptos de CanalYT (`docs/mercado.md`, `herr
 ## R14. Recorrido y reanudación (SC-006)
 
 - **Decisión:** tabla `journey` con `kind` (`nuevo` / `existente`), `step` y `state` JSON. Pasos del canal nuevo:
-  `intereses → preguntas → nichos → nicho_elegido → ritmo → conceptos → concepto_elegido → nombres → hecho`; del
-  existente: `enlace → confirmar → lectura → posicionamiento → hecho`. Cada transición se guarda en una transacción
+  `intereses → preguntas → nichos → ritmo → conceptos → nombres → hecho`; del existente:
+  `enlace → confirmar → lectura → posicionamiento → hecho`. Elegir un nicho o un concepto no es un paso propio: es
+  aprobar la propuesta (`selected_index` y `status = aprobada`, ver el modelo de datos), y esa aprobación es la que
+  hace avanzar al paso siguiente. Cada transición se guarda en una transacción
   junto con la propuesta o la aprobación que la produce. Al abrir la app, si hay un recorrido sin terminar, el inicio
   ofrece «Seguir donde lo dejaste». Las operaciones largas (medir, leer canal) son trabajos con estado en la tabla, así
   que cerrar la app a mitad deja el trabajo en `interrumpido` y se puede relanzar.
