@@ -248,7 +248,7 @@ también dio `ok: true`.
 | API: clave con espacios | ✓ |
 | API: sin saldo | solo el aviso ✓ (la consola pide 5 $ para crear la clave) |
 | API: sin Wi-Fi | ✓ (tras un arreglo) |
-| API: clave revocada | pendiente |
+| API: clave revocada | ✓ |
 | README, instalador y bienvenida sin opción gratuita | pendiente |
 | Consola de Anthropic: 0 € por comprobaciones | pendiente |
 | §6: búsqueda de las claves reales | pendiente |
@@ -315,3 +315,8 @@ de la clave. **Corregido:** ruta nueva `/ajustes/ia/cambiar/:kind/limites`, que 
 **API sin Wi-Fi (2026-10-31):** con la build corregida, «Usar esta opción» pidió solo los límites y la API quedó en
 uso. Sin Wi-Fi, «Comprobar ahora» dio «No hay conexión a internet». Con Wi-Fi, se volvió a la suscripción sin
 problemas. La suscripción sin Wi-Fi también dio «Sin conexión».
+
+**API, clave revocada (2026-10-31):** el creador revocó la clave en la consola de Anthropic con la API en uso.
+«Comprobar ahora» dio `sin_sesion`/`clave_no_valida` (`status: 401`). En pantalla salió «Clave no válida», el mensaje
+«La clave no es válida. Revisa que la has copiado entera o crea una nueva.» y «Conseguir una clave nueva». La clave no
+aparece en `server.log`.
