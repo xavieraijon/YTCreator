@@ -38,10 +38,11 @@ function LimitsStep({ onSaved, onBack }: { onSaved: () => void; onBack: () => vo
 }
 
 // /ajustes/ia/cambiar/:kind: the wizard's connection screen, ending in «Usar esta opción»; onboarding is not touched.
-export function ChangeAi({ kind }: { kind: ConnectionKind }) {
+// With limitsFirst (/limites) the connection is already saved, so it opens straight on the limits it still lacks.
+export function ChangeAi({ kind, limitsFirst = false }: { kind: ConnectionKind; limitsFirst?: boolean }) {
   const [activating, setActivating] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [needsLimits, setNeedsLimits] = useState(false)
+  const [needsLimits, setNeedsLimits] = useState(limitsFirst)
 
   const activate = async () => {
     setError(null)
@@ -63,7 +64,7 @@ export function ChangeAi({ kind }: { kind: ConnectionKind }) {
       setNeedsLimits(false)
       void activate()
     }
-    return <LimitsStep onSaved={saved} onBack={() => setNeedsLimits(false)} />
+    return <LimitsStep onSaved={saved} onBack={limitsFirst ? toSettings : () => setNeedsLimits(false)} />
   }
 
   const outside = {

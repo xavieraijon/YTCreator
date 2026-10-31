@@ -12,6 +12,7 @@ const targets: Target[] = [
   { page: 'settings' },
   { page: 'aiSettings' },
   { page: 'switchAi', kind: 'pago_por_uso' },
+  { page: 'switchAi', kind: 'pago_por_uso', limits: true },
   { page: 'generalSettings' },
 ]
 
@@ -25,7 +26,14 @@ describe('router (R19)', () => {
   })
 
   it('rejects unknown paths, steps and kinds', () => {
-    for (const path of ['/otra', '/bienvenida/pagar', '/ajustes/ia/cambiar/otra', '/inicio/x', '/ajustes/ia/cambiar'])
+    for (const path of [
+      '/otra',
+      '/bienvenida/pagar',
+      '/ajustes/ia/cambiar/otra',
+      '/inicio/x',
+      '/ajustes/ia/cambiar',
+      '/ajustes/ia/cambiar/pago_por_uso/otra',
+    ])
       expect(parseRoute(path), path).toEqual({ page: 'notFound' })
   })
 })

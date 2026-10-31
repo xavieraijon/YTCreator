@@ -14,7 +14,8 @@ export type Route =
   | { readonly page: 'home' }
   | { readonly page: 'settings' }
   | { readonly page: 'aiSettings' }
-  | { readonly page: 'switchAi'; readonly kind: ConnectionKind }
+  // limits: the connection is already there and only the spending limits are missing (no form to fill in again).
+  | { readonly page: 'switchAi'; readonly kind: ConnectionKind; readonly limits?: true }
   | { readonly page: 'generalSettings' }
   | { readonly page: 'notFound' }
 
@@ -25,7 +26,7 @@ const isKind = (value: string): value is ConnectionKind => (CONNECTION_KINDS as 
 
 export function parseRoute(pathname: string): Route {
   const parts = pathname.split('/').filter(Boolean)
-  const [first, second, third, fourth, ...rest] = parts
+  const [first, second, third, fourth, fifth, ...rest] = parts
   if (rest.length) return { page: 'notFound' }
   if (!first) return { page: 'root' }
   if (first === 'bienvenida') {
@@ -38,7 +39,10 @@ export function parseRoute(pathname: string): Route {
     if (!second) return { page: 'settings' }
     if (second === 'general' && !third) return { page: 'generalSettings' }
     if (second === 'ia' && !third) return { page: 'aiSettings' }
-    if (second === 'ia' && third === 'cambiar' && fourth && isKind(fourth)) return { page: 'switchAi', kind: fourth }
+    if (second === 'ia' && third === 'cambiar' && fourth && isKind(fourth)) {
+      if (!fifth) return { page: 'switchAi', kind: fourth }
+      if (fifth === 'limites') return { page: 'switchAi', kind: fourth, limits: true }
+    }
   }
   return { page: 'notFound' }
 }
@@ -60,7 +64,7 @@ export function href(route: Target): string {
     case 'aiSettings':
       return '/ajustes/ia'
     case 'switchAi':
-      return `/ajustes/ia/cambiar/${route.kind}`
+      return `/ajustes/ia/cambiar/${route.kind}${route.limits ? '/limites' : ''}`
     case 'generalSettings':
       return '/ajustes/general'
   }

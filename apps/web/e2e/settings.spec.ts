@@ -12,6 +12,7 @@ import {
 
 // Outside 4310–4329, other than 4390–4399 which the other specs already use (server.ts's own comment).
 const GENERAL_TAB_PORT = 4389
+const SAVED_KEY_PORT = 4384
 
 let server: TestServer
 
@@ -160,6 +161,40 @@ test('the General tab: disabling the update notice and the AI timeout override, 
     await page.reload()
     await page.locator('summary', { hasText: 'Modo experto' }).click()
     await expect(page.getByLabel('Tiempo máximo de espera de la IA')).toHaveValue('120')
+  } finally {
+    await local.stop()
+  }
+})
+
+test('using a saved key that has no limits yet asks only for the limits, not for the key again (T158)', async ({
+  page,
+  context,
+}) => {
+  // Its own server: the first test leaves limits saved, and they are what this one goes without.
+  const local = await startServer({ port: SAVED_KEY_PORT })
+  try {
+    await blockExternal(context)
+    await page.goto(local.baseURL)
+    await toConnect(page, 'Usar mi suscripción de Claude')
+    await connectAccount(page)
+    await page.getByRole('button', { name: 'Continuar' }).click()
+    await page.getByRole('button', { name: 'Ir al inicio' }).click()
+
+    // The key is saved from «Configurar», but the creator goes back without using it: no limits yet.
+    await page.goto(`${local.baseURL}/ajustes/ia`)
+    await others(page).getByRole('button', { name: 'Configurar' }).click()
+    await page.getByLabel('Tu clave').fill(FAKE_KEY)
+    await page.getByRole('button', { name: 'Comprobar y guardar' }).click()
+    await expect(page.getByText(`Clave guardada ••••${FAKE_KEY.slice(-4)} · Funciona`)).toBeVisible()
+    await page.goto(`${local.baseURL}/ajustes/ia`)
+
+    await others(page).getByRole('button', { name: 'Usar esta opción' }).click()
+    await expect(heading(page, 'Límites de gasto')).toBeVisible()
+    await expect(page.getByLabel('Tu clave')).toHaveCount(0)
+    await page.getByRole('button', { name: 'Guardar límites' }).click()
+
+    await expect(heading(page, 'Ajustes')).toBeVisible()
+    await expect(badge(page, 'Pago por uso de Anthropic · Funciona')).toBeVisible()
   } finally {
     await local.stop()
   }

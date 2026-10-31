@@ -22,6 +22,7 @@ glosario de la 001 (FR-032) y se escriben de tú.
 | `/ajustes` | Settings (pestañas IA y General) | — |
 | `/ajustes/ia` | AiSettings | «Comprobar ahora» |
 | `/ajustes/ia/cambiar/:kind` | Las mismas pantallas de conexión (y límites si hacen falta), fuera del asistente | «Usar esta opción» |
+| `/ajustes/ia/cambiar/:kind/limites` | Solo Limits: la conexión ya está guardada y le faltan los límites | «Guardar límites» |
 | `/ajustes/general` | GeneralSettings | — (interruptores que se guardan solos) |
 
 **Redirección de `/` y de cualquier ruta del asistente** a partir de `GET /api/onboarding`:
@@ -150,7 +151,8 @@ lleva a `/ajustes/ia`.
   con 5, el botón explica que es el máximo) (FR-016);
 - **Claves guardadas**: «••••abcd» con «Sustituir» y «Borrar»;
 - **Otras opciones**: las no activas, con «Usar esta opción» (si están conectadas) o «Configurar» (→
-  `/ajustes/ia/cambiar/:kind`);
+  `/ajustes/ia/cambiar/:kind`). «Usar esta opción» con una clave guardada sin límites
+  lleva a `/ajustes/ia/cambiar/:kind/limites`: pide solo los límites, nunca la clave otra vez;
 - **Límites de gasto** (`LimitsForm`) si la opción de pago por uso está configurada.
 
 ### GeneralSettings — `/ajustes/general` (FR-009b, FR-034)

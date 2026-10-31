@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import styles from './App.module.css'
 import { reloadAi } from './ai/useAiOverview.ts'
 import { reloadOnboarding, useOnboarding, useOnboardingSync } from './onboarding/useOnboarding.ts'
-import { navigate, onboardingRedirect, type Route, usePathname, useRoute } from './router.ts'
+import { href, navigate, onboardingRedirect, type Route, usePathname, useRoute } from './router.ts'
 import { ConnectAi } from './screens/connect-later/ConnectAi.tsx'
 import { Home } from './screens/home/Home.tsx'
 import { ChooseAi } from './screens/onboarding/ChooseAi.tsx'
@@ -59,7 +59,7 @@ function Page({ route, state }: { route: Route; state: OnboardingState | null })
     case 'generalSettings':
       return <Settings tab="general" />
     case 'switchAi':
-      return <ChangeAi key={route.kind} kind={route.kind} />
+      return <ChangeAi key={href(route)} kind={route.kind} limitsFirst={route.limits === true} />
     case 'notFound':
       return (
         <Screen title={es.app.notFoundTitle}>

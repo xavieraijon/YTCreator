@@ -113,8 +113,9 @@ export function AiSettings() {
       await apiClient.post('/api/ai/active', { kind }, aiOverviewSchema)
       void reloadAi()
     } catch (caught) {
-      // Without limits the change goes through its own screen, which asks for them first.
-      if (caught instanceof ApiClientError && caught.body?.guard === 'sin_limites') navigate({ page: 'switchAi', kind })
+      // Without limits the change goes through its own screen, which asks only for them: the key is already saved.
+      if (caught instanceof ApiClientError && caught.body?.guard === 'sin_limites')
+        navigate({ page: 'switchAi', kind, limits: true })
       else setError(errorText(caught))
     } finally {
       setBusy(null)
