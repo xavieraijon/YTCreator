@@ -1,0 +1,386 @@
+---
+description: "Lista de tareas de la feature 003: canal y nicho"
+---
+
+# Tasks: Canal y nicho
+
+**Input**: Documentos de diseño en `/specs/003-channel-and-niche/`
+**Prerequisites**: [plan.md](./plan.md), [spec.md](./spec.md), [research.md](./research.md),
+[data-model.md](./data-model.md), [contracts/](./contracts/), [quickstart.md](./quickstart.md)
+
+**Tests**: SÍ. La constitución (principio VI) pide pruebas primero: cada tarea de test se escribe antes que su
+implementación y tiene que fallar al principio.
+
+**Organization**: Las tareas van agrupadas por historia de usuario para que cada una se pueda implementar y probar por
+separado.
+
+## Formato: `[ID] [P?] [Story] Descripción`
+
+- **[P]**: se puede hacer en paralelo (ficheros distintos, sin dependencias pendientes)
+- **[Story]**: historia a la que pertenece (US1…US5)
+- Cada descripción lleva la ruta exacta del fichero
+
+## Convenciones comunes
+
+- Código, identificadores y nombres de fichero en inglés; textos de interfaz, prompts y documentos en español.
+- Ningún test llama a una IA real ni a YouTube real: proveedor `fake` (`YTCREATOR_FAKE_AI=<escenario>`) y YouTube
+  `fake` (`YTCREATOR_FAKE_YOUTUBE=1`). `pnpm test:real-youtube` es opcional y queda fuera de CI.
+- El servidor devuelve códigos (`sin_datos`, `bloqueado`, `ya_hay_canal`…); la web los traduce en `strings/`.
+- La clave de YouTube Data API es un `Secret` de la 002: vive en el `SecretStore`, va en la cabecera `X-Goog-Api-Key`
+  (nunca en la URL), solo se muestra su `hint` de 4 caracteres y `Secret.reveal()` solo se permite en
+  `packages/ai/src/**`, `packages/youtube/src/data-api/**` y `apps/server/src/secrets/**`. Los logs nunca llevan URLs
+  completas ni cabeceras.
+- yt-dlp se lanza con `execFile` y argumentos en lista, nunca con `shell: true`.
+- Comandos con Node 24: `fnm exec --using=24 -- pnpm lint|typecheck|test|test:installer|test:e2e`.
+- Al acabar cada fase o historia: lint + typecheck + test en verde y commit (`feat(003): …`).
+
+---
+
+## Phase 1: Setup (infraestructura compartida)
+
+**Purpose**: Spikes, paquete nuevo y ajustes de herramientas.
+
+- [ ] T001 Spike S1+S2 (research.md): con yt-dlp real fuera de CI, probar `yt-dlp --flat-playlist -J "ytsearch40:<q>"`, la pestaña `/videos` de un canal (suscriptores y hasta 200 vídeos) y `https://www.youtube.com/@<handle>` libre (404) frente a ocupado frente a sin red; anotar campos que vienen vacíos y patrones de stderr de bloqueo y 404 en `specs/003-channel-and-niche/research.md` («### Resultados»)
+- [ ] T002 Spike S3: medir el tiempo de 5 nichos con 3 procesos en paralelo y anotar en `specs/003-channel-and-niche/research.md` si hace falta bajar a `ytsearch25`
+- [ ] T003 Spike S4: contar unidades de la Data API de un recorrido completo (búsqueda 100 unidades, canales y vídeos 1) y anotar el reparto Data API / yt-dlp en `specs/003-channel-and-niche/research.md`
+- [ ] T004 Crear el paquete `@ytcreator/youtube` en `packages/youtube/` (`package.json`, `tsconfig.json`, `src/index.ts`, `vitest.config.ts`) y añadir su referencia en `tsconfig.json` raíz y el proyecto en `vitest.workspace.ts`
+- [ ] T005 [P] Añadir yt-dlp (versión, URL y SHA256 por sistema y arquitectura: macOS, Linux x64/arm64, Windows) en `installer/versions.json`
+- [ ] T006 [P] Reglas de ESLint en `eslint.config.js`: `node:child_process` solo en `packages/youtube/src/ytdlp/**` (y donde ya lo permita la 002), prohibido `shell: true`, llamadas a `googleapis.com` solo en `packages/youtube/src/data-api/**`, y ampliar la lista de `Secret.reveal()` con `packages/youtube/src/data-api/**`
+- [ ] T007 [P] Script `test:real-youtube` en `package.json` raíz y `packages/youtube/package.json` (solo `*.real.test.ts`, excluido de `pnpm test`)
+- [ ] T008 [P] Variable `YTCREATOR_FAKE_YOUTUBE=1` en el `webServer` de `apps/web/playwright.config.ts` y en `apps/web/e2e/server.ts`; declararla en `apps/server/src/env.d.ts`
+
+**Checkpoint**: spikes anotados y paquete vacío que compila.
+
+---
+
+## Phase 2: Foundational (bloquea todas las historias)
+
+**Purpose**: Puerto de YouTube, conocimiento, base de datos, IA con gasto, trabajos en segundo plano y esqueleto de
+rutas y pantallas.
+
+**⚠️ CRITICAL**: Ninguna historia empieza hasta acabar esta fase.
+
+### Tests foundational ⚠️
+
+- [ ] T009 [P] Test del puerto y los fallos de YouTube en `packages/core/test/youtube/failures.test.ts`: códigos `sin_datos | no_encontrado | bloqueado | cupo_agotado | tiempo_agotado | no_disponible` y forma `{ok:false, failure}`
+- [ ] T010 [P] Test de normalización de la @ en `packages/core/test/youtube/handle.test.ts`: acepta enlace de canal, `@handle`, `handle`, enlace de vídeo y `/channel/UC…`; la @ final tiene 3–30 caracteres `[A-Za-z0-9._-]` sin `@`; `youtube_channel_id` empieza por `UC` y tiene 24 caracteres
+- [ ] T011 [P] Test del limitador de concurrencia en `packages/core/test/concurrency.test.ts`: nunca más de N tareas a la vez, conserva el orden de resultados y sigue tras un fallo
+- [ ] T012 [P] Test del paquete de conocimiento en `packages/knowledge/test/market.test.ts`: cada fichero (`ypp`, `rpm`, `made-for-kids`, `inauthentic`, `shorts`, `thresholds`, `pricing`) cumple su esquema (`version` entero, `reviewedAt`, `source` con uno o más `{label,url}`, `data`); un fichero roto lanza al cargar; aviso de revisión con más de 180 días con fecha simulada
+- [ ] T013 [P] Test de la migración `0002_channel.sql` en `apps/server/test/db/migration-0002.test.ts`: crea `channel`, `channel_journey`, `ai_proposal`, `profile_version`, `niche_measure`, `name_check`, `channel_reading`, `ai_usage`, `yt_cache`, `yt_quota`, `background_job`; `UNIQUE(youtube_channel_id)`; índice único `UNIQUE(channel_id) WHERE status='activo'` en recorridos; la 0001 sigue intacta
+- [ ] T014 [P] Tests de repos en `apps/server/test/db/repos/channels.test.ts`, `journeys.test.ts`, `proposals.test.ts`, `profiles.test.ts`: crear canal, `revision` desfasada devuelve `conflicto`, un solo recorrido activo por canal, versiones de perfil correlativas con origen `ia|manual|restaurada`
+- [ ] T015 [P] Tests de repos en `apps/server/test/db/repos/measures.test.ts`, `names.test.ts`, `readings.test.ts`, `usage.test.ts`, `yt-cache.test.ts`, `jobs.test.ts`: caché de 24 h (1 h para comprobaciones de @), cupo por fecha del Pacífico, trabajos `en_curso` pasan a `interrumpido` al arrancar
+- [ ] T016 [P] Test de `AiRequest.input` en `packages/ai/test/input.test.ts`: los datos de YouTube y del creador van dentro de `<datos>…</datos>` y nunca se mezclan con las instrucciones del prompt; fake y adaptadores reales lo reciben igual
+- [ ] T017 [P] Test de los usos de IA en `packages/core/test/ai/uses.test.ts`: `preguntas`, `nichos`, `conceptos`, `nombres`, `lectura_canal`, `posicionamiento` con su modelo (Haiku o Sonnet según ai-uses.md), tiempo máximo (60 s o 120 s) y esquema de salida Zod
+- [ ] T018 [P] Test de prompts en `packages/knowledge/test/prompts.test.ts`: cada `prompts/<uso>/v1.md` tiene cabecera con versión y hash, el hash coincide con el contenido y cambiar el texto sin subir versión falla
+- [ ] T019 [P] Test del validador de cifras en `packages/core/test/channel/claims.test.ts`: una cifra que no está en los datos de entrada se detecta; primer fallo pide un reintento; si vuelve a fallar se recortan las frases y se marca `claimsTrimmed`
+- [ ] T020 [P] Test de estimación y presupuesto en `packages/core/test/spending/estimate.test.ts` y `budget.test.ts`: `cents = ceil(usd × fx × 100)` con `pricing.json`; suscripción cuesta 0 €; estimación caduca a los 10 min; límites por operación, diario y mensual; aviso si el coste real supera la estimación en más del 50 %
+- [ ] T021 [P] Test del servicio `ai-run` en `apps/server/test/services/ai-run.test.ts`: sin `estimateId` válido no llama a la IA; guarda `ai_usage`; `limite_de_gasto` sin llamada; reintento único por cifras inventadas
+- [ ] T022 [P] Batería de contrato de YouTube en `packages/youtube/test/contract/battery.ts` (search, channel, videos, handle, resolve; cada fallo del puerto) y `packages/youtube/test/fake.contract.test.ts` que la pasa con el fake
+- [ ] T023 [P] Tests del adaptador yt-dlp en `packages/youtube/test/ytdlp.contract.test.ts` con el binario falso `packages/youtube/test/fixtures/fake-yt-dlp` (salidas grabadas en S1): argumentos en lista, tiempo máximo 45 s (15 s para la @), clasificación de stderr en `bloqueado`/`no_encontrado`, binario ausente = `no_disponible`
+- [ ] T024 [P] Tests de RSS y Data API en `packages/youtube/test/rss.test.ts` y `packages/youtube/test/data-api.contract.test.ts` con `fetch` simulado: clave en `X-Goog-Api-Key` y nunca en la URL, 403 `quotaExceeded` = `cupo_agotado`, contador de unidades
+- [ ] T025 [P] Test del servicio `youtube` en `apps/server/test/services/youtube.test.ts`: elige Data API si hay clave y cupo, si no yt-dlp; usa la caché; como mucho 3 procesos yt-dlp y 4 comprobaciones de @ a la vez; los logs no contienen la clave, URLs completas ni cabeceras
+- [ ] T026 [P] Test de trabajos en segundo plano en `apps/server/test/http/jobs.test.ts`: `GET /api/jobs/:id/events` emite `progress`, `item`, `done`, `failed` por SSE; el trabajo sigue si se cierra la conexión; al reiniciar, `en_curso` pasa a `interrumpido`
+- [ ] T027 [P] Test del recorrido en `packages/core/test/channel/journey.test.ts`: transiciones `intereses→preguntas→nichos→ritmo→conceptos→nombres→hecho` y `enlace→confirmar→lectura→posicionamiento→hecho`; saltar un paso no aprobado falla; `journeyStateSchema` (intereses 10–1.000 caracteres, 0–3 respuestas, `hoursPerWeek` 1–60, `onCamera` `cara|voz|ninguna`)
+- [ ] T028 [P] Test del esquema `ChannelProfile` en `packages/core/test/channel/profile.test.ts`: promesa ≤ 160 caracteres, 3–4 pilares, monetización con `monthlyEurRange` = visitas × RPM / 1.000, `displayName` 1–100 caracteres
+- [ ] T029 [P] Tests de esquemas de API en `packages/core/test/api/channel.test.ts`, `youtube.test.ts`, `usage.test.ts`: cada cuerpo de petición y respuesta de http-api.md
+- [ ] T030 [P] Tests de rutas base en `apps/server/test/http/channel-base.test.ts`: `GET /api/channels/current` con y sin canal, `POST /api/channels` (201 y `409 ya_hay_canal`), `GET /api/journeys/:id`, `POST /api/journeys/:id/step` con `revision` desfasada (`409` con `current`) y paso no aprobado (`400`), `POST /api/journeys/:id/estimate`, `POST /api/journeys/:id/proposals` con `estimateId` caducado, `PATCH /api/proposals/:id`, guardia de Host/Origin
+- [ ] T031 [P] Tests de componentes en `packages/ui/test/Semaphore.test.tsx` y `packages/ui/test/DataSource.test.tsx`: cada estado con texto e icono (no solo color), `DataSource` en sus tres variantes (dato de YouTube con fecha, conocimiento con fecha de revisión, «Opinión de la IA»), axe sin fallos
+- [ ] T032 [P] Ampliar `packages/ui/test/forbidden-terms.ts` con `RPM`, `YPP`, `CTR`, `handle` y `yt-dlp` y comprobar que `apps/web/test/glossary.test.ts` falla con un texto de prueba que los use
+- [ ] T033 [P] Tests del instalador en `installer/test/ytdlp.test.ts`: descarga correcta, hash erróneo (borra el temporal y sigue), sin red (sigue y avisa), ya instalado con la misma versión (no descarga); en macOS, Linux y Windows
+
+### Implementation foundational
+
+- [ ] T034 [P] Puerto de YouTube en `packages/core/src/youtube/port.ts` (operaciones `search`, `channel`, `videos`, `checkHandle`, `resolve`; vídeos con `title`, `views`, `durationSec`, `publishedAt`, campos que pueden ser `null`) y fallos en `packages/core/src/youtube/failures.ts`
+- [ ] T035 [P] Normalización de enlaces y @ en `packages/core/src/youtube/handle.ts`
+- [ ] T036 [P] Limitador de concurrencia en `packages/core/src/concurrency.ts`
+- [ ] T037 [P] Ficheros de mercado en `packages/knowledge/market/ypp.json`, `rpm.json` (€ por categoría y región `espana|latam|mixto`), `made-for-kids.json`, `inauthentic.json`, `shorts.json` (incluye `solo_shorts`), `thresholds.json` (demanda alta ≥ 50.000, media ≥ 5.000; puerta abierta ≥ 3, entreabierta ≥ 1; concentración alta ≥ 0,70, media ≥ 0,40; < 10 vídeos = `sin_datos`; máximo 20 canales; datos viejos > 90 días) y `pricing.json` (USD por millón de tokens por modelo y cambio a € con fecha), cada uno con `version`, `reviewedAt` y `source`
+- [ ] T038 Cargador y esquemas Zod del conocimiento en `packages/knowledge/src/index.ts` (falla al arrancar si un fichero no valida; lista de entradas con más de 180 días) y guía de escritura en `packages/knowledge/writing/human.md`
+- [ ] T039 Migración `apps/server/src/db/migrations/0002_channel.sql` con las tablas y restricciones de data-model.md (handle 3–30 `[A-Za-z0-9._-]`, `display_name` 1–100, `youtube_channel_id` `UC…` de 24 caracteres UNIQUE, `revision`, origen de versión `ia|manual|restaurada`, estados de `background_job`)
+- [ ] T040 [P] Repos `apps/server/src/db/repos/channels.ts`, `journeys.ts`, `proposals.ts`, `profiles.ts` sobre `transaction.ts`
+- [ ] T041 [P] Repos `apps/server/src/db/repos/measures.ts`, `names.ts`, `readings.ts`, `usage.ts`, `yt-cache.ts`, `jobs.ts`
+- [ ] T042 Añadir `input` a `AiRequest` en `packages/core/src/ai/port.ts` y envolverlo en `<datos>` en `packages/ai/src/anthropic/adapter.ts`, `packages/ai/src/claude-code/adapter.ts` y `packages/ai/src/fake/fake-provider.ts`
+- [ ] T043 Usos nuevos en `packages/core/src/ai/uses.ts` y perfiles de modelo en `packages/ai/src/profiles.ts`
+- [ ] T044 [P] Esquemas Zod de salida de cada uso en `packages/core/src/channel/outputs.ts` (preguntas, nichos con consultas, conceptos, nombres, lectura del canal, posicionamiento)
+- [ ] T045 [P] Validador de cifras en `packages/core/src/channel/claims.ts`
+- [ ] T046 [P] Escenarios del fake de IA para los seis usos (normal, `cifra_inventada`, `salida_rota`, `limite_de_gasto`) en `packages/ai/src/fake/scenarios.ts`
+- [ ] T047 [P] Estimación en `packages/core/src/spending/estimate.ts` y presupuesto en `packages/core/src/spending/budget.ts` (reutiliza `spending/limits.ts` de la 002)
+- [ ] T048 Servicio `apps/server/src/services/ai-run.ts`: estimar, guardar la estimación 10 min, comprobar presupuesto, llamar al puerto, validar con Zod, validar cifras, registrar `ai_usage`
+- [ ] T049 [P] Fake de YouTube con escenarios (nicho normal, `sin_datos`, `bloqueado`, @ ocupada, canal de 30 vídeos, canal de 3 vídeos) en `packages/youtube/src/fake/fake-youtube.ts` y `packages/youtube/src/fake/scenarios.ts`
+- [ ] T050 [P] Adaptador yt-dlp en `packages/youtube/src/ytdlp/command.ts`, `adapter.ts`, `parse.ts`, `classify.ts`, más `packages/youtube/test/fixtures/fake-yt-dlp`
+- [ ] T051 [P] Lector RSS de vídeos recientes (fechas exactas de `publishedAt`) en `packages/youtube/src/rss/feed.ts` y `parse.ts`
+- [ ] T052 [P] Adaptador de la Data API en `packages/youtube/src/data-api/adapter.ts` y `classify.ts` (clave en cabecera, contador de unidades)
+- [ ] T053 Registro en `packages/youtube/src/registry.ts` (fake con `YTCREATOR_FAKE_YOUTUBE=1`, si no Data API o yt-dlp; ruta del binario `<datos>/bin/yt-dlp`, `yt-dlp.exe` en Windows) y exportaciones en `packages/youtube/src/index.ts`
+- [ ] T054 Servicio `apps/server/src/services/youtube.ts`: elección de fuente, caché `yt_cache`, cupo `yt_quota`, concurrencia (3 yt-dlp, 4 @), registro sin secretos en `apps/server/src/logging.ts`
+- [ ] T055 Trabajos en segundo plano: `apps/server/src/services/jobs.ts` (lanzar, emitir eventos, marcar `interrumpido` al arrancar desde `apps/server/src/main.ts`) y ruta SSE `GET /api/jobs/:id/events` en `apps/server/src/http/routes/jobs.ts`
+- [ ] T056 [P] Tabla de transiciones en `packages/core/src/channel/journey.ts` y esquema `ChannelProfile` en `packages/core/src/channel/profile.ts`
+- [ ] T057 [P] Esquemas de API en `packages/core/src/api/channel.ts`, `youtube.ts`, `usage.ts` y exportarlos en `packages/core/src/api/index.ts`; guardia `ya_hay_canal` en `GUARDS` de `packages/core/src/api/errors.ts`
+- [ ] T058 Rutas base en `apps/server/src/http/routes/channel.ts` (`channels/current`, crear canal, `journeys/:id`, `step`, `estimate`, `proposals`, `PATCH proposals/:id`) y montarlas en `apps/server/src/http/app.ts`
+- [ ] T059 [P] Componente `Semaphore` en `packages/ui/src/components/Semaphore/` (verde, ámbar, rojo, «sin comprobar») con entrada en `apps/catalog`
+- [ ] T060 [P] Componente `DataSource` en `packages/ui/src/components/DataSource/` con entrada en `apps/catalog`; exportar ambos en `packages/ui/src/index.ts`
+- [ ] T061 [P] Textos base en `apps/web/src/strings/channel.es.ts` y traducción de fallos de YouTube en `apps/web/src/strings/youtube-failures.es.ts`; cubrirlos en `apps/web/test/strings-coverage.test.ts`
+- [ ] T062 Cliente de API para canal, recorrido, trabajos (SSE) y consumo en `apps/web/src/api/client.ts` y hook de trabajo en `apps/web/src/shell/useJob.ts`
+- [ ] T063 Pantalla de Inicio del canal en `apps/web/src/screens/channel/start/Start.tsx` («Crear mi canal» / «Ya tengo un canal» / «Seguir donde lo dejaste», solo una visible) enlazada desde `apps/web/src/screens/home/Home.tsx`, y rutas `/canal/...` en `apps/web/src/router.ts`
+- [ ] T064 Componente de propuesta en `apps/web/src/screens/channel/Proposal.tsx`: «Aprobar», «Editar», «Proponer otra» con «¿Qué cambiarías?», importe en el botón, estados de fallo de IA (`limite_de_gasto` enlaza a Ajustes → Límites)
+- [ ] T065 Paso 9 del instalador «Preparar el lector de YouTube» en `installer/install.sh` (temporal, SHA256, permisos, mensajes «Preparando el lector de YouTube…» / «Lector de YouTube listo.» / «No hemos podido preparar el lector de YouTube. Puedes seguir; lo intentaremos desde Ajustes.», códigos `descarga|hash|permisos` sin rutas personales) y ayudas en `installer/test/helpers.ts` y `installer/test/fixtures/make-release.ts`
+
+**Checkpoint**: base lista; las historias pueden empezar.
+
+---
+
+## Phase 3: User Story 1 - Elegir nicho con datos reales (Priority: P1) 🎯 MVP
+
+**Goal**: El creador cuenta qué le interesa, contesta o salta hasta 3 preguntas, ve 3–5 nichos medidos con datos de
+YouTube (demanda, puerta de entrada, concentración, veredicto) y elige uno con 2–4 canales de referencia y su ritmo.
+
+**Independent Test**: Con los fakes, recorrer Intereses → Preguntas → Nichos → Referencias → Ritmo y comprobar que cada
+cifra lleva «Dato de YouTube · fecha», que un nicho `sin_datos` no muestra cifras ni veredicto y que `bloqueado` ofrece
+«Volver a intentarlo» sin parar el resto.
+
+### Tests para User Story 1 ⚠️
+
+- [ ] T066 [P] [US1] Test de medidas en `packages/core/test/market/measures.test.ts`: demanda (mediana de visitas de los resultados), puerta de entrada (canales < 200.000 suscriptores con visitas muy por encima de sus suscriptores), concentración (parte de visitas de los 3 primeros canales), máximo 20 canales, < 10 vídeos = `sin_datos`
+- [ ] T067 [P] [US1] Test del veredicto en `packages/core/test/market/verdict.test.ts`: reglas de research.md con los umbrales de `thresholds.json`, razón en llano y sin veredicto cuando hay `sin_datos`
+- [ ] T068 [P] [US1] Test del servicio `niche-research` en `apps/server/test/services/niche-research.test.ts`: mide cada nicho con sus consultas, guarda cada medida al acabar (lo medido sobrevive a un corte), un fallo no para el resto, reanuda los pendientes con «Seguir»
+- [ ] T069 [P] [US1] Tests de rutas en `apps/server/test/http/measures.test.ts`: `POST /api/journeys/:id/measures` (`202 {jobId}`, `revision`), `POST /api/journeys/:id/references` (`measureId`, `add`, `remove`, 2–4 canales), eventos `item` por nicho
+- [ ] T070 [P] [US1] Tests de pantallas en `apps/web/test/channel/new-us1.test.tsx`: Intereses explica «nicho» en una frase, Preguntas permite «Saltar», tarjeta de nicho con `DataSource` y veredicto, «Escribir mi propio nicho», estado `no_disponible` enlaza a Ajustes → YouTube
+- [ ] T071 [P] [US1] E2E en `apps/web/e2e/channel-niche.spec.ts`: recorrido hasta Ritmo con los fakes, nicho `sin_datos`, nicho `bloqueado`, cerrar la pestaña midiendo y volver con «Seguir donde lo dejaste», axe sin fallos
+
+### Implementation para User Story 1
+
+- [ ] T072 [P] [US1] Cálculo de medidas en `packages/core/src/market/measures.ts`
+- [ ] T073 [P] [US1] Veredicto en `packages/core/src/market/verdict.ts`
+- [ ] T074 [P] [US1] Prompts `packages/knowledge/prompts/preguntas/v1.md` y `packages/knowledge/prompts/nichos/v1.md` (cada nicho con 2–3 consultas de búsqueda; sin cifras propias)
+- [ ] T075 [US1] Servicio `apps/server/src/services/niche-research.ts` sobre `services/youtube.ts` y `services/jobs.ts`
+- [ ] T076 [US1] Rutas `measures` y `references` en `apps/server/src/http/routes/youtube.ts` y montarlas en `apps/server/src/http/app.ts`
+- [ ] T077 [P] [US1] Pantalla `apps/web/src/screens/channel/new/Interests.tsx` (campo libre con ejemplos, 10–1.000 caracteres)
+- [ ] T078 [P] [US1] Pantalla `apps/web/src/screens/channel/new/Questions.tsx` (0–3 preguntas de la IA, «Seguir» y «Saltar»)
+- [ ] T079 [US1] Pantalla `apps/web/src/screens/channel/new/Niches.tsx` (propuesta de nichos, progreso «Midiendo 2 de 5 nichos», tarjetas con indicadores, «Elegir este nicho», «Escribir mi propio nicho», datos con más de 90 días con «Volver a medir»)
+- [ ] T080 [P] [US1] Pantalla `apps/web/src/screens/channel/new/References.tsx` (2–4 canales de referencia opcionales de la medida)
+- [ ] T081 [P] [US1] Pantalla `apps/web/src/screens/channel/new/Rhythm.tsx` (horas por semana 1–60, cara/voz/ninguna, región del público `espana|latam|mixto`)
+- [ ] T082 [US1] Confirmación antes de gastar (FR-025) en las acciones de IA de Preguntas y Nichos usando el importe de `POST /api/journeys/:id/estimate` en `apps/web/src/screens/channel/Proposal.tsx`
+
+**Checkpoint**: US1 funciona y se prueba sola.
+
+---
+
+## Phase 4: User Story 2 - Definir el concepto del canal (Priority: P1)
+
+**Goal**: Con el nicho y el ritmo, la IA propone 2–3 conceptos (promesa, pilares, público, formato largo + Shorts,
+ritmo y monetización honesta en rangos con fuentes) y el creador elige uno.
+
+**Independent Test**: Con un recorrido en `conceptos` creado en el test, ver 2–3 conceptos con rangos en € citando
+`rpm.json`, el aviso «hecho para niños» cuando toca y elegir uno.
+
+### Tests para User Story 2 ⚠️
+
+- [ ] T083 [P] [US2] Test de monetización en `packages/core/test/channel/monetization.test.ts`: `monthlyEurRange` = visitas × RPM / 1.000 con el rango de `rpm.json` según región; contenido hecho para niños baja el rango; sin datos no hay cifra
+- [ ] T084 [P] [US2] Test de avisos en `packages/core/test/channel/warnings.test.ts`: hecho para niños (`made-for-kids.json`), contenido repetitivo o no auténtico (`inauthentic.json`), `solo_shorts` (`shorts.json`), ritmo insostenible para las horas indicadas; requisitos del programa de socios de `ypp.json`
+- [ ] T085 [P] [US2] Test de la propuesta de conceptos en `apps/server/test/http/concepts.test.ts`: `POST /api/journeys/:id/proposals` con `kind: conceptos` devuelve 2–3 conceptos válidos, «Proponer otra» con indicaciones crea una propuesta hija (`parentId`), elegir avanza a `nombres`
+- [ ] T086 [P] [US2] Test de pantalla en `apps/web/test/channel/concepts.test.tsx`: monetización en rangos con `DataSource` del conocimiento, avisos visibles, «Elegir este concepto», editar un concepto
+
+### Implementation para User Story 2
+
+- [ ] T087 [P] [US2] Monetización en `packages/core/src/channel/monetization.ts`
+- [ ] T088 [P] [US2] Avisos en `packages/core/src/channel/warnings.ts`
+- [ ] T089 [P] [US2] Prompt `packages/knowledge/prompts/conceptos/v1.md` (promesa ≤ 160 caracteres, 3–4 pilares unidos por la promesa, formato largo + Shorts de escaparate, sin cifras propias)
+- [ ] T090 [US2] Montar en el servidor los conceptos: datos de entrada (nicho medido, referencias, ritmo, conocimiento) y cálculo de monetización y avisos tras la IA en `apps/server/src/services/concepts.ts`, llamado desde `apps/server/src/http/routes/channel.ts`
+- [ ] T091 [US2] Pantalla `apps/web/src/screens/channel/new/Concepts.tsx`
+
+**Checkpoint**: US1 + US2 forman el MVP.
+
+---
+
+## Phase 5: User Story 3 - Elegir el nombre y la @ (Priority: P2)
+
+**Goal**: La IA propone 6–8 nombres, la app comprueba nombre y @ en YouTube con semáforo, el creador elige, escribe el
+suyo o lo deja para más tarde, y se guarda el perfil v1.
+
+**Independent Test**: Con un recorrido en `nombres`, ver 6–8 nombres con semáforo y razón, una @ ocupada en rojo y no
+recomendada, «Decidir más tarde» guarda el perfil con nombre provisional.
+
+### Tests para User Story 3 ⚠️
+
+- [ ] T092 [P] [US3] Test del semáforo en `packages/core/test/market/names.test.ts`: reglas de data-model.md; @ ocupada = rojo; nombre parecido a un canal grande = ámbar; cualquier fallo de comprobación = `sin_comprobar` y nunca verde
+- [ ] T093 [P] [US3] Test del servicio `name-check` en `apps/server/test/services/name-check.test.ts`: como mucho 4 comprobaciones a la vez, caché de 1 h, cada nombre emite `item`
+- [ ] T094 [P] [US3] Test de rutas en `apps/server/test/http/names.test.ts`: `POST /api/journeys/:id/name-checks` (`202`), paso a `hecho` crea `profile_version` 1 con origen `ia`, nombre aplazado guarda nombre provisional
+- [ ] T095 [P] [US3] Test de pantalla en `apps/web/test/channel/names.test.tsx`: semáforo con texto e icono, «la @ de tu canal», «Quedarme con este nombre», «Escribir el mío», «Decidir más tarde»
+
+### Implementation para User Story 3
+
+- [ ] T096 [P] [US3] Semáforo de nombres en `packages/core/src/market/names.ts`
+- [ ] T097 [P] [US3] Prompt `packages/knowledge/prompts/nombres/v1.md` (6–8 nombres, @ válida de 3–30 caracteres)
+- [ ] T098 [US3] Servicio `apps/server/src/services/name-check.ts` y ruta `name-checks` en `apps/server/src/http/routes/youtube.ts`
+- [ ] T099 [US3] Cierre del recorrido nuevo: paso `hecho` arma el `ChannelProfile` desde nicho, concepto y nombre y guarda la versión 1 en `apps/server/src/services/profile.ts`
+- [ ] T100 [US3] Pantalla `apps/web/src/screens/channel/new/Names.tsx` (comprobar el nombre escrito por el creador, nombre provisional al aplazar)
+
+**Checkpoint**: recorrido de canal nuevo completo.
+
+---
+
+## Phase 6: User Story 4 - Posicionar un canal que ya existe (Priority: P2)
+
+**Goal**: El creador pega el enlace o la @ de su canal, lo confirma, la app lee sus vídeos y la IA saca el perfil
+actual (citando vídeos) y propone cómo posicionarlo.
+
+**Independent Test**: Con el canal fake de 30 vídeos, recorrer Enlace → Confirmar → Lectura → Posicionamiento y aprobar;
+el perfil tiene la misma forma que uno nuevo. Con el canal de 3 vídeos se ofrece el recorrido de canal nuevo
+conservando nombre y @.
+
+### Tests para User Story 4 ⚠️
+
+- [ ] T101 [P] [US4] Test de rutas en `apps/server/test/http/existing.test.ts`: `POST /api/journeys/:id/resolve` (`{channelId,title,handle,subscribers,thumbnailUrl}`, `404` si no existe), `POST /api/journeys/:id/reading` (`202`), `youtube_channel_id` repetido da `conflicto`
+- [ ] T102 [P] [US4] Test del servicio `channel-reading` en `apps/server/test/services/channel-reading.test.ts`: hasta 200 vídeos con título, visitas, duración y fecha (fecha exacta del RSS para los recientes), menos de 5 vídeos marca `lowInfo`, lo que funciona cita vídeos de la lectura
+- [ ] T103 [P] [US4] Test de posicionamiento en `apps/server/test/http/positioning.test.ts`: aprobar crea `profile_version` 1 con origen `ia` y la forma de `ChannelProfile`; editar antes de aprobar
+- [ ] T104 [P] [US4] Tests de pantallas en `apps/web/test/channel/existing.test.tsx` y E2E en `apps/web/e2e/channel-existing.spec.ts`: acepta enlace de canal, @ o enlace de vídeo; «Sí, es mi canal»; progreso de lectura; canal de 3 vídeos ofrece recorrido nuevo; axe sin fallos
+
+### Implementation para User Story 4
+
+- [ ] T105 [P] [US4] Prompts `packages/knowledge/prompts/lectura_canal/v1.md` (perfil actual: nicho, pilares, público, lo que funciona y lo que no, citando vídeos por id) y `packages/knowledge/prompts/posicionamiento/v1.md`
+- [ ] T106 [US4] Servicio `apps/server/src/services/channel-reading.ts` (resolver, leer canal y vídeos, RSS, guardar `channel_reading`)
+- [ ] T107 [US4] Rutas `resolve` y `reading` en `apps/server/src/http/routes/youtube.ts`
+- [ ] T108 [P] [US4] Pantallas `apps/web/src/screens/channel/existing/ChannelUrl.tsx` y `Confirm.tsx`
+- [ ] T109 [US4] Pantalla `apps/web/src/screens/channel/existing/Reading.tsx` (progreso, «Ver mi perfil actual», con menos de 5 vídeos ofrece el recorrido de canal nuevo conservando nombre y @)
+- [ ] T110 [US4] Pantalla `apps/web/src/screens/channel/existing/Positioning.tsx` (perfil actual con vídeos citados, propuesta de cambios, «Aprobar»)
+
+**Checkpoint**: los dos recorridos acaban en el mismo perfil.
+
+---
+
+## Phase 7: User Story 5 - Ver, editar y exportar el perfil del canal (Priority: P3)
+
+**Goal**: El creador ve el perfil vigente, lo edita (nueva versión), restaura versiones, cambia el nombre, lo descarga
+como documento y como datos, y gestiona YouTube y el consumo en Ajustes.
+
+**Independent Test**: Con un perfil creado en el test, editar dos veces, restaurar la 1 (versión 4 `restaurada`, la 2 y
+la 3 siguen), descargar `.md` y `.json` con las mismas secciones y «Fuentes» al final, y guardar una clave de prueba
+que solo se ve por su `hint`.
+
+### Tests para User Story 5 ⚠️
+
+- [ ] T111 [P] [US5] Test de exportación en `packages/core/test/channel/export.test.ts`: Markdown y JSON con las mismas secciones, «Fuentes» al final con cada dato de YouTube (fecha) y cada fichero de conocimiento (revisión), opiniones marcadas como de la IA
+- [ ] T112 [P] [US5] Tests de rutas de perfil en `apps/server/test/http/profile.test.ts`: `GET .../profile/versions` y `/versions/:v`, `PUT .../profile` con `baseVersion` desfasada (`409`), `POST .../profile/restore`, `PATCH /api/channels/:id/name` con `checkId`, `GET .../export?format=md|json` con `Content-Disposition`
+- [ ] T113 [P] [US5] Tests de ajustes en `apps/server/test/http/youtube-settings.test.ts` y `usage.test.ts`: `GET/PUT /api/settings/youtube/source`, `PUT api-key` comprueba con una llamada de 1 unidad y nunca devuelve la clave, `400` si no vale, `DELETE` (`204`), `update-reader` (`202`), `GET /api/usage?from&to` con `todayCents` y `monthCents`; buscar la clave de prueba en todo lo escrito (base de datos, logs, respuestas) no da resultados
+- [ ] T114 [P] [US5] Tests de pantallas en `apps/web/test/channel/profile.test.tsx` y `apps/web/test/settings/youtube.test.tsx`: «Descargar como documento» y «Descargar como datos», historial, restaurar, aviso de datos con más de 90 días con «Volver a medir», clave solo con `hint`, consumo con totales
+
+### Implementation para User Story 5
+
+- [ ] T115 [P] [US5] Exportación en `packages/core/src/channel/export.ts`
+- [ ] T116 [US5] Rutas de perfil y exportación en `apps/server/src/http/routes/channel.ts` sobre `apps/server/src/services/profile.ts`
+- [ ] T117 [US5] Ajustes de YouTube: guardar la clave en el `SecretStore` (`apps/server/src/secrets/`), fuente, cupo y actualizar el lector (descarga verificada por SHA256 con `installer/versions.json`) en `apps/server/src/http/routes/youtube-settings.ts`
+- [ ] T118 [P] [US5] Ruta `GET /api/usage` en `apps/server/src/http/routes/usage.ts`
+- [ ] T119 [US5] Pantallas `apps/web/src/screens/channel/profile/Profile.tsx`, `ProfileHistory.tsx` y `Export.tsx` (siguiente paso: banco de ideas «próximamente»)
+- [ ] T120 [P] [US5] Pantalla `apps/web/src/screens/settings/YouTubeSettings.tsx` (fuente, «clave de YouTube» en «Modo experto», `hint`, cupo, «Actualizar el lector») enlazada en `apps/web/src/screens/settings/Settings.tsx`
+- [ ] T121 [P] [US5] Pantalla `apps/web/src/screens/settings/UsageLog.tsx` y lista de conocimiento con más de 180 días en Ajustes
+
+**Checkpoint**: todas las historias funcionan por separado.
+
+---
+
+## Polish & Cross-Cutting Concerns
+
+- [ ] T122 [P] Revisar todos los textos nuevos con `apps/web/test/glossary.test.ts` y `packages/knowledge/writing/human.md`
+- [ ] T123 [P] E2E de accesibilidad a 375 px en tema claro y oscuro para las pantallas nuevas en `apps/web/e2e/a11y.spec.ts`
+- [ ] T124 [P] E2E de fuga de la clave de YouTube en `apps/web/e2e/secrets-leak.spec.ts` (base de datos, logs, carpeta de trabajo, Git, respuestas HTTP)
+- [ ] T125 [P] E2E de casos difíciles de quickstart §4 que falten (sin lector, límite de 1 céntimo, cifra inventada, versiones) en `apps/web/e2e/channel-hard-cases.spec.ts`
+- [ ] T126 Pasar `specs/003-channel-and-niche/quickstart.md` §1–§5 entero y anotar resultados en `specs/003-channel-and-niche/checklists/validation.md`
+- [ ] T127 Auditoría de novato (§6) con el agente `usuario-novato` sobre los dos recorridos; anotar en `specs/003-channel-and-niche/novice-audit.md` y corregir los bloqueos
+- [ ] T128 Actualizar el estado de la 003 en `CLAUDE.md`
+
+---
+
+## Dependencies & Execution Order
+
+### Entre fases
+
+- **Setup (Phase 1)**: sin dependencias. Los spikes T001–T003 van antes de los adaptadores (T050–T052).
+- **Foundational (Phase 2)**: depende de Setup y bloquea todas las historias.
+- **US1 (Phase 3)**: tras Foundational.
+- **US2 (Phase 4)**: tras Foundational; usa el nicho medido de US1 como entrada, pero sus tests crean el recorrido en
+  `conceptos` directamente.
+- **US3 (Phase 5)**: tras Foundational; sus tests crean el recorrido en `nombres`.
+- **US4 (Phase 6)**: tras Foundational; independiente del recorrido nuevo.
+- **US5 (Phase 7)**: tras Foundational; necesita un perfil (lo crea el test). En la app real llega tras US3 o US4.
+- **Polish**: tras las historias que se quieran entregar.
+
+### Dentro de cada historia
+
+- Tests primero (deben fallar), luego dominio en `packages/core`, prompts, servicios, rutas y pantallas.
+
+### Grafo
+
+```text
+Setup → Foundational ─┬→ US1 → US2 ─┐
+                      ├→ US3 ───────┤
+                      ├→ US4 ───────┼→ US5 → Polish
+                      └─────────────┘
+```
+
+---
+
+## Parallel Examples
+
+### Phase 2
+
+```text
+T009, T010, T011, T012, T016, T017, T018, T019, T020, T022, T023, T024, T027, T028, T031, T033 (tests en paquetes distintos)
+T034, T035, T036, T037 (core y conocimiento)
+T049, T050, T051, T052 (adaptadores de YouTube)
+T059, T060, T061 (componentes y textos)
+```
+
+### US1
+
+```text
+T066, T067, T068, T069, T070, T071
+T072, T073, T074 → T075 → T076
+T077, T078, T080, T081 (pantallas independientes) mientras se hace T079
+```
+
+### US2
+
+```text
+T083, T084, T085, T086 → T087, T088, T089 → T090 → T091
+```
+
+### US3
+
+```text
+T092, T093, T094, T095 → T096, T097 → T098 → T099 → T100
+```
+
+### US4
+
+```text
+T101, T102, T103, T104 → T105, T108 → T106 → T107 → T109, T110
+```
+
+### US5
+
+```text
+T111, T112, T113, T114 → T115, T118, T120, T121 → T116, T117, T119
+```
+
+---
+
+## Implementation Strategy
+
+### MVP primero (US1 + US2)
+
+1. Phase 1 y Phase 2.
+2. US1: nichos medidos con datos reales.
+3. US2: concepto del canal.
+4. **Parar y validar** con quickstart §2 hasta el concepto.
+
+### Entrega incremental
+
+1. Base → US1 → US2 (MVP) → US3 (recorrido nuevo completo) → US4 (canal existente) → US5 (perfil, exportar, ajustes).
+2. Cada historia se cierra con lint, typecheck, test, E2E y commit.
+
+---
+
+## Notes
+
+- [P] = ficheros distintos y sin dependencias pendientes.
+- Si un spike cambia un supuesto (S2 sin 404 fiable, S3 lento), se ajusta `thresholds.json` o el semáforo queda en
+  `sin_comprobar`, y se anota en research.md antes de seguir.
+- Nada se sube (`git push`) sin que lo pida el creador.
