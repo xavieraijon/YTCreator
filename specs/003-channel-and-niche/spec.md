@@ -188,8 +188,8 @@ los ficheros exportados se leen sin la app y contienen lo mismo que la pantalla.
    la @, con los datos de mercado y su fecha.
 2. **Given** el perfil, **When** edita una parte y guarda, **Then** se crea una versión nueva y puede volver a la
    anterior desde el historial.
-3. **Given** el perfil, **When** pulsa «Exportar», **Then** obtiene un documento legible y un fichero de datos con el
-   mismo contenido, incluidas las fuentes y fechas de las cifras.
+3. **Given** el perfil, **When** pulsa «Descargar como documento» o «Descargar como datos», **Then** obtiene un
+   documento legible o un fichero de datos con el mismo contenido, incluidas las fuentes y fechas de las cifras.
 4. **Given** unos datos de mercado de hace más de 90 días, **When** el creador abre el perfil, **Then** ve un aviso de
    que las cifras pueden haber cambiado y la opción de volver a medir.
 
