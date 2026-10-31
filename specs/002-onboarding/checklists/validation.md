@@ -244,7 +244,7 @@ también dio `ok: true`.
 | Suscripción: código mal copiado | ✓ |
 | Suscripción: añadir la misma cuenta | ✓ (alcance reducido de S3) |
 | Suscripción: desinstalar Claude Code y pulsar «Reparar» | ✓ (tras dos arreglos; repetida el 2026-10-31) |
-| Suscripción: sesión caducada | pendiente |
+| Suscripción: sesión caducada | ✓ |
 | API: clave con espacios, sin saldo, revocada, sin Wi-Fi | pendiente |
 | README, instalador y bienvenida sin opción gratuita | pendiente |
 | Consola de Anthropic: 0 € por comprobaciones | pendiente |
@@ -291,3 +291,8 @@ el arreglo.
 
 Repetida el 2026-10-31 con la build corregida: tras «Reparar», «Cuenta 2» pasa sola a «Funciona», sin pulsar
 «Comprobar» ni reiniciar el servidor.
+
+**Sesión caducada (2026-10-31):** el token de «Cuenta 2» se cambió en el llavero por uno falso. Claude Code
+respondió `401 OAuth access token is invalid` y la comprobación dio `sin_sesion`/`sesion_caducada` (`status: 401`),
+con «Volver a conectar». El creador volvió a entrar con su suscripción: `ai.login_completed`, la comprobación dio bien y
+«Cuenta 2» volvió a «Funciona». En la base de datos sigue habiendo dos cuentas, sin duplicados.
