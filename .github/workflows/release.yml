@@ -1,0 +1,98 @@
+name: Release
+
+# R24: a `v*` tag builds the published version and attaches what install.sh downloads to its GitHub release.
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write # to create the release and upload its assets
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @ytcreator/tokens build
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+
+      - name: Version
+        id: version
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          if ! [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "The tag must look like v1.2.3, not ${GITHUB_REF_NAME}" >&2
+            exit 1
+          fi
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+          # The exact Node 24 the runner set up from .nvmrc is the one install.sh will download.
+          echo "node=$(node -p process.versions.node)" >> "$GITHUB_OUTPUT"
+
+      - run: pnpm --filter @ytcreator/web build
+      # `production`: __YTC_ALLOW_FAKE_AI__ is false, so the fake provider is left out.
+      - run: pnpm --filter @ytcreator/server exec vite build --mode production
+
+      # The fake provider (its tokens, its login page, the variable that switches it on) must not be in the bundle.
+      - name: No fake provider
+        run: |
+          if grep -n -E 'sk-ant-oat-FAKE|inicio-de-sesion-falso|YTCREATOR_FAKE_AI|createFakeProvider|createFakeLogin' \
+            apps/server/dist/server.mjs; then
+            echo "server.mjs still contains the fake AI provider" >&2
+            exit 1
+          fi
+
+      # The tarball's root is what ends up in $APP_HOME/versions/<v>: bin/ytcreator runs ../server.mjs, and
+      # server.mjs looks for VERSION and web/ next to itself (cli.ts).
+      - name: Package
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          stage="$RUNNER_TEMP/stage"
+          mkdir -p "$stage/bin" out
+          cp apps/server/dist/server.mjs "$stage/"
+          cp -R apps/web/dist "$stage/web"
+          cp apps/server/bin/ytcreator "$stage/bin/"
+          chmod +x "$stage/bin/ytcreator"
+          printf '%s\n' "$VERSION" > "$stage/VERSION"
+          tar -czf "out/ytcreator-${VERSION}.tar.gz" -C "$stage" .
+          cp "$stage/VERSION" out/VERSION
+          tar -tzf "out/ytcreator-${VERSION}.tar.gz"
+
+      # SHA256SUMS: the tarball plus the four Node archives install.sh may download, taken from nodejs.org.
+      - name: Checksums and install.sh
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          NODE_VERSION: ${{ steps.version.outputs.node }}
+        working-directory: out
+        run: |
+          sha256sum "ytcreator-${VERSION}.tar.gz" > SHA256SUMS
+          curl -fsSL "https://nodejs.org/dist/v${NODE_VERSION}/SHASUMS256.txt" \
+            | grep -E "  node-v${NODE_VERSION}-(darwin-arm64|darwin-x64|linux-x64|linux-arm64)\.tar\.gz$" >> SHA256SUMS
+          if [ "$(wc -l < SHA256SUMS)" -ne 5 ]; then
+            echo "Missing Node ${NODE_VERSION} checksums" >&2
+            cat SHA256SUMS >&2
+            exit 1
+          fi
+          ../installer/stamp.sh ../installer/install.sh install.sh "$VERSION" "$NODE_VERSION" SHA256SUMS
+          if grep -n '__[A-Z_]*__' install.sh; then
+            echo "install.sh still has markers to stamp" >&2
+            exit 1
+          fi
+          sha256sum install.sh >> SHA256SUMS
+          cat SHA256SUMS
+
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" --verify-tag --title "YTCreator ${VERSION}" --generate-notes \
+            "out/ytcreator-${VERSION}.tar.gz" out/install.sh out/SHA256SUMS out/VERSION

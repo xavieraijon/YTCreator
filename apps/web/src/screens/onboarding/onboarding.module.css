@@ -1,0 +1,65 @@
+.text {
+  color: var(--s-color-text-secondary);
+}
+
+.stack {
+  display: grid;
+  gap: var(--s-space-4);
+}
+
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-space-2) var(--s-space-5);
+}
+
+.link {
+  color: var(--s-color-text-accent);
+}
+
+.steps {
+  display: grid;
+  gap: var(--s-space-2);
+  padding-inline-start: var(--s-space-5);
+}
+
+.optionNote {
+  display: grid;
+  gap: var(--s-space-2);
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-space-2);
+}
+
+.accounts {
+  display: grid;
+  gap: var(--s-space-3);
+  padding: 0;
+  list-style: none;
+}
+
+.keyRow {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--s-space-2);
+}
+
+.keyRow > :first-child {
+  flex: 1;
+  min-inline-size: 0;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-space-2);
+}
+
+.primary {
+  margin-inline-start: auto;
+}

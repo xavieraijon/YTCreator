@@ -1,4 +1,13 @@
 {
   "files": [],
-  "references": [{ "path": "packages/tokens" }, { "path": "packages/ui" }, { "path": "apps/catalog" }]
+  "references": [
+    { "path": "packages/tokens" },
+    { "path": "packages/ui" },
+    { "path": "packages/core" },
+    { "path": "packages/ai" },
+    { "path": "packages/knowledge" },
+    { "path": "apps/catalog" },
+    { "path": "apps/server" },
+    { "path": "apps/web" }
+  ]
 }

@@ -1,0 +1,9 @@
+.link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-space-1);
+}
+
+.icon {
+  flex-shrink: 0;
+}

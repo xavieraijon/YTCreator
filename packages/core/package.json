@@ -1,0 +1,13 @@
+{
+  "name": "@ytcreator/core",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./api": "./src/api/index.ts"
+  },
+  "dependencies": {
+    "zod": "^4.6.7"
+  }
+}

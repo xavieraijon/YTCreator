@@ -105,12 +105,14 @@ export function Dialog({
           <div className={styles.body}>{children}</div>
           {footer && <div className={styles.footer}>{footer}</div>}
           {/* Last in the DOM so the focus starts on the content; placed at the top right by CSS. */}
+          {/* side="left": it sits right against the dialog's top-right corner, where overflow-y: auto clips a tooltip above or to the right. */}
           <IconButton
             label={strings.close}
             icon={X}
             size="sm"
             className={styles.close}
             onClick={() => onOpenChange(false)}
+            tooltipSide="left"
           />
         </TooltipContainerContext.Provider>
       )}

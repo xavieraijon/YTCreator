@@ -1,0 +1,46 @@
+.limits {
+  display: grid;
+  gap: var(--s-space-5);
+}
+
+.stack {
+  display: grid;
+  gap: var(--s-space-4);
+}
+
+.section {
+  display: grid;
+  gap: var(--s-space-4);
+}
+
+.text {
+  color: var(--s-color-text-secondary);
+}
+
+.accounts {
+  display: grid;
+  gap: var(--s-space-3);
+  padding: 0;
+  list-style: none;
+}
+
+.account {
+  display: grid;
+  gap: var(--s-space-3);
+}
+
+.option {
+  display: grid;
+  gap: var(--s-space-1);
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-space-2);
+}
+
+.spread {
+  justify-content: space-between;
+}
