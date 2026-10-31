@@ -96,11 +96,20 @@ export async function toConnect(page: Page, option: Option) {
 export const FAKE_CODE = 'ABCD-1234'
 export const FAKE_KEY = 'sk-ant-api03-FAKE-e2e-0123456789abcdef'
 
+// Claude's page opens on the click as about:blank and gets its address once the server answers. Closing it in the
+// middle of that navigation can leave close() hanging on Linux Chromium, so it closes once the page has loaded.
+export async function closeClaudePage(popup: Promise<Page>) {
+  const tab = await popup
+  await tab.waitForURL((url) => url.href !== 'about:blank')
+  await tab.waitForLoadState()
+  await tab.close()
+}
+
 // Opens Claude's page (a popup the test closes), pastes the code and connects.
 export async function connectAccount(page: Page, code = FAKE_CODE) {
   const popup = page.waitForEvent('popup')
   await page.getByRole('button', { name: 'Abrir la página de Claude' }).click()
-  await (await popup).close()
+  await closeClaudePage(popup)
   await page.getByLabel('Código de Claude').fill(code)
   await page.getByRole('button', { name: 'Conectar', exact: true }).click()
 }

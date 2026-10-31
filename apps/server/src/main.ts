@@ -90,6 +90,9 @@ function claudeCodeStatus(env: StartOptions['env'], fake: boolean) {
   }
 }
 
+// Closing waits this long for the answers in flight.
+const CLOSE_GRACE_MS = 1000
+
 // With the fake AI nothing is downloaded: the "installer" ends well after a moment.
 const fakeInstaller = () => new Promise<number>((resolve) => setTimeout(() => resolve(0), 1500))
 
@@ -180,7 +183,11 @@ export async function startServer({
     close: () =>
       new Promise((resolve) => {
         if (versionCheckTimer) clearInterval(versionCheckTimer)
+        // A connection busy when close() starts stays open after its answer (keep-alive) and would hold close()
+        // for good: whatever is left after a short grace is cut.
+        const forceClose = setTimeout(() => server.closeAllConnections(), CLOSE_GRACE_MS)
         server.close(() => {
+          clearTimeout(forceClose)
           db.close()
           resolve()
         })

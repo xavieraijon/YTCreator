@@ -1,6 +1,15 @@
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test, type Locator, type Page } from '@playwright/test'
-import { blockExternal, choose, FAKE_CODE, FAKE_KEY, heading, startServer, toConnect } from './server.ts'
+import {
+  blockExternal,
+  choose,
+  closeClaudePage,
+  FAKE_CODE,
+  FAKE_KEY,
+  heading,
+  startServer,
+  toConnect,
+} from './server.ts'
 
 // SC-010: every screen of contracts/ui-screens.md without axe violations in both themes, at 375 px and at 200 %
 // zoom, and the wizard done with the keyboard alone and a visible focus. Ports outside 4310–4329, other than the
@@ -81,7 +90,7 @@ test('the subscription screens, the home and the settings pass axe in both theme
     await audit('ConnectSubscription · inicio')
     const popup = page.waitForEvent('popup')
     await page.getByRole('button', { name: 'Abrir la página de Claude' }).click()
-    await (await popup).close()
+    await closeClaudePage(popup)
     await expect(page.getByLabel('Código de Claude')).toBeVisible()
     await audit('ConnectSubscription · pegar el código')
     await page.getByLabel('Código de Claude').fill(FAKE_CODE)
@@ -243,7 +252,7 @@ test('the whole wizard with the keyboard alone, the focus always visible (SC-010
     const popup = page.waitForEvent('popup')
     await tabTo(page, page.getByRole('button', { name: 'Abrir la página de Claude' }))
     await page.keyboard.press('Enter')
-    await (await popup).close()
+    await closeClaudePage(popup)
     await page.bringToFront()
     await tabTo(page, page.getByLabel('Código de Claude'))
     await page.keyboard.type(FAKE_CODE)

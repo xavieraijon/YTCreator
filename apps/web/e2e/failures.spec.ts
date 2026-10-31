@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test'
 import {
   blockExternal,
+  closeClaudePage,
   connectAccount,
   FAKE_CODE,
   FAKE_KEY,
@@ -89,7 +90,7 @@ test('a wrong code asks for a new one', async ({ page }) => {
   await expect(page.getByText('El código no es válido o ha caducado.')).toBeVisible()
   const popup = page.waitForEvent('popup')
   await page.getByRole('button', { name: 'Pedir otro código' }).first().click()
-  await (await popup).close()
+  await closeClaudePage(popup)
   await expect(page.getByLabel('Código de Claude')).toBeVisible()
 })
 
@@ -109,7 +110,7 @@ test('an empty code is marked on the field and nothing is sent', async ({ page }
   await toSubscription(page)
   const popup = page.waitForEvent('popup')
   await page.getByRole('button', { name: 'Abrir la página de Claude' }).click()
-  await (await popup).close()
+  await closeClaudePage(popup)
   await page.getByRole('button', { name: 'Conectar', exact: true }).click()
   await expect(page.getByText('Pega aquí el código que te ha dado Claude.')).toBeVisible()
   await expect(page.getByLabel('Código de Claude')).toBeVisible()

@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test'
 import {
   blockExternal,
+  closeClaudePage,
   connectAccount,
   FAKE_CODE,
   FAKE_KEY,
@@ -84,7 +85,7 @@ test('the AI settings: accounts, reconnecting, changing the option and back, and
   // Claude's page opens on the click itself; the form below takes the code.
   const popup = page.waitForEvent('popup')
   await row.getByRole('button', { name: 'Volver a conectar' }).click()
-  await (await popup).close()
+  await closeClaudePage(popup)
   await expect(row.getByText(/Entra con la misma cuenta de Claude/)).toBeVisible()
   await expect(row.getByRole('link', { name: /Volver a abrir la página de Claude/ })).toBeVisible()
   await row.getByLabel('Código de Claude').fill(FAKE_CODE)
