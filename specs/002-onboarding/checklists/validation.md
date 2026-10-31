@@ -251,7 +251,7 @@ también dio `ok: true`.
 | API: clave revocada | ✓ |
 | README, instalador y bienvenida sin opción gratuita | pendiente |
 | Consola de Anthropic: 0 € por comprobaciones | pendiente |
-| §6: búsqueda de las claves reales | pendiente |
+| §6: búsqueda de las claves reales | ✓ (0 apariciones) |
 
 **Código mal copiado y misma cuenta (2026-10-30, desde Ajustes → «Añadir otra cuenta»):**
 - Código con letras borradas: «El código no es válido o ha caducado.» al momento y enlace nuevo. En el registro,
@@ -320,3 +320,13 @@ problemas. La suscripción sin Wi-Fi también dio «Sin conexión».
 «Comprobar ahora» dio `sin_sesion`/`clave_no_valida` (`status: 401`). En pantalla salió «Clave no válida», el mensaje
 «La clave no es válida. Revisa que la has copiado entera o crea una nueva.» y «Conseguir una clave nueva». La clave no
 aparece en `server.log`.
+
+**§6, búsqueda de secretos (2026-10-31):** se leyeron del llavero los tres secretos que guarda YTCreator: las dos cuentas
+de suscripción y la clave de API, ya revocada. Se buscaron con un script que no los imprime, enteros y sin sus 4 últimos
+caracteres, en:
+
+- el APP_HOME de prueba (logs incluidos) y `~/ytc-prueba/YTCreator`;
+- el APP_HOME real, que se usó por error con el `.app`;
+- el repositorio, en sus ficheros y en todo el historial de git.
+
+**Resultado:** 0 apariciones.
