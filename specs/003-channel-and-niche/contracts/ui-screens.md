@@ -46,7 +46,7 @@ de la pantalla Intereses, no el test de glosario. «YouTube» es una marca permi
 
 | Pantalla | Paso | Acción principal | Notas |
 |---|---|---|---|
-| Inicio | — | «Crear mi canal» / «Ya tengo un canal» / «Seguir donde lo dejaste» | Solo una visible según el estado |
+| Inicio | — | «Crear mi canal» / «Ya tengo un canal» / «Seguir donde lo dejaste» | Sin canal: «Crear mi canal» principal y «Ya tengo un canal» secundaria, cada una con su frase; con un recorrido a medias: «Seguir donde lo dejaste»; con el canal listo: siguiente paso y recordatorio del nombre provisional |
 | Intereses | `intereses` | «Seguir» | Campo libre con ejemplos |
 | Preguntas | `preguntas` | «Seguir» | 0–3 preguntas; «Saltar» secundaria |
 | Nichos | `nichos` | «Elegir este nicho» | Tarjeta por nicho con indicadores, veredicto y razón; «Escribir mi propio nicho» |

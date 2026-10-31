@@ -9,7 +9,7 @@ instale nada a mano.
 
 - Versión, URL y SHA256 por sistema y arquitectura fijados en `installer/versions.json`. Nunca «la última».
 - Se descarga a un fichero temporal, se comprueba el SHA256 y solo entonces se mueve a `<datos>/bin/yt-dlp`
-  (`yt-dlp.exe` en Windows) con permisos de ejecución.
+  con permisos de ejecución.
 - Si el hash no coincide o la descarga falla: se borra el temporal, se dice en lenguaje llano («No hemos podido
   preparar el lector de YouTube. Puedes seguir; lo intentaremos desde Ajustes.»), la fuente queda `no_disponible` y
   la instalación **continúa**. Este paso nunca bloquea la instalación.
@@ -26,4 +26,4 @@ instale nada a mano.
 
 ## Pruebas
 
-`pnpm test:installer`: descarga simulada correcta, hash erróneo, sin red, ya instalada; en macOS, Linux y Windows.
+`pnpm test:installer`: descarga simulada correcta, hash erróneo, sin red, ya instalada; en macOS y Linux.
