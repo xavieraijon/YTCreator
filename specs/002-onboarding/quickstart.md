@@ -127,8 +127,10 @@ romper nada.
 
 ## 9. Auditoría de novato (SC-008)
 
-Una persona que no ha usado nunca YTCreator ni la terminal instala y conecta una IA sin ayuda, mientras alguien
-observa y anota. Resultado esperado: **0 problemas graves** (se queda bloqueada o hace algo que no quería) y **≤ 3
+Un agente que hace de persona profana (`.claude/agents/usuario-novato.md`, constitución IX) instala con la línea
+del README y conecta una IA sin ayuda. Lo hace contra una release local con la IA simulada y en una carpeta de
+prueba aislada, y anota lo que ve. Si una ronda no pasa, se corrige y la repite un agente nuevo, sin contexto de la
+anterior. Resultado esperado: **0 problemas graves** (se queda bloqueada o hace algo que no quería) y **≤ 3
 medios** (duda o se equivoca y se recupera sola). Los textos se revisan con el glosario.
 
 ## Mapeo a criterios de éxito
