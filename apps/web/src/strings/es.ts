@@ -31,7 +31,8 @@ export const es = {
     closeBody: 'Lo que hayas guardado se queda guardado. Puedes volver a abrirlo cuando quieras.',
     closeConfirm: 'Sí, cerrar',
     closeCancel: 'Seguir usándolo',
-    closed: 'YTCreator se ha cerrado. Puedes cerrar esta pestaña.',
+    closed:
+      'YTCreator se ha cerrado. Puedes cerrar esta pestaña. Para volver, ábrelo como cualquier otra aplicación de tu ordenador (en Mac, desde Launchpad).',
     closeRetry: 'Volver a intentarlo',
   },
 
@@ -64,7 +65,8 @@ export const es = {
         body: 'Para quien ya paga Claude Pro o Max. Sin coste extra.',
         recommended: 'Recomendado',
         responsibility: 'Usa tu suscripción, bajo tu responsabilidad',
-        responsibilityHelp: 'YTCreator usa tu suscripción como lo harías tú; las condiciones de uso las pone Claude.',
+        responsibilityHelp:
+          'Quiere decir que YTCreator usa tu cuenta de Claude como la usarías tú, con las normas de uso de Claude.',
       },
       pago_por_uso: {
         title: 'Pagar solo lo que uses',
@@ -79,14 +81,15 @@ export const es = {
     steps: {
       open: 'Abre la página de Claude con el botón de abajo.',
       approve: 'Entra con tu cuenta y aprueba el acceso.',
-      copy: 'Copia el código que te muestra y pégalo aquí.',
+      copy: 'Copia el código que te muestra y vuelve aquí para pegarlo.',
     },
     openPage: 'Abrir la página de Claude',
     codeHelp: 'Claude te muestra el código al aprobar el acceso.',
     reopenPage: 'Volver a abrir la página de Claude',
     codeLabel: 'Código de Claude',
+    codeMissing: 'Pega aquí el código que te ha dado Claude.',
     connect: 'Conectar',
-    newLink: 'Pedir un enlace nuevo',
+    newLink: 'Pedir otro código',
     connecting: 'Conectando tu cuenta…',
     account: '{nombre} · {estado}',
     addAccount: 'Añadir otra cuenta',
@@ -103,12 +106,18 @@ export const es = {
     title: 'Conecta tu clave de Anthropic',
     why: 'La clave es como una contraseña que deja a YTCreator usar tu cuenta de Anthropic. Se guarda solo en tu ordenador.',
     getKey: 'Conseguir mi clave',
+    steps: {
+      open: 'Abre la página de Anthropic con «Conseguir mi clave» y entra con tu cuenta.',
+      create: 'Pulsa «Create Key» (crear clave), ponle un nombre cualquiera, como «YTCreator», y confírmalo.',
+      copy: 'Copia el texto largo que empieza por «sk-ant-» y pégalo abajo. Anthropic solo lo enseña una vez.',
+    },
     balanceNotice: 'Necesitas saldo en tu cuenta de Anthropic.',
     balanceLink: 'Ver mi saldo',
   },
 
   keyForm: {
     label: 'Tu clave',
+    missing: 'Pega aquí tu clave. Es el texto largo que empieza por «sk-ant-».',
     show: 'Mostrar la clave',
     hide: 'Ocultar la clave',
     save: 'Comprobar y guardar',
@@ -150,6 +159,7 @@ export const es = {
   home: {
     title: 'Inicio',
     body: 'Aquí empezarás tus canales y tus vídeos.',
+    soon: 'Crear canales llega muy pronto, en la próxima versión. Tu IA ya está lista para entonces.',
     createChannel: 'Crear mi primer canal',
     comingTitle: 'Muy pronto',
     comingBody: 'Crear canales llegará en la próxima versión. Mientras, puedes revisar tu IA en Ajustes.',
@@ -180,6 +190,9 @@ export const es = {
     remove: 'Borrar',
     removeTitle: '¿Borrar {nombre}?',
     removeBody: 'YTCreator dejará de usar esta cuenta y olvidará su acceso.',
+    removeLastBody:
+      'Es tu única cuenta y la opción que usas ahora: YTCreator se quedará sin IA conectada hasta que conectes otra.',
+    noAccount: 'Sin cuenta conectada',
     reconnect: 'Volver a conectar',
     reconnectNote: 'Entra con la misma cuenta de Claude: YTCreator no puede comprobarlo.',
     accessInOtherRow: 'Ese acceso ya está en otra cuenta de la lista.',
@@ -192,6 +205,7 @@ export const es = {
     removeKeyBody: 'YTCreator la borrará de tu ordenador. Si es la opción en uso, te quedarás sin IA conectada.',
     others: 'Otras opciones',
     useThis: 'Usar esta opción',
+    nowUsing: 'Listo. Ahora YTCreator usa «{opcion}».',
     configure: 'Configurar',
     limits: 'Límites de gasto',
     cancel: 'Cancelar',

@@ -36,6 +36,11 @@ export function ConnectApiKey({ chosenKind, outside }: { chosenKind: ConnectionK
     setFieldError(null)
     setFailure(null)
     setError(null)
+    if (key.trim() === '') {
+      setFieldError(es.keyForm.missing)
+      field.current?.focus()
+      return
+    }
     try {
       const view = await run(es.keyForm.checking, (signal) =>
         apiClient.put('/api/ai/connections/pago_por_uso/credential', { key }, connectionViewSchema, { signal }),
@@ -83,6 +88,13 @@ export function ConnectApiKey({ chosenKind, outside }: { chosenKind: ConnectionK
           {es.connectApiKey.getKey}
         </ExternalLink>
       </div>
+      {savedHint === null && (
+        <ol className={styles.steps}>
+          <li>{es.connectApiKey.steps.open}</li>
+          <li>{es.connectApiKey.steps.create}</li>
+          <li>{es.connectApiKey.steps.copy}</li>
+        </ol>
+      )}
       <p className={styles.text}>
         {es.connectApiKey.balanceNotice}{' '}
         <ExternalLink className={styles.link} href={links.anthropicBilling}>
@@ -106,7 +118,10 @@ export function ConnectApiKey({ chosenKind, outside }: { chosenKind: ConnectionK
             autoComplete="off"
             spellCheck={false}
             value={key}
-            onChange={(event) => setKey(event.target.value)}
+            onChange={(event) => {
+              setKey(event.target.value)
+              setFieldError(null)
+            }}
             error={fieldError ?? undefined}
           />
           <IconButton

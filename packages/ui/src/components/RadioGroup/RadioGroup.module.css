@@ -98,6 +98,12 @@
     line-height: var(--s-line-height-reading);
   }
 
+  .extra {
+    grid-column: 2;
+    color: var(--c-field-description);
+    font-size: var(--s-font-size-sm);
+  }
+
   .icon {
     display: none;
   }
@@ -114,9 +120,10 @@
   .group[data-appearance='cards'] .option {
     grid-template-areas:
       'label radio'
-      'hint hint';
+      'hint hint'
+      'extra extra';
     grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-rows: auto 1fr;
+    grid-template-rows: auto 1fr auto;
     column-gap: var(--s-space-3);
     row-gap: var(--s-space-2);
     align-content: start;
@@ -131,8 +138,9 @@
     grid-template-areas:
       'icon radio'
       'label label'
-      'hint hint';
-    grid-template-rows: auto auto 1fr;
+      'hint hint'
+      'extra extra';
+    grid-template-rows: auto auto 1fr auto;
   }
 
   .group[data-appearance='cards'] .input {
@@ -172,6 +180,10 @@
 
   .group[data-appearance='cards'] .hint {
     grid-area: hint;
+  }
+
+  .group[data-appearance='cards'] .extra {
+    grid-area: extra;
   }
 
   .group[data-appearance='cards'] .option:has(.input:not(:disabled):hover) {

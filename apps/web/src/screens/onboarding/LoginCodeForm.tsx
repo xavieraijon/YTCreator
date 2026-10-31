@@ -1,4 +1,5 @@
 import { Button, TextField } from '@ytcreator/ui'
+import { useEffect, useRef } from 'react'
 import { ExternalLink } from '../../shell/ExternalLink.tsx'
 import { es } from '../../strings/es.ts'
 import styles from './onboarding.module.css'
@@ -11,10 +12,25 @@ export interface LoginCodeFormProps {
   readonly onSubmit: () => void
   readonly onNewLink: () => void
   readonly starting?: boolean
+  /** What is wrong with the code; the field takes the focus to fix it. */
+  readonly error?: string | null
 }
 
 // The code Claude shows after approving the access; shared by the wizard and the account list in Ajustes.
-export function LoginCodeForm({ url, code, onCodeChange, onSubmit, onNewLink, starting = false }: LoginCodeFormProps) {
+export function LoginCodeForm({
+  url,
+  code,
+  onCodeChange,
+  onSubmit,
+  onNewLink,
+  starting = false,
+  error = null,
+}: LoginCodeFormProps) {
+  const field = useRef<HTMLInputElement>(null)
+  useEffect(() => {
+    if (error) field.current?.focus()
+  }, [error])
+
   return (
     <form
       className={styles.stack}
@@ -30,11 +46,13 @@ export function LoginCodeForm({ url, code, onCodeChange, onSubmit, onNewLink, st
         </ExternalLink>
       </p>
       <TextField
+        ref={field}
         label={es.connectSubscription.codeLabel}
         autoComplete="off"
         spellCheck={false}
         value={code}
         onChange={(event) => onCodeChange(event.target.value)}
+        error={error ?? undefined}
       />
       {/* A secondary action of its own, never in a row with the link (contracts/ui-screens.md). */}
       <div>

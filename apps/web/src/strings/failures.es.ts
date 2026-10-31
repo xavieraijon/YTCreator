@@ -65,8 +65,8 @@ export const failuresEs: FailureCatalog = {
     codigo_no_valido: {
       status: 'Código no válido',
       what: 'El código no es válido o ha caducado.',
-      todo: 'Pide un enlace nuevo y copia el código que te dé.',
-      actions: [{ id: 'pedir_enlace', label: 'Pedir un enlace nuevo' }],
+      todo: 'Pulsa «Pedir otro código», copia el código nuevo que te muestre Claude y pégalo en el mismo sitio.',
+      actions: [{ id: 'pedir_enlace', label: 'Pedir otro código' }],
     },
   },
   cupo_agotado: {

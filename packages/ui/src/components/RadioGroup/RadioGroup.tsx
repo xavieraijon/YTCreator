@@ -10,6 +10,8 @@ export interface RadioOption {
   /** In the `cards` look it is the card title. */
   readonly label: string
   readonly description?: string
+  /** Shown under the description, inside the option (tags, a note); never anything to click. */
+  readonly extra?: ReactNode
   readonly icon?: LucideIcon
   readonly disabled?: boolean
 }
@@ -27,6 +29,8 @@ export interface RadioGroupProps extends Omit<ComponentProps<'fieldset'>, 'onCha
   readonly required?: boolean
   /** `cards` suits a few options that need a description, such as choosing an AI provider. */
   readonly appearance?: 'list' | 'cards'
+  /** Keeps the label for screen readers only, when a heading right above already says it. */
+  readonly hideLabel?: boolean
 }
 
 /** One choice out of a few visible options. Arrows move between them (native radio behaviour). */
@@ -42,6 +46,7 @@ export function RadioGroup({
   optional,
   required,
   appearance = 'list',
+  hideLabel = false,
   className,
   ...rest
 }: RadioGroupProps) {
@@ -58,7 +63,7 @@ export function RadioGroup({
       data-appearance={appearance}
       className={cx(styles.group, className)}
     >
-      <FieldLabel as="legend" optional={optional} className={styles.legend}>
+      <FieldLabel as="legend" optional={optional} className={cx(styles.legend, hideLabel && 'visually-hidden')}>
         {label}
       </FieldLabel>
       <FieldDescription id={descriptionId}>{description}</FieldDescription>
@@ -66,6 +71,7 @@ export function RadioGroup({
         {options.map((option) => {
           const optionId = `${groupId}-${option.value}`
           const hintId = option.description ? `${optionId}-hint` : undefined
+          const extraId = option.extra ? `${optionId}-extra` : undefined
           return (
             <div key={option.value} className={styles.option}>
               <input
@@ -77,7 +83,7 @@ export function RadioGroup({
                 defaultChecked={defaultValue === undefined ? undefined : defaultValue === option.value}
                 disabled={option.disabled}
                 required={required}
-                aria-describedby={hintId}
+                aria-describedby={cx(hintId, extraId) || undefined}
                 onChange={handleChange}
                 className={styles.input}
               />
@@ -93,6 +99,11 @@ export function RadioGroup({
                 <p id={hintId} className={styles.hint}>
                   {option.description}
                 </p>
+              )}
+              {option.extra && (
+                <div id={extraId} className={styles.extra}>
+                  {option.extra}
+                </div>
               )}
             </div>
           )

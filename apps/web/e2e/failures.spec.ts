@@ -1,5 +1,14 @@
 import { expect, test, type Page } from '@playwright/test'
-import { blockExternal, connectAccount, FAKE_KEY, heading, startServer, toConnect, type TestServer } from './server.ts'
+import {
+  blockExternal,
+  connectAccount,
+  FAKE_CODE,
+  FAKE_KEY,
+  heading,
+  startServer,
+  toConnect,
+  type TestServer,
+} from './server.ts'
 
 // Each failure comes from the fake AI (YTCREATOR_FAKE_AI), on a YTCreator of its own: nothing leaves the machine.
 let server: TestServer | null = null
@@ -73,15 +82,38 @@ test('an account out of quota is kept, with the date it comes back', async ({ pa
   await expect(page.getByRole('button', { name: 'Continuar' })).toHaveCount(0)
 })
 
-test('a wrong code asks for a new link', async ({ page }) => {
+test('a wrong code asks for a new one', async ({ page }) => {
   await open(page, 'login:codigo_malo')
   await toSubscription(page)
   await connectAccount(page)
   await expect(page.getByText('El código no es válido o ha caducado.')).toBeVisible()
   const popup = page.waitForEvent('popup')
-  await page.getByRole('button', { name: 'Pedir un enlace nuevo' }).click()
+  await page.getByRole('button', { name: 'Pedir otro código' }).first().click()
   await (await popup).close()
   await expect(page.getByLabel('Código de Claude')).toBeVisible()
+})
+
+test('after a wrong code the field stays, and the code from the page reopened works', async ({ page }) => {
+  await open(page, 'ok')
+  await toSubscription(page)
+  await connectAccount(page, 'NADA-0000')
+  await expect(page.getByText('El código no es válido o ha caducado.')).toBeVisible()
+  await expect(page.getByLabel('Código de Claude')).toHaveValue('')
+  await page.getByLabel('Código de Claude').fill(FAKE_CODE)
+  await page.getByRole('button', { name: 'Conectar', exact: true }).click()
+  await expect(page.getByText('Cuenta 1 · Funciona')).toBeVisible()
+})
+
+test('an empty code is marked on the field and nothing is sent', async ({ page }) => {
+  await open(page, 'ok')
+  await toSubscription(page)
+  const popup = page.waitForEvent('popup')
+  await page.getByRole('button', { name: 'Abrir la página de Claude' }).click()
+  await (await popup).close()
+  await page.getByRole('button', { name: 'Conectar', exact: true }).click()
+  await expect(page.getByText('Pega aquí el código que te ha dado Claude.')).toBeVisible()
+  await expect(page.getByLabel('Código de Claude')).toBeVisible()
+  await expect(page.getByLabel('Código de Claude')).toBeFocused()
 })
 
 test('the same account twice is refused and the first one stays', async ({ page }) => {

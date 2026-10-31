@@ -487,6 +487,7 @@ main() {
   echo ""
   echo "$MSG_DONE"
   echo "  Se ha abierto en tu navegador. La próxima vez, ábrelo desde ${place}."
+  echo "  Ya puedes cerrar esta ventana."
 }
 
 main "$@"

@@ -42,6 +42,7 @@ export function ConnectSubscription({
   const [failure, setFailure] = useState<AiFailure | null>(null)
   const [duplicate, setDuplicate] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [codeError, setCodeError] = useState<string | null>(null)
   const { work, run, cancel } = useAiWork()
   const step = useWizardStep()
 
@@ -59,6 +60,7 @@ export function ConnectSubscription({
     setFailure(null)
     setDuplicate(false)
     setError(null)
+    setCodeError(null)
   }
 
   const show = (caught: unknown) => {
@@ -71,16 +73,23 @@ export function ConnectSubscription({
     } else setError(errorText(caught))
   }
 
+  // A new login on the server; the tab is the one opened on the click, or none when it replaces a refused code.
+  const startLogin = async (tab: ReturnType<typeof openPendingTab> | null) => {
+    const started = await apiClient.post('/api/ai/subscription/login', {}, loginStartSchema)
+    if (openLogin.current && openLogin.current !== started.loginId)
+      void apiClient.delete(`/api/ai/subscription/login/${openLogin.current}`).catch(() => undefined)
+    openLogin.current = started.loginId
+    setLogin({ id: started.loginId, url: started.url })
+    setCode('')
+    tab?.go(started.url)
+  }
+
   const openPage = async () => {
     clearMessages()
     setStarting(true)
     const tab = openPendingTab()
     try {
-      const started = await apiClient.post('/api/ai/subscription/login', {}, loginStartSchema)
-      openLogin.current = started.loginId
-      setLogin({ id: started.loginId, url: started.url })
-      setCode('')
-      tab.go(started.url)
+      await startLogin(tab)
     } catch (caught) {
       tab.close()
       show(caught)
@@ -92,9 +101,16 @@ export function ConnectSubscription({
   const connect = async () => {
     if (!login) return
     clearMessages()
+    const typed = code.trim()
+    if (!typed) {
+      setCodeError(es.connectSubscription.codeMissing)
+      return
+    }
     try {
       await run(es.connectSubscription.connecting, (signal) =>
-        apiClient.post(`/api/ai/subscription/login/${login.id}/complete`, { code }, accountViewSchema, { signal }),
+        apiClient.post(`/api/ai/subscription/login/${login.id}/complete`, { code: typed }, accountViewSchema, {
+          signal,
+        }),
       )
       openLogin.current = null
       setLogin(null)
@@ -102,9 +118,11 @@ export function ConnectSubscription({
       void reloadAi()
     } catch (caught) {
       if (wasCancelled(caught)) return
-      // The server has closed this login whatever happened: a new code needs a new link.
+      // The server has closed this login whatever happened. A refused code keeps the field, on a new login
+      // whose page the form links to; anything else goes back to the start.
       openLogin.current = null
-      setLogin(null)
+      if (failureOf(caught)?.reason === 'codigo_no_valido') await startLogin(null).catch(() => setLogin(null))
+      else setLogin(null)
       show(caught)
     }
   }
@@ -215,6 +233,7 @@ export function ConnectSubscription({
           onSubmit={() => void connect()}
           onNewLink={() => void openPage()}
           starting={starting}
+          error={codeError}
         />
       ) : (
         <ol className={styles.steps}>

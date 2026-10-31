@@ -1,6 +1,5 @@
 import { CONNECTION_KINDS, type ConnectionKind } from '@ytcreator/core'
-import { Badge, IconButton, RadioGroup } from '@ytcreator/ui'
-import { Info } from 'lucide-react'
+import { Badge, RadioGroup } from '@ytcreator/ui'
 import { useState } from 'react'
 import { es } from '../../strings/es.ts'
 import styles from './onboarding.module.css'
@@ -26,19 +25,28 @@ export function ChooseAi({ chosenKind }: { chosenKind: ConnectionKind | null }) 
       <p className={styles.text}>{es.choose.why}</p>
       <RadioGroup
         label={es.choose.title}
+        hideLabel
         appearance="cards"
         value={kind}
         onValueChange={(value) => isKind(value) && setKind(value)}
         options={[
-          { value: 'suscripcion', label: options.suscripcion.title, description: options.suscripcion.body },
+          {
+            value: 'suscripcion',
+            label: options.suscripcion.title,
+            description: options.suscripcion.body,
+            extra: (
+              <div className={styles.optionNote}>
+                <div className={styles.tags}>
+                  <Badge tone="accent">{options.suscripcion.recommended}</Badge>
+                  <Badge tone="warning">{options.suscripcion.responsibility}</Badge>
+                </div>
+                <p>{options.suscripcion.responsibilityHelp}</p>
+              </div>
+            ),
+          },
           { value: 'pago_por_uso', label: options.pago_por_uso.title, description: options.pago_por_uso.body },
         ]}
       />
-      <div className={styles.tags} aria-label={options.suscripcion.title} role="group">
-        <Badge tone="accent">{options.suscripcion.recommended}</Badge>
-        <Badge tone="warning">{options.suscripcion.responsibility}</Badge>
-        <IconButton variant="ghost" size="sm" icon={Info} label={options.suscripcion.responsibilityHelp} />
-      </div>
       <p className={styles.text}>{es.wizard.privacy}</p>
     </WizardShell>
   )

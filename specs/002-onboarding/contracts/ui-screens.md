@@ -89,7 +89,7 @@ Anthropic (`console.anthropic.com`), y «Empezar».
 
 | Opción | Qué dice | Etiquetas |
 |---|---|---|
-| **Usar mi suscripción de Claude** | Para quien ya paga Claude Pro o Max. Sin coste extra | «Recomendado», «Usa tu suscripción, bajo tu responsabilidad» (con un `Tooltip` que lo explica en una frase) |
+| **Usar mi suscripción de Claude** | Para quien ya paga Claude Pro o Max. Sin coste extra | «Recomendado», «Usa tu suscripción, bajo tu responsabilidad» y una frase a la vista que lo explica, todo dentro de su tarjeta (auditoría de novato, T159) |
 | **Pagar solo lo que uses** | Con una clave de Anthropic; pagas por cada uso, con límites que tú pones | — |
 
 Debajo, una línea fija: «Tus ideas y guiones se envían al servicio de IA que elijas.» (FR-030).
@@ -134,7 +134,7 @@ YTCreator». «Ir al inicio».
 (`retomar`).
 
 ### Home — `/inicio` (FR-020)
-`EmptyState` con «Crear mi primer canal» habilitado como acción principal (principio I). Al pulsarlo, un `Dialog`:
+`EmptyState` con «Crear mi primer canal» habilitado como acción principal (principio I); con una IA en uso, una línea debajo ya avisa de que crear canales llega en la próxima versión (auditoría de novato, T159). Al pulsarlo, un `Dialog`:
 «Crear canales llegará en la próxima versión. Mientras, puedes revisar tu IA en Ajustes», con «Entendido» y
 «Ir a Ajustes» (supuesto de la spec). Si no hay opción activa (p. ej. se borró la clave), encima va un `ErrorMessage` con «Conectar una IA» que
 lleva a `/ajustes/ia`.

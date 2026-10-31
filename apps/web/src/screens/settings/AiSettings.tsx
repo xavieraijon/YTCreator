@@ -112,6 +112,7 @@ export function AiSettings() {
     try {
       await apiClient.post('/api/ai/active', { kind }, aiOverviewSchema)
       void reloadAi()
+      toast({ tone: 'success', title: format(es.aiSettings.nowUsing, { opcion: es.choose.options[kind].title }) })
     } catch (caught) {
       // Without limits the change goes through its own screen, which asks only for them: the key is already saved.
       if (caught instanceof ApiClientError && caught.body?.guard === 'sin_limites')
@@ -188,7 +189,9 @@ export function AiSettings() {
               <AiFailureMessage failure={NOT_INSTALLED} onAction={onFailureAction} />
             ))}
           {busy === 'repair' && <p role="status">{es.connectSubscription.repairing}</p>}
-          {overview.accounts.length > 0 && <AccountList accounts={overview.accounts} />}
+          {overview.accounts.length > 0 && (
+            <AccountList accounts={overview.accounts} inUse={overview.activeKind === 'suscripcion'} />
+          )}
         </section>
       )}
 
@@ -243,7 +246,11 @@ export function AiSettings() {
               <Card as="li" key={kind} className={`${styles.row} ${styles.spread}`}>
                 <span className={styles.option}>
                   <strong>{kindLabel(kind)}</strong>
-                  {connection && <StatusLine view={connection} />}
+                  {kind === 'suscripcion' && overview.accounts.length === 0 ? (
+                    <span className={styles.text}>{es.aiSettings.noAccount}</span>
+                  ) : (
+                    connection && <StatusLine view={connection} />
+                  )}
                 </span>
                 {ready ? (
                   <Button variant="secondary" loading={busy === kind} onClick={() => void use(kind)}>

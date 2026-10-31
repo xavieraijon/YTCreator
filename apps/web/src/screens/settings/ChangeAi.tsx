@@ -1,6 +1,6 @@
 import type { ConnectionKind } from '@ytcreator/core'
 import { aiOverviewSchema } from '@ytcreator/core/api'
-import { Button } from '@ytcreator/ui'
+import { Button, format, useToast } from '@ytcreator/ui'
 import { useState } from 'react'
 import { reloadAi } from '../../ai/useAiOverview.ts'
 import { apiClient, ApiClientError } from '../../api/client.ts'
@@ -43,6 +43,7 @@ export function ChangeAi({ kind, limitsFirst = false }: { kind: ConnectionKind; 
   const [activating, setActivating] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [needsLimits, setNeedsLimits] = useState(limitsFirst)
+  const { toast } = useToast()
 
   const activate = async () => {
     setError(null)
@@ -50,6 +51,7 @@ export function ChangeAi({ kind, limitsFirst = false }: { kind: ConnectionKind; 
     try {
       await apiClient.post('/api/ai/active', { kind }, aiOverviewSchema)
       void reloadAi()
+      toast({ tone: 'success', title: format(es.aiSettings.nowUsing, { opcion: es.choose.options[kind].title }) })
       toSettings()
     } catch (caught) {
       if (caught instanceof ApiClientError && caught.body?.guard === 'sin_limites') setNeedsLimits(true)

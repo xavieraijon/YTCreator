@@ -25,14 +25,17 @@ Windows todavía no es compatible.
 
 ## Instalar
 
-Abre la Terminal, pega esta línea y pulsa Intro:
+1. **Abre la Terminal.**
+   - macOS: pulsa `Cmd` + `Espacio`, escribe «Terminal» y pulsa Intro. Se abre una ventana con texto.
+   - Linux: pulsa `Ctrl` + `Alt` + `T`.
+2. **Copia esta línea**, pégala en la Terminal (`Cmd` + `V` en macOS, `Ctrl` + `Mayús` + `V` en Linux) y pulsa Intro:
 
 ```sh
 curl -fsSL https://github.com/xavieraijon/YTCreator/releases/latest/download/install.sh | bash
 ```
 
-El instalador te dice en qué paso está («Paso N de 8») y, al terminar, abre YTCreator en tu navegador. No pide la
-contraseña del ordenador.
+3. **Espera.** El instalador te dice en qué paso está («Paso N de 8») y tarda unos minutos. Al terminar abre
+   YTCreator en tu navegador y ya puedes cerrar la Terminal. No pide la contraseña del ordenador.
 
 Si algo falla o se corta, vuelve a pegar **la misma línea**: seguirá donde se quedó. Esa misma línea también sirve
 para actualizar a una versión nueva sin perder nada.

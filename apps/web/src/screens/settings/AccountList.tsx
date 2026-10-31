@@ -30,10 +30,12 @@ function AccountRow({
   onMove,
   onLogin,
   login,
+  lastInUse,
 }: {
   account: AccountView
   first: boolean
   last: boolean
+  lastInUse: boolean
   onMove: (step: -1 | 1) => void
   onLogin: () => void
   login: ReactNode
@@ -134,7 +136,7 @@ function AccountRow({
         onOpenChange={setConfirming}
         size="sm"
         title={format(es.aiSettings.removeTitle, { nombre: account.label })}
-        description={es.aiSettings.removeBody}
+        description={lastInUse ? es.aiSettings.removeLastBody : es.aiSettings.removeBody}
         footer={
           <>
             <Button variant="ghost" onClick={() => setConfirming(false)}>
@@ -151,12 +153,14 @@ function AccountRow({
 }
 
 // FR-008: the subscription accounts in the order they are used; the first one with quota does the work.
-export function AccountList({ accounts }: { accounts: readonly AccountView[] }) {
+// inUse: the subscription is the option in use, so removing its only account leaves no AI connected.
+export function AccountList({ accounts, inUse }: { accounts: readonly AccountView[]; inUse: boolean }) {
   const [login, setLogin] = useState<Login | null>(null)
   const [code, setCode] = useState('')
   const [starting, setStarting] = useState(false)
   const [failure, setFailure] = useState<AiFailure | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [codeError, setCodeError] = useState<string | null>(null)
   const { work, run, cancel } = useAiWork()
 
   // A login left half-way is cancelled on the server, so its code stops working.
@@ -172,6 +176,7 @@ export function AccountList({ accounts }: { accounts: readonly AccountView[] }) 
   const clearMessages = () => {
     setFailure(null)
     setError(null)
+    setCodeError(null)
   }
 
   const show = (caught: unknown) => {
@@ -182,19 +187,24 @@ export function AccountList({ accounts }: { accounts: readonly AccountView[] }) 
     else setError(errorText(caught))
   }
 
+  // A new login on the server; the tab is the one opened on the click, or none when it replaces a refused code.
+  const newLogin = async (accountId: string | null, tab: ReturnType<typeof openPendingTab> | null) => {
+    const path = accountId ? `/api/ai/subscription/accounts/${accountId}/login` : '/api/ai/subscription/login'
+    const started = await apiClient.post(path, {}, loginStartSchema)
+    if (openLogin.current && openLogin.current !== started.loginId)
+      void apiClient.delete(`/api/ai/subscription/login/${openLogin.current}`).catch(() => undefined)
+    openLogin.current = started.loginId
+    setLogin({ id: started.loginId, url: started.url, accountId })
+    setCode('')
+    tab?.go(started.url)
+  }
+
   const startLogin = async (accountId: string | null) => {
     clearMessages()
     setStarting(true)
     const tab = openPendingTab()
     try {
-      const path = accountId ? `/api/ai/subscription/accounts/${accountId}/login` : '/api/ai/subscription/login'
-      const started = await apiClient.post(path, {}, loginStartSchema)
-      if (openLogin.current && openLogin.current !== started.loginId)
-        void apiClient.delete(`/api/ai/subscription/login/${openLogin.current}`).catch(() => undefined)
-      openLogin.current = started.loginId
-      setLogin({ id: started.loginId, url: started.url, accountId })
-      setCode('')
-      tab.go(started.url)
+      await newLogin(accountId, tab)
     } catch (caught) {
       tab.close()
       show(caught)
@@ -206,18 +216,30 @@ export function AccountList({ accounts }: { accounts: readonly AccountView[] }) 
   const connect = async () => {
     if (!login) return
     clearMessages()
+    const typed = code.trim()
+    if (!typed) {
+      setCodeError(es.connectSubscription.codeMissing)
+      return
+    }
     try {
       await run(es.connectSubscription.connecting, (signal) =>
-        apiClient.post(`/api/ai/subscription/login/${login.id}/complete`, { code }, accountViewSchema, { signal }),
+        apiClient.post(`/api/ai/subscription/login/${login.id}/complete`, { code: typed }, accountViewSchema, {
+          signal,
+        }),
       )
+      openLogin.current = null
+      setLogin(null)
       void reloadAi()
     } catch (caught) {
       if (wasCancelled(caught)) return
+      // The server has closed this login whatever happened. A refused code keeps the field, on a new login
+      // whose page the form links to; anything else closes the form.
+      openLogin.current = null
+      if (failureOf(caught)?.reason === 'codigo_no_valido')
+        await newLogin(login.accountId, null).catch(() => setLogin(null))
+      else setLogin(null)
       show(caught)
     }
-    // The server has closed this login whatever happened: a new code needs a new link.
-    openLogin.current = null
-    setLogin(null)
   }
 
   const move = async (index: number, step: -1 | 1) => {
@@ -249,6 +271,7 @@ export function AccountList({ accounts }: { accounts: readonly AccountView[] }) 
           onSubmit={() => void connect()}
           onNewLink={() => void startLogin(forId)}
           starting={starting}
+          error={codeError}
         />
         <div>
           <Button variant="primary" loading={!!work} onClick={() => void connect()}>
@@ -270,6 +293,7 @@ export function AccountList({ accounts }: { accounts: readonly AccountView[] }) 
             onMove={(step) => void move(index, step)}
             onLogin={() => void startLogin(account.id)}
             login={loginForm(account.id)}
+            lastInUse={inUse && accounts.length === 1}
           />
         ))}
       </ul>

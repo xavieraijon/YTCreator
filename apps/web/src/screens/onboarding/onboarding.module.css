@@ -23,6 +23,11 @@
   padding-inline-start: var(--s-space-5);
 }
 
+.optionNote {
+  display: grid;
+  gap: var(--s-space-2);
+}
+
 .tags {
   display: flex;
   flex-wrap: wrap;

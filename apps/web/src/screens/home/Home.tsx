@@ -21,6 +21,7 @@ export function Home() {
         icon={Clapperboard}
         titleAs="h2"
         title={es.home.body}
+        description={overview?.activeKind ? es.home.soon : undefined}
         action={{ label: es.home.createChannel, onClick: () => setComing(true) }}
       />
       <Dialog
