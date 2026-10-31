@@ -25,6 +25,8 @@ data/
 # Logs
 *.log
 logs/
+# Recorded CLI output that the contract tests and the fake CLI replay.
+!packages/ai/test/fixtures/**/*.log
 
 # Tests
 playwright-report/
