@@ -19,6 +19,16 @@ dentro de esta feature. Gestión de varios canales, estilo, voz, marca, equipo d
   cifras reales, con su fuente y su fecha.
 - Q: ¿Qué recorridos cubre? → A: Canal nuevo desde cero y canal que ya existe. Cambiar entre canales y archivarlos va
   al backlog.
+- Q: ¿El creador puede saltarse el paso del nombre? → A: Sí. Con el concepto aprobado el perfil ya sirve para las
+  fases siguientes; el nombre queda «provisional» y la pantalla de inicio recuerda elegirlo.
+- Q: ¿El posicionamiento de un canal que ya existe tiene la misma forma que el perfil de uno nuevo? → A: Sí. Acaba en
+  nicho + concepto (promesa, pilares, público, formato, ritmo y monetización en rangos); el perfil actual y la
+  lectura del canal se guardan como contexto con sus datos.
+- Q: ¿Para qué público se miden los nichos y se calcula la monetización? → A: La demanda se mide en castellano sin
+  filtrar país; el creador indica su público principal (España por defecto, Latinoamérica o mixto) y los rangos de
+  ingresos se ajustan a ese público.
+- Q: ¿Qué pregunta la app al creador para proponer un ritmo sostenible? → A: Las horas por semana que puede dedicar y si
+  quiere salir en cámara, poner solo la voz o ninguna de las dos; ambas cosas condicionan el ritmo y el formato.
 
 ## Contexto
 
@@ -124,7 +134,9 @@ ve 6-8 nombres con semáforo, añade uno propio, lo ve medido y lo elige.
    confirmación; no lo bloquea.
 4. **Given** un nombre que no se ha podido comprobar, **When** se muestra, **Then** su semáforo es «sin comprobar»,
    nunca verde.
-5. **Given** un nombre elegido, **When** el creador termina, **Then** el perfil del canal queda completo y la pantalla
+5. **Given** un concepto aprobado, **When** el creador elige «Decidir el nombre más tarde», **Then** el canal usa un
+   nombre provisional, puede pasar a las fases siguientes y la pantalla de inicio le recuerda elegir el nombre.
+6. **Given** un nombre elegido, **When** el creador termina, **Then** el perfil del canal queda completo y la pantalla
    de inicio pasa a mostrar el canal y el siguiente paso.
 
 ---
@@ -239,10 +251,15 @@ los ficheros exportados se leen sin la app y contienen lo mismo que la pantalla.
 
 **Concepto**
 
+- **FR-012b**: Antes de proponer conceptos, el sistema DEBE preguntar cuántas horas por semana puede dedicar el creador
+  y si quiere salir en cámara, poner solo la voz o ninguna de las dos; el ritmo y el formato propuestos DEBEN encajar
+  con esas respuestas.
 - **FR-013**: La IA DEBE proponer de 2 a 3 conceptos con promesa (una frase), 3-4 pilares, público, formato, ritmo de
   publicación y monetización.
 - **FR-014**: La monetización DEBE expresarse en rangos con sus supuestos visibles, basarse en el conocimiento
   versionado de la app (requisitos del programa de socios, ingresos por nicho) y citar su fuente y fecha.
+- **FR-014b**: El sistema DEBE pedir el público principal del canal (España por defecto, Latinoamérica o mixto) y
+  ajustar a él los rangos de monetización; la demanda se mide en el idioma del canal sin filtrar por país.
 - **FR-015**: El sistema DEBE avisar, con la fuente, cuando el público sea infantil, cuando el formato se apoye solo en
   Shorts o cuando el concepto roce las políticas de contenido no auténtico.
 
@@ -254,6 +271,8 @@ los ficheros exportados se leen sin la app y contienen lo mismo que la pantalla.
   (ninguna de las anteriores) o «sin comprobar» si la comprobación falla.
 - **FR-018**: El sistema DEBE explicar el semáforo de cada nombre en una frase y avisar de que la @ solo se confirma al
   crearla en YouTube; elegir un nombre en rojo DEBE pedir confirmación, no estar prohibido.
+- **FR-018b**: El creador DEBE poder dejar el nombre para más tarde: el perfil con nicho y concepto aprobados ya sirve
+  para las fases siguientes, el nombre se marca como provisional y la pantalla de inicio recuerda elegirlo.
 
 **Canal que ya existe**
 
@@ -263,6 +282,9 @@ los ficheros exportados se leen sin la app y contienen lo mismo que la pantalla.
   visitas, duración, fecha) y mostrar un resumen con cifras marcadas como dato y con fecha.
 - **FR-021**: La IA DEBE proponer el perfil actual (nicho, pilares, público, lo que funciona y lo que no) y una
   propuesta de posicionamiento; cada afirmación sobre lo que funciona DEBE citar los vídeos en que se basa.
+- **FR-021b**: El posicionamiento aprobado DEBE tener la misma forma que el perfil de un canal nuevo (nicho y concepto
+  completos, con la monetización en rangos de FR-014), para que las fases siguientes lean siempre el mismo perfil; el
+  perfil actual y la lectura del canal se conservan como contexto.
 - **FR-022**: Con menos de 5 vídeos, el sistema DEBE avisar de que hay poca información y ofrecer el recorrido de canal
   nuevo conservando el nombre y la @ existentes.
 
@@ -297,10 +319,12 @@ los ficheros exportados se leen sin la app y contienen lo mismo que la pantalla.
 
 ### Key Entities
 
-- **Canal**: el canal del creador. Origen (nuevo o existente), estado del recorrido, paso actual, nombre, @, enlace al
+- **Canal**: el canal del creador. Origen (nuevo o existente), idioma, público principal, horas por semana, presencia
+  (cámara, solo voz o ninguna), estado del recorrido, paso actual, nombre (definitivo o provisional), @, enlace al
   canal de YouTube si ya existe. Una instalación puede tener varios.
-- **Perfil del canal**: lo aprobado sobre el canal: nicho, concepto y nombre (o perfil actual y posicionamiento si el
-  canal ya existía). Tiene un historial de versiones.
+- **Perfil del canal**: lo aprobado sobre el canal: nicho, concepto y nombre, con la misma forma venga de un canal
+  nuevo o de uno que ya existía (en ese caso, con el perfil actual y la lectura como contexto). Tiene un historial de
+  versiones.
 - **Versión del perfil**: copia fechada del perfil con su origen (propuesta de la IA, edición a mano, vuelta atrás).
 - **Propuesta**: una tanda generada por la IA para un paso (nichos, conceptos, nombres, perfil actual), con las
   indicaciones que la pidieron y su fecha. Las tandas anteriores se conservan.
@@ -347,6 +371,7 @@ los ficheros exportados se leen sin la app y contienen lo mismo que la pantalla.
 - La app no crea el canal en YouTube ni publica nada: el alta la hace el creador en YouTube Studio.
 - Solo se lee información pública: la app no se conecta a la cuenta de YouTube del creador ni lee sus estadísticas
   privadas.
-- El idioma por defecto del canal es el castellano; el mercado se mide en ese idioma salvo que el creador indique otro.
+- El idioma por defecto del canal es el castellano; el mercado se mide en ese idioma, sin filtrar por país, salvo que
+  el creador indique otro. El público principal (España, Latinoamérica o mixto) solo cambia los rangos de ingresos.
 - Fuera de esta feature: gestionar varios canales (cambiar y archivar), estilo visual, voz, música, marca gráfica,
   equipo de agentes y banco de ideas.
