@@ -114,14 +114,14 @@ type UpdateInfo = { current: string; latest: string | null; show: boolean };
 | `POST /api/ai/subscription/accounts/:id/login` | `{}` | `{loginId, url, expiresAt}` | Volver a entrar en una cuenta (FR-016). El inicio queda ligado a esa cuenta: al completarlo, sustituye su *token* y su huella y responde `200 AccountView` `conectada`, con el mismo nombre y posición (no se puede saber si es la misma cuenta, S3); si la huella nueva ya es de otra fila → `409 conflicto` y no cambia nada |
 | `PATCH /api/ai/subscription/accounts/order` | `{ids: string[]}` | `AccountView[]` | `ids` debe ser una permutación exacta de las existentes |
 | `PATCH /api/ai/subscription/accounts/:id` | `{label}` | `AccountView` | 1–40 caracteres |
-| `DELETE /api/ai/subscription/accounts/:id` | — | `204` | Borra secreto y carpeta (FR-029) |
+| `DELETE /api/ai/subscription/accounts/:id` | — | `204` | Borra secreto y carpeta (FR-029). Si era la última cuenta y la suscripción estaba activa, pasa a estarlo el pago por uso si está `conectada` y tiene límites; si no, ya no hay opción activa |
 
 ### Claves: pago por uso
 
 | Método y ruta | Cuerpo | Respuesta | Notas |
 |---|---|---|---|
 | `PUT /api/ai/connections/:kind/credential` | `{key: string}` | `ConnectionView` | `kind` = `pago_por_uso`. Limpia espacios; comprueba sin coste; **solo guarda si queda `conectada`**. Si no, `422 ia` con el fallo y la clave no se guarda (FR-017) |
-| `DELETE /api/ai/connections/:kind/credential` | — | `204` | Borra la clave del almacén y la fila. Si estaba activa, ya no hay opción activa |
+| `DELETE /api/ai/connections/:kind/credential` | — | `204` | Borra la clave del almacén y la fila. Si estaba activa, pasa a estarlo la suscripción si está `conectada`; si no, ya no hay opción activa |
 | `POST /api/ai/connections/:kind/check` | `{}` | `ConnectionView` | «Comprobar ahora» (FR-025). Para `suscripcion`, pasa por la rotación (R14) y la respuesta añade `switched?: AccountSwitched[]` |
 
 ### Reparar Claude Code

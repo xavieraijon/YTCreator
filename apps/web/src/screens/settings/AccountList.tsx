@@ -1,6 +1,6 @@
-import { MAX_ACCOUNTS, type AiFailure } from '@ytcreator/core'
+import { MAX_ACCOUNTS, type AiFailure, type ConnectionKind } from '@ytcreator/core'
 import { accountViewSchema, loginStartSchema, type AccountView } from '@ytcreator/core/api'
-import { Button, Card, Dialog, ErrorMessage, format, TextField } from '@ytcreator/ui'
+import { Button, Card, Dialog, ErrorMessage, format, TextField, useToast } from '@ytcreator/ui'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { reloadAi } from '../../ai/useAiOverview.ts'
 import { apiClient, ApiClientError } from '../../api/client.ts'
@@ -31,11 +31,13 @@ function AccountRow({
   onLogin,
   login,
   lastInUse,
+  fallback,
 }: {
   account: AccountView
   first: boolean
   last: boolean
   lastInUse: boolean
+  fallback: ConnectionKind | null
   onMove: (step: -1 | 1) => void
   onLogin: () => void
   login: ReactNode
@@ -45,6 +47,7 @@ function AccountRow({
   const [confirming, setConfirming] = useState(false)
   const [busy, setBusy] = useState<'check' | 'remove' | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const { toast } = useToast()
 
   useEffect(() => setLabel(account.label), [account.label])
 
@@ -80,6 +83,8 @@ function AccountRow({
       await apiClient.delete(`/api/ai/subscription/accounts/${account.id}`)
       setConfirming(false)
       void reloadAi()
+      if (lastInUse && fallback)
+        toast({ tone: 'success', title: format(es.aiSettings.nowUsing, { opcion: es.choose.options[fallback].title }) })
     } catch (caught) {
       setError(errorText(caught))
     } finally {
@@ -136,7 +141,13 @@ function AccountRow({
         onOpenChange={setConfirming}
         size="sm"
         title={format(es.aiSettings.removeTitle, { nombre: account.label })}
-        description={lastInUse ? es.aiSettings.removeLastBody : es.aiSettings.removeBody}
+        description={
+          !lastInUse
+            ? es.aiSettings.removeBody
+            : fallback
+              ? format(es.aiSettings.removeLastFallbackBody, { opcion: es.choose.options[fallback].title })
+              : es.aiSettings.removeLastBody
+        }
         footer={
           <>
             <Button variant="ghost" onClick={() => setConfirming(false)}>
@@ -153,8 +164,17 @@ function AccountRow({
 }
 
 // FR-008: the subscription accounts in the order they are used; the first one with quota does the work.
-// inUse: the subscription is the option in use, so removing its only account leaves no AI connected.
-export function AccountList({ accounts, inUse }: { accounts: readonly AccountView[]; inUse: boolean }) {
+// inUse: the subscription is the option in use, so removing its only account leaves it without accounts;
+// fallback: the option that then takes over, or null if none can (no AI connected).
+export function AccountList({
+  accounts,
+  inUse,
+  fallback,
+}: {
+  accounts: readonly AccountView[]
+  inUse: boolean
+  fallback: ConnectionKind | null
+}) {
   const [login, setLogin] = useState<Login | null>(null)
   const [code, setCode] = useState('')
   const [starting, setStarting] = useState(false)
@@ -294,6 +314,7 @@ export function AccountList({ accounts, inUse }: { accounts: readonly AccountVie
             onLogin={() => void startLogin(account.id)}
             login={loginForm(account.id)}
             lastInUse={inUse && accounts.length === 1}
+            fallback={fallback}
           />
         ))}
       </ul>

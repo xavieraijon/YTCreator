@@ -116,10 +116,24 @@ test('the AI settings: accounts, reconnecting, changing the option and back, and
   await others(page).getByRole('button', { name: 'Usar esta opción' }).click()
   await expect(badge(page, 'Tu suscripción de Claude · Funciona')).toBeVisible()
 
-  // Without accounts the subscription cannot be the option in use.
-  await removeAccount(page, 0, 'Cuenta 2')
+  // Without accounts the subscription cannot be the option in use: the key, which works and has limits, takes over.
+  await accountRows(page).nth(0).getByRole('button', { name: 'Borrar' }).click()
+  const removeLast = page.getByRole('dialog', { name: '¿Borrar Cuenta 2?' })
+  await expect(removeLast).toContainText('pasará a usar «Pagar solo lo que uses»')
+  await removeLast.getByRole('button', { name: 'Borrar' }).click()
+  await expect(removeLast).toBeHidden()
+  await expect(
+    page.getByText('Listo. Ahora YTCreator usa «Pagar solo lo que uses».', { exact: true }).last(),
+  ).toBeVisible()
+  await expect(badge(page, 'Pago por uso de Anthropic · Funciona')).toBeVisible()
+
+  // And with the key gone too, nothing is left to take over.
+  await page.getByRole('region', { name: 'Claves guardadas' }).getByRole('button', { name: 'Borrar' }).click()
+  const removeKey = page.getByRole('dialog', { name: '¿Borrar esta clave?' })
+  await expect(removeKey).toContainText('se quedará sin IA conectada')
+  await removeKey.getByRole('button', { name: 'Borrar' }).click()
+  await expect(removeKey).toBeHidden()
   await expect(badge(page, 'Sin IA conectada')).toBeVisible()
-  await expect(page.getByText('Sin IA conectada').last()).toBeVisible()
 })
 
 test('the General tab: disabling the update notice and the AI timeout override, both surviving a reload (US5)', async ({

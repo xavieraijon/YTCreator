@@ -25,7 +25,7 @@ Spec-Driven Development with GitHub Spec Kit (`/speckit-*`).
   (`APP_HOME` path at `migrate`, `open`/`serve` silently no-op'ing through the `current` symlink, step 8 hanging
   forever once `open` actually blocks), confirmed with a real Docker install. T158 (real-provider manual tests) done
   2026-10-31, with four bugs found and fixed. T159 (novice audit) done
-  2026-10-31 by the `usuario-novato` agent: round 2 passed (0 graves, 3 medios, left open as improvements), report in
+  2026-10-31 by the `usuario-novato` agent: round 2 passed (0 graves, 3 medios, all fixed afterwards), report in
   `specs/002-onboarding/novice-audit.md`.
   Creator's approval at each phase.
 - Provider subscriptions beyond Claude are a later feature, not part of 002. First one planned: Gemini

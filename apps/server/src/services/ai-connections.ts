@@ -100,6 +100,14 @@ export function createAiConnectionsService(deps: AiConnectionsDeps) {
     return outcome
   }
 
+  // The option in use was removed: the other one takes over if it works and can be used (pago_por_uso needs limits).
+  function fallBackFrom(removed: ConnectionKind): void {
+    const other = connections.list().find((c) => c.kind !== removed)
+    if (other?.status !== 'conectada') return
+    if (other.kind === 'pago_por_uso' && !connections.hasLimits()) return
+    connections.setActive(other.kind)
+  }
+
   async function startSubscriptionLogin(accountId: string | null) {
     const { descriptor, login } = subscriptionLogin()
     if (openLogin) await login.cancel(openLogin.loginId)
@@ -261,6 +269,7 @@ export function createAiConnectionsService(deps: AiConnectionsDeps) {
         if (!deleted.ok) throw failed(connection.providerId, 'delete_secret', deleted.failure)
       }
       connections.remove(kind)
+      if (connection.isActive) fallBackFrom(kind)
     },
 
     // An exact permutation of the accounts; anything else is `validacion`.
@@ -285,7 +294,9 @@ export function createAiConnectionsService(deps: AiConnectionsDeps) {
       if (!deleted.ok) throw failed(account.providerId, 'delete_secret', deleted.failure)
       await rm(accountDir(id), { recursive: true, force: true })
       accounts.remove(id)
+      const wasActive = connections.get('suscripcion')?.isActive ?? false
       connections.syncSubscription(account.providerId, accounts.list(account.providerId))
+      if (wasActive && !connections.active()) fallBackFrom('suscripcion')
     },
   }
 }

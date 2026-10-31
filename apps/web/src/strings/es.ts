@@ -131,7 +131,7 @@ export const es = {
     why: 'YTCreator nunca gastará más de lo que pongas aquí. Puedes cambiarlos cuando quieras.',
     perOperation: 'Por operación',
     perOperationHelp:
-      'Lo máximo que puede costar una sola operación. Si una fuese a costar más, YTCreator no la hace y te avisa.',
+      'Una operación es cada encargo que le haces a la IA, como pedirle ideas para vídeos o que escriba un guion. Suelen costar céntimos: unas ideas, 1 o 2 céntimos; un guion largo, entre 10 y 20, más o menos. Si una fuese a costar más de lo que pongas aquí, YTCreator no la hace y te avisa.',
     daily: 'Por día',
     dailyHelp: 'Lo máximo que puedes gastar en un día. Al llegar, YTCreator deja de usar la IA hasta el día siguiente.',
     monthly: 'Por mes',
@@ -192,6 +192,8 @@ export const es = {
     removeBody: 'YTCreator dejará de usar esta cuenta y olvidará su acceso.',
     removeLastBody:
       'Es tu única cuenta y la opción que usas ahora: YTCreator se quedará sin IA conectada hasta que conectes otra.',
+    removeLastFallbackBody:
+      'Es tu única cuenta y la opción que usas ahora. YTCreator olvidará su acceso y pasará a usar «{opcion}», que también funciona.',
     noAccount: 'Sin cuenta conectada',
     reconnect: 'Volver a conectar',
     reconnectNote: 'Entra con la misma cuenta de Claude: YTCreator no puede comprobarlo.',
@@ -202,7 +204,11 @@ export const es = {
     savedKey: '••••{pista}',
     replace: 'Sustituir',
     removeKeyTitle: '¿Borrar esta clave?',
-    removeKeyBody: 'YTCreator la borrará de tu ordenador. Si es la opción en uso, te quedarás sin IA conectada.',
+    removeKeyBody: 'YTCreator la borrará de tu ordenador.',
+    removeKeyInUseBody:
+      'Es la opción que usas ahora. YTCreator la borrará de tu ordenador y se quedará sin IA conectada hasta que conectes otra.',
+    removeKeyFallbackBody:
+      'Es la opción que usas ahora. YTCreator la borrará de tu ordenador y pasará a usar «{opcion}», que también funciona.',
     others: 'Otras opciones',
     useThis: 'Usar esta opción',
     nowUsing: 'Listo. Ahora YTCreator usa «{opcion}».',

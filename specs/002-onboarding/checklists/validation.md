@@ -346,8 +346,9 @@ La hizo el agente `usuario-novato` (Marta, nunca ha abierto la Terminal) con una
 carpeta aislada y la IA simulada. Informe completo en `specs/002-onboarding/novice-audit.md`.
 
 - **Ronda 1:** no pasa (0 graves, 8 medios, 22 menores). Se corrigieron los 8 medios y 7 menores.
-- **Ronda 2** (agente nuevo, sin contexto): **pasa** (0 graves, 3 medios, 17 menores). Los 3 medios quedan abiertos
-  como mejora: doble clic en «Empezar» marca el pago por uso, Inicio en rojo tras borrar la clave en uso con la
-  suscripción aún guardada, y «una sola operación» sin ejemplos de coste.
+- **Ronda 2** (agente nuevo, sin contexto): **pasa** (0 graves, 3 medios, 17 menores). Los 3 medios se corrigieron
+  después: el doble clic en «Empezar» ya no marca el pago por uso (e2e nuevo), borrar la opción en uso pasa a la otra
+  si funciona y lo avisa (tests HTTP y e2e), y la ayuda del límite explica qué es una operación con ejemplos en
+  céntimos.
 
 **T159 completa (SC-008).**

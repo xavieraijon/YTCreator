@@ -140,6 +140,27 @@ describe('DELETE /api/ai/connections/:kind/credential', () => {
     expect(aiOverviewSchema.parse((await call(t, 'GET', '/api/ai')).body).activeKind).toBeNull()
   })
 
+  it('the key in use with the subscription working → the subscription takes over', async () => {
+    const t = makeTestApp({ fakeAi: 'ok' })
+    await login(t)
+    await call(t, 'PUT', '/api/ai/connections/pago_por_uso/credential', { key: KEY })
+    await call(t, 'PUT', '/api/settings/limits', LIMITS)
+    await call(t, 'POST', '/api/ai/active', { kind: 'pago_por_uso' })
+
+    expect((await call(t, 'DELETE', '/api/ai/connections/pago_por_uso/credential')).status).toBe(204)
+    expect(aiOverviewSchema.parse((await call(t, 'GET', '/api/ai')).body).activeKind).toBe('suscripcion')
+  })
+
+  it('a key that is not in use → the option in use does not change', async () => {
+    const t = makeTestApp({ fakeAi: 'ok' })
+    await login(t)
+    await call(t, 'POST', '/api/ai/active', { kind: 'suscripcion' })
+    await call(t, 'PUT', '/api/ai/connections/pago_por_uso/credential', { key: KEY })
+
+    expect((await call(t, 'DELETE', '/api/ai/connections/pago_por_uso/credential')).status).toBe(204)
+    expect(aiOverviewSchema.parse((await call(t, 'GET', '/api/ai')).body).activeKind).toBe('suscripcion')
+  })
+
   it('without a key stored → 404', async () => {
     const t = makeTestApp({ fakeAi: 'ok' })
     expect((await call(t, 'DELETE', '/api/ai/connections/pago_por_uso/credential')).status).toBe(404)
@@ -228,6 +249,23 @@ describe('subscription accounts', () => {
       reason: 'sesion_caducada',
       isActive: false,
     })
+  })
+
+  it('deleting the last account in use with the key working → pago_por_uso takes over if it has limits', async () => {
+    const withLimits = makeTestApp({ fakeAi: 'ok' })
+    await login(withLimits)
+    await call(withLimits, 'PUT', '/api/ai/connections/pago_por_uso/credential', { key: KEY })
+    await call(withLimits, 'PUT', '/api/settings/limits', LIMITS)
+    await call(withLimits, 'POST', '/api/ai/active', { kind: 'suscripcion' })
+    await call(withLimits, 'DELETE', `/api/ai/subscription/accounts/${accountIds(withLimits)[0]}`)
+    expect(aiOverviewSchema.parse((await call(withLimits, 'GET', '/api/ai')).body).activeKind).toBe('pago_por_uso')
+
+    const withoutLimits = makeTestApp({ fakeAi: 'ok' })
+    await login(withoutLimits)
+    await call(withoutLimits, 'PUT', '/api/ai/connections/pago_por_uso/credential', { key: KEY })
+    await call(withoutLimits, 'POST', '/api/ai/active', { kind: 'suscripcion' })
+    await call(withoutLimits, 'DELETE', `/api/ai/subscription/accounts/${accountIds(withoutLimits)[0]}`)
+    expect(aiOverviewSchema.parse((await call(withoutLimits, 'GET', '/api/ai')).body).activeKind).toBeNull()
   })
 
   it('POST :id/check checks that account only, without rotating', async () => {

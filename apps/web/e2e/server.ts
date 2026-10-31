@@ -77,9 +77,12 @@ export const heading = (page: Page, name: string | RegExp) => page.getByRole('he
 type Option = 'Usar mi suscripción de Claude' | 'Pagar solo lo que uses'
 
 // The radio sits under its card's label, which takes the click.
+// The choice screen ignores clicks in its first moments (the second click of a double click on «Empezar»).
 export async function choose(page: Page, option: Option) {
-  await page.getByText(option, { exact: true }).click()
-  await expect(page.getByRole('radio', { name: option })).toBeChecked()
+  await expect(async () => {
+    await page.getByText(option, { exact: true }).click()
+    await expect(page.getByRole('radio', { name: option })).toBeChecked({ timeout: 300 })
+  }).toPass()
 }
 
 // From the welcome to the connect step with the given option.

@@ -163,7 +163,7 @@ export function createConnectionsRepo(db: DatabaseSync, now: () => Date = () => 
       })
     },
 
-    // If it was the active one, none is active afterwards.
+    // If it was the active one, none is active afterwards (the service may then activate the other one).
     remove(kind: ConnectionKind): void {
       deleteOne.run(kind)
     },

@@ -120,7 +120,8 @@ Una cuenta duplicada (mismo acceso pegado dos veces): «Esta cuenta ya está con
 
 ### Limits (FR-021–FR-023)
 Tres `TextField` en euros con dos decimales (`inputmode="decimal"`, admite coma), con los valores propuestos de R17
-ya escritos y una frase por campo («Lo máximo que puede costar una sola operación»). Errores por campo
+ya escritos y una frase por campo; la de «Por operación» explica qué es una operación (cada encargo a la IA) con costes de
+ejemplo en céntimos. Errores por campo
 (`fields` de la API). «Guardar límites».
 
 ### Done (FR-020, FR-023)
@@ -150,6 +151,9 @@ lleva a `/ajustes/ia`.
   la lista.» Bajo la lista, la nota de S3 de `ConnectSubscription`. «Añadir otra cuenta» (hasta 5;
   con 5, el botón explica que es el máximo) (FR-016);
 - **Claves guardadas**: «••••abcd» con «Sustituir» y «Borrar»;
+- **Borrar la opción en uso** (la clave, o la única cuenta): el `Dialog` dice qué pasará. Si la otra opción
+  funciona (y, si es el pago por uso, tiene límites), YTCreator pasa a usarla y un `Toast` lo confirma: «Listo.
+  Ahora YTCreator usa «…».»; si no, avisa de que se quedará sin IA conectada;
 - **Otras opciones**: las no activas, con «Usar esta opción» (si están conectadas) o «Configurar» (→
   `/ajustes/ia/cambiar/:kind`). «Usar esta opción» con una clave guardada sin límites
   lleva a `/ajustes/ia/cambiar/:kind/limites`: pide solo los límites, nunca la clave otra vez;

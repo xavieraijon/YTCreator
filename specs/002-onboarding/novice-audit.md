@@ -35,9 +35,9 @@ tarde», volver atrás, recargar, borrar una cuenta y una clave, Ajustes, teclad
 
 | # | Gravedad | Hallazgo | Resolución |
 | --- | --- | --- | --- |
-| 1 | Medio | Un doble clic en «Empezar» hace que el segundo clic marque «Pagar solo lo que uses» en la pantalla siguiente. | Abierto. |
-| 2 | Medio | Al borrar la clave en uso, Inicio dice en rojo «No tienes ninguna IA conectada.» aunque la suscripción sigue guardada y funciona. Marta lo arregla sola con «Usar esta opción». | Abierto. |
-| 3 | Medio | «Lo máximo que puede costar una sola operación.» no dice qué es una operación ni si 0,50 € es poco o mucho. | Abierto. |
+| 1 | Medio | Un doble clic en «Empezar» hace que el segundo clic marque «Pagar solo lo que uses» en la pantalla siguiente. | Corregido después de la ronda. Durante medio segundo tras mostrarse, la pantalla ignora los clics sobre las opciones (el teclado no se ve afectado). e2e nuevo. |
+| 2 | Medio | Al borrar la clave en uso, Inicio dice en rojo «No tienes ninguna IA conectada.» aunque la suscripción sigue guardada y funciona. Marta lo arregla sola con «Usar esta opción». | Corregido después de la ronda. Si la otra opción funciona, pasa a ser la opción en uso sola; el diálogo de borrar lo anuncia y después sale «Listo. Ahora YTCreator usa «…».». Igual al borrar la última cuenta de la suscripción en uso. |
+| 3 | Medio | «Lo máximo que puede costar una sola operación.» no dice qué es una operación ni si 0,50 € es poco o mucho. | Corregido después de la ronda. La ayuda explica que una operación es cada encargo a la IA y da ejemplos en céntimos (unas ideas, 1 o 2; un guion largo, entre 10 y 20). |
 
 Del montaje, no cuenta: la IA simulada acepta una clave cortada que empiece por `sk-ant-api03-FAKE`. La aplicación de
 verdad comprueba la clave con Anthropic antes de guardarla (en T158 una clave revocada se rechazó), así que una clave
@@ -61,5 +61,5 @@ cortada no daría «Funciona».
 - «(segundos)» repetido en Modo experto;
 - el título de la pestaña de cierre es la frase entera.
 
-**Veredicto**: cumple SC-008. La ronda 2 dio 0 graves y 3 medios, en el límite del umbral. Los tres medios quedan
-abiertos como mejora.
+**Veredicto**: cumple SC-008. La ronda 2 dio 0 graves y 3 medios, en el límite del umbral, y los tres medios se
+corrigieron después.

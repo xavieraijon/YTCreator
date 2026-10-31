@@ -71,6 +71,20 @@ export function AiSettings() {
   const others = CONNECTION_KINDS.filter((kind) => kind !== overview.activeKind)
   const failing = active && active.status !== 'conectada' && active.status !== 'sin_comprobar' && active.reason
 
+  // The option that takes over if `removed` is in use and goes away: the other one, if it works and can be used.
+  const takesOver = (removed: ConnectionKind): ConnectionKind | null => {
+    if (overview.activeKind !== removed) return null
+    const other = overview.connections.find((c) => c.kind !== removed)
+    if (other?.status !== 'conectada' || (other.kind === 'pago_por_uso' && !overview.hasLimits)) return null
+    return other.kind
+  }
+  const keyFallback = takesOver('pago_por_uso')
+  const removeKeyBody = keyFallback
+    ? format(es.aiSettings.removeKeyFallbackBody, { opcion: es.choose.options[keyFallback].title })
+    : overview.activeKind === 'pago_por_uso'
+      ? es.aiSettings.removeKeyInUseBody
+      : es.aiSettings.removeKeyBody
+
   const check = async (kind: ConnectionKind) => {
     setError(null)
     try {
@@ -129,6 +143,11 @@ export function AiSettings() {
     try {
       await apiClient.delete('/api/ai/connections/pago_por_uso/credential')
       setConfirmKey(false)
+      if (keyFallback)
+        toast({
+          tone: 'success',
+          title: format(es.aiSettings.nowUsing, { opcion: es.choose.options[keyFallback].title }),
+        })
     } catch (caught) {
       setError(errorText(caught))
     } finally {
@@ -190,7 +209,11 @@ export function AiSettings() {
             ))}
           {busy === 'repair' && <p role="status">{es.connectSubscription.repairing}</p>}
           {overview.accounts.length > 0 && (
-            <AccountList accounts={overview.accounts} inUse={overview.activeKind === 'suscripcion'} />
+            <AccountList
+              accounts={overview.accounts}
+              inUse={overview.activeKind === 'suscripcion'}
+              fallback={takesOver('suscripcion')}
+            />
           )}
         </section>
       )}
@@ -219,7 +242,7 @@ export function AiSettings() {
             onOpenChange={setConfirmKey}
             size="sm"
             title={es.aiSettings.removeKeyTitle}
-            description={es.aiSettings.removeKeyBody}
+            description={removeKeyBody}
             footer={
               <>
                 <Button variant="ghost" onClick={() => setConfirmKey(false)}>
