@@ -19,12 +19,13 @@ Spec-Driven Development with GitHub Spec Kit (`/speckit-*`).
   constitution 2.0.0): **design complete, branch `002-onboarding`** (revised 2026-10-29). spec, plan, research,
   data-model, contracts, quickstart and tasks (164 tasks: 5 withdrawn, 4 new, including T164 — visual review
   against `checklists/design.md`) done; three `/speckit-analyze` passes with all findings fixed (0 critical/high).
-  The free-Gemini code already written (adapter, registry, DB check, UI) was removed in this revision. 156/164
-  tasks done (spikes, US1–US5, Phase 8 Polish T152–T157/T160/T164 complete; not committed yet). Validation in
+  The free-Gemini code already written (adapter, registry, DB check, UI) was removed in this revision. 157/164
+  tasks done (spikes, US1–US5, Phase 8 Polish T152–T158/T160/T164 complete and committed). Validation in
   `specs/002-onboarding/checklists/validation.md`: T157's pass found and fixed three real installer/launcher bugs
   (`APP_HOME` path at `migrate`, `open`/`serve` silently no-op'ing through the `current` symlink, step 8 hanging
-  forever once `open` actually blocks), confirmed with a real Docker install. **Only T158 and T159 remain, and both
-  need the creator/an outside tester** (real-provider manual tests, novice audit) — the agent cannot do them.
+  forever once `open` actually blocks), confirmed with a real Docker install. T158 (real-provider manual tests) done
+  2026-10-31, with four bugs found and fixed. **Only T159 remains** (novice audit by an outside tester; the agent cannot
+  do it).
   Creator's approval at each phase.
 - Provider subscriptions beyond Claude are a later feature, not part of 002. First one planned: Gemini
   (Google AI Pro, with its CLI).

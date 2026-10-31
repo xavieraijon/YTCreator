@@ -348,7 +348,7 @@ arranca `v2` con todo intacto; con una migración que falla, código 60 y la bas
 - [X] T155 Pasada final del glosario: ejecutar `apps/web/test/glossary.test.ts` y revisar a mano todos los textos de `apps/web/src/strings/` e `installer/install.sh` contra el glosario de la constitución
 - [X] T156 Ejecutar `fnm exec --using=24 -- pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:installer` y `pnpm test:e2e` completos y corregir lo que falle
 - [X] T157 Recorrer `specs/002-onboarding/quickstart.md` §2–§4 y §7–§8 (desarrollo local, instalador en macOS y Linux con y sin escritorio, cortes en cada paso, actualización, dos pestañas) y anotar el resultado en `specs/002-onboarding/checklists/validation.md`
-- [ ] T158 Pruebas manuales con proveedores reales de `quickstart.md` §5 y §6 (las hace el creador con sus cuentas): suscripción, clave con y sin saldo, clave revocada, sin Wi-Fi, 0 € en la consola de Anthropic, y búsqueda de las claves reales; anotar en `specs/002-onboarding/checklists/validation.md`
+- [x] T158 Pruebas manuales con proveedores reales de `quickstart.md` §5 y §6 (las hace el creador con sus cuentas): suscripción, clave con y sin saldo, clave revocada, sin Wi-Fi, 0 € en la consola de Anthropic, y búsqueda de las claves reales; anotar en `specs/002-onboarding/checklists/validation.md`
 - [ ] T159 Auditoría de novato de `quickstart.md` §9 (0 problemas graves, ≤ 3 medios) con una persona que no ha usado nunca la terminal; anotar hallazgos y correcciones en `specs/002-onboarding/checklists/validation.md`
 - [X] T160 Actualizar el estado de la feature 002 y los comandos nuevos (`test:installer`, dev de server y web) en `CLAUDE.md`
 

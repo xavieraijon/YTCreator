@@ -249,8 +249,8 @@ también dio `ok: true`.
 | API: sin saldo | solo el aviso ✓ (la consola pide 5 $ para crear la clave) |
 | API: sin Wi-Fi | ✓ (tras un arreglo) |
 | API: clave revocada | ✓ |
-| README, instalador y bienvenida sin opción gratuita | pendiente |
-| Consola de Anthropic: 0 € por comprobaciones | pendiente |
+| README, instalador y bienvenida sin opción gratuita | ✓ |
+| Consola de Anthropic: 0 € por comprobaciones | ✓ |
 | §6: búsqueda de las claves reales | ✓ (0 apariciones) |
 
 **Código mal copiado y misma cuenta (2026-10-30, desde Ajustes → «Añadir otra cuenta»):**
@@ -330,3 +330,12 @@ caracteres, en:
 - el repositorio, en sus ficheros y en todo el historial de git.
 
 **Resultado:** 0 apariciones.
+
+**README, instalador y bienvenida (2026-10-31):** el README y el mensaje del instalador (`MSG_NEEDS_AI_2`) dicen «No
+incluye una IA gratuita». El creador vio la bienvenida en una instancia vacía aparte: dice que hace falta una
+suscripción de Claude o una cuenta de Anthropic con saldo, sin opción gratuita, y tiene los dos enlaces.
+
+**Consola de Anthropic (2026-10-31):** después de todo el recorrido el gasto sigue en 0 $. Las comprobaciones no han
+costado nada (SC-004).
+
+**T158 completa.**
