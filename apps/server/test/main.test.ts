@@ -59,9 +59,7 @@ describe('startServer', () => {
     mkdirSync(paths.workspace)
     writeFileSync(join(paths.workspace, 'notas.txt'), 'mío')
 
-    await expect(startServer({ paths, env: {}, version: '0.1.0', webDir: null })).rejects.toThrow(
-      ForeignWorkspaceError,
-    )
+    await expect(startServer({ paths, env: {}, version: '0.1.0', webDir: null })).rejects.toThrow(ForeignWorkspaceError)
     expect(existsSync(paths.database)).toBe(false)
   })
 
