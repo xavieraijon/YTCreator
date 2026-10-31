@@ -245,7 +245,10 @@ también dio `ok: true`.
 | Suscripción: añadir la misma cuenta | ✓ (alcance reducido de S3) |
 | Suscripción: desinstalar Claude Code y pulsar «Reparar» | ✓ (tras dos arreglos; repetida el 2026-10-31) |
 | Suscripción: sesión caducada | ✓ |
-| API: clave con espacios, sin saldo, revocada, sin Wi-Fi | pendiente |
+| API: clave con espacios | ✓ |
+| API: sin saldo | solo el aviso ✓ (la consola pide 5 $ para crear la clave) |
+| API: sin Wi-Fi | ✓ (tras un arreglo) |
+| API: clave revocada | pendiente |
 | README, instalador y bienvenida sin opción gratuita | pendiente |
 | Consola de Anthropic: 0 € por comprobaciones | pendiente |
 | §6: búsqueda de las claves reales | pendiente |
@@ -296,3 +299,19 @@ Repetida el 2026-10-31 con la build corregida: tras «Reparar», «Cuenta 2» pa
 respondió `401 OAuth access token is invalid` y la comprobación dio `sin_sesion`/`sesion_caducada` (`status: 401`),
 con «Volver a conectar». El creador volvió a entrar con su suscripción: `ai.login_completed`, la comprobación dio bien y
 «Cuenta 2» volvió a «Funciona». En la base de datos sigue habiendo dos cuentas, sin duplicados.
+
+**API, clave con espacios (2026-10-31):** la clave pegada con espacios delante y detrás se guardó bien. La pista es
+la de los últimos 4 caracteres y la clave no aparece en `server.log`.
+
+**API sin saldo (2026-10-31):** no se puede probar de verdad, porque la consola de Anthropic pide 5 $ de saldo para
+crear una clave (como en S4). Se comprobó solo el aviso previo, «Necesitas saldo en tu cuenta de Anthropic.» con «Ver
+mi saldo».
+
+**«Usar esta opción» volvía a pedir la clave (2026-10-31, hallazgo):** con la clave guardada desde «Configurar» pero
+sin límites de gasto, «Usar esta opción» llevaba a `/ajustes/ia/cambiar/pago_por_uso`, que empieza por el formulario
+de la clave. **Corregido:** ruta nueva `/ajustes/ia/cambiar/:kind/limites`, que abre directamente en los límites
+(contrato `ui-screens.md`). Prueba e2e nueva en `settings.spec.ts`; falla sin el arreglo.
+
+**API sin Wi-Fi (2026-10-31):** con la build corregida, «Usar esta opción» pidió solo los límites y la API quedó en
+uso. Sin Wi-Fi, «Comprobar ahora» dio «No hay conexión a internet». Con Wi-Fi, se volvió a la suscripción sin
+problemas. La suscripción sin Wi-Fi también dio «Sin conexión».
