@@ -243,7 +243,7 @@ también dio `ok: true`.
 | Suscripción: conectar desde la app, sin Terminal | ✓ |
 | Suscripción: código mal copiado | ✓ |
 | Suscripción: añadir la misma cuenta | ✓ (alcance reducido de S3) |
-| Suscripción: desinstalar Claude Code y pulsar «Reparar» | ✓ tras el arreglo (falta repetirla con la build nueva) |
+| Suscripción: desinstalar Claude Code y pulsar «Reparar» | ✓ (tras dos arreglos; repetida el 2026-10-31) |
 | Suscripción: sesión caducada | pendiente |
 | API: clave con espacios, sin saldo, revocada, sin Wi-Fi | pendiente |
 | README, instalador y bienvenida sin opción gratuita | pendiente |
@@ -288,3 +288,6 @@ servidor había arrancado con Claude Code aún instalado.
 **Corregido:** la ruta se busca en cada uso, en `claude --version`, en cada comprobación y en cada inicio de sesión.
 Prueba nueva en `claude-code.contract.test.ts` (Claude Code instalado después de crear el inicio de sesión); falla sin
 el arreglo.
+
+Repetida el 2026-10-31 con la build corregida: tras «Reparar», «Cuenta 2» pasa sola a «Funciona», sin pulsar
+«Comprobar» ni reiniciar el servidor.
