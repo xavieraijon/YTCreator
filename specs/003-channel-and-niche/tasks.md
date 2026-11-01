@@ -40,14 +40,14 @@ separado.
 
 **Purpose**: Spikes, paquete nuevo y ajustes de herramientas.
 
-- [ ] T001 Spike S1+S2 (research.md): con yt-dlp real fuera de CI, probar `yt-dlp --flat-playlist -J "ytsearch40:<q>"`, la pestaña `/videos` de un canal (suscriptores y hasta 200 vídeos) y `https://www.youtube.com/@<handle>` libre (404) frente a ocupado frente a sin red; anotar campos que vienen vacíos y patrones de stderr de bloqueo y 404 en `specs/003-channel-and-niche/research.md` («### Resultados»)
-- [ ] T002 Spike S3: medir el tiempo de 5 nichos con 3 procesos en paralelo y anotar en `specs/003-channel-and-niche/research.md` si hace falta bajar a `ytsearch25`
-- [ ] T003 Spike S4: contar unidades de la Data API de un recorrido completo (búsqueda 100 unidades, canales y vídeos 1) y anotar el reparto Data API / yt-dlp en `specs/003-channel-and-niche/research.md`
-- [ ] T004 Crear el paquete `@ytcreator/youtube` en `packages/youtube/` (`package.json`, `tsconfig.json`, `src/index.ts`, `vitest.config.ts`) y añadir su referencia en `tsconfig.json` raíz y el proyecto en `vitest.workspace.ts`
-- [ ] T005 [P] Añadir yt-dlp (versión, URL y SHA256 por sistema y arquitectura: macOS, Linux x64/arm64) en `installer/versions.json`
-- [ ] T006 [P] Reglas de ESLint en `eslint.config.js`: `node:child_process` solo en `packages/youtube/src/ytdlp/**` (y donde ya lo permita la 002), prohibido `shell: true`, llamadas a `googleapis.com` solo en `packages/youtube/src/data-api/**`, y ampliar la lista de `Secret.reveal()` con `packages/youtube/src/data-api/**`
-- [ ] T007 [P] Script `test:real-youtube` en `package.json` raíz y `packages/youtube/package.json` (solo `*.real.test.ts`, excluido de `pnpm test`)
-- [ ] T008 [P] Variable `YTCREATOR_FAKE_YOUTUBE=1` en el `webServer` de `apps/web/playwright.config.ts` y en `apps/web/e2e/server.ts`; declararla en `apps/server/src/env.d.ts`
+- [X] T001 Spike S1+S2 (research.md): con yt-dlp real fuera de CI, probar `yt-dlp --flat-playlist -J "ytsearch40:<q>"`, la pestaña `/videos` de un canal (suscriptores y hasta 200 vídeos) y `https://www.youtube.com/@<handle>` libre (404) frente a ocupado frente a sin red; anotar campos que vienen vacíos y patrones de stderr de bloqueo y 404 en `specs/003-channel-and-niche/research.md` («### Resultados»)
+- [X] T002 Spike S3: medir el tiempo de 5 nichos con 3 procesos en paralelo y anotar en `specs/003-channel-and-niche/research.md` si hace falta bajar a `ytsearch25`
+- [X] T003 Spike S4: contar unidades de la Data API de un recorrido completo (búsqueda 100 unidades, canales y vídeos 1) y anotar el reparto Data API / yt-dlp en `specs/003-channel-and-niche/research.md`
+- [X] T004 Crear el paquete `@ytcreator/youtube` en `packages/youtube/` (`package.json`, `tsconfig.json`, `src/index.ts`, `vitest.config.ts`) y añadir su referencia en `tsconfig.json` raíz y el proyecto en `vitest.workspace.ts`
+- [X] T005 [P] Añadir yt-dlp (versión, URL y SHA256 por sistema y arquitectura: macOS, Linux x64/arm64) en `installer/versions.json`
+- [X] T006 [P] Reglas de ESLint en `eslint.config.js`: `node:child_process` solo en `packages/youtube/src/ytdlp/**` (y donde ya lo permita la 002), prohibido `shell: true`, llamadas a `googleapis.com` solo en `packages/youtube/src/data-api/**`, y ampliar la lista de `Secret.reveal()` con `packages/youtube/src/data-api/**`
+- [X] T007 [P] Script `test:real-youtube` en `package.json` raíz y `packages/youtube/package.json` (solo `*.real.test.ts`, excluido de `pnpm test`)
+- [X] T008 [P] Variable `YTCREATOR_FAKE_YOUTUBE=1` en el `webServer` de `apps/web/playwright.config.ts` y en `apps/web/e2e/server.ts`; declararla en `apps/server/src/env.d.ts`
 
 **Checkpoint**: spikes anotados y paquete vacío que compila.
 

@@ -245,5 +245,28 @@ umbrales de mercado vienen de los conceptos de CanalYT (`docs/mercado.md`, `herr
 
 - S5 resuelto en esta fase: con la suscripción de Claude Code no hay coste por llamada, así que la estimación devuelve
   0 € y no llama a `count_tokens`.
-- S1–S4 se ejecutan como primera tarea de implementación; sus resultados se anotan aquí antes de escribir los
-  adaptadores.
+- S1 (2026-11-01, yt-dlp 2026.08.19, macOS arm64, red doméstica):
+  - `yt-dlp --flat-playlist -J "ytsearch40:<consulta>"` tarda ~3 s y devuelve 40 entradas con `id`, `title`, `url`,
+    `view_count`, `duration`, `channel`, `channel_id`, `uploader_id` (la @) y `channel_is_verified` (no siempre).
+    **`timestamp`, `upload_date` y `release_timestamp` vienen siempre vacíos** en modo plano. Una consulta sin
+    resultados devuelve `entries: []` con código 0 (→ `sin_datos`).
+  - `--flat-playlist -J --playlist-end 200 https://www.youtube.com/@<handle>/videos` tarda ~3 s y trae
+    `channel_id`, `channel` y `channel_follower_count` (suscriptores) a nivel raíz y 200 entradas con `view_count`,
+    `duration` y `title`, también **sin fecha**.
+  - Las fechas salen del feed RSS (`/feeds/videos.xml?channel_id=UC…`), que da las 15 últimas publicaciones. Por
+    eso la saturación (vídeos de los últimos 90 días) se calcula con las fechas que haya; si ningún vídeo de la
+    búsqueda tiene fecha, la saturación queda `null` («sin dato»), nunca estimada. La Data API sí da fechas.
+  - Canal inexistente: código 1 y stderr con `HTTP Error 404` / `Requested entity was not found` → `no_encontrado`.
+  - Sin red: código 1 y stderr con `Unable to download API page` + `Failed to establish a new connection` /
+    `Unable to connect` / `getaddrinfo` → `no_disponible`. Bloqueo: patrones `HTTP Error 429`,
+    `Sign in to confirm`, `captcha` (no reproducido; tomado de los avisos de yt-dlp) → `bloqueado`.
+- S2: `GET https://www.youtube.com/@<handle>` responde 404 si la @ está libre y 200 si está ocupada; sin red, error de
+  conexión → `sin_comprobar`. Se hace con `fetch` (más rápido que lanzar yt-dlp) y se confirma la decisión del
+  contrato.
+- S3: 10 búsquedas (5 nichos × 2) con 3 procesos a la vez: 8 s. 20 canales con `--playlist-end 30` y 3 a la vez:
+  10 s. Medir 5 nichos completos cabe holgado en SC-003 (< 2 min): **no hace falta bajar a `ytsearch25`**.
+- S4 (calculado, sin clave real): un recorrido desde cero hace 10 `search.list` (1.000 unidades), 10 `videos.list`
+  para las visitas (10) y 5 `channels.list` por lotes de 50 (5); la comprobación de 5 nombres, 5 `search.list` (500).
+  Total ≈ 1.515 unidades: unos 6 recorridos al día con el cupo gratuito de 10.000. Reparto: la Data API mide nichos y
+  nombres mientras quede cupo; la @ libre se comprueba siempre por URL pública (0 unidades) y, al llegar al 100 %, el
+  registro cae a yt-dlp.
