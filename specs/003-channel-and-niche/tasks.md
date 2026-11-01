@@ -78,7 +78,7 @@ rutas y pantallas.
 - [ ] T021 [P] Test del servicio `ai-run` en `apps/server/test/services/ai-run.test.ts`: sin `estimateId` válido no llama a la IA; guarda `ai_usage`; `limite_de_gasto` sin llamada; reintento único por cifras inventadas
 - [ ] T022 [P] Batería de contrato de YouTube en `packages/youtube/test/contract/battery.ts` (search, channel, videos, handle, resolve; cada fallo del puerto) y `packages/youtube/test/fake.contract.test.ts` que la pasa con el fake
 - [ ] T023 [P] Tests del adaptador yt-dlp en `packages/youtube/test/ytdlp.contract.test.ts` con el binario falso `packages/youtube/test/fixtures/fake-yt-dlp` (salidas grabadas en S1): argumentos en lista, tiempo máximo 45 s (15 s para la @), clasificación de stderr en `bloqueado`/`no_encontrado`, binario ausente = `no_disponible`
-- [ ] T024 [P] Tests de RSS y Data API en `packages/youtube/test/rss.test.ts` y `packages/youtube/test/data-api.contract.test.ts` con `fetch` simulado: clave en `X-Goog-Api-Key` y nunca en la URL, 403 `quotaExceeded` = `cupo_agotado`, contador de unidades
+- [ ] T024 [P] Tests de RSS y Data API en `packages/youtube/test/rss.test.ts` y `packages/youtube/test/data-api.contract.test.ts` con `fetch` simulado: clave en `X-Goog-Api-Key` y nunca en la URL, 403 `quotaExceeded` = `cupo_agotado`, contador de unidades, `health().quota.nearLimit` es verdadero al pasar el umbral de `thresholds.json` (FR-030)
 - [ ] T025 [P] Test del servicio `youtube` en `apps/server/test/services/youtube.test.ts`: elige Data API si hay clave y cupo, si no yt-dlp; usa la caché; como mucho 3 procesos yt-dlp y 4 comprobaciones de @ a la vez; los logs no contienen la clave, URLs completas ni cabeceras
 - [ ] T026 [P] Test de trabajos en segundo plano en `apps/server/test/http/jobs.test.ts`: `GET /api/jobs/:id/events` emite `progress`, `item`, `done`, `failed` por SSE; el trabajo sigue si se cierra la conexión; al reiniciar, `en_curso` pasa a `interrumpido`
 - [ ] T027 [P] Test del recorrido en `packages/core/test/channel/journey.test.ts`: transiciones `intereses→preguntas→nichos→ritmo→conceptos→nombres→hecho` y `enlace→confirmar→lectura→posicionamiento→hecho`; saltar un paso no aprobado falla; volver a un paso anterior conserva lo aprobado después hasta que se cambie; volver a `nichos` con un concepto aprobado lo marca para revisar y exige `confirm: true` (FR-025); `journeyStateSchema` (intereses 10–1.000 caracteres, 0–3 respuestas, `hoursPerWeek` 1–60, `onCamera` `cara|voz|ninguna`)
@@ -96,7 +96,7 @@ rutas y pantallas.
 - [ ] T034 [P] Puerto de YouTube en `packages/core/src/youtube/port.ts` (operaciones `search`, `channel`, `videos`, `checkHandle`, `resolve`; vídeos con `title`, `views`, `durationSec`, `publishedAt`, campos que pueden ser `null`) y fallos en `packages/core/src/youtube/failures.ts`
 - [ ] T035 [P] Normalización de enlaces y @ en `packages/core/src/youtube/handle.ts`
 - [ ] T036 [P] Limitador de concurrencia en `packages/core/src/concurrency.ts`
-- [ ] T037 [P] Ficheros de mercado en `packages/knowledge/market/ypp.json`, `rpm.json` (€ por categoría y región `espana|latam|mixto`), `made-for-kids.json`, `inauthentic.json`, `shorts.json` (incluye `solo_shorts`), `thresholds.json` (demanda alta ≥ 50.000, media ≥ 5.000; puerta abierta ≥ 3, entreabierta ≥ 1; concentración alta ≥ 0,70, media ≥ 0,40; < 10 vídeos = `sin_datos`; máximo 20 canales; datos viejos > 90 días) y `pricing.json` (USD por millón de tokens por modelo y cambio a € con fecha), cada uno con `version`, `reviewedAt` y `source`
+- [ ] T037 [P] Ficheros de mercado en `packages/knowledge/market/ypp.json`, `rpm.json` (€ por categoría y región `espana|latam|mixto`), `made-for-kids.json`, `inauthentic.json`, `shorts.json` (incluye `solo_shorts`), `thresholds.json` (demanda alta ≥ 50.000, media ≥ 5.000; puerta abierta ≥ 3, entreabierta ≥ 1; concentración alta ≥ 0,70, media ≥ 0,40; < 10 vídeos = `sin_datos`; máximo 20 canales; datos viejos > 90 días; aviso de cupo de la Data API al 80 % de las unidades del día) y `pricing.json` (USD por millón de tokens por modelo y cambio a € con fecha), cada uno con `version`, `reviewedAt` y `source`
 - [ ] T088 [P] Avisos en `packages/core/src/channel/warnings.ts` (para nichos y conceptos)
 - [ ] T038 Cargador y esquemas Zod del conocimiento en `packages/knowledge/src/index.ts` (falla al arrancar si un fichero no valida; lista de entradas con más de 180 días) y guía de escritura en `packages/knowledge/writing/human.md`
 - [ ] T039 Migración `apps/server/src/db/migrations/0002_channel.sql` con las tablas y restricciones de data-model.md (handle 3–30 `[A-Za-z0-9._-]`, `display_name` 1–100, `youtube_channel_id` `UC…` de 24 caracteres UNIQUE, `revision`, origen de versión `ia|manual|restaurada`, estados de `background_job`)
@@ -114,7 +114,7 @@ rutas y pantallas.
 - [ ] T051 [P] Lector RSS de vídeos recientes (fechas exactas de `publishedAt`) en `packages/youtube/src/rss/feed.ts` y `parse.ts`
 - [ ] T052 [P] Adaptador de la Data API en `packages/youtube/src/data-api/adapter.ts` y `classify.ts` (clave en cabecera, contador de unidades)
 - [ ] T053 Registro en `packages/youtube/src/registry.ts` (fake con `YTCREATOR_FAKE_YOUTUBE=1`, si no Data API o yt-dlp; ruta del binario `<datos>/bin/yt-dlp`) y exportaciones en `packages/youtube/src/index.ts`
-- [ ] T054 Servicio `apps/server/src/services/youtube.ts`: elección de fuente, caché `yt_cache`, cupo `yt_quota`, concurrencia (3 yt-dlp, 4 @), registro sin secretos en `apps/server/src/logging.ts`
+- [ ] T054 Servicio `apps/server/src/services/youtube.ts`: elección de fuente, caché `yt_cache`, cupo `yt_quota` con aviso al acercarse al límite (FR-030), concurrencia (3 yt-dlp, 4 @), registro sin secretos en `apps/server/src/logging.ts`
 - [ ] T055 Trabajos en segundo plano: `apps/server/src/services/jobs.ts` (lanzar, emitir eventos, marcar `interrumpido` al arrancar desde `apps/server/src/main.ts`) y ruta SSE `GET /api/jobs/:id/events` en `apps/server/src/http/routes/jobs.ts`
 - [ ] T056 [P] Tabla de transiciones en `packages/core/src/channel/journey.ts` y esquema `ChannelProfile` en `packages/core/src/channel/profile.ts`
 - [ ] T057 [P] Esquemas de API en `packages/core/src/api/channel.ts`, `youtube.ts`, `usage.ts` y exportarlos en `packages/core/src/api/index.ts`; guardia `ya_hay_canal` en `GUARDS` de `packages/core/src/api/errors.ts`
@@ -154,12 +154,12 @@ cifra lleva «Dato de YouTube · fecha», que un nicho `sin_datos` no muestra ci
 
 - [ ] T072 [P] [US1] Cálculo de medidas (demanda, puerta de entrada, concentración y saturación) en `packages/core/src/market/measures.ts`
 - [ ] T073 [P] [US1] Veredicto en `packages/core/src/market/verdict.ts`
-- [ ] T074 [P] [US1] Prompts `packages/knowledge/prompts/preguntas/v1.md` y `packages/knowledge/prompts/nichos/v1.md` (cada nicho con 2–3 consultas de búsqueda; sin cifras propias)
+- [ ] T074 [P] [US1] Prompts `packages/knowledge/prompts/preguntas/v1.md` y `packages/knowledge/prompts/nichos/v1.md` (cada nicho con 2–3 consultas de búsqueda; sin cifras propias; reglas de `writing/human.md`)
 - [ ] T075 [US1] Servicio `apps/server/src/services/niche-research.ts` sobre `services/youtube.ts` y `services/jobs.ts`
 - [ ] T076 [US1] Rutas `measures` y `references` en `apps/server/src/http/routes/youtube.ts` y montarlas en `apps/server/src/http/app.ts`
 - [ ] T077 [P] [US1] Pantalla `apps/web/src/screens/channel/new/Interests.tsx` (campo libre con ejemplos, 10–1.000 caracteres)
 - [ ] T078 [P] [US1] Pantalla `apps/web/src/screens/channel/new/Questions.tsx` (0–3 preguntas de la IA, «Seguir» y «Saltar»)
-- [ ] T079 [US1] Pantalla `apps/web/src/screens/channel/new/Niches.tsx` (propuesta de nichos, progreso «Midiendo 2 de 5 nichos», tarjetas con los cuatro indicadores (la saturación como cifra, sin semáforo) y los avisos de `warnings.ts`, «Elegir este nicho», «Escribir mi propio nicho», datos con más de 90 días con «Volver a medir»)
+- [ ] T079 [US1] Pantalla `apps/web/src/screens/channel/new/Niches.tsx` (propuesta de nichos, progreso «Midiendo 2 de 5 nichos», tarjetas con los cuatro indicadores (la saturación como cifra, sin semáforo) y los avisos de `warnings.ts`, «Elegir este nicho», «Escribir mi propio nicho», volver a la tanda anterior (US1 AS5), datos con más de 90 días con «Volver a medir»)
 - [ ] T080 [P] [US1] Pantalla `apps/web/src/screens/channel/new/References.tsx` (2–4 canales de referencia opcionales de la medida)
 - [ ] T081 [P] [US1] Pantalla `apps/web/src/screens/channel/new/Rhythm.tsx` (horas por semana 1–60, cara/voz/ninguna, región del público `espana|latam|mixto`)
 - [ ] T082 [US1] Confirmación antes de gastar (FR-029) en las acciones de IA de Preguntas y Nichos usando el importe de `POST /api/journeys/:id/estimate` en `apps/web/src/screens/channel/Proposal.tsx`
@@ -186,7 +186,7 @@ ritmo y monetización honesta en rangos con fuentes) y el creador elige uno.
 ### Implementation para User Story 2
 
 - [ ] T087 [P] [US2] Monetización en `packages/core/src/channel/monetization.ts`
-- [ ] T089 [P] [US2] Prompt `packages/knowledge/prompts/conceptos/v1.md` (promesa ≤ 160 caracteres, 3–4 pilares unidos por la promesa, formato largo + Shorts de escaparate, sin cifras propias)
+- [ ] T089 [P] [US2] Prompt `packages/knowledge/prompts/conceptos/v1.md` (promesa ≤ 160 caracteres, 3–4 pilares unidos por la promesa, formato largo + Shorts de escaparate, sin cifras propias; reglas de `writing/human.md`)
 - [ ] T090 [US2] Montar en el servidor los conceptos: datos de entrada (nicho medido, referencias, ritmo, conocimiento) y cálculo de monetización y avisos tras la IA en `apps/server/src/services/concepts.ts`, llamado desde `apps/server/src/http/routes/channel.ts`
 - [ ] T091 [US2] Pantalla `apps/web/src/screens/channel/new/Concepts.tsx`
 - [ ] T091b [US2] Aviso y confirmación al cambiar de nicho con un concepto aprobado en `apps/web/src/screens/channel/new/Niches.tsx`, enviando `confirm: true` a `POST /api/journeys/:id/step`
@@ -205,7 +205,7 @@ recomendada, «Decidir más tarde» guarda el perfil con nombre provisional.
 
 ### Tests para User Story 3 ⚠️
 
-- [ ] T092 [P] [US3] Test del semáforo en `packages/core/test/market/names.test.ts`: reglas de data-model.md; @ ocupada = rojo; nombre parecido a un canal grande = ámbar; cualquier fallo de comprobación = `sin_comprobar` y nunca verde
+- [ ] T092 [P] [US3] Test del semáforo en `packages/core/test/market/names.test.ts`: reglas de data-model.md; @ ocupada = rojo; canales parecidos, 3 o más vídeos con el nombre en el título o más de 30 letras = ámbar (FR-017); cualquier fallo de comprobación = `sin_comprobar` y nunca verde
 - [ ] T093 [P] [US3] Test del servicio `name-check` en `apps/server/test/services/name-check.test.ts`: como mucho 4 comprobaciones a la vez, caché de 1 h, cada nombre emite `item`
 - [ ] T094 [P] [US3] Test de rutas en `apps/server/test/http/names.test.ts`: `POST /api/journeys/:id/name-checks` (`202`), paso a `hecho` crea `profile_version` 1 con origen `ia`, nombre aplazado guarda nombre provisional
 - [ ] T095 [P] [US3] Test de pantalla en `apps/web/test/channel/names.test.tsx`: semáforo con texto e icono, «la @ de tu canal», «Quedarme con este nombre», «Escribir el mío», «Decidir más tarde»; elegir un nombre en rojo pide confirmación y no lo bloquea; aviso de que la @ solo se confirma al crearla en YouTube (FR-018)
@@ -213,7 +213,7 @@ recomendada, «Decidir más tarde» guarda el perfil con nombre provisional.
 ### Implementation para User Story 3
 
 - [ ] T096 [P] [US3] Semáforo de nombres en `packages/core/src/market/names.ts`
-- [ ] T097 [P] [US3] Prompt `packages/knowledge/prompts/nombres/v1.md` (6–8 nombres, @ válida de 3–30 caracteres)
+- [ ] T097 [P] [US3] Prompt `packages/knowledge/prompts/nombres/v1.md` (6–8 nombres, @ válida de 3–30 caracteres; reglas de `writing/human.md`)
 - [ ] T098 [US3] Servicio `apps/server/src/services/name-check.ts` y ruta `name-checks` en `apps/server/src/http/routes/youtube.ts`
 - [ ] T099 [US3] Cierre del recorrido nuevo: paso `hecho` arma el `ChannelProfile` desde nicho, concepto y nombre y guarda la versión 1 en `apps/server/src/services/profile.ts`
 - [ ] T100 [US3] Pantalla `apps/web/src/screens/channel/new/Names.tsx` (comprobar el nombre escrito por el creador, confirmación al elegir uno en rojo, aviso de que la @ se confirma en YouTube, nombre provisional al aplazar)
@@ -234,17 +234,17 @@ conservando nombre y @.
 ### Tests para User Story 4 ⚠️
 
 - [ ] T101 [P] [US4] Test de rutas en `apps/server/test/http/existing.test.ts`: `POST /api/journeys/:id/resolve` (`{channelId,title,handle,subscribers,thumbnailUrl}`, `404` si no existe), `POST /api/journeys/:id/reading` (`202`), `youtube_channel_id` repetido da `conflicto`
-- [ ] T102 [P] [US4] Test del servicio `channel-reading` en `apps/server/test/services/channel-reading.test.ts`: hasta 200 vídeos con título, visitas, duración y fecha (fecha exacta del RSS para los recientes), menos de 5 vídeos marca `lowInfo`, lo que funciona cita vídeos de la lectura
+- [ ] T102 [P] [US4] Test del servicio `channel-reading` en `apps/server/test/services/channel-reading.test.ts`: hasta 200 vídeos con título, visitas, duración y fecha (fecha exacta del RSS para los recientes), resumen con duración media, vídeos por semana y los 3 mejores y 3 peores por visitas, cada cifra marcada como dato con fecha (FR-020); menos de 5 vídeos marca `lowInfo`; lo que funciona cita vídeos de la lectura
 - [ ] T103 [P] [US4] Test de posicionamiento en `apps/server/test/http/positioning.test.ts`: aprobar crea `profile_version` 1 con origen `ia` y la forma de `ChannelProfile`; editar antes de aprobar
 - [ ] T104 [P] [US4] Tests de pantallas en `apps/web/test/channel/existing.test.tsx` y E2E en `apps/web/e2e/channel-existing.spec.ts`: acepta enlace de canal, @ o enlace de vídeo; «Sí, es mi canal»; progreso de lectura; canal de 3 vídeos ofrece recorrido nuevo; axe sin fallos
 
 ### Implementation para User Story 4
 
-- [ ] T105 [P] [US4] Prompts `packages/knowledge/prompts/lectura_canal/v1.md` (perfil actual: nicho, pilares, público, lo que funciona y lo que no, citando vídeos por id) y `packages/knowledge/prompts/posicionamiento/v1.md`
+- [ ] T105 [P] [US4] Prompts `packages/knowledge/prompts/lectura_canal/v1.md` (perfil actual: nicho, pilares, público, lo que funciona y lo que no, citando vídeos por id) y `packages/knowledge/prompts/posicionamiento/v1.md`, los dos con las reglas de `writing/human.md`
 - [ ] T106 [US4] Servicio `apps/server/src/services/channel-reading.ts` (resolver, leer canal y vídeos, RSS, guardar `channel_reading`)
 - [ ] T107 [US4] Rutas `resolve` y `reading` en `apps/server/src/http/routes/youtube.ts`
 - [ ] T108 [P] [US4] Pantallas `apps/web/src/screens/channel/existing/ChannelUrl.tsx` y `Confirm.tsx`
-- [ ] T109 [US4] Pantalla `apps/web/src/screens/channel/existing/Reading.tsx` (progreso, «Ver mi perfil actual», con menos de 5 vídeos ofrece el recorrido de canal nuevo conservando nombre y @)
+- [ ] T109 [US4] Pantalla `apps/web/src/screens/channel/existing/Reading.tsx` (progreso, resumen de cifras con `DataSource` (duración media, frecuencia, mejores y peores vídeos), «Ver mi perfil actual», con menos de 5 vídeos ofrece el recorrido de canal nuevo conservando nombre y @)
 - [ ] T110 [US4] Pantalla `apps/web/src/screens/channel/existing/Positioning.tsx` (perfil actual con vídeos citados, propuesta de cambios, «Aprobar»)
 
 **Checkpoint**: los dos recorridos acaban en el mismo perfil.
@@ -274,7 +274,7 @@ que solo se ve por su `hint`.
 - [ ] T117 [US5] Ajustes de YouTube: guardar la clave en el `SecretStore` (`apps/server/src/secrets/`), fuente, cupo y actualizar el lector (descarga verificada por SHA256 con `installer/versions.json`) en `apps/server/src/http/routes/youtube-settings.ts`
 - [ ] T118 [P] [US5] Ruta `GET /api/usage` en `apps/server/src/http/routes/usage.ts`
 - [ ] T119 [US5] Pantallas `apps/web/src/screens/channel/profile/Profile.tsx`, `ProfileHistory.tsx` y `Export.tsx` (siguiente paso: banco de ideas «próximamente»)
-- [ ] T120 [P] [US5] Pantalla `apps/web/src/screens/settings/YouTubeSettings.tsx` (fuente, «clave de YouTube» en «Modo experto», `hint`, cupo, «Actualizar el lector») enlazada en `apps/web/src/screens/settings/Settings.tsx`
+- [ ] T120 [P] [US5] Pantalla `apps/web/src/screens/settings/YouTubeSettings.tsx` (fuente, «clave de YouTube» en «Modo experto», `hint`, cupo con aviso al pasar del 80 % del día (FR-030), «Actualizar el lector») enlazada en `apps/web/src/screens/settings/Settings.tsx`
 - [ ] T121 [P] [US5] Pantalla `apps/web/src/screens/settings/UsageLog.tsx` y lista de conocimiento con más de 180 días en Ajustes
 
 **Checkpoint**: todas las historias funcionan por separado.

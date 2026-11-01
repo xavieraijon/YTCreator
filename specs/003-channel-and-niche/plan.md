@@ -121,7 +121,7 @@ justificar en «Complexity Tracking»).
 | II | Todo lo generado se puede aprobar, editar y regenerar, con versiones; nada externo sin una acción explícita; dato ≠ opinión | ✅ | Cada propuesta de la IA (preguntas, nichos, conceptos, nombres, lectura, posicionamiento) se guarda como `proposal` con versión y admite aprobar, editar o regenerar con indicaciones. El perfil guarda una `profile_version` en cada cambio. Las medidas se muestran con fuente y fecha en un bloque visualmente separado de la opinión de la IA, y el validador elimina las cifras que la IA no pueda respaldar con los datos (R8). Las consultas a YouTube solo se lanzan tras una acción del creador |
 | III | Coste estimado en euros antes de gastar, dentro de los límites de gasto, con un camino sin coste adicional | ✅ | Cada botón que lanza IA con la API muestra «~X €», que sale de `count_tokens`, del máximo de salida y de la tabla de precios fechada (R12). Antes de lanzar se aplican los límites por operación, por día y por mes de la 002, y la tabla `ai_usage` registra el consumo real, consultable en Ajustes (R13). Con la suscripción cuesta 0 € y no hay estimación. YouTube cuesta 0 € con los dos adaptadores |
 | IV | La IA solo a través del puerto `AiProvider`; prompts versionados que valen para cualquier modelo; salida validada con Zod; errores tipados; uso explícito | ✅ | Seis usos nuevos en `AI_USES`, cada uno con perfil por proveedor (modelo, esfuerzo, tiempo, máximo de salida) y prompt `v1` en `packages/knowledge`. Las salidas son estructuradas, se validan con Zod y tienen un solo reintento si no validan. `AiRequest.input` separa datos de prompt (R7, R9). Sin reintentos ciegos en cupo ni en tiempo agotado |
-| V | Conocimiento en paquetes versionados con fuente y fecha; datos de mercado reales y citados; reglas de escritura humana | ✅ | `packages/knowledge/market/*.json` contiene YPP, RPM, «hecho para niños», contenido no auténtico, Shorts, umbrales y precios, cada fichero con `source` y `reviewedAt`. Las reglas de escritura humana van en `writing/human.md`, que se incluye en los prompts de nombres y conceptos. Los datos de mercado salen solo de yt-dlp o de la YouTube Data API (R11). Un aviso salta si un fichero lleva más de 180 días sin revisar |
+| V | Conocimiento en paquetes versionados con fuente y fecha; datos de mercado reales y citados; reglas de escritura humana | ✅ | `packages/knowledge/market/*.json` contiene YPP, RPM, «hecho para niños», contenido no auténtico, Shorts, umbrales y precios, cada fichero con `source` y `reviewedAt`. Las reglas de escritura humana van en `writing/human.md`, que se incluye en los prompts de los seis usos (FR-032). Los datos de mercado salen solo de yt-dlp o de la YouTube Data API (R11). Un aviso salta si un fichero lleva más de 180 días sin revisar |
 | VI | Solo tokens (ningún valor suelto), `@layer` + CSS Modules, temas claro y oscuro, WCAG 2.2 AA, 375 px, componente documentado | ✅ | Las pantallas se componen con `@ytcreator/ui`. Hacen falta dos componentes nuevos, `Semaphore` (semáforo con texto, no solo color) y `DataSource` (sello de fuente y fecha), que se documentan en el catálogo antes de usarlos (R16) |
 | VII | Local y portable; exportable en Markdown y JSON; secretos protegidos; un creador con varios canales | ✅ | Todo vive en la SQLite local. «Exportar perfil» genera `.md` y `.json` (R17). La clave de YouTube va en el `SecretStore` y solo se muestra su `hint`. `channel` lleva su `id` y todo cuelga de él, así que el modelo admite N canales |
 | VIII | Dentro del alcance de la v1; lo que surja va al backlog | ✅ | Fuera de esta feature: gestión de varios canales, estilo visual, voz, música, marca gráfica, agentes y banco de ideas |
@@ -180,7 +180,7 @@ specs/003-channel-and-niche/
 
 ```text
 installer/
-├── install.sh               # + paso 9: yt-dlp (descarga, SHA256, ~/.local/share/ytcreator/bin/yt-dlp)
+├── install.sh               # + paso 9: yt-dlp (descarga, SHA256, <datos>/bin/yt-dlp)
 └── test/                    # + caso del paso 9 (descarga falsa, suma errónea, actualización)
 
 packages/core/src/
@@ -188,7 +188,7 @@ packages/core/src/
 │   ├── port.ts              # AiRequest + input
 │   └── uses.ts              # + preguntas, nichos, conceptos, nombres, lectura_canal, posicionamiento
 ├── youtube/
-│   ├── port.ts              # YouTubeData: searchVideos, channelVideos, resolveChannel, handleExists, quota
+│   ├── port.ts              # YouTubeData: search, channel, videos, checkHandle, resolve
 │   ├── failures.ts          # YouTubeFailure tipado
 │   └── handle.ts            # normalizar URL o @ → referencia de canal
 ├── market/
@@ -197,6 +197,9 @@ packages/core/src/
 │   └── names.ts             # semáforo de nombres
 ├── channel/
 │   ├── journey.ts           # máquina de estados de los dos recorridos
+│   ├── outputs.ts           # esquemas Zod de salida de los seis usos
+│   ├── monetization.ts      # ingresos en rangos con rpm.json
+│   ├── warnings.ts          # avisos de nicho y concepto (niños, no auténtico, solo Shorts, ritmo)
 │   ├── profile.ts           # perfil y versiones, edición, diferencias
 │   ├── claims.ts            # validador «sin cifras inventadas»
 │   └── export.ts            # perfil → Markdown y JSON
@@ -234,22 +237,28 @@ packages/knowledge/
 apps/server/src/
 ├── db/
 │   ├── migrations/0002_channel.sql
-│   └── repos/               # channels, journeys, proposals, profiles, measures, names, readings, usage, yt-cache
+│   └── repos/               # channels, journeys, proposals, profiles, measures, names, readings, usage, yt-cache, jobs
 ├── services/
 │   ├── ai-run.ts            # estimación → presupuesto → generate → validar → registrar consumo
 │   ├── youtube.ts           # elegir adaptador, caché, cupo
 │   ├── niche-research.ts    # nichos → medidas en paralelo
+│   ├── concepts.ts          # entrada de la IA, monetización y avisos
 │   ├── name-check.ts
-│   └── channel-reading.ts
-└── http/routes/             # + channel.ts, youtube.ts, usage.ts
+│   ├── channel-reading.ts
+│   ├── profile.ts           # armar el perfil y guardar versiones
+│   └── jobs.ts              # trabajos en segundo plano con eventos SSE
+└── http/routes/             # + channel.ts, youtube.ts, youtube-settings.ts, jobs.ts, usage.ts
 
 apps/web/src/
 ├── strings/                 # + channel.es.ts, youtube-failures.es.ts
+├── shell/useJob.ts          # seguir un trabajo por SSE
 └── screens/
     ├── channel/
-    │   ├── start/           # Elegir recorrido (nuevo / ya existe)
-    │   ├── new/             # Interests, Questions, Niches (con medidas), References, Concepts, Names
-    │   ├── existing/        # ChannelUrl, Reading, Positioning
+    │   ├── Proposal.tsx     # aprobar, editar, proponer otra, importe
+    │   ├── StepIndicator.tsx # paso actual y «Volver»
+    │   ├── start/           # Inicio: elegir recorrido, seguir, canal listo
+    │   ├── new/             # Interests, Questions, Niches (con medidas), References, Rhythm, Concepts, Names
+    │   ├── existing/        # ChannelUrl, Confirm, Reading, Positioning
     │   └── profile/         # Profile, ProfileHistory, Export
     └── settings/            # + YouTubeSettings (Modo experto: clave), UsageLog
 

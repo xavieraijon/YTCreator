@@ -25,7 +25,7 @@ llama a la Data API.
 | `listChannelVideos(channelId, {limit})` | `limit` ≤ 200 | `VideoInfo[]`, de más nuevo a más viejo |
 | `checkHandle(handle)` | sin `@` | `'libre' \| 'ocupado'` |
 | `resolve(input)` | URL de canal, `@`, URL de vídeo | `ChannelRef` |
-| `health()` | — | `{source, available, version?, quota?}` |
+| `health()` | — | `{source, available, version?, quota?: {used, limit, nearLimit}}`; `nearLimit` al pasar el umbral de `thresholds.json` (FR-030) |
 
 Tipos:
 
