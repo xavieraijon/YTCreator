@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "reviewedAt": "2026-11-01",
+  "source": [
+    { "label": "Precios de Claude", "url": "https://claude.com/pricing" },
+    {
+      "label": "Banco Central Europeo: tipos de cambio de referencia",
+      "url": "https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html"
+    }
+  ],
+  "data": {
+    "unit": "USD por millón de tokens",
+    "models": {
+      "claude-haiku-5-5": { "input": 0.1, "output": 0.5 },
+      "claude-sonnet-5-5": { "input": 2, "output": 10 },
+      "claude-opus-5-5": { "input": 4, "output": 20 }
+    },
+    "usdToEur": { "rate": 0.86, "date": "2026-11-01" },
+    "charsPerToken": 3.5
+  }
+}

@@ -217,7 +217,7 @@ Una medida de un nicho (FR-007, FR-009).
 | `journey_id` | `TEXT` FK | |
 | `niche_label` | `TEXT` | |
 | `queries` | `TEXT` (JSON `string[]`) | 1–3 búsquedas en el idioma del canal |
-| `source` | `'ytdlp' \| 'data_api'` | |
+| `source` | `'ytdlp' \| 'data_api' \| 'fake'` | `fake` solo en pruebas |
 | `status` | `'en_curso' \| 'medida' \| 'fallida'` | |
 | `failure` | `YouTubeFailure \| NULL` | Si `fallida`; no hay cifras (FR-009) |
 | `demand_median_views` | `INTEGER \| NULL` | |
@@ -279,7 +279,7 @@ Lo que se leyó de un canal existente (FR-020).
 | `id` | `TEXT` PK | |
 | `channel_id` | `TEXT` FK | |
 | `youtube_channel_id` | `TEXT` | |
-| `source` | `'ytdlp' \| 'data_api'` | |
+| `source` | `'ytdlp' \| 'data_api' \| 'fake'` | `fake` solo en pruebas |
 | `title`, `handle`, `description` | `TEXT` | |
 | `subscribers` | `INTEGER \| NULL` | |
 | `video_count` | `INTEGER` | Total público |
@@ -294,8 +294,8 @@ Las operaciones largas guardan su estado para que cerrar la app no las deje colg
 | Columna | Tipo | Regla |
 |---|---|---|
 | `id` | `TEXT` PK | |
-| `journey_id` | `TEXT` FK | |
-| `kind` | `'medir_nichos' \| 'comprobar_nombres' \| 'leer_canal' \| 'ia'` | |
+| `journey_id` | `TEXT \| NULL` FK | `NULL` en `actualizar_lector`, que no depende de un recorrido |
+| `kind` | `'medir_nichos' \| 'comprobar_nombres' \| 'leer_canal' \| 'ia' \| 'actualizar_lector'` | |
 | `status` | `'en_curso' \| 'hecho' \| 'fallido' \| 'interrumpido'` | Al arrancar, los `en_curso` pasan a `interrumpido` |
 | `progress` | `TEXT` (JSON) | `{done, total}` |
 | `failure` | `TEXT \| NULL` | Código de fallo |

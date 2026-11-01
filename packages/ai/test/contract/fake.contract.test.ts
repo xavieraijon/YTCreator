@@ -2,7 +2,7 @@ import { Secret } from '@ytcreator/core'
 import { createFakeProvider } from '../../src/fake/fake-provider.ts'
 import { parseScenario } from '../../src/fake/scenarios.ts'
 import { resolveProfile } from '../../src/profiles.ts'
-import { INVALID_OUTPUT, runProviderContract, VALID_OUTPUT, type ContractCase } from './battery.ts'
+import { INVALID_OUTPUT, runProviderContract, useOutputs, VALID_OUTPUT, type ContractCase } from './battery.ts'
 
 const KEY = 'sk-ant-api03-FAKE-contract-0123456789'
 
@@ -23,7 +23,7 @@ const OUTPUTS: Partial<Record<ContractCase, unknown[]>> = {
 
 runProviderContract('fake', (stub, deps) => {
   let calls = 0
-  const outputs = [...(OUTPUTS[stub] ?? [])]
+  const outputs = [...(OUTPUTS[stub] ?? useOutputs(stub) ?? [])]
   const credential = stub === 'invalid_credential' ? 'sk-ant-api03-REAL-not-accepted-0123' : KEY
   const aiTimeoutSeconds = stub === 'timeout' ? 1 : undefined
   const provider = createFakeProvider(

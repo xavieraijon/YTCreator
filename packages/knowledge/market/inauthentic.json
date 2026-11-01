@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "reviewedAt": "2026-11-01",
+  "source": [
+    {
+      "label": "Ayuda de YouTube: políticas de monetización de canales",
+      "url": "https://support.google.com/youtube/answer/1311392"
+    }
+  ],
+  "data": {
+    "since": "2025-07-15",
+    "rule": "YouTube no monetiza el contenido repetitivo, hecho en serie o con plantilla, aunque cada vídeo cambie un poco.",
+    "notAllowed": [
+      "Vídeos casi iguales con pequeños cambios de texto o imagen",
+      "Montajes automáticos de imágenes con voz sintética sin aportar nada propio",
+      "Listas o recopilaciones de contenido ajeno sin comentario ni análisis",
+      "Muchos vídeos producidos en masa con la misma plantilla"
+    ],
+    "allowed": [
+      "Series con un formato fijo pero historias o temas distintos en cada vídeo",
+      "Usar IA como herramienta si el vídeo aporta tu criterio, tu voz o tu trabajo",
+      "Reacciones o análisis con comentario propio sustancial"
+    ]
+  }
+}

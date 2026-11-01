@@ -128,7 +128,7 @@ umbrales de mercado vienen de los conceptos de CanalYT (`docs/mercado.md`, `herr
 
 ## R10. Prompts v1
 
-- **Decisión:** un fichero por uso en `packages/ai/prompts/<uso>.v1.md` con cabecera `id`, `version`, `use`. Cada
+- **Decisión:** un fichero por uso en `packages/knowledge/prompts/<uso>/v1.md` con cabecera `id`, `version`, `use`. Cada
   prompt dice: el papel (productor de YouTube en castellano), las reglas de II/V (no inventar cifras, citar fuentes del
   `input`, marcar opinión), los límites de cantidad de la spec (3 preguntas, 3-5 nichos, 2-3 conceptos, 6-8 nombres)
   e incluye las reglas de `packages/knowledge/writing/human.md` (FR-032). Los tests de contrato comprueban que el

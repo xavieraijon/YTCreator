@@ -1,0 +1,74 @@
+{
+  "version": 1,
+  "reviewedAt": "2026-11-01",
+  "source": [
+    {
+      "label": "AIR Media-Tech: RPM real de 300 canales (2026)",
+      "url": "https://air.io/en/air-data-findings/how-much-does-youtube-really-pay-in-2026-real-rpm-data-from-300-channels"
+    },
+    {
+      "label": "AIR Media-Tech: nichos que más pagan por RPM (2026)",
+      "url": "https://air.io/en/air-data-findings/which-youtube-niche-makes-the-most-money-in-2026-ranked-by-real-rpm-and-cpm"
+    },
+    {
+      "label": "AIR Media-Tech: RPM de Shorts por nicho (2026)",
+      "url": "https://air.io/en/air-data-findings/what-is-youtube-shorts-rpm-in-your-niche-in-2026"
+    }
+  ],
+  "data": {
+    "unit": "EUR por 1.000 visualizaciones de vídeos largos, lo que cobra el creador",
+    "note": "Los datos públicos son sobre todo de canales en inglés. En castellano el RPM suele ser entre la mitad y la cuarta parte; por eso los rangos son amplios y la confianza es baja.",
+    "confidence": "baja",
+    "categories": {
+      "educacion": {
+        "label": "Educación",
+        "espana": { "min": 1.5, "max": 5 },
+        "latam": { "min": 0.5, "max": 2 },
+        "mixto": { "min": 0.8, "max": 3.5 }
+      },
+      "ciencia_tecnologia": {
+        "label": "Ciencia y tecnología",
+        "espana": { "min": 1.5, "max": 5 },
+        "latam": { "min": 0.5, "max": 2 },
+        "mixto": { "min": 0.8, "max": 3.5 }
+      },
+      "finanzas_negocios": {
+        "label": "Finanzas y negocios",
+        "espana": { "min": 2.5, "max": 9 },
+        "latam": { "min": 0.8, "max": 3 },
+        "mixto": { "min": 1.5, "max": 6 }
+      },
+      "entretenimiento": {
+        "label": "Entretenimiento",
+        "espana": { "min": 0.5, "max": 2 },
+        "latam": { "min": 0.2, "max": 0.8 },
+        "mixto": { "min": 0.3, "max": 1.5 }
+      },
+      "videojuegos": {
+        "label": "Videojuegos",
+        "espana": { "min": 0.4, "max": 1.5 },
+        "latam": { "min": 0.15, "max": 0.6 },
+        "mixto": { "min": 0.3, "max": 1 }
+      },
+      "estilo_de_vida": {
+        "label": "Estilo de vida",
+        "espana": { "min": 1, "max": 3 },
+        "latam": { "min": 0.3, "max": 1.2 },
+        "mixto": { "min": 0.6, "max": 2 }
+      },
+      "infantil": {
+        "label": "Infantil",
+        "espana": { "min": 0.1, "max": 0.4 },
+        "latam": { "min": 0.05, "max": 0.2 },
+        "mixto": { "min": 0.08, "max": 0.3 }
+      },
+      "general": {
+        "label": "General",
+        "espana": { "min": 0.5, "max": 2 },
+        "latam": { "min": 0.2, "max": 0.8 },
+        "mixto": { "min": 0.3, "max": 1.5 }
+      }
+    },
+    "shorts": { "unit": "EUR por 1.000 visualizaciones de Shorts", "min": 0.03, "max": 0.08 }
+  }
+}

@@ -13,7 +13,8 @@ import {
 } from '@ytcreator/core'
 import { COMPROBACION } from '@ytcreator/knowledge'
 import { z } from 'zod'
-import { resolveProfile } from '../profiles.ts'
+import { resolveProfile, type AiProfile } from '../profiles.ts'
+import { buildPrompt } from '../prompt.ts'
 import { classifyClaudeResult, type ClaudeOutcome } from './classify.ts'
 import { buildClaudeCommand, cleanEnv, resolveClaudeBin, type Env } from './command.ts'
 import { runClaude } from './process.ts'
@@ -59,11 +60,16 @@ export function createClaudeCodeProvider(
     return { configDir, cwd }
   }
 
-  async function call(prompt: string, jsonSchema: unknown, signal?: AbortSignal): Promise<ClaudeOutcome> {
+  async function call(
+    prompt: string,
+    jsonSchema: unknown,
+    signal?: AbortSignal,
+    use: AiProfile = profile,
+  ): Promise<ClaudeOutcome> {
     try {
       const { configDir, cwd } = folders()
-      const command = buildClaudeCommand(profile, { token: credentials, configDir }, { jsonSchema }, env)
-      const timeout = AbortSignal.timeout(profile.timeoutMs)
+      const command = buildClaudeCommand(use, { token: credentials, configDir }, { jsonSchema }, env)
+      const timeout = AbortSignal.timeout(use.timeoutMs)
       const run = await runClaude(bin, command.args, {
         env: command.env,
         cwd,
@@ -110,9 +116,11 @@ export function createClaudeCodeProvider(
 
     async generate<T>(request: AiRequest<T>): Promise<AiResult<T>> {
       const jsonSchema = request.schema ? z.toJSONSchema(request.schema) : undefined
+      const prompt = buildPrompt(request.prompt.text, request.input)
+      const useProfile = resolveProfile('claude-code', request.use, { aiTimeoutSeconds: deps.aiTimeoutSeconds })
       // A structured output that does not validate is asked for once more (principle IV).
       for (let attempt = 1; attempt <= 2; attempt++) {
-        const outcome = await call(request.prompt.text, jsonSchema, request.signal)
+        const outcome = await call(prompt, jsonSchema, request.signal, useProfile)
         if (!outcome.ok) {
           logResult('generate', outcome)
           return { ok: false, failure: outcome.failure }
@@ -122,7 +130,7 @@ export function createClaudeCodeProvider(
         if (parsed.success) return { ok: true, value: parsed.data, usage: outcome.usage }
         deps.logger.warn('ai.output_invalid', { provider: 'claude-code', attempt, issues: parsed.error.issues.length })
       }
-      return { ok: false, failure: UNKNOWN_FAILURE }
+      return { ok: false, failure: UNKNOWN_FAILURE, invalidOutput: true }
     },
   }
 }

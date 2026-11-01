@@ -2,7 +2,7 @@ import { Secret, type Logger, type ProviderDeps } from '@ytcreator/core'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createAnthropicProvider } from '../../src/anthropic/adapter.ts'
 import { resolveProfile } from '../../src/profiles.ts'
-import { INVALID_OUTPUT, runProviderContract, VALID_OUTPUT, type ContractCase } from './battery.ts'
+import { INVALID_OUTPUT, runProviderContract, useOutputs, VALID_OUTPUT, type BaseCase, type ContractCase } from './battery.ts'
 
 const KEY = 'sk-ant-api03-FAKE-contract-0123456789'
 const NOW = new Date('2026-10-29T10:00:00.000Z')
@@ -50,7 +50,7 @@ const replies =
   (call) =>
     list[Math.min(call, list.length - 1)]!
 
-const RESPONDERS: Record<ContractCase, Responder> = {
+const RESPONDERS: Record<BaseCase, Responder> = {
   valid_credential: replies(json(200, MODELS)),
   invalid_credential: replies(apiError(401, 'authentication_error', 'invalid x-api-key')),
   no_permission: replies(apiError(403, 'permission_error')),
@@ -63,6 +63,12 @@ const RESPONDERS: Record<ContractCase, Responder> = {
   output_valid: replies(message(JSON.stringify(VALID_OUTPUT))),
   output_invalid_then_valid: replies(message(JSON.stringify(INVALID_OUTPUT)), message(JSON.stringify(VALID_OUTPUT))),
   output_invalid_twice: replies(message(JSON.stringify(INVALID_OUTPUT))),
+}
+
+function responderFor(stub: ContractCase): Responder {
+  const outputs = useOutputs(stub)
+  if (outputs) return replies(...outputs.map((output) => message(JSON.stringify(output))))
+  return RESPONDERS[stub as BaseCase]
 }
 
 // A `fetch` that never leaves the process: it answers from the responder and keeps every request.
@@ -102,7 +108,7 @@ runProviderContract(
   'anthropic',
   (stub, deps) => {
     const aiTimeoutSeconds = stub === 'timeout' ? 1 : undefined
-    const { fetch, requests } = stubFetch(RESPONDERS[stub])
+    const { fetch, requests } = stubFetch(responderFor(stub))
     const provider = createAnthropicProvider(Secret.from(KEY), { ...deps, fetch, aiTimeoutSeconds })
     const timeoutMs = resolveProfile('anthropic', 'comprobacion', { aiTimeoutSeconds }).timeoutMs
     return { provider, calls: () => requests.length, credential: KEY, timeoutMs }

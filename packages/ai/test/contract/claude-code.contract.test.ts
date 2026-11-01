@@ -6,14 +6,20 @@ import { createClaudeCodeProvider } from '../../src/claude-code/adapter.ts'
 import { createClaudeLogin, extractToken } from '../../src/claude-code/login.ts'
 import { resolveProfile } from '../../src/profiles.ts'
 import { createFakeClaude, isAlive, mkdtemp, type FakeClaudeState } from '../claude-bin.ts'
-import { INVALID_OUTPUT, runProviderContract, VALID_OUTPUT, type ContractCase } from './battery.ts'
+import {
+  INVALID_OUTPUT,
+  runProviderContract,
+  useOutputs,
+  VALID_OUTPUT,
+  type BaseCase,
+} from './battery.ts'
 
 const TOKEN = 'sk-ant-oat01-FAKE-contract-0123456789'
 // The token of the recorded `setup-token` screen (fixtures/claude-code/setup-token/success.log).
 const RECORDED_TOKEN = `sk-ant-oat01-${'FAKEfixture'.repeat(6)}FAKEfixtureFAKEfixtureAA`
 const LOGIN_CODE = 'codigo-FAKE-1234'
 
-const STATES: Record<ContractCase, FakeClaudeState> = {
+const STATES: Record<BaseCase, FakeClaudeState> = {
   valid_credential: { scenario: 'ok' },
   invalid_credential: { scenario: 'fixture:invalid-token' },
   no_permission: { scenario: 'status:403' },
@@ -49,7 +55,8 @@ function depsFor(bin: string, accountDir = mkdtemp('ytc-account-')): ProviderDep
 }
 
 runProviderContract('claude-code', (stub, deps) => {
-  const fake = createFakeClaude(STATES[stub])
+  const outputs = useOutputs(stub)
+  const fake = createFakeClaude(outputs ? { scenario: 'output', outputs } : STATES[stub as BaseCase])
   const aiTimeoutSeconds = stub === 'timeout' ? 1 : undefined
   const provider = createClaudeCodeProvider(
     Secret.from(TOKEN),

@@ -10,7 +10,8 @@ import {
   type ProviderDeps,
   type Secret,
 } from '@ytcreator/core'
-import { resolveProfile } from '../profiles.ts'
+import { resolveProfile, type AiProfile } from '../profiles.ts'
+import { buildPrompt } from '../prompt.ts'
 import { classifyAnthropicError } from './classify.ts'
 
 const API_URL = 'https://api.anthropic.com'
@@ -44,16 +45,21 @@ export function createAnthropicProvider(credentials: Secret, deps: ProviderDeps)
     return { ok: false, failure, status }
   }
 
-  async function call(prompt: string, schema: Record<string, unknown> | undefined, signal?: AbortSignal) {
+  async function call(
+    prompt: string,
+    schema: Record<string, unknown> | undefined,
+    signal?: AbortSignal,
+    use: AiProfile = profile,
+  ) {
     try {
       const message = await getClient().messages.create(
         {
-          model: profile.model,
-          max_tokens: profile.maxOutputTokens,
+          model: use.model,
+          max_tokens: use.maxOutputTokens,
           messages: [{ role: 'user', content: prompt }],
           ...(schema ? { output_config: { format: { type: 'json_schema' as const, schema } } } : {}),
         },
-        { signal },
+        { signal, timeout: use.timeoutMs },
       )
       if (message.stop_reason === 'refusal') return { ok: false, failure: REFUSED } satisfies Outcome
       const text = message.content.flatMap((block) => (block.type === 'text' ? [block.text] : [])).join('')
@@ -91,9 +97,11 @@ export function createAnthropicProvider(credentials: Secret, deps: ProviderDeps)
 
     async generate<T>(request: AiRequest<T>): Promise<AiResult<T>> {
       const schema = request.schema ? zodOutputFormat(request.schema).schema : undefined
+      const prompt = buildPrompt(request.prompt.text, request.input)
+      const useProfile = resolveProfile('anthropic', request.use, { aiTimeoutSeconds: deps.aiTimeoutSeconds })
       // A structured output that does not validate is asked for once more (principle IV).
       for (let attempt = 1; attempt <= 2; attempt++) {
-        const outcome = await call(request.prompt.text, schema, request.signal)
+        const outcome = await call(prompt, schema, request.signal, useProfile)
         if (!outcome.ok) {
           logResult('generate', outcome)
           return { ok: false, failure: outcome.failure }
@@ -104,7 +112,7 @@ export function createAnthropicProvider(credentials: Secret, deps: ProviderDeps)
         const issues = parsed.error.issues.length
         deps.logger.warn('ai.output_invalid', { provider: 'anthropic', attempt, issues })
       }
-      return { ok: false, failure: UNKNOWN_FAILURE }
+      return { ok: false, failure: UNKNOWN_FAILURE, invalidOutput: true }
     },
   }
 }

@@ -1,0 +1,130 @@
+#!/usr/bin/env node
+// Stand-in for yt-dlp in tests: answers with the shapes recorded in spike S1 (flat JSON without dates, stderr
+// patterns of 404, 429 and no network) and never reaches the network. The mode comes from `state.json` in
+// FAKE_YTDLP_DIR, which the per-test wrapper (see ytdlp-bin.ts) sets. Every call is written to `calls.log`.
+import { appendFileSync, readFileSync } from 'node:fs'
+import { join } from 'node:path'
+
+// The same channels and video ids as the fake adapter's world (src/fake/scenarios.ts), so one battery fits both.
+const CHANNELS = [
+  { handle: 'cocinacorta30', id: 'UCcocinacorta30000000000', title: 'Cocina Corta', prefix: 'co30', count: 30, followers: 5_500 },
+  { handle: 'cocinatres', id: 'UCcocinatres000000000000', title: 'Cocina en Tres', prefix: 'coes', count: 3, followers: null },
+]
+
+const dir = process.env.FAKE_YTDLP_DIR
+const state = JSON.parse(readFileSync(join(dir, 'state.json'), 'utf8'))
+const args = process.argv.slice(2)
+appendFileSync(join(dir, 'calls.log'), `${JSON.stringify({ argv: args })}\n`)
+
+const fail = (message) => {
+  process.stderr.write(`ERROR: ${message}\n`)
+  process.exit(1)
+}
+
+if (args.includes('--version')) {
+  process.stdout.write('2026.08.19\n')
+  process.exit(0)
+}
+// Never answers; the adapter must kill it when its time runs out.
+if (state.mode === 'hang') setInterval(() => undefined, 1_000)
+else run()
+
+function run() {
+  if (state.mode === 'offline') {
+    fail(
+      '[youtube] Unable to download API page: <urlopen error [Errno 8] nodename nor servname provided> ' +
+        '(caused by Failed to establish a new connection)',
+    )
+  }
+
+  const target = args.at(-1) ?? ''
+  const end = Number(args[args.indexOf('--playlist-end') + 1]) || Infinity
+
+  const search = /^ytsearch(\d+):(.*)$/s.exec(target)
+  if (search) return answerSearch(Number(search[1]), search[2])
+
+  const channel = CHANNELS.find(
+    (c) =>
+      target === `https://www.youtube.com/@${c.handle}/videos` ||
+      target === `https://www.youtube.com/channel/${c.id}/videos`,
+  )
+  if (channel) return answerChannel(channel, end)
+  if (/\/videos$/.test(target)) fail('[youtube:tab] noexiste: HTTP Error 404: Not Found')
+
+  const video = /[?&]v=([A-Za-z0-9_-]{11})/.exec(target)
+  if (video) {
+    const owner = CHANNELS.find((c) => videos(c).some((v) => v.id === video[1]))
+    if (!owner) fail(`[youtube] ${video[1]}: Video unavailable. Requested entity was not found`)
+    process.stdout.write(`${owner.id}\n`)
+    process.exit(0)
+  }
+  fail(`Unsupported URL: ${target}`)
+}
+
+function answerSearch(limit, query) {
+  if (query.includes('sin datos')) return print({ _type: 'playlist', id: query, entries: [] })
+  if (query.includes('bloqueado')) {
+    fail('[youtube:search] Unable to download API page: HTTP Error 429: Too Many Requests')
+  }
+  const channel = CHANNELS[0]
+  const entries = Array.from({ length: Math.min(limit, 40) }, (_, i) => ({
+    _type: 'url',
+    ie_key: 'Youtube',
+    id: `srch${String(i).padStart(3, '0')}xxxx`,
+    url: `https://www.youtube.com/watch?v=srch${String(i).padStart(3, '0')}xxxx`,
+    title: `Receta rápida ${i + 1}`,
+    view_count: i % 9 === 8 ? null : 1_000 + i * 731,
+    duration: i % 10 === 9 ? null : 300 + i * 17,
+    channel: channel.title,
+    channel_id: channel.id,
+    uploader_id: `@${channel.handle}`,
+    timestamp: null,
+    upload_date: null,
+    release_timestamp: null,
+  }))
+  print({ _type: 'playlist', id: query, title: query, entries })
+}
+
+function answerChannel(channel, end) {
+  const entries = videos(channel)
+    .slice(0, end)
+    .map((v) => ({
+      _type: 'url',
+      ie_key: 'Youtube',
+      id: v.id,
+      url: `https://www.youtube.com/watch?v=${v.id}`,
+      title: v.title,
+      view_count: v.views,
+      duration: v.duration,
+      timestamp: null,
+      upload_date: null,
+    }))
+  print({
+    _type: 'playlist',
+    id: channel.id,
+    title: `${channel.title} - Videos`,
+    channel: channel.title,
+    channel_id: channel.id,
+    uploader_id: `@${channel.handle}`,
+    channel_follower_count: channel.followers,
+    description: `Canal de prueba «${channel.title}».`,
+    entries,
+  })
+}
+
+function print(value) {
+  process.stdout.write(JSON.stringify(value))
+  process.exit(0)
+}
+
+function videos(channel) {
+  return Array.from({ length: channel.count }, (_, i) => {
+    const short = i % 4 === 1
+    return {
+      id: `${channel.prefix}v${String(i).padStart(3, '0')}`.padEnd(11, 'x').slice(0, 11),
+      title: short ? `${channel.title}: un truco en un minuto (${i + 1})` : `${channel.title}: receta completa ${i + 1}`,
+      views: i % 7 === 6 ? null : 900 + ((i * 7919) % 48_000),
+      duration: i % 11 === 10 ? null : short ? 45 : 420 + i * 13,
+    }
+  })
+}

@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "reviewedAt": "2026-11-01",
+  "source": [
+    {
+      "label": "Ayuda de YouTube: reparto de ingresos de Shorts",
+      "url": "https://support.google.com/youtube/answer/12504220"
+    },
+    {
+      "label": "AIR Media-Tech: RPM de Shorts por nicho (2026)",
+      "url": "https://air.io/en/air-data-findings/what-is-youtube-shorts-rpm-in-your-niche-in-2026"
+    }
+  ],
+  "data": {
+    "maxDurationSeconds": 180,
+    "creatorShare": 0.45,
+    "payVsLong": { "min": 0.03, "max": 0.14 },
+    "role": "Los Shorts sirven de escaparate: atraen gente nueva al canal, pero pagan muy poco por visualización.",
+    "recommendedMix": "Un Short por cada dos o tres vídeos largos.",
+    "soloShorts": {
+      "warning": "solo_shorts",
+      "text": "Un canal solo de Shorts necesita muchísimas visualizaciones para ganar dinero y depende de un reparto que paga entre el 3 % y el 14 % de lo que paga un vídeo largo."
+    }
+  }
+}

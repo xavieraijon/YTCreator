@@ -7,10 +7,10 @@ modelo.
 
 ## Reglas generales
 
-- `AI_USES` añade: `preguntas`, `nichos`, `conceptos`, `nombres`, `perfil_actual`, `posicionamiento`.
+- `AI_USES` añade: `preguntas`, `nichos`, `conceptos`, `nombres`, `lectura_canal`, `posicionamiento`.
 - `AiRequest` gana `input?: Record<string, unknown>`, que el proveedor envía como JSON dentro de un bloque `<datos>`
   separado de las instrucciones. Todo lo que el creador escribe va en `input`, nunca concatenado al prompt.
-- Prompts en `packages/ai/prompts/<uso>.v1.md` con cabecera `id`, `version`, `use`; una prueba comprueba que el hash
+- Prompts en `packages/knowledge/prompts/<uso>/v1.md` con cabecera `id`, `version`, `use`; una prueba comprueba que el hash
   de cada prompt coincide con el registrado (cambiar un prompt obliga a subir `version`). Todos incluyen
   `writing/human.md` (reglas de escritura: sin jerga, frases cortas, tuteo).
 - Cada salida se valida con su esquema Zod. Si no pasa: un reintento con el error de validación; si vuelve a fallar,
@@ -29,7 +29,7 @@ modelo.
 | `nichos` | Sonnet 5.5 | 120 s | `interests`, `answers` | 3–5 `{label, summary, queries[1..3], whyItFits}` |
 | `conceptos` | Sonnet 5.5 | 120 s | nicho, medida, referencias, `hoursPerWeek`, `onCamera`, `audienceRegion`, fragmentos de conocimiento (`ypp`, `rpm`, `made-for-kids`, `inauthentic`, `shorts`) | 2–3 `Concept` (forma de `ChannelProfile.concept`) |
 | `nombres` | Haiku 5.5 | 60 s | concepto elegido, nombres ya descartados | 6–8 `{displayName, handle, why}` |
-| `perfil_actual` | Sonnet 5.5 | 120 s | lectura del canal (`summary` + vídeos) | `{niche, pillars, audience, works[], doesNotWork[]}`; cada punto con `videoIds[]` |
+| `lectura_canal` | Sonnet 5.5 | 120 s | lectura del canal (`summary` + vídeos) | `{niche, pillars, audience, works[], doesNotWork[]}`; cada punto con `videoIds[]` |
 | `posicionamiento` | Sonnet 5.5 | 120 s | perfil actual, lectura, conocimiento | `Concept` + `changes[]` `{what, why, videoIds[]}` |
 
 Reglas de forma (además del esquema):

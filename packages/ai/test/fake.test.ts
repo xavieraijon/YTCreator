@@ -1,4 +1,12 @@
-import { Secret, type ProviderDeps } from '@ytcreator/core'
+import {
+  CHANNEL_OUTPUTS,
+  checkClaims,
+  Secret,
+  type AiRequest,
+  type ChannelOutput,
+  type ChannelUse,
+  type ProviderDeps,
+} from '@ytcreator/core'
 import { describe, expect, it } from 'vitest'
 import { createFakeLogin, FAKE_LOGIN_CODE } from '../src/fake/fake-login.ts'
 import { createFakeProvider } from '../src/fake/fake-provider.ts'
@@ -23,6 +31,10 @@ describe('parseScenario', () => {
     expect(parseScenario('cuentas:cupo,ok').accounts).toEqual([{ type: 'cupo' }, { type: 'ok' }])
     expect(parseScenario('lento').accounts).toEqual([{ type: 'lento' }])
     expect(parseScenario('login:duplicada').login).toBe('duplicada')
+    expect(parseScenario('ok').output).toBe('normal')
+    for (const mode of ['cifra_inventada', 'salida_rota', 'limite_de_gasto'] as const) {
+      expect(parseScenario(mode)).toEqual({ name: mode, accounts: [{ type: 'ok' }], login: 'ok', output: mode })
+    }
   })
 
   it('refuses unknown names, reasons of another kind and bad dates', () => {
@@ -107,5 +119,59 @@ describe('fake login', () => {
     }
     expect(tokens).toHaveLength(2)
     expect(tokens[0]).toBe(tokens[1])
+  })
+})
+
+describe('fake provider: channel uses', () => {
+  const KEY = Secret.from('sk-ant-api03-FAKE-0123456789')
+  const input = { videos: [{ videoId: 'vid-xyz' }] }
+  const uses = Object.keys(CHANNEL_OUTPUTS) as ChannelUse[]
+  const request = <U extends ChannelUse>(use: U): AiRequest<ChannelOutput<U>> => ({
+    use,
+    prompt: { id: use, version: 1, text: 'Prueba.' },
+    input,
+    schema: CHANNEL_OUTPUTS[use] as unknown as AiRequest<ChannelOutput<U>>['schema'],
+  })
+
+  it('answers every channel use with an output its schema accepts and no invented figure', async () => {
+    const provider = createFakeProvider(parseScenario('ok'), KEY, deps)
+    for (const use of uses) {
+      const result = await provider.generate(request(use))
+      expect(result.ok, use).toBe(true)
+      if (result.ok) expect(checkClaims(result.value, input), use).toEqual([])
+    }
+  })
+
+  it('cites the videos of the input in the readings', async () => {
+    const result = await createFakeProvider(parseScenario('ok'), KEY, deps).generate(request('lectura_canal'))
+    expect(result.ok && result.value.niche.videoIds).toEqual(['vid-xyz'])
+  })
+
+  it('cifra_inventada puts a figure the validator catches', async () => {
+    const provider = createFakeProvider(parseScenario('cifra_inventada'), KEY, deps)
+    for (const use of uses) {
+      const result = await provider.generate(request(use))
+      expect(result.ok, use).toBe(true)
+      if (result.ok) expect(checkClaims(result.value, input).length, use).toBeGreaterThan(0)
+    }
+  })
+
+  it('salida_rota fails the schema twice and gives invalidOutput', async () => {
+    const result = await createFakeProvider(parseScenario('salida_rota'), KEY, deps).generate(request('nichos'))
+    expect(result).toMatchObject({ ok: false, invalidOutput: true })
+  })
+
+  it('limite_de_gasto reports a usage that blows any daily limit', async () => {
+    const result = await createFakeProvider(parseScenario('limite_de_gasto'), KEY, deps).generate(request('nichos'))
+    expect(result.ok).toBe(true)
+    if (result.ok) expect(result.usage.inputTokens).toBeGreaterThanOrEqual(1_000_000)
+  })
+
+  it('keeps answering listo for comprobacion', async () => {
+    const result = await createFakeProvider(parseScenario('cifra_inventada'), KEY, deps).generate({
+      use: 'comprobacion',
+      prompt: { id: 'comprobacion', version: 1, text: 'Responde listo.' },
+    })
+    expect(result).toMatchObject({ ok: true, value: 'listo' })
   })
 })
