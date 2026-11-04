@@ -120,9 +120,9 @@ describe('yt-dlp failure classification (S1)', () => {
     expect(run('ERROR: [youtube] abc: Sign in to confirm you’re not a bot')).toBe('bloqueado')
     expect(run('ERROR: [youtube:tab] x: HTTP Error 404: Not Found')).toBe('no_encontrado')
     expect(run('ERROR: Requested entity was not found')).toBe('no_encontrado')
-    expect(run('ERROR: Unable to download API page: <urlopen error> (caused by Failed to establish a new connection)')).toBe(
-      'no_disponible',
-    )
+    expect(
+      run('ERROR: Unable to download API page: <urlopen error> (caused by Failed to establish a new connection)'),
+    ).toBe('no_disponible')
     expect(run('ERROR: algo raro')).toBe('no_disponible')
   })
 

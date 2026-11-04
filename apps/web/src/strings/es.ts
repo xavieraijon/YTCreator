@@ -159,12 +159,7 @@ export const es = {
   home: {
     title: 'Inicio',
     body: 'Aquí empezarás tus canales y tus vídeos.',
-    soon: 'Crear canales llega muy pronto, en la próxima versión. Tu IA ya está lista para entonces.',
     createChannel: 'Crear mi primer canal',
-    comingTitle: 'Muy pronto',
-    comingBody: 'Crear canales llegará en la próxima versión. Mientras, puedes revisar tu IA en Ajustes.',
-    understood: 'Entendido',
-    goSettings: 'Ir a Ajustes',
     noAi: 'No tienes ninguna IA conectada.',
     connectAi: 'Conectar una IA',
   },
@@ -266,6 +261,7 @@ export const es = {
     sin_conexion: 'Para esto necesitas conexión a internet.',
     sin_limites: 'Antes de pagar por uso, pon tus límites de gasto.',
     maximo_de_cuentas: 'Puedes conectar hasta 5 cuentas.',
+    ya_hay_canal: 'Ya tienes un canal. Por ahora, YTCreator trabaja con un solo canal.',
   } satisfies Record<Guard, string>,
 
   field: {

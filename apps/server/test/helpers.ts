@@ -2,19 +2,42 @@ import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { createRegistry } from '@ytcreator/ai'
+import type { Pricing } from '@ytcreator/core'
 import { afterEach } from 'vitest'
 import { migrate, MIGRATIONS } from '../src/db/migrate.ts'
 import { openDatabase } from '../src/db/open.ts'
 import { createAccountsRepo } from '../src/db/repos/accounts.ts'
 import { createConnectionsRepo } from '../src/db/repos/connections.ts'
+import { createChannelsRepo } from '../src/db/repos/channels.ts'
+import { createJobsRepo } from '../src/db/repos/jobs.ts'
+import { createJourneysRepo } from '../src/db/repos/journeys.ts'
 import { createLimitsRepo } from '../src/db/repos/limits.ts'
+import { createMeasuresRepo } from '../src/db/repos/measures.ts'
+import { createNamesRepo } from '../src/db/repos/names.ts'
 import { createOnboardingRepo } from '../src/db/repos/onboarding.ts'
+import { createProfilesRepo } from '../src/db/repos/profiles.ts'
+import { createProposalsRepo } from '../src/db/repos/proposals.ts'
 import { createSettingsRepo } from '../src/db/repos/settings.ts'
+import { createUsageRepo } from '../src/db/repos/usage.ts'
 import { createApp } from '../src/http/app.ts'
 import { createMemoryLogger } from '../src/logging.ts'
 import { createFileStore } from '../src/secrets/file-store.ts'
 import { createAiConnectionsService } from '../src/services/ai-connections.ts'
+import { createAiRunService } from '../src/services/ai-run.ts'
 import { createClaudeRepair, type InstallerRunner } from '../src/services/claude-repair.ts'
+import { createJobsService } from '../src/services/jobs.ts'
+
+// Fixed prices, so no test depends on the knowledge package.
+const PRICING: Pricing = {
+  version: 1,
+  models: {
+    'claude-haiku-5-5': { input: 1, output: 5 },
+    'claude-sonnet-5-5': { input: 3, output: 15 },
+    fake: { input: 1, output: 5 },
+  },
+  usdToEur: 0.9,
+  charsPerToken: 3.5,
+}
 
 export const TEST_PORT = 4310
 export const LOCAL_HEADERS = { host: `127.0.0.1:${TEST_PORT}`, origin: `http://127.0.0.1:${TEST_PORT}` }
@@ -72,6 +95,33 @@ export function makeTestApp({ fakeAi, now = () => new Date(), installer }: TestA
     claudeCode: async () => ({ installed: true, version: '2.1.312' }),
     repairState: repair.state,
   })
+  const usage = createUsageRepo(db, now)
+  const channels = createChannelsRepo(db, now)
+  const jobsRepo = createJobsRepo(db, now)
+  const jobs = createJobsService({ jobs: jobsRepo, logger })
+  // The prompts of the channel uses arrive with each story; the fake provider does not read them.
+  const promptFor = (use: string) => ({ id: use, version: 1, text: `Prompt de prueba de ${use}.` })
+  const aiRun = createAiRunService({
+    usage,
+    limits,
+    pricing: PRICING,
+    logger,
+    now,
+    active: () => ai.activeAi(),
+    promptFor,
+  })
+  const channel = {
+    db,
+    channels,
+    journeys: createJourneysRepo(db, now),
+    proposals: createProposalsRepo(db, now),
+    profiles: createProfilesRepo(db, now),
+    measures: createMeasuresRepo(db, now),
+    names: createNamesRepo(db, now),
+    jobs: jobsRepo,
+    aiRun,
+    promptFor,
+  }
   const version = '0.1.0'
   const app = createApp({
     port: TEST_PORT,
@@ -84,6 +134,8 @@ export function makeTestApp({ fakeAi, now = () => new Date(), installer }: TestA
     repair,
     limits,
     settings,
+    channel,
+    jobs,
   })
 
   // A request as the local SPA sends it: local Host and Origin, JSON body.
@@ -108,6 +160,10 @@ export function makeTestApp({ fakeAi, now = () => new Date(), installer }: TestA
     limits,
     claudeAccountsDir,
     repair,
+    usage,
+    channels,
+    jobs,
+    jobsRepo,
     request,
     now,
   }

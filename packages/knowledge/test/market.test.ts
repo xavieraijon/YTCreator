@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { MARKET_FILES, loadMarket, bundledMarketFiles, staleEntries } from '../src/index.ts'
+import { MARKET_FILES, loadMarket, bundledMarketFiles, staleEntries, warningKnowledge } from '../src/index.ts'
 
 describe('market knowledge', () => {
   const files = bundledMarketFiles()
@@ -16,6 +16,15 @@ describe('market knowledge', () => {
       expect(entry.source.length).toBeGreaterThan(0)
       for (const s of entry.source) expect(s.url).toMatch(/^https:\/\//)
     }
+  })
+
+  it('gives the warnings their words, requirements and hours', () => {
+    const knowledge = warningKnowledge(loadMarket(files))
+    expect(knowledge.madeForKids.audienceKeywords).toContain('infantil')
+    expect(knowledge.inauthentic.keywords).toContain('plantilla')
+    expect(knowledge.ypp.ads).toEqual({ subscribers: 1000, watchHours: 4000, shortsViews: 10_000_000 })
+    expect(knowledge.hoursPerLongVideo).toBe(4)
+    expect(knowledge.hoursPerShort).toBe(1)
   })
 
   it('keeps the thresholds of the market contract', () => {

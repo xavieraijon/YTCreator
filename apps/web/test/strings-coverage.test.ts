@@ -1,9 +1,11 @@
-import { FAILURE_REASONS } from '@ytcreator/core'
-import { API_ERROR_CODES, FIELD_CODES, GUARDS } from '@ytcreator/core/api'
+import { FAILURE_REASONS, NEW_CHANNEL_STEPS, EXISTING_CHANNEL_STEPS, YOUTUBE_FAILURES } from '@ytcreator/core'
+import { AI_RUN_FAILURES, API_ERROR_CODES, FIELD_CODES, GUARDS } from '@ytcreator/core/api'
 import { describe, expect, it } from 'vitest'
 import { flattenStrings } from '../../../packages/ui/test/forbidden-terms.ts'
+import { channelEs } from '../src/strings/channel.es.ts'
 import { es } from '../src/strings/es.ts'
 import { failuresEs } from '../src/strings/failures.es.ts'
+import { youtubeFailureActionsEs, youtubeFailuresEs } from '../src/strings/youtube-failures.es.ts'
 
 // Mirrors the `label` keys of packages/ai/src/registry.ts.
 const PROVIDER_LABELS = ['ai.provider.claude_code', 'ai.provider.anthropic']
@@ -38,8 +40,23 @@ describe('strings coverage (FR-027, SC-007)', () => {
     expect(sorted(keys)).toEqual(sorted(PROVIDER_LABELS))
   })
 
+  it('every failure of YouTube says what happened and has an action with a text', () => {
+    expect(sorted(Object.keys(youtubeFailuresEs))).toEqual(sorted(YOUTUBE_FAILURES))
+    for (const text of Object.values(youtubeFailuresEs)) {
+      expect(text.what).toBeTruthy()
+      expect(youtubeFailureActionsEs[text.action]).toBeTruthy()
+    }
+  })
+
+  it('every failure of an AI run and every step of a journey has a text', () => {
+    expect(sorted(Object.keys(channelEs.aiFailure))).toEqual(sorted(AI_RUN_FAILURES))
+    expect(sorted(Object.keys(channelEs.steps))).toEqual(
+      sorted([...new Set([...NEW_CHANNEL_STEPS, ...EXISTING_CHANNEL_STEPS])]),
+    )
+  })
+
   it('no text is empty or has a malformed placeholder', () => {
-    const all = flattenStrings({ es, failuresEs })
+    const all = flattenStrings({ es, failuresEs, channelEs, youtubeFailuresEs, youtubeFailureActionsEs })
     expect(all.filter(({ value }) => value.trim() === '')).toEqual([])
     expect(all.filter(({ value }) => /\{(?!\w+\})|(?<!\{\w*)\}/.test(value))).toEqual([])
   })

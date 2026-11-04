@@ -89,7 +89,11 @@ function answer(url: URL): Response {
 
   if (endpoint === 'videos') {
     const ids = (q.get('id') ?? '').split(',')
-    return json({ items: allVideos().filter(({ video }) => ids.includes(video.videoId)).map(videoItem) })
+    return json({
+      items: allVideos()
+        .filter(({ video }) => ids.includes(video.videoId))
+        .map(videoItem),
+    })
   }
 
   if (endpoint === 'channels') {
@@ -105,7 +109,9 @@ function answer(url: URL): Response {
     if (!channel) return apiError(404, 'playlistNotFound')
     const start = Number(q.get('pageToken') ?? 0)
     const max = Number(q.get('maxResults') ?? 5)
-    const items = channel.videos.slice(start, start + max).map((video) => ({ contentDetails: { videoId: video.videoId } }))
+    const items = channel.videos
+      .slice(start, start + max)
+      .map((video) => ({ contentDetails: { videoId: video.videoId } }))
     const next = start + max < channel.videos.length ? { nextPageToken: String(start + max) } : {}
     return json({ items, ...next, pageInfo: { totalResults: channel.videos.length, resultsPerPage: PAGE } })
   }

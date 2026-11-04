@@ -2,7 +2,10 @@
   "version": 1,
   "reviewedAt": "2026-11-01",
   "source": [
-    { "label": "Ayuda de YouTube: contenido creado para niños", "url": "https://support.google.com/youtube/answer/9528076" },
+    {
+      "label": "Ayuda de YouTube: contenido creado para niños",
+      "url": "https://support.google.com/youtube/answer/9528076"
+    },
     {
       "label": "Ayuda de YouTube: cómo saber si tu contenido es para niños",
       "url": "https://support.google.com/youtube/answer/9632097"

@@ -33,8 +33,7 @@ export function createFakeYouTube(options: FakeYouTubeOptions = {}): YouTubeData
   })
   const forced = () => (options.failure ? youtubeFailure(options.failure) : null)
 
-  const byId = (channelId: string): FakeChannel | undefined =>
-    FAKE_CHANNELS.find((c) => c.info.channelId === channelId)
+  const byId = (channelId: string): FakeChannel | undefined => FAKE_CHANNELS.find((c) => c.info.channelId === channelId)
   const byHandle = (handle: string): FakeChannel | undefined =>
     FAKE_CHANNELS.find((c) => c.info.handle?.toLowerCase() === handle.toLowerCase())
   const byVideo = (videoId: string): FakeChannel | undefined =>

@@ -8,6 +8,8 @@ export { ThemeSwitcher, type ThemeSwitcherProps } from './theme/ThemeSwitcher.ts
 export { useResolvedTheme } from './theme/useResolvedTheme.ts'
 export { useThemePreference, type ThemePreference } from './theme/useThemePreference.ts'
 export { Badge, type BadgeProps, type BadgeTone } from './components/Badge/index.ts'
+export { DataSource, type DataSourceProps } from './components/DataSource/index.ts'
+export { Semaphore, type SemaphoreProps, type SemaphoreState } from './components/Semaphore/index.ts'
 export { Card, type CardProps } from './components/Card/index.ts'
 export { Disclosure, type DisclosureProps } from './components/Disclosure/index.ts'
 export { ProgressBar, type ProgressBarProps } from './components/ProgressBar/index.ts'

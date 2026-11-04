@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { ApiClientError, createApiClient } from '../src/api/client.ts'
+import { ApiClientError, createApiClient, type JobEventSource, watchJob } from '../src/api/client.ts'
 
 const numberSchema = {
   parse(data: unknown) {
@@ -68,5 +68,63 @@ describe('apiClient', () => {
     const pending = caught(hanging.post('/api/x', {}, numberSchema, { signal: controller.signal }))
     controller.abort()
     expect((await pending).kind).toBe('cancelada')
+  })
+})
+
+describe('watchJob', () => {
+  function fakeSource() {
+    const listeners = new Map<string, (event: { data?: string }) => void>()
+    const state = { url: '', closed: false }
+    const source: JobEventSource = {
+      addEventListener: (type, listener) => listeners.set(type, listener),
+      close: () => {
+        state.closed = true
+      },
+    }
+    const open = (url: string) => {
+      state.url = url
+      return source
+    }
+    const send = (type: string, data: object) => listeners.get(type)?.({ data: JSON.stringify(data) })
+    return { open, send, state }
+  }
+
+  it('hears the events of the job and closes when it ends', () => {
+    const { open, send, state } = fakeSource()
+    const events: unknown[] = []
+    watchJob('b1', (event) => events.push(event), open)
+    expect(state.url).toBe('/api/jobs/b1/events')
+    send('progress', { type: 'progress', done: 1, total: 5 })
+    send('item', { type: 'item', item: { id: 'm1' } })
+    expect(state.closed).toBe(false)
+    send('done', { type: 'done' })
+    expect(state.closed).toBe(true)
+    expect(events).toEqual([
+      { type: 'progress', done: 1, total: 5 },
+      { type: 'item', item: { id: 'm1' } },
+      { type: 'done' },
+    ])
+  })
+
+  it('a failed job closes too', () => {
+    const { open, send, state } = fakeSource()
+    watchJob('b1', () => {}, open)
+    send('failed', { type: 'failed', failure: 'bloqueado' })
+    expect(state.closed).toBe(true)
+  })
+
+  it('ignores what is not an event of the contract', () => {
+    const { open, send } = fakeSource()
+    const events: unknown[] = []
+    watchJob('b1', (event) => events.push(event), open)
+    send('progress', { type: 'otra cosa' })
+    expect(events).toEqual([])
+  })
+
+  it('stops watching on demand', () => {
+    const { open, state } = fakeSource()
+    const stop = watchJob('b1', () => {}, open)
+    stop()
+    expect(state.closed).toBe(true)
   })
 })

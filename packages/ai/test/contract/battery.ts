@@ -1,4 +1,11 @@
-import { CHANNEL_OUTPUTS, checkClaims, type AiProvider, type ChannelUse, type Logger, type ProviderDeps } from '@ytcreator/core'
+import {
+  CHANNEL_OUTPUTS,
+  checkClaims,
+  type AiProvider,
+  type ChannelUse,
+  type Logger,
+  type ProviderDeps,
+} from '@ytcreator/core'
 import { COMPROBACION } from '@ytcreator/knowledge'
 import { describe, expect, it } from 'vitest'
 import { z } from 'zod'
@@ -144,23 +151,27 @@ export function runProviderContract(name: string, factory: ContractFactory, opti
       expect(subject.calls()).toBe(2)
     })
 
-    caseIt('output_invalid_twice', 'C11 dos salidas inválidas → servicio_caido con invalidOutput tras un único reintento', async () => {
-      const { deps, lines } = capturingDeps()
-      const subject = await factory('output_invalid_twice', deps)
-      const result = await subject.provider.generate({
-        use: 'comprobacion',
-        prompt: COMPROBACION,
-        schema: CONTRACT_SCHEMA,
-      })
-      expect(result).toEqual({
-        ok: false,
-        failure: { kind: 'no_disponible', reason: 'servicio_caido' },
-        invalidOutput: true,
-      })
-      expect(subject.calls()).toBe(2)
-      // The validation failure is logged without the content.
-      expect(lines.join('\n')).not.toContain('42')
-    })
+    caseIt(
+      'output_invalid_twice',
+      'C11 dos salidas inválidas → servicio_caido con invalidOutput tras un único reintento',
+      async () => {
+        const { deps, lines } = capturingDeps()
+        const subject = await factory('output_invalid_twice', deps)
+        const result = await subject.provider.generate({
+          use: 'comprobacion',
+          prompt: COMPROBACION,
+          schema: CONTRACT_SCHEMA,
+        })
+        expect(result).toEqual({
+          ok: false,
+          failure: { kind: 'no_disponible', reason: 'servicio_caido' },
+          invalidOutput: true,
+        })
+        expect(subject.calls()).toBe(2)
+        // The validation failure is logged without the content.
+        expect(lines.join('\n')).not.toContain('42')
+      },
+    )
 
     for (const use of CHANNEL_USES) {
       const request = {
@@ -178,24 +189,32 @@ export function runProviderContract(name: string, factory: ContractFactory, opti
         expect(subject.calls()).toBe(1)
       })
 
-      caseIt(`use_invalid_twice:${use}`, `U2 ${use}: dos salidas inválidas → invalidOutput tras un único reintento`, async () => {
-        const { deps } = capturingDeps()
-        const subject = await factory(`use_invalid_twice:${use}`, deps)
-        const result = await subject.provider.generate(request)
-        expect(result).toMatchObject({ ok: false, invalidOutput: true })
-        expect(subject.calls()).toBe(2)
-      })
+      caseIt(
+        `use_invalid_twice:${use}`,
+        `U2 ${use}: dos salidas inválidas → invalidOutput tras un único reintento`,
+        async () => {
+          const { deps } = capturingDeps()
+          const subject = await factory(`use_invalid_twice:${use}`, deps)
+          const result = await subject.provider.generate(request)
+          expect(result).toMatchObject({ ok: false, invalidOutput: true })
+          expect(subject.calls()).toBe(2)
+        },
+      )
 
       // The adapter gives it back as is: the figure validator lives in the server (ai-run), not in the port.
-      caseIt(`use_invented:${use}`, `U3 ${use}: cifra inventada → llega tal cual y el validador la detecta`, async () => {
-        const { deps } = capturingDeps()
-        const subject = await factory(`use_invented:${use}`, deps)
-        const result = await subject.provider.generate(request)
-        expect(result.ok).toBe(true)
-        if (!result.ok) return
-        expect(checkClaims(result.value, USE_INPUT).length).toBeGreaterThan(0)
-        expect(subject.calls()).toBe(1)
-      })
+      caseIt(
+        `use_invented:${use}`,
+        `U3 ${use}: cifra inventada → llega tal cual y el validador la detecta`,
+        async () => {
+          const { deps } = capturingDeps()
+          const subject = await factory(`use_invented:${use}`, deps)
+          const result = await subject.provider.generate(request)
+          expect(result.ok).toBe(true)
+          if (!result.ok) return
+          expect(checkClaims(result.value, USE_INPUT).length).toBeGreaterThan(0)
+          expect(subject.calls()).toBe(1)
+        },
+      )
     }
 
     caseIt('valid_credential', 'C13 la credencial no aparece al serializar el proveedor', async () => {

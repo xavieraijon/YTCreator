@@ -67,7 +67,8 @@ export function createFakeProvider(
 
   // What a call answers without a transport: the canned output of a channel use, or `listo`.
   function answer(request?: AiRequest<unknown>): AiResult<unknown> {
-    if (!request || !isChannelUse(request.use)) return { ok: true, value: 'listo', usage: { inputTokens: 1, outputTokens: 1 } }
+    if (!request || !isChannelUse(request.use))
+      return { ok: true, value: 'listo', usage: { inputTokens: 1, outputTokens: 1 } }
     const value = fakeChannelOutput(request.use, request.input ?? {}, scenario.output)
     const usage = scenario.output === 'limite_de_gasto' ? HUGE_USAGE : { inputTokens: 1, outputTokens: 1 }
     return { ok: true, value, usage }

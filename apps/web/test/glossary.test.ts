@@ -1,8 +1,10 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { findForbiddenTerms, forbiddenTerms } from '../../../packages/ui/test/forbidden-terms.ts'
+import { channelEs } from '../src/strings/channel.es.ts'
 import { es } from '../src/strings/es.ts'
 import { failuresEs } from '../src/strings/failures.es.ts'
+import { youtubeFailureActionsEs, youtubeFailuresEs } from '../src/strings/youtube-failures.es.ts'
 
 // The creator has to know which service each option uses (contracts/ui-screens.md), so the web may name the
 // three brands of this feature. Model names stay forbidden (principle I).
@@ -27,7 +29,20 @@ function installerStrings(): Record<string, string> {
 
 describe('glossary of the web (FR-032, principle I)', () => {
   it('no text of apps/web/src/strings uses a forbidden term', () => {
-    expect(findForbiddenTerms({ es, failuresEs }, webTerms)).toEqual([])
+    expect(
+      findForbiddenTerms({ es, failuresEs, channelEs, youtubeFailuresEs, youtubeFailureActionsEs }, webTerms),
+    ).toEqual([])
+  })
+
+  it('forbids the YouTube jargon of 003 too', () => {
+    const texts = { a: 'Tu RPM', b: 'el YPP', c: 'sube tu CTR', d: 'elige tu handle', e: 'instala yt-dlp' }
+    expect(findForbiddenTerms(texts, webTerms)).toEqual([
+      { key: 'a', term: 'RPM' },
+      { key: 'b', term: 'YPP' },
+      { key: 'c', term: 'CTR' },
+      { key: 'd', term: 'handle' },
+      { key: 'e', term: 'yt-dlp' },
+    ])
   })
 
   it('still forbids jargon and model names', () => {
@@ -44,7 +59,7 @@ describe('glossary of the installer (FR-032, principle I)', () => {
 
   it('finds the visible texts of installer/install.sh', () => {
     expect(strings.MSG_STEP1).toBe('Comprobando tu ordenador')
-    expect(Object.values(strings)).toContain('Paso  de 8 ·')
+    expect(Object.values(strings)).toContain('Paso  de 9 ·')
     expect(Object.keys(strings).filter((key) => key.startsWith('MSG_')).length).toBeGreaterThanOrEqual(30)
   })
 

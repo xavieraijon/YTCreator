@@ -21,8 +21,7 @@ export interface AiUsage {
 
 // `invalidOutput`: the structured output failed its schema twice; the domain shows it as `respuesta_invalida`.
 export type AiResult<T> =
-  | { ok: true; value: T; usage: AiUsage }
-  | { ok: false; failure: AiFailure; invalidOutput?: true }
+  { ok: true; value: T; usage: AiUsage } | { ok: false; failure: AiFailure; invalidOutput?: true }
 
 // check() and generate() never throw: every internal error is classified as an AiFailure.
 export interface AiProvider {

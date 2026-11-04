@@ -70,9 +70,7 @@ const fromRow = (row: Row): Proposal => ({
 
 export function createProposalsRepo(db: DatabaseSync, now: () => Date = () => new Date()) {
   const selectOne = db.prepare('SELECT * FROM proposal WHERE id = ?')
-  const selectByKind = db.prepare(
-    'SELECT * FROM proposal WHERE journey_id = ? AND kind = ? ORDER BY created_at, rowid',
-  )
+  const selectByKind = db.prepare('SELECT * FROM proposal WHERE journey_id = ? AND kind = ? ORDER BY created_at, rowid')
   const selectAll = db.prepare('SELECT * FROM proposal WHERE journey_id = ? ORDER BY created_at, rowid')
   const insert = db.prepare(
     `INSERT INTO proposal (id, journey_id, kind, payload, parent_id, instructions, prompt_id, prompt_version,
@@ -112,7 +110,11 @@ export function createProposalsRepo(db: DatabaseSync, now: () => Date = () => ne
     list,
     // The newest proposal of a kind that is not discarded.
     latest(journeyId: string, kind: ProposalKind): Proposal | null {
-      return list(journeyId, kind).filter((p) => p.status !== 'descartada').at(-1) ?? null
+      return (
+        list(journeyId, kind)
+          .filter((p) => p.status !== 'descartada')
+          .at(-1) ?? null
+      )
     },
     create(proposal: NewProposal): Proposal {
       return insertOne(proposal, null)

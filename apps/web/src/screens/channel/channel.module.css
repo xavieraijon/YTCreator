@@ -1,0 +1,42 @@
+@layer components {
+  .indicator {
+    display: grid;
+    justify-items: start;
+    gap: var(--s-space-3);
+  }
+
+  .why {
+    color: var(--s-color-text-secondary);
+  }
+
+  .options {
+    display: grid;
+    gap: var(--s-space-4);
+  }
+
+  .option {
+    display: grid;
+    justify-items: start;
+    gap: var(--s-space-2);
+  }
+
+  .option p {
+    color: var(--s-color-text-secondary);
+  }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-space-2);
+  }
+
+  .proposal {
+    display: grid;
+    gap: var(--s-space-4);
+  }
+
+  .notice {
+    color: var(--s-color-text-secondary);
+    font-size: var(--s-font-size-sm);
+  }
+}

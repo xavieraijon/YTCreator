@@ -1,10 +1,4 @@
-import {
-  type ChannelInfo,
-  SHORT_MAX_SECONDS,
-  type VideoHit,
-  type VideoInfo,
-  isChannelId,
-} from '@ytcreator/core'
+import { type ChannelInfo, SHORT_MAX_SECONDS, type VideoHit, type VideoInfo, isChannelId } from '@ytcreator/core'
 
 // Maps yt-dlp's flat JSON (spike S1) to the port. A field that is missing or of another type is null.
 type Json = Record<string, unknown>

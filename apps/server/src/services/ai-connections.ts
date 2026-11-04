@@ -1,11 +1,14 @@
 import { randomUUID } from 'node:crypto'
 import { mkdir, rm } from 'node:fs/promises'
 import { join } from 'node:path'
+import type { ProviderId } from '@ytcreator/ai'
 import {
   MAX_ACCOUNTS,
   runWithRotation,
   secretRef,
   type AiFailure,
+  type AiRequest,
+  type AiResult,
   type CheckResult,
   type ConnectionKind,
   type Logger,
@@ -21,6 +24,7 @@ import { connectionView, LimitsRequiredError, type ConnectionsRepo } from '../db
 import type { SettingsRepo } from '../db/repos/settings.ts'
 import { ApiError } from '../http/errors.ts'
 import { secretFingerprint } from '../secrets/fingerprint.ts'
+import type { ActiveAi } from './ai-run.ts'
 
 export interface ClaudeCodeStatus {
   installed: boolean
@@ -129,7 +133,42 @@ export function createAiConnectionsService(deps: AiConnectionsDeps) {
     return accountView(findAccount(accountId))
   }
 
+  // Runs one generation on an account, or on the key; a stored key that is gone is a session to renew.
+  async function generateWith<T>(
+    descriptor: ProviderDescriptor,
+    ref: string | null,
+    request: AiRequest<T>,
+    dir?: string,
+  ): Promise<AiResult<T>> {
+    const stored = ref ? await secrets.get(ref) : { ok: true as const, value: null }
+    if (!stored.ok) return { ok: false, failure: stored.failure }
+    if (!stored.value) return { ok: false, failure: NO_SESSION }
+    return descriptor.create(stored.value, providerDeps(dir)).generate(request)
+  }
+
   return {
+    // The connection in use, ready to generate; the subscription rotates between its accounts (R14).
+    activeAi(): ActiveAi | null {
+      const active = connections.active()
+      if (!active) return null
+      const descriptor = descriptorFor(active.kind)
+      return {
+        providerId: descriptor.id as ProviderId,
+        billing: descriptor.billing,
+        async generate<T>(request: AiRequest<T>): Promise<AiResult<T>> {
+          if (active.kind === 'pago_por_uso') return generateWith(descriptor, active.secretRef, request)
+          const run = await runWithRotation(
+            accounts.list(descriptor.id),
+            (id) => generateWith(descriptor, findAccount(id).secretRef, request, accountDir(id)),
+            deps.now(),
+          )
+          for (const update of run.updates) accounts.updateStatus(update.id, update.outcome)
+          connections.syncSubscription(descriptor.id, accounts.list(descriptor.id))
+          return run.result
+        },
+      }
+    },
+
     async overview(): Promise<AiOverview> {
       const all = connections.list()
       const subscription = all.find((c) => c.kind === 'suscripcion')

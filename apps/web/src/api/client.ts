@@ -1,4 +1,18 @@
-import { apiErrorSchema, type ApiErrorBody } from '@ytcreator/core/api'
+import type { ChannelOrigin, ChannelUse, JourneyStep, ProposalKind } from '@ytcreator/core'
+import {
+  apiErrorSchema,
+  type ApiErrorBody,
+  channelCurrentSchema,
+  createChannelResponseSchema,
+  estimateSchema,
+  type JobEvent,
+  jobEventSchema,
+  journeySchema,
+  journeyViewSchema,
+  proposalOutcomeSchema,
+  proposalSchema,
+  usageListSchema,
+} from '@ytcreator/core/api'
 
 // Any Zod schema from @ytcreator/core/api; structural so the web needs no direct zod import.
 export interface Parser<T> {
@@ -100,3 +114,53 @@ export function createApiClient({ fetch = globalThis.fetch.bind(globalThis), bas
 }
 
 export const apiClient = createApiClient()
+
+export const channelApi = {
+  current: (options?: RequestOptions) => apiClient.get('/api/channels/current', channelCurrentSchema, options),
+  create: (origin: ChannelOrigin) => apiClient.post('/api/channels', { origin }, createChannelResponseSchema),
+  journey: (id: string, options?: RequestOptions) => apiClient.get(`/api/journeys/${id}`, journeyViewSchema, options),
+  step: (
+    id: string,
+    body: { revision: number; step: JourneyStep; data?: object; confirm?: boolean; nameLater?: boolean },
+  ) => apiClient.post(`/api/journeys/${id}/step`, body, journeySchema),
+  estimate: (id: string, use: ChannelUse, options?: RequestOptions) =>
+    apiClient.post(`/api/journeys/${id}/estimate`, { use }, estimateSchema, options),
+  propose: (
+    id: string,
+    body: { revision: number; kind: ProposalKind; estimateId: string; instructions?: string; parentId?: string },
+    options?: RequestOptions,
+  ) => apiClient.post(`/api/journeys/${id}/proposals`, body, proposalOutcomeSchema, options),
+  decide: (id: string, body: { editedPayload?: unknown; selectedIndex?: number; status?: 'aprobada' | 'descartada' }) =>
+    apiClient.patch(`/api/proposals/${id}`, body, proposalSchema),
+}
+
+export const usageApi = {
+  list: (options?: RequestOptions) => apiClient.get('/api/usage', usageListSchema, options),
+}
+
+const JOB_EVENTS: readonly JobEvent['type'][] = ['progress', 'item', 'done', 'failed']
+
+// The part of EventSource used here, so it can be replaced in tests.
+export interface JobEventSource {
+  addEventListener(type: string, listener: (event: { data?: string }) => void): void
+  close(): void
+}
+
+// Follows a job until it ends; returns how to stop watching (the job goes on in the server).
+// A connection lost is retried by the browser; on coming back it hears the state the job is in.
+export function watchJob(
+  jobId: string,
+  onEvent: (event: JobEvent) => void,
+  open: (url: string) => JobEventSource = (url) => new EventSource(url) as unknown as JobEventSource,
+): () => void {
+  const source = open(`/api/jobs/${jobId}/events`)
+  for (const type of JOB_EVENTS) {
+    source.addEventListener(type, (message) => {
+      const parsed = jobEventSchema.safeParse(JSON.parse(message.data ?? 'null'))
+      if (!parsed.success) return
+      onEvent(parsed.data)
+      if (parsed.data.type === 'done' || parsed.data.type === 'failed') source.close()
+    })
+  }
+  return () => source.close()
+}

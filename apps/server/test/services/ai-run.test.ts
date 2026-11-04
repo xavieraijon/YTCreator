@@ -98,7 +98,7 @@ describe('ai-run', () => {
     const input = { interests: 'cocina' }
     const est = service.estimate({ journeyId, use: 'preguntas', input })
     const result = await service.run({ estimateId: est.estimateId, use: 'preguntas', input })
-    expect(result).toEqual({ ok: true, value: VALID, claimsTrimmed: false })
+    expect(result).toEqual({ ok: true, value: VALID, claimsTrimmed: false, usageId: expect.any(String) })
     expect(calls[0]).toMatchObject({ use: 'preguntas', prompt: PROMPT, input })
     expect(calls[0]?.schema).toBeDefined()
     const [row] = usage.list()
@@ -119,8 +119,17 @@ describe('ai-run', () => {
     const { service, journeyId, calls, usage } = setup([ok(VALID)])
     const est = service.estimate({ journeyId, use: 'preguntas', input: {} })
     // Another call spent today's whole limit in between.
-    usage.record({ use: 'nichos', providerId: 'anthropic', model: 'claude-sonnet-5-5', inputTokens: 1, outputTokens: 1,
-      estimatedCents: 200, costCents: 200, pricingVersion: 1, outcome: 'ok' })
+    usage.record({
+      use: 'nichos',
+      providerId: 'anthropic',
+      model: 'claude-sonnet-5-5',
+      inputTokens: 1,
+      outputTokens: 1,
+      estimatedCents: 200,
+      costCents: 200,
+      pricingVersion: 1,
+      outcome: 'ok',
+    })
     const result = await service.run({ estimateId: est.estimateId, use: 'preguntas', input: {} })
     expect(result).toEqual({ ok: false, failure: 'limite_de_gasto' })
     expect(calls).toHaveLength(0)
@@ -184,7 +193,7 @@ describe('ai-run', () => {
     const { service, journeyId, calls, usage } = setup([ok(invented), ok(VALID)])
     const est = service.estimate({ journeyId, use: 'preguntas', input: {} })
     const result = await service.run({ estimateId: est.estimateId, use: 'preguntas', input: {} })
-    expect(result).toEqual({ ok: true, value: VALID, claimsTrimmed: false })
+    expect(result).toEqual({ ok: true, value: VALID, claimsTrimmed: false, usageId: expect.any(String) })
     expect(calls).toHaveLength(2)
     expect(calls[1]?.prompt.text).toContain('sin respaldo')
     // One row with the tokens of both calls.

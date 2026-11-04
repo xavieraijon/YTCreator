@@ -26,7 +26,11 @@ const valid = {
   },
   conceptos: { concepts: [concept, concept] },
   nombres: {
-    names: Array.from({ length: 6 }, (_, i) => ({ displayName: `Cena Lista ${i}`, handle: `cenalista${i}`, why: 'Corto' })),
+    names: Array.from({ length: 6 }, (_, i) => ({
+      displayName: `Cena Lista ${i}`,
+      handle: `cenalista${i}`,
+      why: 'Corto',
+    })),
   },
   lectura_canal: {
     niche: { text: 'Cocina rápida', videoIds: ['abc'] },

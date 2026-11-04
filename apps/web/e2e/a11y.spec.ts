@@ -107,8 +107,9 @@ test('the subscription screens, the home and the settings pass axe in both theme
     await audit('Home con el aviso de versión nueva')
 
     await page.getByRole('button', { name: 'Crear mi primer canal' }).click()
-    await expect(page.getByRole('dialog', { name: 'Muy pronto' })).toBeVisible()
-    await audit('Home · diálogo «Muy pronto»')
+    await expect(page.getByRole('heading', { name: 'Tu canal', level: 1 })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Crear mi canal' })).toBeVisible()
+    await audit('Inicio del canal')
     await page.keyboard.press('Escape')
     await page.getByRole('button', { name: 'Cerrar YTCreator' }).click()
     await expect(page.getByRole('dialog', { name: '¿Cerrar YTCreator?' })).toBeVisible()
@@ -267,14 +268,10 @@ test('the whole wizard with the keyboard alone, the focus always visible (SC-010
     await page.keyboard.press('Enter')
     await expect(heading(page, 'Inicio')).toBeVisible()
 
-    // The dialog closes with Escape and gives the focus back to what opened it.
-    const create = page.getByRole('button', { name: 'Crear mi primer canal' })
-    await tabTo(page, create)
+    // The way into the channel also works with the keyboard alone.
+    await tabTo(page, page.getByRole('button', { name: 'Crear mi primer canal' }))
     await page.keyboard.press('Enter')
-    await expect(page.getByRole('dialog', { name: 'Muy pronto' })).toBeVisible()
-    await page.keyboard.press('Escape')
-    await expect(page.getByRole('dialog', { name: 'Muy pronto' })).toBeHidden()
-    await expect(create).toBeFocused()
+    await expect(heading(page, 'Tu canal')).toBeVisible()
   } finally {
     await server.stop()
   }

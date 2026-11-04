@@ -33,7 +33,10 @@ describe('journeys repo', () => {
   it('bumps the revision on every update', () => {
     const journey = journeys.create({ channelId, kind: 'nuevo', step: 'intereses' })
     const result = journeys.update(journey.id, 0, { step: 'preguntas', state: { interests: 'cocina' } })
-    expect(result).toMatchObject({ ok: true, journey: { step: 'preguntas', revision: 1, state: { interests: 'cocina' } } })
+    expect(result).toMatchObject({
+      ok: true,
+      journey: { step: 'preguntas', revision: 1, state: { interests: 'cocina' } },
+    })
   })
 
   it('returns conflicto with the current journey when the revision is stale', () => {

@@ -22,7 +22,11 @@ export function createLimiter(max: number): Limiter {
 export type Settled<T> = { ok: true; value: T } | { ok: false; error: unknown }
 
 // Runs fn over every item with at most `max` at once; results keep the input order and a failure stops nothing.
-export async function mapLimit<I, T>(items: readonly I[], max: number, fn: (item: I) => Promise<T>): Promise<Settled<T>[]> {
+export async function mapLimit<I, T>(
+  items: readonly I[],
+  max: number,
+  fn: (item: I) => Promise<T>,
+): Promise<Settled<T>[]> {
   const limit = createLimiter(max)
   return Promise.all(
     items.map((item) =>

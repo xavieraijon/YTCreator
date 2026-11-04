@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { costCents, ESTIMATE_TTL_MS, estimateCall, isEstimateExpired, overrunsEstimate, type Pricing } from '../../src/index.ts'
+import {
+  costCents,
+  ESTIMATE_TTL_MS,
+  estimateCall,
+  isEstimateExpired,
+  overrunsEstimate,
+  type Pricing,
+} from '../../src/index.ts'
 
 const pricing: Pricing = {
   version: 1,

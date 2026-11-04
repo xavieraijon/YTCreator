@@ -66,6 +66,7 @@ export const MARKET_SCHEMAS = {
       since: z.iso.date(),
       rule: z.string().min(1),
       notAllowed: z.array(z.string().min(1)).min(1),
+      contentKeywords: z.array(z.string().min(1)).min(1),
       allowed: z.array(z.string().min(1)).min(1),
     }),
   ),
@@ -81,6 +82,7 @@ export const MARKET_SCHEMAS = {
   ),
   'thresholds.json': envelope(
     z.object({
+      rhythm: z.object({ hoursPerLongVideo: z.number().positive(), hoursPerShort: z.number().positive() }),
       demand: z.object({ high: z.number().int().positive(), medium: z.number().int().positive() }),
       entryDoor: z.object({
         open: z.number().int().positive(),
@@ -156,7 +158,9 @@ const bundled = import.meta.glob<unknown>('../market/*.json', { eager: true, imp
 
 /** The market files shipped with the app, keyed by file name. */
 export function bundledMarketFiles(): Record<string, unknown> {
-  return Object.fromEntries(Object.entries(bundled).map(([path, json]) => [path.slice(path.lastIndexOf('/') + 1), json]))
+  return Object.fromEntries(
+    Object.entries(bundled).map(([path, json]) => [path.slice(path.lastIndexOf('/') + 1), json]),
+  )
 }
 
 /** Validates every market file; throws naming the broken file so the server refuses to start (principle V). */
@@ -165,7 +169,8 @@ export function loadMarket(files: Record<string, unknown> = bundledMarketFiles()
   for (const file of MARKET_FILES) {
     if (!(file in files)) throw new Error(`Falta el fichero de conocimiento ${file}`)
     const parsed = MARKET_SCHEMAS[file].safeParse(files[file])
-    if (!parsed.success) throw new Error(`El fichero de conocimiento ${file} no es válido: ${z.prettifyError(parsed.error)}`)
+    if (!parsed.success)
+      throw new Error(`El fichero de conocimiento ${file} no es válido: ${z.prettifyError(parsed.error)}`)
     out[KEY_BY_FILE[file]] = parsed.data
   }
   return out as MarketKnowledge
@@ -187,4 +192,30 @@ export function staleEntries(market: MarketKnowledge, now: Date): StaleEntry[] {
     if (Date.parse(`${entry.reviewedAt}T00:00:00Z`) >= limit) return []
     return [{ file, label: entry.source[0]!.label, reviewedAt: entry.reviewedAt }]
   })
+}
+
+/** What the warnings of a niche or concept need (core/channel/warnings.ts), with the date of each source. */
+export function warningKnowledge(market: MarketKnowledge) {
+  const ads = market.ypp.data.tiers.find((tier) => tier.id === 'ads')
+  if (!ads) throw new Error('ypp.json no tiene el nivel de anuncios')
+  return {
+    madeForKids: {
+      reviewedAt: market.madeForKids.reviewedAt,
+      label: market.madeForKids.source[0]!.label,
+      audienceKeywords: market.madeForKids.data.audienceKeywords,
+    },
+    inauthentic: {
+      reviewedAt: market.inauthentic.reviewedAt,
+      label: market.inauthentic.source[0]!.label,
+      keywords: market.inauthentic.data.contentKeywords,
+    },
+    shorts: { reviewedAt: market.shorts.reviewedAt, label: market.shorts.source[0]!.label },
+    ypp: {
+      reviewedAt: market.ypp.reviewedAt,
+      label: market.ypp.source[0]!.label,
+      ads: { subscribers: ads.subscribers, watchHours: ads.watchHours.hours, shortsViews: ads.shortsViews.views },
+    },
+    hoursPerLongVideo: market.thresholds.data.rhythm.hoursPerLongVideo,
+    hoursPerShort: market.thresholds.data.rhythm.hoursPerShort,
+  }
 }

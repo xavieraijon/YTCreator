@@ -61,8 +61,22 @@ describe('measures repo', () => {
   it('lists the measures of a journey and keeps 2–4 reference channels per measure', () => {
     const measure = start()
     measures.setReferences(measure.id, [
-      { youtubeChannelId: 'UCaaaaaaaaaaaaaaaaaaaaaa', title: 'A', handle: 'a', subscribers: null, topVideoViews: 5000, reason: 'r' },
-      { youtubeChannelId: 'UCbbbbbbbbbbbbbbbbbbbbbb', title: 'B', handle: null, subscribers: 900, topVideoViews: 8000, reason: 'r' },
+      {
+        youtubeChannelId: 'UCaaaaaaaaaaaaaaaaaaaaaa',
+        title: 'A',
+        handle: 'a',
+        subscribers: null,
+        topVideoViews: 5000,
+        reason: 'r',
+      },
+      {
+        youtubeChannelId: 'UCbbbbbbbbbbbbbbbbbbbbbb',
+        title: 'B',
+        handle: null,
+        subscribers: 900,
+        topVideoViews: 8000,
+        reason: 'r',
+      },
     ])
     expect(measures.listByJourney(journeyId).map((m) => m.id)).toEqual([measure.id])
     const references = measures.listReferences(measure.id)
@@ -72,7 +86,14 @@ describe('measures repo', () => {
 
   it('replacing references drops the old ones', () => {
     const measure = start()
-    const ref = { youtubeChannelId: 'UCaaaaaaaaaaaaaaaaaaaaaa', title: 'A', handle: null, subscribers: 1, topVideoViews: 1, reason: 'r' }
+    const ref = {
+      youtubeChannelId: 'UCaaaaaaaaaaaaaaaaaaaaaa',
+      title: 'A',
+      handle: null,
+      subscribers: 1,
+      topVideoViews: 1,
+      reason: 'r',
+    }
     measures.setReferences(measure.id, [ref])
     measures.setReferences(measure.id, [{ ...ref, title: 'A2' }])
     expect(measures.listReferences(measure.id).map((r) => r.title)).toEqual(['A2'])

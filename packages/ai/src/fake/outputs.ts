@@ -17,7 +17,11 @@ const CONCEPT = {
     { title: 'Básicos', description: 'Técnicas sencillas que sirven para muchas recetas.' },
   ],
   audience: { description: 'Gente joven que empieza a cocinar en casa.', region: 'espana', madeForKids: false },
-  format: { presence: 'voz', longForm: 'Vídeos de diez minutos con la receta entera.', shortsRole: 'Un truco por short.' },
+  format: {
+    presence: 'voz',
+    longForm: 'Vídeos de diez minutos con la receta entera.',
+    shortsRole: 'Un truco por short.',
+  },
   cadence: { longPerWeek: 1, shortsPerWeek: 3, hoursPerWeek: 6 },
   monetization: { assumptions: ['Público de España, con anuncios de alimentación.'] },
 }
@@ -43,16 +47,35 @@ function normal(use: ChannelUse, input: Record<string, unknown>): Record<string,
     case 'preguntas':
       return {
         questions: [
-          { id: 'tiempo', question: '¿Cuánto tiempo tienes para cocinar entre semana?', why: 'Para ajustar las recetas.' },
+          {
+            id: 'tiempo',
+            question: '¿Cuánto tiempo tienes para cocinar entre semana?',
+            why: 'Para ajustar las recetas.',
+          },
           { id: 'camara', question: '¿Te apetece salir en cámara?', why: 'Cambia el tipo de vídeo.' },
         ],
       }
     case 'nichos':
       return {
         niches: [
-          { label: 'Cocina rápida', summary: 'Recetas en veinte minutos.', queries: ['recetas rapidas'], whyItFits: 'Te gusta cocinar sin complicarte.' },
-          { label: 'Cocina de tupper', summary: 'Comidas para llevar.', queries: ['tupper para el trabajo'], whyItFits: 'Encaja con tu día a día.' },
-          { label: 'Cocina barata', summary: 'Comer bien gastando poco.', queries: ['recetas baratas', 'menu semanal barato'], whyItFits: 'Te interesa ahorrar.' },
+          {
+            label: 'Cocina rápida',
+            summary: 'Recetas en veinte minutos.',
+            queries: ['recetas rapidas'],
+            whyItFits: 'Te gusta cocinar sin complicarte.',
+          },
+          {
+            label: 'Cocina de tupper',
+            summary: 'Comidas para llevar.',
+            queries: ['tupper para el trabajo'],
+            whyItFits: 'Encaja con tu día a día.',
+          },
+          {
+            label: 'Cocina barata',
+            summary: 'Comer bien gastando poco.',
+            queries: ['recetas baratas', 'menu semanal barato'],
+            whyItFits: 'Te interesa ahorrar.',
+          },
         ],
       }
     case 'conceptos':

@@ -8,9 +8,12 @@ import type { OnboardingRepo } from '../db/repos/onboarding.ts'
 import type { SettingsRepo } from '../db/repos/settings.ts'
 import type { AiConnectionsService } from '../services/ai-connections.ts'
 import type { ClaudeRepair } from '../services/claude-repair.ts'
+import type { JobsService } from '../services/jobs.ts'
 import { ApiError } from './errors.ts'
 import { guard } from './guard.ts'
 import { aiRoutes } from './routes/ai.ts'
+import { channelRoutes, type ChannelRoutesDeps } from './routes/channel.ts'
+import { jobsRoutes } from './routes/jobs.ts'
 import { onboardingRoutes } from './routes/onboarding.ts'
 import { settingsRoutes } from './routes/settings.ts'
 import { updatesRoutes } from './routes/updates.ts'
@@ -30,6 +33,8 @@ export interface AppDeps {
   repair?: ClaudeRepair
   limits?: LimitsRepo
   settings?: SettingsRepo
+  channel?: ChannelRoutesDeps
+  jobs?: JobsService
 }
 
 const MIME: Record<string, string> = {
@@ -94,6 +99,9 @@ export function createApp(deps: AppDeps) {
   if (deps.limits && deps.settings)
     app.route('/api/settings', settingsRoutes({ limits: deps.limits, settings: deps.settings }))
   if (deps.settings) app.route('/api/updates', updatesRoutes({ settings: deps.settings, version: deps.version }))
+
+  if (deps.channel) app.route('/api', channelRoutes(deps.channel))
+  if (deps.jobs) app.route('/api/jobs', jobsRoutes(deps.jobs))
 
   // Fallback after every route, so routes registered later still match: static files, else the SPA.
   app.notFound((c) => {

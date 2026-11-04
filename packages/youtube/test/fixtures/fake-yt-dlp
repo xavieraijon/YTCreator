@@ -7,8 +7,22 @@ import { join } from 'node:path'
 
 // The same channels and video ids as the fake adapter's world (src/fake/scenarios.ts), so one battery fits both.
 const CHANNELS = [
-  { handle: 'cocinacorta30', id: 'UCcocinacorta30000000000', title: 'Cocina Corta', prefix: 'co30', count: 30, followers: 5_500 },
-  { handle: 'cocinatres', id: 'UCcocinatres000000000000', title: 'Cocina en Tres', prefix: 'coes', count: 3, followers: null },
+  {
+    handle: 'cocinacorta30',
+    id: 'UCcocinacorta30000000000',
+    title: 'Cocina Corta',
+    prefix: 'co30',
+    count: 30,
+    followers: 5_500,
+  },
+  {
+    handle: 'cocinatres',
+    id: 'UCcocinatres000000000000',
+    title: 'Cocina en Tres',
+    prefix: 'coes',
+    count: 3,
+    followers: null,
+  },
 ]
 
 const dir = process.env.FAKE_YTDLP_DIR
@@ -122,7 +136,9 @@ function videos(channel) {
     const short = i % 4 === 1
     return {
       id: `${channel.prefix}v${String(i).padStart(3, '0')}`.padEnd(11, 'x').slice(0, 11),
-      title: short ? `${channel.title}: un truco en un minuto (${i + 1})` : `${channel.title}: receta completa ${i + 1}`,
+      title: short
+        ? `${channel.title}: un truco en un minuto (${i + 1})`
+        : `${channel.title}: receta completa ${i + 1}`,
       views: i % 7 === 6 ? null : 900 + ((i * 7919) % 48_000),
       duration: i % 11 === 10 ? null : short ? 45 : 420 + i * 13,
     }

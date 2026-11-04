@@ -21,7 +21,10 @@ export const nichesOutput = z.object({
 
 export const conceptSchema = z.object({
   promise: text.max(160),
-  pillars: z.array(z.object({ title: text, description: text })).min(3).max(4),
+  pillars: z
+    .array(z.object({ title: text, description: text }))
+    .min(3)
+    .max(4),
   audience: z.object({ description: text, region: z.enum(AUDIENCE_REGIONS), madeForKids: z.boolean() }),
   format: z.object({ presence: z.enum(['cara', 'voz', 'ninguna']), longForm: text, shortsRole: text }),
   cadence: z.object({

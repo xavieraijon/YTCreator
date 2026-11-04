@@ -4,13 +4,24 @@ import type { Server } from 'node:http'
 import type { AddressInfo } from 'node:net'
 import { createAdaptorServer } from '@hono/node-server'
 import { claudeVersion, createRegistry, resolveClaudeBin } from '@ytcreator/ai'
+import { type ChannelUse, type Pricing } from '@ytcreator/core'
+import { loadMarket, promptFor } from '@ytcreator/knowledge'
 import { migrate, MIGRATIONS } from './db/migrate.ts'
 import { openDatabase } from './db/open.ts'
 import { createAccountsRepo } from './db/repos/accounts.ts'
+import { createChannelsRepo } from './db/repos/channels.ts'
 import { createConnectionsRepo } from './db/repos/connections.ts'
+import { createJobsRepo } from './db/repos/jobs.ts'
+import { createJourneysRepo } from './db/repos/journeys.ts'
 import { createLimitsRepo } from './db/repos/limits.ts'
+import { createMeasuresRepo } from './db/repos/measures.ts'
+import { createNamesRepo } from './db/repos/names.ts'
 import { createOnboardingRepo } from './db/repos/onboarding.ts'
+import { createProfilesRepo } from './db/repos/profiles.ts'
+import { createProposalsRepo } from './db/repos/proposals.ts'
 import { createSettingsRepo } from './db/repos/settings.ts'
+import { createUsageRepo } from './db/repos/usage.ts'
+import { createYtCacheRepo } from './db/repos/yt-cache.ts'
 import { createApp } from './http/app.ts'
 import { acquireInstance, releaseInstance } from './instance.ts'
 import { createLogger } from './logging.ts'
@@ -18,7 +29,9 @@ import { prepareWorkspace, type AppPaths } from './paths.ts'
 import { createFileStore } from './secrets/file-store.ts'
 import { selectSecretStore } from './secrets/select.ts'
 import { createAiConnectionsService, type ClaudeCodeStatus } from './services/ai-connections.ts'
+import { createAiRunService } from './services/ai-run.ts'
 import { createClaudeRepair, officialInstaller } from './services/claude-repair.ts'
+import { createJobsService } from './services/jobs.ts'
 import { createVersionCheck } from './updates/version-check.ts'
 
 export const HOST = '127.0.0.1'
@@ -143,6 +156,40 @@ export async function startServer({
   const onboarding = createOnboardingRepo(db, connections, now)
   const limits = createLimitsRepo(db, now)
 
+  // The knowledge package fails here if a file does not validate: the server refuses to start (principle V).
+  const market = loadMarket()
+  const pricing: Pricing = {
+    version: market.pricing.version,
+    models: market.pricing.data.models,
+    usdToEur: market.pricing.data.usdToEur.rate,
+    charsPerToken: market.pricing.data.charsPerToken,
+  }
+  const jobsRepo = createJobsRepo(db, now)
+  const jobs = createJobsService({ jobs: jobsRepo, logger })
+  jobs.interruptRunning()
+  createYtCacheRepo(db, now).purgeExpired()
+  const channelPrompt = (use: ChannelUse) => promptFor(use)
+  const channel = {
+    db,
+    channels: createChannelsRepo(db, now),
+    journeys: createJourneysRepo(db, now),
+    proposals: createProposalsRepo(db, now),
+    profiles: createProfilesRepo(db, now),
+    measures: createMeasuresRepo(db, now),
+    names: createNamesRepo(db, now),
+    jobs: jobsRepo,
+    promptFor: channelPrompt,
+    aiRun: createAiRunService({
+      usage: createUsageRepo(db, now),
+      limits,
+      pricing,
+      logger,
+      now,
+      active: () => ai.activeAi(),
+      promptFor: channelPrompt,
+      aiTimeoutSeconds: () => settings.get('ai_timeout_seconds'),
+    }),
+  }
   // Only in the published build (R20): dev, test and e2e all build with __YTC_ALLOW_FAKE_AI__ true, so no test
   // or local run ever reaches the network here, regardless of YTCREATOR_FAKE_AI.
   let versionCheckTimer: NodeJS.Timeout | null = null
@@ -174,7 +221,21 @@ export async function startServer({
     throw new NoFreePortError()
   }
 
-  app = createApp({ port, version, instanceId, logger, webDir, onShutdown, onboarding, ai, repair, limits, settings })
+  app = createApp({
+    port,
+    version,
+    instanceId,
+    logger,
+    webDir,
+    onShutdown,
+    onboarding,
+    ai,
+    repair,
+    limits,
+    settings,
+    channel,
+    jobs,
+  })
   logger.info('server_started', { port, version })
 
   return {

@@ -1,4 +1,4 @@
-import { CONNECTION_KINDS, type ConnectionKind } from '@ytcreator/core'
+import { type ChannelOrigin, CONNECTION_KINDS, type ConnectionKind, type JourneyStep, stepsOf } from '@ytcreator/core'
 import type { OnboardingState } from '@ytcreator/core/api'
 import { useSyncExternalStore } from 'react'
 
@@ -12,6 +12,8 @@ export type Route =
   | { readonly page: 'wizard'; readonly step: WizardStep }
   | { readonly page: 'connectAi' }
   | { readonly page: 'home' }
+  | { readonly page: 'channelStart' }
+  | { readonly page: 'channelStep'; readonly kind: ChannelOrigin; readonly step: JourneyStep }
   | { readonly page: 'settings' }
   | { readonly page: 'aiSettings' }
   // limits: the connection is already there and only the spending limits are missing (no form to fill in again).
@@ -22,6 +24,9 @@ export type Route =
 export type Target = Exclude<Route, { page: 'notFound' }>
 
 const isStep = (value: string): value is WizardStep => (WIZARD_STEPS as readonly string[]).includes(value)
+const KIND_BY_SEGMENT: Readonly<Record<string, ChannelOrigin>> = { nuevo: 'nuevo', existente: 'existente' }
+const isJourneyStep = (kind: ChannelOrigin, value: string): value is JourneyStep =>
+  (stepsOf(kind) as readonly string[]).includes(value)
 const isKind = (value: string): value is ConnectionKind => (CONNECTION_KINDS as readonly string[]).includes(value)
 
 export function parseRoute(pathname: string): Route {
@@ -35,6 +40,11 @@ export function parseRoute(pathname: string): Route {
   }
   if (first === 'conectar-ia' && !second) return { page: 'connectAi' }
   if (first === 'inicio' && !second) return { page: 'home' }
+  if (first === 'canal') {
+    if (!second) return { page: 'channelStart' }
+    const kind = KIND_BY_SEGMENT[second]
+    if (kind && third && !fourth && isJourneyStep(kind, third)) return { page: 'channelStep', kind, step: third }
+  }
   if (first === 'ajustes') {
     if (!second) return { page: 'settings' }
     if (second === 'general' && !third) return { page: 'generalSettings' }
@@ -59,6 +69,10 @@ export function href(route: Target): string {
       return '/conectar-ia'
     case 'home':
       return '/inicio'
+    case 'channelStart':
+      return '/canal'
+    case 'channelStep':
+      return `/canal/${route.kind}/${route.step}`
     case 'settings':
       return '/ajustes'
     case 'aiSettings':

@@ -4,7 +4,10 @@ import { checkClaims, claimsFeedback, parseFigures, trimClaims } from '../../src
 const input = {
   measure: { medianViews: 12_345, topShare: 0.42, recentVideos: 18 },
   knowledge: { rpm: { min: 1.5, max: 4 } },
-  videos: [{ videoId: 'abc', views: 3_200 }, { videoId: 'def', views: 900 }],
+  videos: [
+    { videoId: 'abc', views: 3_200 },
+    { videoId: 'def', views: 900 },
+  ],
 }
 
 describe('figures in free text', () => {
@@ -20,7 +23,9 @@ describe('figures in free text', () => {
 
 describe('checkClaims', () => {
   it('passes figures that are in the input, with rounding tolerance', () => {
-    const output = { summary: 'La mediana ronda las 12.000 visitas y los 3 primeros canales se llevan el 42 % de las visitas.' }
+    const output = {
+      summary: 'La mediana ronda las 12.000 visitas y los 3 primeros canales se llevan el 42 % de las visitas.',
+    }
     expect(checkClaims(output, input)).toEqual([])
   })
 
@@ -32,7 +37,12 @@ describe('checkClaims', () => {
   })
 
   it('detects a point that cites a video that is not in the input', () => {
-    const output = { works: [{ text: 'Los tutoriales', videoIds: ['abc'] }, { text: 'Los directos', videoIds: ['zzz'] }] }
+    const output = {
+      works: [
+        { text: 'Los tutoriales', videoIds: ['abc'] },
+        { text: 'Los directos', videoIds: ['zzz'] },
+      ],
+    }
     expect(checkClaims(output, input)).toEqual([{ path: 'works.1', text: 'Los directos', reason: 'video_inexistente' }])
   })
 
@@ -46,11 +56,17 @@ describe('trimClaims', () => {
   it('drops the failing sentences and marks the output as trimmed', () => {
     const output = {
       summary: 'Es un buen nicho. Los vídeos tienen 80.000 visitas de media.',
-      works: [{ text: 'Los tutoriales', videoIds: ['abc'] }, { text: 'Los directos', videoIds: ['zzz'] }],
+      works: [
+        { text: 'Los tutoriales', videoIds: ['abc'] },
+        { text: 'Los directos', videoIds: ['zzz'] },
+      ],
     }
     const result = trimClaims(output, input)
     expect(result.trimmed).toBe(true)
-    expect(result.output).toEqual({ summary: 'Es un buen nicho.', works: [{ text: 'Los tutoriales', videoIds: ['abc'] }] })
+    expect(result.output).toEqual({
+      summary: 'Es un buen nicho.',
+      works: [{ text: 'Los tutoriales', videoIds: ['abc'] }],
+    })
     expect(checkClaims(result.output, input)).toEqual([])
   })
 

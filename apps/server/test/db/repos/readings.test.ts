@@ -32,7 +32,11 @@ describe('readings repo', () => {
 
   it('keeps the videos and summary as read, with null where YouTube gave nothing', () => {
     const saved = readings.add(reading('Canal'))
-    expect(saved).toMatchObject({ subscribers: null, videos: [{ id: 'v1', views: null }], summary: { medianViews: null } })
+    expect(saved).toMatchObject({
+      subscribers: null,
+      videos: [{ id: 'v1', views: null }],
+      summary: { medianViews: null },
+    })
     expect(saved.fetchedAt).toBe(clock.now().toISOString())
   })
 

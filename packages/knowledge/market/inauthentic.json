@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "reviewedAt": "2026-11-01",
   "source": [
     {
@@ -15,6 +15,15 @@
       "Montajes automáticos de imágenes con voz sintética sin aportar nada propio",
       "Listas o recopilaciones de contenido ajeno sin comentario ni análisis",
       "Muchos vídeos producidos en masa con la misma plantilla"
+    ],
+    "contentKeywords": [
+      "recopilación",
+      "compilación",
+      "plantilla",
+      "en masa",
+      "en serie",
+      "voz sintética",
+      "automático"
     ],
     "allowed": [
       "Series con un formato fijo pero historias o temas distintos en cada vídeo",

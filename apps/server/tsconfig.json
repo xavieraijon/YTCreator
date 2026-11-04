@@ -8,6 +8,7 @@
   "references": [
     { "path": "../../packages/core" },
     { "path": "../../packages/ai" },
-    { "path": "../../packages/knowledge" }
+    { "path": "../../packages/knowledge" },
+    { "path": "../../packages/youtube" }
   ]
 }

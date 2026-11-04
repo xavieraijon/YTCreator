@@ -2,6 +2,17 @@ import type { UiStrings } from './types.ts'
 
 /** Default catalog. Plain words: no technical jargon (principle I, glossary test). */
 export const es: UiStrings = {
+  semaphore: {
+    verde: 'Bien',
+    ambar: 'Con dudas',
+    rojo: 'Mal',
+    sin_comprobar: 'Sin comprobar',
+  },
+  dataSource: {
+    youtube: 'Dato de YouTube · {fecha}',
+    conocimiento: '{fuente} · revisado el {fecha}',
+    ia: 'Opinión de la IA',
+  },
   button: {
     loading: 'Cargando…',
   },

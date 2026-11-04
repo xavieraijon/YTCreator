@@ -6,13 +6,7 @@ import { createClaudeCodeProvider } from '../../src/claude-code/adapter.ts'
 import { createClaudeLogin, extractToken } from '../../src/claude-code/login.ts'
 import { resolveProfile } from '../../src/profiles.ts'
 import { createFakeClaude, isAlive, mkdtemp, type FakeClaudeState } from '../claude-bin.ts'
-import {
-  INVALID_OUTPUT,
-  runProviderContract,
-  useOutputs,
-  VALID_OUTPUT,
-  type BaseCase,
-} from './battery.ts'
+import { INVALID_OUTPUT, runProviderContract, useOutputs, VALID_OUTPUT, type BaseCase } from './battery.ts'
 
 const TOKEN = 'sk-ant-oat01-FAKE-contract-0123456789'
 // The token of the recorded `setup-token` screen (fixtures/claude-code/setup-token/success.log).

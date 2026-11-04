@@ -2,7 +2,14 @@ import { Secret, type Logger, type ProviderDeps } from '@ytcreator/core'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createAnthropicProvider } from '../../src/anthropic/adapter.ts'
 import { resolveProfile } from '../../src/profiles.ts'
-import { INVALID_OUTPUT, runProviderContract, useOutputs, VALID_OUTPUT, type BaseCase, type ContractCase } from './battery.ts'
+import {
+  INVALID_OUTPUT,
+  runProviderContract,
+  useOutputs,
+  VALID_OUTPUT,
+  type BaseCase,
+  type ContractCase,
+} from './battery.ts'
 
 const KEY = 'sk-ant-api03-FAKE-contract-0123456789'
 const NOW = new Date('2026-10-29T10:00:00.000Z')

@@ -1,14 +1,18 @@
 {
-  "version": 1,
+  "version": 2,
   "reviewedAt": "2026-11-01",
   "source": [
     {
       "label": "Criterio de YTCreator, revisado con datos de AIR Media-Tech (2026)",
       "url": "https://air.io/en/air-data-findings/how-much-does-youtube-really-pay-in-2026-real-rpm-data-from-300-channels"
     },
-    { "label": "Cuotas de la YouTube Data API", "url": "https://developers.google.com/youtube/v3/getting-started#quota" }
+    {
+      "label": "Cuotas de la YouTube Data API",
+      "url": "https://developers.google.com/youtube/v3/getting-started#quota"
+    }
   ],
   "data": {
+    "rhythm": { "hoursPerLongVideo": 4, "hoursPerShort": 1 },
     "demand": { "high": 50000, "medium": 5000 },
     "entryDoor": { "open": 3, "ajar": 1, "maxSubscribers": 200000 },
     "concentration": { "high": 0.7, "medium": 0.4, "topChannels": 3 },

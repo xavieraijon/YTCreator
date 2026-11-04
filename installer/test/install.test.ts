@@ -53,8 +53,8 @@ describe('installer/install.sh', () => {
 
       expect(result.stderr).toBe('')
       expect(result.code).toBe(0)
-      for (const n of [1, 2, 3, 4, 5, 6, 7, 8]) {
-        expect(result.stdout).toContain(`Paso ${n} de 8 ·`)
+      for (const n of [1, 2, 3, 4, 5, 6, 7, 8, 9]) {
+        expect(result.stdout).toContain(`Paso ${n} de 9 ·`)
       }
       expect(result.stdout).toContain('YTCreator está listo')
 
@@ -70,7 +70,7 @@ describe('installer/install.sh', () => {
     })
   })
 
-  it.each([1, 2, 3, 4, 5, 6, 7, 8])('resumes after an interruption at step %i with the same end state', (n) => {
+  it.each([1, 2, 3, 4, 5, 6, 7, 8, 9])('resumes after an interruption at step %i with the same end state', (n) => {
     const h = home('darwin-arm64')
     const { script, cleanup } = stampFor(h)
     cleanups.push(cleanup)
@@ -106,7 +106,7 @@ describe('installer/install.sh', () => {
     for (const run of [runInstaller(script, h), runInstaller(script, h)]) {
       expect(run.code).toBe(0)
       expect(run.stdout.startsWith(notice)).toBe(true)
-      expect(run.stdout.indexOf(notice)).toBeLessThan(run.stdout.indexOf('Paso 1 de 8'))
+      expect(run.stdout.indexOf(notice)).toBeLessThan(run.stdout.indexOf('Paso 1 de 9'))
     }
   })
 

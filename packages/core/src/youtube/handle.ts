@@ -1,9 +1,7 @@
 // What the creator can paste to point at a channel (FR-019): a channel link, @handle, handle, a video link or a
 // /channel/UC… link. Anything else is null.
 export type ChannelInput =
-  | { kind: 'handle'; handle: string }
-  | { kind: 'channel'; channelId: string }
-  | { kind: 'video'; videoId: string }
+  { kind: 'handle'; handle: string } | { kind: 'channel'; channelId: string } | { kind: 'video'; videoId: string }
 
 const HANDLE = /^[A-Za-z0-9._-]{3,30}$/
 const CHANNEL_ID = /^UC[A-Za-z0-9_-]{22}$/

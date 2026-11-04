@@ -60,8 +60,7 @@ export interface Estimate {
 export type RunFailure = FailureKind | 'respuesta_invalida' | 'limite_de_gasto'
 
 export type RunResult<U extends ChannelUse> =
-  | { ok: true; value: ChannelOutput<U>; claimsTrimmed: boolean }
-  | { ok: false; failure: RunFailure }
+  { ok: true; value: ChannelOutput<U>; claimsTrimmed: boolean; usageId: string } | { ok: false; failure: RunFailure }
 
 interface Saved {
   journeyId: string
@@ -97,7 +96,15 @@ export function createAiRunService(deps: AiRunDeps) {
   }
 
   return {
-    estimate({ journeyId, use, input }: { journeyId: string; use: ChannelUse; input: Record<string, unknown> }): Estimate {
+    estimate({
+      journeyId,
+      use,
+      input,
+    }: {
+      journeyId: string
+      use: ChannelUse
+      input: Record<string, unknown>
+    }): Estimate {
       const ai = activeOrThrow()
       const profile = profileOf(ai, use)
       const promptChars = deps.promptFor(use).text.length + JSON.stringify(input).length
@@ -178,10 +185,11 @@ export function createAiRunService(deps: AiRunDeps) {
       }
       const finish = (outcome: RunFailure | 'ok') => {
         const cents = ai.billing === 'suscripcion' ? 0 : costCents(pricing, profile.model, inputTokens, outputTokens)
-        usage.record({ ...base, inputTokens, outputTokens, costCents: cents, outcome })
+        const row = usage.record({ ...base, inputTokens, outputTokens, costCents: cents, outcome })
         if (overrunsEstimate(saved.cents, cents)) {
           logger.warn('estimate_overrun', { use, estimatedCents: saved.cents, costCents: cents })
         }
+        return row.id
       }
 
       let result = await call(prompt.text)
@@ -197,8 +205,7 @@ export function createAiRunService(deps: AiRunDeps) {
         return { ok: false, failure }
       }
       const { output, trimmed } = trimClaims(result.value, input)
-      finish('ok')
-      return { ok: true, value: output, claimsTrimmed: trimmed }
+      return { ok: true, value: output, claimsTrimmed: trimmed, usageId: finish('ok') }
     },
   }
 }

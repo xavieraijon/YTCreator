@@ -1,10 +1,4 @@
-import {
-  type HandleStatus,
-  type Sourced,
-  type YouTubeResult,
-  isValidHandle,
-  youtubeFailure,
-} from '@ytcreator/core'
+import { type HandleStatus, type Sourced, type YouTubeResult, isValidHandle, youtubeFailure } from '@ytcreator/core'
 
 // Both adapters check a handle the same way: the public @handle page, with no key and no units (spike S2).
 export async function checkHandleAt(

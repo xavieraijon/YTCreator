@@ -11,13 +11,17 @@ const SETTINGS = {
   dismissed_version: semver,
   ai_timeout_seconds: z.coerce.number().int().min(10).max(300),
   secret_store: z.enum(['keychain', 'secret-service', 'file']),
+  'youtube.source': z.enum(['auto', 'ytdlp', 'data_api']),
+  'youtube.api_key_ref': z.string().min(1),
+  'youtube.api_key_hint': z.string().length(4),
+  'youtube.ytdlp_version': z.string().min(1),
 }
 
 type Settings = typeof SETTINGS
 export type SettingKey = keyof Settings
 export type SettingValue<K extends SettingKey> = z.output<Settings[K]>
 
-const DEFAULTS: { [K in SettingKey]?: SettingValue<K> } = { update_check_enabled: true }
+const DEFAULTS: { [K in SettingKey]?: SettingValue<K> } = { update_check_enabled: true, 'youtube.source': 'auto' }
 
 function encode(value: unknown): string {
   if (typeof value === 'boolean') return value ? '1' : '0'

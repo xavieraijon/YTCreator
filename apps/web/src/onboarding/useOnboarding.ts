@@ -41,7 +41,8 @@ export async function sendStep(action: WizardAction, kind?: ConnectionKind): Pro
   } catch (caught) {
     const error = asClientError(caught)
     if (error.body?.code === 'conflicto') {
-      if (error.body.current) set({ state: error.body.current, error: null })
+      const current = onboardingStateSchema.safeParse(error.body.current)
+      if (current.success) set({ state: current.data, error: null })
       else await reloadOnboarding()
     }
     return { ok: false, error }

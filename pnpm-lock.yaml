@@ -99,6 +99,9 @@ importers:
       '@ytcreator/knowledge':
         specifier: workspace:*
         version: link:../../packages/knowledge
+      '@ytcreator/youtube':
+        specifier: workspace:*
+        version: link:../../packages/youtube
       hono:
         specifier: ^4.13.14
         version: 4.13.14

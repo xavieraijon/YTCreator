@@ -11,13 +11,7 @@ import {
 import { checkHandleAt } from '../handle.ts'
 import { readRecentDates } from '../rss/feed.ts'
 import { classifyRun } from './classify.ts'
-import {
-  channelVideosArgs,
-  handleVideosArgs,
-  searchArgs,
-  versionArgs,
-  videoChannelArgs,
-} from './command.ts'
+import { channelVideosArgs, handleVideosArgs, searchArgs, versionArgs, videoChannelArgs } from './command.ts'
 import { type Listing, parseListing, toChannel, toHits, toVideos } from './parse.ts'
 import { type YtDlpRun, runYtDlp } from './process.ts'
 

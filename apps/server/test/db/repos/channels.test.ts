@@ -29,13 +29,21 @@ describe('channels repo', () => {
   })
 
   it('creates an existing channel with its YouTube id and finds it by that id', () => {
-    const channel = channels.create({ origin: 'existente', youtubeChannelId: 'UC' + 'a'.repeat(22), displayName: 'Mi canal' })
+    const channel = channels.create({
+      origin: 'existente',
+      youtubeChannelId: 'UC' + 'a'.repeat(22),
+      displayName: 'Mi canal',
+    })
     expect(channels.findByYouTubeId('UC' + 'a'.repeat(22))?.id).toBe(channel.id)
   })
 
   it('updates the name and the status', () => {
     const channel = channels.create({ origin: 'nuevo' })
-    const updated = channels.update(channel.id, { displayName: 'Cocina lenta', handle: 'cocinalenta', nameStatus: 'elegido' })
+    const updated = channels.update(channel.id, {
+      displayName: 'Cocina lenta',
+      handle: 'cocinalenta',
+      nameStatus: 'elegido',
+    })
     expect(updated).toMatchObject({ displayName: 'Cocina lenta', handle: 'cocinalenta', nameStatus: 'elegido' })
   })
 

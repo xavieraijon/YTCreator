@@ -2,8 +2,9 @@
 
 **Feature**: `003-channel-and-niche` | Decisiones en [research.md](../research.md) R2
 
-El instalador de la 002 gana un paso 9, «Preparar el lector de YouTube», que deja yt-dlp listo sin que el creador
-instale nada a mano.
+El instalador de la 002 gana un paso, «Preparar el lector de YouTube», que deja yt-dlp listo sin que el creador
+instale nada a mano. Pasa a haber 9 pasos: este es el 8 y abrir la app pasa al 9, porque el creador puede cerrar la
+ventana en cuanto se le abre el navegador.
 
 ## Reglas generales
 

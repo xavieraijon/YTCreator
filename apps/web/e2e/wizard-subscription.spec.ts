@@ -55,12 +55,10 @@ test('the whole wizard with the subscription, two accounts, and the home afterwa
     '/ajustes/ia',
   )
 
-  // «Crear mi primer canal» is enabled and says when it arrives; Escape closes it.
+  // «Crear mi primer canal» leads to the start of the channel.
   await page.getByRole('button', { name: 'Crear mi primer canal' }).click()
-  const dialog = page.getByRole('dialog', { name: 'Muy pronto' })
-  await expect(dialog).toContainText('Crear canales llegará en la próxima versión')
-  await page.keyboard.press('Escape')
-  await expect(dialog).toBeHidden()
+  await expect(page).toHaveURL(/\/canal$/)
+  await expect(page.getByRole('button', { name: 'Crear mi canal' })).toBeVisible()
 
   // Once completed, the wizard routes lead home.
   await page.goto(`${server.baseURL}/bienvenida`)

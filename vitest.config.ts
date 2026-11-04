@@ -7,7 +7,7 @@ export default defineConfig({
   test: {
     projects: [
       { test: { name: 'tokens', root: 'packages/tokens', environment: 'node', include: ['test/**/*.test.ts'] } },
-      { test: { name: 'ui', root: 'packages/ui', environment: 'node', include: ['test/**/*.test.ts'] } },
+      { test: { name: 'ui', root: 'packages/ui', environment: 'node', include: ['test/**/*.test.{ts,tsx}'] } },
       { test: { name: 'core', root: 'packages/core', environment: 'node', include: ['test/**/*.test.ts'] } },
       {
         test: { name: 'knowledge', root: 'packages/knowledge', environment: 'node', include: ['test/**/*.test.ts'] },
@@ -31,7 +31,7 @@ export default defineConfig({
         define: allowFakeAi,
         test: { name: 'server', root: 'apps/server', environment: 'node', include: ['test/**/*.test.ts'] },
       },
-      { test: { name: 'web', root: 'apps/web', environment: 'node', include: ['test/**/*.test.ts'] } },
+      { test: { name: 'web', root: 'apps/web', environment: 'node', include: ['test/**/*.test.{ts,tsx}'] } },
       {
         test: {
           name: 'installer',

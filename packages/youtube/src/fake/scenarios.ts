@@ -39,12 +39,7 @@ function makeVideos(prefix: string, count: number, topic: string): VideoInfo[] {
   })
 }
 
-function makeChannel(
-  slug: string,
-  title: string,
-  videoCount: number,
-  extra: Partial<ChannelInfo> = {},
-): FakeChannel {
+function makeChannel(slug: string, title: string, videoCount: number, extra: Partial<ChannelInfo> = {}): FakeChannel {
   // Two letters from each end keep the video ids of the fake channels apart.
   const videos = makeVideos(`${slug.slice(0, 2)}${slug.slice(-2)}`, videoCount, title)
   return {

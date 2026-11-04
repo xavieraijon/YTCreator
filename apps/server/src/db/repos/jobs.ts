@@ -46,6 +46,7 @@ export function createJobsRepo(db: DatabaseSync, now: () => Date = () => new Dat
   const selectRunning = db.prepare(
     "SELECT * FROM background_job WHERE journey_id = ? AND status = 'en_curso' ORDER BY started_at, rowid",
   )
+  const selectByJourney = db.prepare('SELECT * FROM background_job WHERE journey_id = ? ORDER BY started_at, rowid')
   const insert = db.prepare(
     "INSERT INTO background_job (id, journey_id, kind, status, progress, started_at) VALUES (?, ?, ?, 'en_curso', ?, ?)",
   )
@@ -65,6 +66,10 @@ export function createJobsRepo(db: DatabaseSync, now: () => Date = () => new Dat
 
     listRunning(journeyId: string): Job[] {
       return (selectRunning.all(journeyId) as unknown as Row[]).map(fromRow)
+    },
+
+    listByJourney(journeyId: string): Job[] {
+      return (selectByJourney.all(journeyId) as unknown as Row[]).map(fromRow)
     },
 
     start(job: NewJob): Job {

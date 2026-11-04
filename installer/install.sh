@@ -12,6 +12,15 @@ SHA_NODE_DARWIN_ARM64="__SHA_NODE_DARWIN_ARM64__"
 SHA_NODE_DARWIN_X64="__SHA_NODE_DARWIN_X64__"
 SHA_NODE_LINUX_X64="__SHA_NODE_LINUX_X64__"
 SHA_NODE_LINUX_ARM64="__SHA_NODE_LINUX_ARM64__"
+YTDLP_VERSION="__YTDLP_VERSION__"
+YTDLP_URL_DARWIN_ARM64="__YTDLP_URL_DARWIN_ARM64__"
+YTDLP_URL_DARWIN_X64="__YTDLP_URL_DARWIN_X64__"
+YTDLP_URL_LINUX_X64="__YTDLP_URL_LINUX_X64__"
+YTDLP_URL_LINUX_ARM64="__YTDLP_URL_LINUX_ARM64__"
+SHA_YTDLP_DARWIN_ARM64="__SHA_YTDLP_DARWIN_ARM64__"
+SHA_YTDLP_DARWIN_X64="__SHA_YTDLP_DARWIN_X64__"
+SHA_YTDLP_LINUX_X64="__SHA_YTDLP_LINUX_X64__"
+SHA_YTDLP_LINUX_ARM64="__SHA_YTDLP_LINUX_ARM64__"
 
 # --- Env vars (none of these are documented for the creator) ------------------------------------------------
 : "${YTCREATOR_RELEASE_BASE:=https://github.com/xavieraijon/YTCreator/releases/latest/download}"
@@ -31,7 +40,8 @@ MSG_STEP4="Descargando YTCreator"
 MSG_STEP5="Instalando Claude Code"
 MSG_STEP6="Preparando tus datos"
 MSG_STEP7="Creando el acceso directo"
-MSG_STEP8="Abriendo YTCreator"
+MSG_STEP8="Preparando el lector de YouTube…"
+MSG_STEP9="Abriendo YTCreator"
 MSG_DONE="✓ YTCreator está listo."
 
 MSG_UNSUPPORTED_WHAT="Tu sistema no es compatible con YTCreator todavía."
@@ -52,6 +62,8 @@ MSG_CLAUDE_WARN="No se ha podido instalar Claude Code. Podrás repararlo más ta
 MSG_MIGRATE_WHAT="No se han podido preparar tus datos para la nueva versión."
 MSG_MIGRATE_TODO="Tus datos se han dejado como estaban: sigues con la versión anterior."
 MSG_SHORTCUT_WARN="No se ha podido crear el acceso directo. YTCreator funciona igual sin él."
+MSG_READER_OK="Lector de YouTube listo."
+MSG_READER_WARN="No hemos podido preparar el lector de YouTube. Puedes seguir; lo intentaremos desde Ajustes."
 MSG_UNEXPECTED_WHAT="Algo ha fallado durante la instalación."
 MSG_UNEXPECTED_TODO="Vuelve a pegar la línea de instalación; si sigue pasando, cuéntanoslo con el registro de abajo."
 MSG_INTERRUPTED="Instalación interrumpida."
@@ -437,10 +449,55 @@ step7_run() {
   return 0
 }
 
-# --- Step 8: abriendo YTCreator -------------------------------------------------------------------------------
-step8_done() { return 1; }
+# --- Step 8: preparando el lector de YouTube (contracts/installer.md; never stops the install) ------------------
+# Before opening the app on purpose: the creator may close this window as soon as the browser appears.
+step8_done() {
+  [ -x "$APP_HOME/bin/yt-dlp" ] && [ "$(cat "$APP_HOME/bin/yt-dlp.version" 2>/dev/null)" = "$YTDLP_VERSION" ]
+}
+
+reader_failed() {
+  # $1: descarga | hash | permisos. Only the code goes to the log, never a path of the creator.
+  rm -f "${READER_TMP:-}"
+  echo "$MSG_READER_WARN"
+  log "youtube reader: code=$1"
+  return 0
+}
 
 step8_run() {
+  local url sha actual
+  case "$PLATFORM" in
+    darwin-arm64) url="$YTDLP_URL_DARWIN_ARM64" sha="$SHA_YTDLP_DARWIN_ARM64" ;;
+    darwin-x64) url="$YTDLP_URL_DARWIN_X64" sha="$SHA_YTDLP_DARWIN_X64" ;;
+    linux-x64) url="$YTDLP_URL_LINUX_X64" sha="$SHA_YTDLP_LINUX_X64" ;;
+    linux-arm64) url="$YTDLP_URL_LINUX_ARM64" sha="$SHA_YTDLP_LINUX_ARM64" ;;
+  esac
+  READER_TMP=""
+  mkdir -p "$APP_HOME/bin" 2>/dev/null || { reader_failed permisos; return 0; }
+  READER_TMP="$(mktemp "$APP_HOME/bin/.reader.XXXXXX" 2>/dev/null)" || { READER_TMP=""; reader_failed permisos; return 0; }
+  # curl's own messages stay out of the log: they may carry paths.
+  if ! curl -fsSL --connect-timeout 20 --max-time 600 -o "$READER_TMP" "$url" >/dev/null 2>&1; then
+    reader_failed descarga
+    return 0
+  fi
+  actual="$(sha256_of "$READER_TMP")"
+  if [ "$actual" != "$sha" ]; then
+    reader_failed hash
+    return 0
+  fi
+  if ! chmod 755 "$READER_TMP" 2>/dev/null || ! mv -f "$READER_TMP" "$APP_HOME/bin/yt-dlp" 2>/dev/null; then
+    reader_failed permisos
+    return 0
+  fi
+  if ! printf '%s\n' "$YTDLP_VERSION" >"$APP_HOME/bin/yt-dlp.version" 2>/dev/null; then
+    log "youtube reader: version not written; next install will download it again"
+  fi
+  echo "$MSG_READER_OK"
+}
+
+# --- Step 9: abriendo YTCreator -------------------------------------------------------------------------------
+step9_done() { return 1; }
+
+step9_run() {
   # "open" (R6) IS the running app once started (serve() blocks on the listening socket until shutdown), the
   # same way a double-clicked .app/.desktop launch works. Here the install script itself is the parent and
   # must finish and hand the terminal back, so it is launched decoupled (setsid when available, else nohup)
@@ -456,7 +513,7 @@ step8_run() {
 # --- Driver ----------------------------------------------------------------------------------------------------
 run_step() {
   local n="$1" text="$2"
-  echo "Paso ${n} de 8 · ${text}"
+  echo "Paso ${n} de 9 · ${text}"
   if [ "${YTCREATOR_INSTALL_TEST}" = "1" ] && [ "${YTCREATOR_INSTALL_FAIL_STEP}" = "$n" ]; then
     log "step $n: forced failure (test hook)"
     fail 99 "$MSG_TEST_HOOK_WHAT" ""
@@ -481,6 +538,7 @@ main() {
   run_step 6 "$MSG_STEP6"
   run_step 7 "$MSG_STEP7"
   run_step 8 "$MSG_STEP8"
+  run_step 9 "$MSG_STEP9"
 
   local place="el menú de aplicaciones"
   [ "$PLATFORM_OS" = "darwin" ] && place="Launchpad"

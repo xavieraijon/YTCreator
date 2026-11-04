@@ -15,7 +15,14 @@ export type JourneyStep = (typeof NEW_CHANNEL_STEPS)[number] | (typeof EXISTING_
 export const JOURNEY_STATUSES = ['activo', 'terminado', 'abandonado'] as const
 export type JourneyStatus = (typeof JOURNEY_STATUSES)[number]
 
-export const PROPOSAL_KINDS = ['preguntas', 'nichos', 'conceptos', 'nombres', 'perfil_actual', 'posicionamiento'] as const
+export const PROPOSAL_KINDS = [
+  'preguntas',
+  'nichos',
+  'conceptos',
+  'nombres',
+  'perfil_actual',
+  'posicionamiento',
+] as const
 export type ProposalKind = (typeof PROPOSAL_KINDS)[number]
 
 export const PROPOSAL_STATUSES = ['propuesta', 'aprobada', 'descartada'] as const
