@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { channelProfileSchema, monthlyEurRange } from '../../src/channel/profile.ts'
+import { monthlyEurRange } from '../../src/channel/monetization.ts'
+import { channelProfileSchema } from '../../src/channel/profile.ts'
 
 const pillar = { title: 'Cenas', description: 'Platos rápidos.' }
 const profile = {

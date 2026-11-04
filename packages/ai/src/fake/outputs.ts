@@ -23,7 +23,7 @@ const CONCEPT = {
     shortsRole: 'Un truco por short.',
   },
   cadence: { longPerWeek: 1, shortsPerWeek: 3, hoursPerWeek: 6 },
-  monetization: { assumptions: ['Público de España, con anuncios de alimentación.'] },
+  monetization: { category: 'estilo_de_vida', assumptions: ['Público de España, con anuncios de alimentación.'] },
 }
 
 function videoIdsOf(input: Record<string, unknown>): string[] {

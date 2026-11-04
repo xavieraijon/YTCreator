@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { createRegistry } from '@ytcreator/ai'
 import type { Pricing } from '@ytcreator/core'
-import { loadMarket, warningKnowledge } from '@ytcreator/knowledge'
+import { conceptKnowledge, loadMarket, warningKnowledge } from '@ytcreator/knowledge'
 import { createFakeYouTube } from '@ytcreator/youtube'
 import { afterEach } from 'vitest'
 import { migrate, MIGRATIONS } from '../src/db/migrate.ts'
@@ -126,6 +126,7 @@ export function makeTestApp({ fakeAi, now = () => new Date(), installer }: TestA
     aiRun,
     promptFor,
     warningKnowledge: warningKnowledge(market),
+    conceptKnowledge: conceptKnowledge(market),
     measureStaleDays: market.thresholds.data.staleDays,
   }
   const fakeYouTube = createFakeYouTube({ now })

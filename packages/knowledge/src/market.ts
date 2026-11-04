@@ -83,6 +83,10 @@ export const MARKET_SCHEMAS = {
   'thresholds.json': envelope(
     z.object({
       rhythm: z.object({ hoursPerLongVideo: z.number().positive(), hoursPerShort: z.number().positive() }),
+      monetization: z.object({
+        weeksPerMonth: z.number().positive(),
+        viewsShareOfMedian: z.object({ min: z.number().positive(), max: z.number().positive() }),
+      }),
       demand: z.object({ high: z.number().int().positive(), medium: z.number().int().positive() }),
       entryDoor: z.object({
         open: z.number().int().positive(),
@@ -200,6 +204,32 @@ export function staleEntries(market: MarketKnowledge, now: Date): StaleEntry[] {
     return [{ file, label: entry.source[0]!.label, reviewedAt: entry.reviewedAt }]
   })
 }
+
+/** What the concept step needs: the sums of the money ranges, their sources and what the AI reads (T090). */
+export function conceptKnowledge(market: MarketKnowledge) {
+  const { ypp, rpm, madeForKids, inauthentic, shorts, thresholds } = market
+  const ads = ypp.data.tiers.find((tier) => tier.id === 'ads')
+  if (!ads) throw new Error('ypp.json no tiene el nivel de anuncios')
+  return {
+    monetization: {
+      categories: rpm.data.categories,
+      weeksPerMonth: thresholds.data.monetization.weeksPerMonth,
+      viewsShareOfMedian: thresholds.data.monetization.viewsShareOfMedian,
+      ypp: { subscribers: ads.subscribers, watchHours: ads.watchHours.hours, shortsViews: ads.shortsViews.views },
+    },
+    rpmSource: { label: rpm.source[0]!.label, reviewedAt: rpm.reviewedAt },
+    yppSource: { label: ypp.source[0]!.label, reviewedAt: ypp.reviewedAt },
+    forPrompt: {
+      partnerProgram: { subscribers: ads.subscribers, watchHours: ads.watchHours.hours },
+      categories: Object.keys(rpm.data.categories),
+      earningsNote: rpm.data.note,
+      madeForKids: madeForKids.data.implications,
+      inauthentic: { rule: inauthentic.data.rule, notAllowed: inauthentic.data.notAllowed },
+      shorts: { role: shorts.data.role, recommendedMix: shorts.data.recommendedMix },
+    },
+  }
+}
+export type ConceptKnowledge = ReturnType<typeof conceptKnowledge>
 
 /** What the warnings of a niche or concept need (core/channel/warnings.ts), with the date of each source. */
 export function warningKnowledge(market: MarketKnowledge) {

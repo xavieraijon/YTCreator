@@ -13,6 +13,11 @@ test.afterAll(async () => {
 })
 
 const audit = async (page: Page) => {
+  // As in a11y.spec.ts: the colours are measured once the animations have settled.
+  await page.evaluate(async () => {
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+    await Promise.all(document.getAnimations().map((animation) => animation.finished.catch(() => undefined)))
+  })
   const { violations } = await new AxeBuilder({ page }).analyze()
   expect(violations.map(({ id, nodes }) => `${id}: ${nodes.map((node) => node.target).join(', ')}`)).toEqual([])
 }
@@ -123,4 +128,49 @@ test('from the interests to the rhythm with the fakes (US1)', async ({ page: fir
   await page.getByText('Solo con mi voz').click()
   await page.getByRole('button', { name: 'Seguir' }).click()
   await expect(page).toHaveURL(/\/canal\/nuevo\/conceptos$/)
+
+  // Concepts: money in ranges with the source, and one is chosen.
+  await expect(heading(page, 'La idea de tu canal')).toBeVisible()
+  await page.getByRole('button', { name: /Proponer ideas/ }).click()
+  const concepts = page.getByRole('article')
+  await expect(concepts.first().getByText(/De [\d.]+ a [\d.]+ € al mes/)).toBeVisible()
+  await audit(page)
+
+  // An edit keeps the concept and its figures.
+  await concepts.first().getByRole('button', { name: 'Cambiar algo' }).click()
+  await page.getByLabel('La promesa').fill('Cenas de diario sin complicarte la vida.')
+  await audit(page)
+  await page.getByRole('button', { name: 'Guardar cambios' }).click()
+  await expect(page.getByRole('article', { name: 'Cenas de diario sin complicarte la vida.' })).toBeVisible()
+
+  await concepts.first().getByRole('button', { name: 'Elegir este concepto' }).click()
+  await expect(page.getByText('Concepto elegido')).toBeVisible()
+  await page.getByRole('button', { name: 'Seguir', exact: true }).click()
+  await expect(page).toHaveURL(/\/canal\/nuevo\/nombres$/)
+
+  // Going back to the niches warns; cancelling changes nothing.
+  await page.getByRole('button', { name: 'Volver', exact: true }).click()
+  await expect(heading(page, 'La idea de tu canal')).toBeVisible()
+  await page.getByRole('button', { name: 'Volver', exact: true }).click()
+  await expect(heading(page, 'Tu ritmo')).toBeVisible()
+  await page.getByRole('button', { name: 'Volver', exact: true }).click()
+  const dialog = page.getByRole('dialog', { name: /Tu concepto se basaba en el nicho anterior/ })
+  await expect(dialog).toBeVisible()
+  await audit(page)
+  await dialog.getByRole('button', { name: 'Cancelar' }).click()
+  await expect(heading(page, 'Tu ritmo')).toBeVisible()
+
+  // Confirming goes back, and the concept has to be chosen again.
+  await page.getByRole('button', { name: 'Volver', exact: true }).click()
+  await dialog.getByRole('button', { name: 'Cambiar igualmente' }).click()
+  await expect(heading(page, 'Elige el tema de tu canal')).toBeVisible()
+  await page.getByRole('button', { name: 'Seguir', exact: true }).last().click()
+  await expect(heading(page, 'Tu ritmo')).toBeVisible()
+  await page.getByRole('button', { name: 'Seguir' }).click()
+  await expect(heading(page, 'La idea de tu canal')).toBeVisible()
+  await expect(page.getByText(/se basaba en el nicho anterior/)).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Seguir', exact: true })).toHaveCount(0)
+  await concepts.first().getByRole('button', { name: 'Elegir este concepto' }).click()
+  await page.getByRole('button', { name: 'Seguir', exact: true }).click()
+  await expect(page).toHaveURL(/\/canal\/nuevo\/nombres$/)
 })

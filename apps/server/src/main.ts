@@ -6,7 +6,7 @@ import { createAdaptorServer } from '@hono/node-server'
 import { claudeVersion, createRegistry, resolveClaudeBin } from '@ytcreator/ai'
 import { type ChannelUse, type Pricing } from '@ytcreator/core'
 import { join } from 'node:path'
-import { loadMarket, promptFor, warningKnowledge } from '@ytcreator/knowledge'
+import { conceptKnowledge, loadMarket, promptFor, warningKnowledge } from '@ytcreator/knowledge'
 import { createYouTubeAdapters } from '@ytcreator/youtube'
 import { migrate, MIGRATIONS } from './db/migrate.ts'
 import { openDatabase } from './db/open.ts'
@@ -214,6 +214,7 @@ export async function startServer({
     jobs: jobsRepo,
     promptFor: channelPrompt,
     warningKnowledge: warningKnowledge(market),
+    conceptKnowledge: conceptKnowledge(market),
     measureStaleDays: market.thresholds.data.staleDays,
     aiRun: createAiRunService({
       usage: createUsageRepo(db, now),

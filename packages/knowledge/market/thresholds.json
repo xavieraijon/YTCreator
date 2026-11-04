@@ -13,6 +13,7 @@
   ],
   "data": {
     "rhythm": { "hoursPerLongVideo": 4, "hoursPerShort": 1 },
+    "monetization": { "weeksPerMonth": 4.33, "viewsShareOfMedian": { "min": 0.05, "max": 0.5 } },
     "demand": { "high": 50000, "medium": 5000 },
     "entryDoor": { "open": 3, "ajar": 1, "maxSubscribers": 200000 },
     "concentration": { "high": 0.7, "medium": 0.4, "topChannels": 3 },

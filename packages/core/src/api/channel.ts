@@ -196,6 +196,20 @@ export const channelWarningViewSchema = z.object({
 })
 export type ChannelWarningView = z.infer<typeof channelWarningViewSchema>
 
+// A concept as stored and shown: what the AI wrote plus what the domain worked out after it (T090).
+export const conceptFiguresSchema = z.object({
+  monetization: z.object({
+    rpmEurRange: z.object({ min: z.number(), max: z.number() }),
+    monthlyViewsAssumption: z.object({ min: z.number(), max: z.number() }).nullable(),
+    monthlyEurRange: z.object({ min: z.number(), max: z.number() }).nullable(),
+    yppRequirements: z.object({ subscribers: z.number(), watchHours: z.number(), shortsViews: z.number() }),
+    rpmSource: z.object({ label: z.string(), reviewedAt: z.string() }),
+    yppSource: z.object({ label: z.string(), reviewedAt: z.string() }),
+  }),
+  warnings: z.array(channelWarningViewSchema),
+})
+export type ConceptFigures = z.infer<typeof conceptFiguresSchema>
+
 export const journeyViewSchema = journeySchema.extend({
   proposals: z.array(proposalSchema),
   measures: z.array(measureSchema),

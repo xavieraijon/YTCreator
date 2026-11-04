@@ -37,7 +37,7 @@ Reglas de forma (además del esquema):
 
 - `handle`: 3–30 caracteres `[A-Za-z0-9._-]`, sin `@`.
 - `Concept.pillars`: 3–4; `promise` ≤ 160 caracteres.
-- `monetization`: la IA solo escribe `assumptions`; los rangos los calcula el dominio con `rpm.json` y `ypp.json`.
+- `monetization`: la IA solo escribe `category` (la categoría de `rpm.json`) y `assumptions`; los rangos los calcula el dominio con `rpm.json` y `ypp.json`, y se guardan aparte en `figures` junto con los avisos. Al editar un concepto, `figures` se descarta y se recalcula.
 - `warnings`: la IA puede proponerlas, pero `infantil` lo decide también una regla del dominio sobre el público.
 
 ## Fallos

@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { AUDIENCE_REGIONS } from './model.ts'
+import { RPM_CATEGORIES } from './monetization.ts'
 
 // Output schemas of the six channel uses (contracts/ai-uses.md). The AI writes these; the domain fills the rest.
 export const HANDLE_PATTERN = /^[A-Za-z0-9._-]{3,30}$/
@@ -47,8 +48,8 @@ export const conceptSchema = z.object({
     shortsPerWeek: z.number().min(0),
     hoursPerWeek: z.number().min(0),
   }),
-  // Only the assumptions: the ranges come from rpm.json and ypp.json.
-  monetization: z.object({ assumptions: z.array(text) }),
+  // Only the assumptions and the kind of content: the ranges come from rpm.json and ypp.json.
+  monetization: z.object({ category: z.enum(RPM_CATEGORIES), assumptions: z.array(text) }),
   warnings: z.array(z.enum(WARNING_CODES)).optional(),
 })
 export type ConceptOutput = z.infer<typeof conceptSchema>

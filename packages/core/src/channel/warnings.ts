@@ -54,6 +54,14 @@ const onlyShorts = (k: WarningKnowledge): ChannelWarning => ({
   reviewedAt: k.shorts.reviewedAt,
 })
 
+/** The warning of a code the AI proposed, with the source it would have by the domain's rule. */
+export function warningOfCode(code: ChannelWarningCode, knowledge: WarningKnowledge): ChannelWarning {
+  if (code === 'infantil') return kids(knowledge)
+  if (code === 'no_autentico') return inauthentic(knowledge)
+  if (code === 'solo_shorts') return onlyShorts(knowledge)
+  return { code, sourceId: null, reviewedAt: null }
+}
+
 export function conceptWarnings(
   concept: ConceptForWarnings,
   { hoursPerWeek }: { hoursPerWeek?: number },

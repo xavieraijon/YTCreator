@@ -77,3 +77,20 @@ Tabla de casos con muestras sintéticas que cubren cada nivel, cada rama del ver
 10 vídeos largos (también con muchos Shorts), Shorts que no alteran ningún indicador, vídeos sin duración y empates en
 el top 3. Para la comparación: menos de 3 anteriores, mediana 0, un viral entre los anteriores, formatos sin mezclar y
 vídeos recientes fuera de «peores».
+
+## Ingresos de un concepto
+
+Regla del dominio en `packages/core/src/channel/monetization.ts`, con `monetization` de `thresholds.json`:
+
+- Visitas al mes = vídeos largos por semana × `weeksPerMonth` (4,33) × mediana de visitas del nicho × `viewsShareOfMedian`
+  (de 0,05 a 0,5: un canal que empieza consigue una parte de lo típico). Es un supuesto visible, no una medida, y un
+  criterio propio de esta feature.
+- Euros al mes = visitas × lo que se gana por cada 1.000 visitas (`rpm.json`, según categoría y región) / 1.000.
+- Contenido hecho para niños usa la categoría `infantil`.
+- Sin medida del nicho o sin vídeos largos no hay cifra: los Shorts pagan demasiado poco para esta cuenta y el aviso
+  `solo_shorts` lo explica.
+
+## Contexto de canal joven
+
+No se calcula: el puerto de YouTube no da la fecha de creación del canal. La medida guarda `small_channels` y
+`hidden_subscribers`.

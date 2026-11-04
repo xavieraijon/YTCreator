@@ -183,18 +183,18 @@ ritmo y monetización honesta en rangos con fuentes) y el creador elige uno.
 
 ### Tests para User Story 2 ⚠️
 
-- [ ] T083 [P] [US2] Test de monetización en `packages/core/test/channel/monetization.test.ts`: `monthlyEurRange` = visitas × RPM / 1.000 con el rango de `rpm.json` según región; contenido hecho para niños baja el rango; sin datos no hay cifra
-- [ ] T085 [P] [US2] Test de la propuesta de conceptos en `apps/server/test/http/concepts.test.ts`: `POST /api/journeys/:id/proposals` con `kind: conceptos` devuelve 2–3 conceptos válidos, «Proponer otra» con indicaciones crea una propuesta hija (`parentId`), elegir avanza a `nombres`
-- [ ] T086 [P] [US2] Test de pantalla en `apps/web/test/channel/concepts.test.tsx`: monetización en rangos con `DataSource` del conocimiento, avisos visibles, «Elegir este concepto», editar un concepto
-- [ ] T085b [P] [US2] Test de pantalla en `apps/web/test/channel/niche-change.test.tsx`: volver a Nichos con un concepto aprobado y elegir otro muestra «Tu concepto se basaba en el nicho anterior. ¿Cambiar igualmente?»; cancelar lo deja todo igual (FR-025, US2 AS5)
+- [X] T083 [P] [US2] Test de monetización en `packages/core/test/channel/monetization.test.ts`: `monthlyEurRange` = visitas × RPM / 1.000 con el rango de `rpm.json` según región; contenido hecho para niños baja el rango; sin datos no hay cifra
+- [X] T085 [P] [US2] Test de la propuesta de conceptos en `apps/server/test/http/concepts.test.ts`: `POST /api/journeys/:id/proposals` con `kind: conceptos` devuelve 2–3 conceptos válidos, «Proponer otra» con indicaciones crea una propuesta hija (`parentId`), elegir avanza a `nombres`
+- [X] T086 [P] [US2] Test de pantalla en `apps/web/test/channel/concepts.test.tsx`: monetización en rangos con `DataSource` del conocimiento, avisos visibles, «Elegir este concepto», editar un concepto
+- [X] T085b [P] [US2] Test de pantalla en `apps/web/test/channel/niche-change.test.tsx`: volver a Nichos con un concepto aprobado y elegir otro muestra «Tu concepto se basaba en el nicho anterior. ¿Cambiar igualmente?»; cancelar lo deja todo igual (FR-025, US2 AS5)
 
 ### Implementation para User Story 2
 
-- [ ] T087 [P] [US2] Monetización en `packages/core/src/channel/monetization.ts`
-- [ ] T089 [P] [US2] Prompt `packages/knowledge/prompts/conceptos/v1.md` (promesa ≤ 160 caracteres, 3–4 pilares unidos por la promesa, formato largo + Shorts de escaparate, sin cifras propias; reglas de `writing/human.md`)
-- [ ] T090 [US2] Montar en el servidor los conceptos: datos de entrada (nicho medido, referencias, ritmo, conocimiento) y cálculo de monetización y avisos tras la IA en `apps/server/src/services/concepts.ts`, llamado desde `apps/server/src/http/routes/channel.ts`
-- [ ] T091 [US2] Pantalla `apps/web/src/screens/channel/new/Concepts.tsx`
-- [ ] T091b [US2] Aviso y confirmación al cambiar de nicho con un concepto aprobado en `apps/web/src/screens/channel/new/Niches.tsx`, enviando `confirm: true` a `POST /api/journeys/:id/step`
+- [X] T087 [P] [US2] Monetización en `packages/core/src/channel/monetization.ts`
+- [X] T089 [P] [US2] Prompt `packages/knowledge/prompts/conceptos/v1.md` (promesa ≤ 160 caracteres, 3–4 pilares unidos por la promesa, formato largo + Shorts de escaparate, sin cifras propias; reglas de `writing/human.md`)
+- [X] T090 [US2] Montar en el servidor los conceptos: datos de entrada (nicho medido, referencias, ritmo, conocimiento) y cálculo de monetización y avisos tras la IA en `apps/server/src/services/concepts.ts`, llamado desde `apps/server/src/http/routes/channel.ts`
+- [X] T091 [US2] Pantalla `apps/web/src/screens/channel/new/Concepts.tsx`
+- [X] T091b [US2] Aviso y confirmación al cambiar de nicho con un concepto aprobado en `apps/web/src/screens/channel/new/NicheChange.tsx` y `ChannelStep.tsx` (el servidor pide la confirmación al volver a Nichos, así que el aviso sale al volver, antes de elegir otro), enviando `confirm: true` a `POST /api/journeys/:id/step`
 
 **Checkpoint**: US1 + US2 forman el MVP.
 

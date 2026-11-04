@@ -11,6 +11,7 @@ import {
   initialStep,
   planStep,
 } from '@ytcreator/core'
+import type { ConceptKnowledge } from '@ytcreator/knowledge'
 import {
   createChannelBodySchema,
   estimateBodySchema,
@@ -30,6 +31,7 @@ import type { ProposalsRepo } from '../../db/repos/proposals.ts'
 import { inTransaction } from '../../db/transaction.ts'
 import type { AiRunService, PromptRef } from '../../services/ai-run.ts'
 import { channelInput } from '../../services/channel-input.ts'
+import { createConcepts } from '../../services/concepts.ts'
 import { ApiError } from '../errors.ts'
 import { parseBody } from '../validate.ts'
 
@@ -45,6 +47,7 @@ export interface ChannelRoutesDeps {
   aiRun: AiRunService
   promptFor: (use: ChannelUse) => PromptRef
   warningKnowledge: WarningKnowledge
+  conceptKnowledge: ConceptKnowledge
   measureStaleDays: number
 }
 
@@ -84,7 +87,8 @@ export function channelRoutes(deps: ChannelRoutesDeps) {
     questions: true, // they can all be skipped (FR-005)
     niche: isApproved(journey.id, 'nichos'),
     rhythm: state.hoursPerWeek !== undefined && state.onCamera !== undefined,
-    concept: isApproved(journey.id, 'conceptos'),
+    // FR-025: a concept of the previous niche has to be chosen again before going on.
+    concept: isApproved(journey.id, 'conceptos') && !state.conceptNeedsReview,
     name: isApproved(journey.id, 'nombres') || channels.get(journey.channelId)?.nameStatus === 'elegido',
     channelInput: state.channelInput !== undefined,
     channelConfirmed: state.resolvedChannelId !== undefined,
@@ -99,6 +103,18 @@ export function channelRoutes(deps: ChannelRoutesDeps) {
     if (sourceId === 'shorts') return shorts.label
     return null
   }
+
+  const concepts = createConcepts({
+    measures,
+    knowledge: deps.conceptKnowledge,
+    warningKnowledge: deps.warningKnowledge,
+    sourceLabel,
+  })
+  const inputOf = (use: ChannelUse, journey: Journey) => {
+    const base = channelInput(use, journey, proposals, measures)
+    return use === 'conceptos' ? concepts.input(journey, base) : base
+  }
+  const nicheOf = (journey: Journey) => channelInput('conceptos', journey, proposals, measures)['niche']
 
   // A niche the creator wrote is checked the same as one the AI proposed.
   const warningsOf = (journeyId: string) => {
@@ -189,9 +205,7 @@ export function channelRoutes(deps: ChannelRoutesDeps) {
   routes.post('/journeys/:id/estimate', async (c) => {
     const journey = findJourney(c.req.param('id'))
     const { use } = await parseBody(c, estimateBodySchema)
-    return c.json(
-      aiRun.estimate({ journeyId: journey.id, use, input: channelInput(use, journey, proposals, measures) }),
-    )
+    return c.json(aiRun.estimate({ journeyId: journey.id, use, input: inputOf(use, journey) }))
   })
 
   routes.post('/journeys/:id/proposals', async (c) => {
@@ -205,7 +219,7 @@ export function channelRoutes(deps: ChannelRoutesDeps) {
     }
 
     const use = useOf(body.kind)
-    const base = channelInput(use, journey, proposals, measures)
+    const base = inputOf(use, journey)
     const input = parent ? { ...base, previous: parent.editedPayload ?? parent.payload } : base
     const result = await aiRun.run({
       estimateId: body.estimateId,
@@ -219,7 +233,7 @@ export function channelRoutes(deps: ChannelRoutesDeps) {
     const fresh = {
       journeyId: journey.id,
       kind: body.kind,
-      payload: result.value,
+      payload: body.kind === 'conceptos' ? concepts.withFigures(journey, nicheOf(journey), result.value) : result.value,
       promptId: prompt.id,
       promptVersion: prompt.version,
       instructions: body.instructions ?? null,
@@ -247,7 +261,13 @@ export function channelRoutes(deps: ChannelRoutesDeps) {
       if (!schema.safeParse(body.editedPayload).success) {
         throw new ApiError({ code: 'validacion', fields: { editedPayload: 'no_valido' } })
       }
-      proposals.edit(proposal.id, body.editedPayload)
+      const owner = journeys.get(proposal.journeyId)
+      proposals.edit(
+        proposal.id,
+        proposal.kind === 'conceptos' && owner
+          ? concepts.withFigures(owner, nicheOf(owner), body.editedPayload)
+          : body.editedPayload,
+      )
     }
     if (body.status === 'descartada') return c.json(proposals.discard(proposal.id))
 

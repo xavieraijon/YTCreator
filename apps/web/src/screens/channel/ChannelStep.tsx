@@ -8,7 +8,9 @@ import { Screen } from '../../shell/Screen.tsx'
 import { channelEs } from '../../strings/channel.es.ts'
 import { es } from '../../strings/es.ts'
 import styles from './channel.module.css'
+import { Concepts } from './new/Concepts.tsx'
 import { Interests } from './new/Interests.tsx'
+import { NicheChange, needsNicheConfirm } from './new/NicheChange.tsx'
 import { Niches } from './new/Niches.tsx'
 import { Questions } from './new/Questions.tsx'
 import { Rhythm } from './new/Rhythm.tsx'
@@ -20,6 +22,7 @@ const TITLES: Partial<Record<JourneyStep, string>> = {
   preguntas: channelEs.questions.title,
   nichos: channelEs.niches.title,
   ritmo: channelEs.rhythm.title,
+  conceptos: channelEs.concepts.title,
 }
 
 // The step comes from the server, so the address and a reload can never skip one (FR-002).
@@ -27,6 +30,7 @@ export function ChannelStep({ kind, step }: { kind: ChannelOrigin; step: Journey
   const { view, noChannel, error, reload } = useJourneyView()
   const [busy, setBusy] = useState(false)
   const [stepError, setStepError] = useState<unknown>(null)
+  const [askNicheChange, setAskNicheChange] = useState(false)
 
   useEffect(() => {
     if (noChannel) navigate({ page: 'channelStart' })
@@ -35,7 +39,7 @@ export function ChannelStep({ kind, step }: { kind: ChannelOrigin; step: Journey
     }
   }, [noChannel, view, kind, step])
 
-  const moveTo = async (target: JourneyStep, data?: object) => {
+  const moveTo = async (target: JourneyStep, data?: object, confirm?: boolean) => {
     if (!view) return
     setBusy(true)
     setStepError(null)
@@ -44,6 +48,7 @@ export function ChannelStep({ kind, step }: { kind: ChannelOrigin; step: Journey
         revision: view.revision,
         step: target,
         ...(data ? { data } : {}),
+        ...(confirm ? { confirm } : {}),
       })
       // The address follows the view: moving it first would send the creator back to the old step.
       await reload()
@@ -65,7 +70,16 @@ export function ChannelStep({ kind, step }: { kind: ChannelOrigin; step: Journey
   return (
     <Screen
       title={TITLES[step] ?? channelEs.steps[step]}
-      before={<StepIndicator kind={kind} step={step} onBack={(back) => void moveTo(back)} />}
+      before={
+        <StepIndicator
+          kind={kind}
+          step={step}
+          onBack={(back) => {
+            if (view && needsNicheConfirm(view, back)) setAskNicheChange(true)
+            else void moveTo(back)
+          }}
+        />
+      }
     >
       {failed !== null && (
         <ErrorMessage live title={errorText(failed)} action={{ label: es.app.retry, onClick: () => void reload() }} />
@@ -75,6 +89,16 @@ export function ChannelStep({ kind, step }: { kind: ChannelOrigin; step: Journey
       {ready && step === 'preguntas' && <Questions view={ready} busy={busy} reload={reload} onStep={onStep} />}
       {ready && step === 'nichos' && <Niches view={ready} busy={busy} reload={reload} onStep={onStep} />}
       {ready && step === 'ritmo' && <Rhythm view={ready} busy={busy} onStep={onStep} />}
+      {ready && step === 'conceptos' && <Concepts view={ready} busy={busy} reload={reload} onStep={onStep} />}
+      <NicheChange
+        open={askNicheChange}
+        busy={busy}
+        onCancel={() => setAskNicheChange(false)}
+        onConfirm={() => {
+          setAskNicheChange(false)
+          void moveTo('nichos', undefined, true)
+        }}
+      />
       {ready && !TITLES[step] && <p className={styles.why}>{channelEs.stepSoon}</p>}
     </Screen>
   )

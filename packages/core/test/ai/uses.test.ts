@@ -11,7 +11,7 @@ const concept = {
   audience: { description: 'Adultos que trabajan', region: 'espana', madeForKids: false },
   format: { presence: 'voz', longForm: 'Vídeos de 8 a 12 minutos', shortsRole: 'Avance de cada receta' },
   cadence: { longPerWeek: 1, shortsPerWeek: 3, hoursPerWeek: 6 },
-  monetization: { assumptions: ['Un vídeo largo por semana'] },
+  monetization: { category: 'general', assumptions: ['Un vídeo largo por semana'] },
 }
 
 const valid = {

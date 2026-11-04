@@ -1,23 +1,19 @@
 import { z } from 'zod'
 import { ON_CAMERA } from './journey.ts'
+import { monthlyEurRange } from './monetization.ts'
 import { AUDIENCE_REGIONS, NAME_STATUSES } from './model.ts'
 import { HANDLE_PATTERN, WARNING_CODES } from './outputs.ts'
 
 // The channel profile, the same for new and existing channels (data-model.md, FR-021b).
 const text = z.string().trim().min(1)
 const range = z.object({ min: z.number().nonnegative(), max: z.number().nonnegative() })
-export type Range = z.infer<typeof range>
-
-// What the channel would earn a month: views × earnings per 1.000 views (rpm.json), rounded to whole euros.
-export function monthlyEurRange(views: Range, rpm: Range): Range {
-  return { min: Math.round((views.min * rpm.min) / 1000), max: Math.round((views.max * rpm.max) / 1000) }
-}
 
 export const monetizationSchema = z
   .object({
     rpmEurRange: range,
-    monthlyViewsAssumption: range,
-    monthlyEurRange: range,
+    // Null when there is no measure behind it: no figure rather than a made-up one.
+    monthlyViewsAssumption: range.nullable(),
+    monthlyEurRange: range.nullable(),
     yppRequirements: z.object({
       subscribers: z.number().int().positive(),
       watchHours: z.number().int().positive(),
@@ -28,6 +24,7 @@ export const monetizationSchema = z
   })
   .refine(
     (m) => {
+      if (!m.monthlyViewsAssumption || !m.monthlyEurRange) return m.monthlyEurRange === m.monthlyViewsAssumption
       const expected = monthlyEurRange(m.monthlyViewsAssumption, m.rpmEurRange)
       return m.monthlyEurRange.min === expected.min && m.monthlyEurRange.max === expected.max
     },

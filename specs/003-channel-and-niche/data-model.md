@@ -191,8 +191,8 @@ La misma forma para canales nuevos y existentes (FR-021b).
 | Campo | Tipo | Regla |
 |---|---|---|
 | `rpmEurRange` | `{min, max}` | De `rpm.json` para la categoría y región |
-| `monthlyViewsAssumption` | `{min, max}` | Supuesto visible, no medida |
-| `monthlyEurRange` | `{min, max}` | `views × rpm / 1000`, redondeado |
+| `monthlyViewsAssumption` | `{min, max} \| null` | Supuesto visible, no medida: vídeos largos al mes × mediana del nicho × `monetization.viewsShareOfMedian`. `null` sin medida o sin vídeos largos |
+| `monthlyEurRange` | `{min, max} \| null` | `views × rpm / 1000`, redondeado. `null` si no hay supuesto: sin datos no hay cifra |
 | `yppRequirements` | `{subscribers, watchHours, shortsViews}` | De `ypp.json` |
 | `assumptions` | `string[]` | Textos generados por la IA, pasados por las reglas de escritura |
 | `sourceIds` | `string[]` | |
