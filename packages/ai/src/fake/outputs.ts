@@ -99,13 +99,19 @@ function normal(use: ChannelUse, input: Record<string, unknown>): Record<string,
       }
     case 'nombres':
       return {
-        names: ['Cocina Corta', 'Tupper Fácil', 'Fogón Rápido', 'Plato Diario', 'Receta Ya', 'Sartén Libre'].map(
-          (displayName) => ({
-            displayName,
-            handle: displayName.normalize('NFD').replace(/[^A-Za-z0-9]/g, ''),
-            why: 'Corto y fácil de recordar.',
-          }),
-        ),
+        names: [
+          'Mesa Sencilla',
+          'Cuchara Viva',
+          'Olla Clara',
+          'Guiso Lento',
+          'Comer sin Prisa',
+          'Mantel Diario',
+          'Platos Diarios',
+        ].map((displayName) => ({
+          displayName,
+          handle: displayName.normalize('NFD').replace(/[^A-Za-z0-9]/g, ''),
+          why: 'Corto y fácil de recordar.',
+        })),
       }
     case 'lectura_canal':
       return {

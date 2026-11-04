@@ -217,6 +217,21 @@ export function conceptKnowledge(market: MarketKnowledge) {
       viewsShareOfMedian: thresholds.data.monetization.viewsShareOfMedian,
       ypp: { subscribers: ads.subscribers, watchHours: ads.watchHours.hours, shortsViews: ads.shortsViews.views },
     },
+    sources: (
+      [
+        ['rpm', rpm],
+        ['ypp', ypp],
+        ['made-for-kids', madeForKids],
+        ['inauthentic', inauthentic],
+        ['shorts', shorts],
+      ] as const
+    ).map(([id, entry]) => ({
+      id,
+      kind: 'conocimiento' as const,
+      label: entry.source[0]!.label,
+      url: entry.source[0]!.url,
+      date: entry.reviewedAt,
+    })),
     rpmSource: { label: rpm.source[0]!.label, reviewedAt: rpm.reviewedAt },
     yppSource: { label: ypp.source[0]!.label, reviewedAt: ypp.reviewedAt },
     forPrompt: {

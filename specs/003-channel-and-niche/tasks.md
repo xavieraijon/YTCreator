@@ -210,18 +210,19 @@ recomendada, «Decidir más tarde» guarda el perfil con nombre provisional.
 
 ### Tests para User Story 3 ⚠️
 
-- [ ] T092 [P] [US3] Test del semáforo en `packages/core/test/market/names.test.ts`: reglas de data-model.md; @ ocupada = rojo; canales parecidos, 3 o más vídeos con el nombre en el título o más de 30 letras = ámbar (FR-017); cualquier fallo de comprobación = `sin_comprobar` y nunca verde
-- [ ] T093 [P] [US3] Test del servicio `name-check` en `apps/server/test/services/name-check.test.ts`: como mucho 4 comprobaciones a la vez, caché de 1 h, cada nombre emite `item`
-- [ ] T094 [P] [US3] Test de rutas en `apps/server/test/http/names.test.ts`: `POST /api/journeys/:id/name-checks` (`202`), paso a `hecho` crea `profile_version` 1 con origen `ia`, nombre aplazado guarda nombre provisional
-- [ ] T095 [P] [US3] Test de pantalla en `apps/web/test/channel/names.test.tsx`: semáforo con texto e icono, «la @ de tu canal», «Quedarme con este nombre», «Escribir el mío», «Decidir más tarde»; elegir un nombre en rojo pide confirmación y no lo bloquea; aviso de que la @ solo se confirma al crearla en YouTube (FR-018)
+- [X] T092 [P] [US3] Test del semáforo en `packages/core/test/market/names.test.ts`: reglas de data-model.md; @ ocupada = rojo; canales parecidos, 3 o más vídeos con el nombre en el título o más de 30 letras = ámbar (FR-017); cualquier fallo de comprobación = `sin_comprobar` y nunca verde
+- [X] T093 [P] [US3] Test del servicio `name-check` en `apps/server/test/services/name-check.test.ts`: como mucho 4 comprobaciones a la vez, caché de 1 h, cada nombre emite `item`
+- [X] T094 [P] [US3] Test de rutas en `apps/server/test/http/names.test.ts`: `POST /api/journeys/:id/name-checks` (`202`), paso a `hecho` crea `profile_version` 1 con origen `ia`, nombre aplazado guarda nombre provisional
+- [X] T095 [P] [US3] Test de pantalla en `apps/web/test/channel/names.test.tsx`: semáforo con texto e icono, «la @ de tu canal», «Quedarme con este nombre», «Escribir el mío», «Decidir más tarde»; elegir un nombre en rojo pide confirmación y no lo bloquea; aviso de que la @ solo se confirma al crearla en YouTube (FR-018)
 
 ### Implementation para User Story 3
 
-- [ ] T096 [P] [US3] Semáforo de nombres en `packages/core/src/market/names.ts`
-- [ ] T097 [P] [US3] Prompt `packages/knowledge/prompts/nombres/v1.md` (6–8 nombres, @ válida de 3–30 caracteres; reglas de `writing/human.md`)
-- [ ] T098 [US3] Servicio `apps/server/src/services/name-check.ts` y ruta `name-checks` en `apps/server/src/http/routes/youtube.ts`
-- [ ] T099 [US3] Cierre del recorrido nuevo: paso `hecho` arma el `ChannelProfile` desde nicho, concepto y nombre y guarda la versión 1 en `apps/server/src/services/profile.ts`
-- [ ] T100 [US3] Pantalla `apps/web/src/screens/channel/new/Names.tsx` (comprobar el nombre escrito por el creador, confirmación al elegir uno en rojo, aviso de que la @ se confirma en YouTube, nombre provisional al aplazar)
+- [X] T096 [P] [US3] Semáforo de nombres en `packages/core/src/market/names.ts`
+- [X] T097 [P] [US3] Prompt `packages/knowledge/prompts/nombres/v1.md` (6–8 nombres, @ válida de 3–30 caracteres; reglas de `writing/human.md`)
+- [X] T098 [US3] Servicio `apps/server/src/services/name-check.ts` y ruta `name-checks` en `apps/server/src/http/routes/youtube.ts`
+- [X] T099 [US3] Cierre del recorrido nuevo: paso `hecho` arma el `ChannelProfile` desde nicho, concepto y nombre y guarda la versión 1 en `apps/server/src/services/profile.ts`
+- [X] T100 [US3] Pantalla `apps/web/src/screens/channel/new/Names.tsx` (comprobar el nombre escrito por el creador, confirmación al elegir uno en rojo, aviso de que la @ se confirma en YouTube, nombre provisional al aplazar)
+- [X] T100b [US3] Elegir más tarde el nombre aplazado y la pantalla de inicio con el canal (FR-018b, US3 AS5 y AS6), que no tenían tarea: paso `hecho` → `nombres` en `packages/core/src/channel/journey.ts`, `Start.tsx` y `apps/web/src/screens/home/Home.tsx`
 
 **Checkpoint**: recorrido de canal nuevo completo.
 

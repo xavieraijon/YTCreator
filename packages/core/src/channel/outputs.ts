@@ -56,6 +56,14 @@ export type ConceptOutput = z.infer<typeof conceptSchema>
 
 export const conceptsOutput = z.object({ concepts: z.array(conceptSchema).min(2).max(3) })
 
+// With the creator's own names added to the proposal (FR-016): they are not limited to what the AI may give.
+export const namesEditedOutput = z.object({
+  names: z
+    .array(z.object({ displayName: text.max(50), handle: z.string().regex(HANDLE_PATTERN), why: text }))
+    .min(1)
+    .max(12),
+})
+
 export const namesOutput = z.object({
   names: z
     .array(z.object({ displayName: text.max(50), handle: z.string().regex(HANDLE_PATTERN), why: text }))

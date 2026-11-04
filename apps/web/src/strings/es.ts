@@ -162,6 +162,12 @@ export const es = {
     createChannel: 'Crear mi primer canal',
     noAi: 'No tienes ninguna IA conectada.',
     connectAi: 'Conectar una IA',
+    resumeChannel: 'Tienes un canal a medias.',
+    resume: 'Seguir con mi canal',
+    channelReady: 'Tu canal ya tiene tema e idea.',
+    noNameYet: 'Tu canal ya tiene tema e idea. Te falta elegir el nombre.',
+    channelNamed: '{nombre} ya tiene tema, idea y nombre.',
+    openChannel: 'Ver mi canal',
   },
 
   settings: {

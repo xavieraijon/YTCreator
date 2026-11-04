@@ -35,6 +35,8 @@ export interface ApprovalState {
   niche?: boolean
   rhythm?: boolean
   concept?: boolean
+  /** The name was left for later: the finished journey can come back to choose it (FR-018b). */
+  nameProvisional?: boolean
   name?: boolean
   channelInput?: boolean
   channelConfirmed?: boolean
@@ -78,6 +80,7 @@ export function planStep({ kind, from, to, approvals, confirm, nameLater }: Step
   const steps = stepsOf(kind)
   const fromIndex = steps.indexOf(from)
   const toIndex = steps.indexOf(to)
+  if (from === 'hecho' && to === 'nombres' && approvals.nameProvisional) return { ok: true, needsReview: false }
   if (fromIndex < 0 || toIndex < 0 || from === 'hecho') return { ok: false, reason: 'salto_no_permitido' }
 
   if (toIndex < fromIndex) {

@@ -28,6 +28,7 @@ import { createAiConnectionsService } from '../src/services/ai-connections.ts'
 import { createAiRunService } from '../src/services/ai-run.ts'
 import { createClaudeRepair, type InstallerRunner } from '../src/services/claude-repair.ts'
 import { createJobsService } from '../src/services/jobs.ts'
+import { createNameCheck } from '../src/services/name-check.ts'
 import { createNicheResearch } from '../src/services/niche-research.ts'
 
 // Fixed prices, so no test depends on the knowledge package.
@@ -153,7 +154,19 @@ export function makeTestApp({ fakeAi, now = () => new Date(), installer }: TestA
     settings,
     channel,
     jobs,
-    youtube: { journeys: channel.journeys, measures: channel.measures, research },
+    youtube: {
+      journeys: channel.journeys,
+      measures: channel.measures,
+      research,
+      nameCheck: createNameCheck({
+        youtube: fakeYouTube,
+        names: channel.names,
+        jobs,
+        thresholds: market.thresholds.data.names,
+        logger,
+        now,
+      }),
+    },
   })
 
   // A request as the local SPA sends it: local Host and Origin, JSON body.
@@ -182,6 +195,7 @@ export function makeTestApp({ fakeAi, now = () => new Date(), installer }: TestA
     channels,
     jobs,
     jobsRepo,
+    channel,
     measures: channel.measures,
     channelProposals: channel.proposals,
     research,

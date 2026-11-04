@@ -4,6 +4,7 @@ import {
   type ChannelUse,
   type ChannelWarning,
   type JourneyState,
+  namesEditedOutput,
   nichesEditedOutput,
   nicheWarnings,
   type WarningKnowledge,
@@ -32,6 +33,7 @@ import { inTransaction } from '../../db/transaction.ts'
 import type { AiRunService, PromptRef } from '../../services/ai-run.ts'
 import { channelInput } from '../../services/channel-input.ts'
 import { createConcepts } from '../../services/concepts.ts'
+import { createProfile } from '../../services/profile.ts'
 import { ApiError } from '../errors.ts'
 import { parseBody } from '../validate.ts'
 
@@ -90,6 +92,7 @@ export function channelRoutes(deps: ChannelRoutesDeps) {
     // FR-025: a concept of the previous niche has to be chosen again before going on.
     concept: isApproved(journey.id, 'conceptos') && !state.conceptNeedsReview,
     name: isApproved(journey.id, 'nombres') || channels.get(journey.channelId)?.nameStatus === 'elegido',
+    nameProvisional: channels.get(journey.channelId)?.nameStatus === 'provisional',
     channelInput: state.channelInput !== undefined,
     channelConfirmed: state.resolvedChannelId !== undefined,
     reading: isApproved(journey.id, 'perfil_actual'),
@@ -109,6 +112,14 @@ export function channelRoutes(deps: ChannelRoutesDeps) {
     knowledge: deps.conceptKnowledge,
     warningKnowledge: deps.warningKnowledge,
     sourceLabel,
+  })
+  const profile = createProfile({
+    channels,
+    proposals,
+    measures,
+    names,
+    profiles,
+    sources: deps.conceptKnowledge.sources,
   })
   const inputOf = (use: ChannelUse, journey: Journey) => {
     const base = channelInput(use, journey, proposals, measures)
@@ -191,10 +202,15 @@ export function channelRoutes(deps: ChannelRoutesDeps) {
       if (body.data?.audienceRegion) {
         channels.update(journey.channelId, { audienceRegion: body.data.audienceRegion })
       }
+      if (body.step === 'hecho' && journey.kind === 'nuevo') {
+        profile.finish(journey, { nameLater: body.nameLater === true })
+      }
       return journeys.update(journey.id, body.revision, {
         step: body.step,
         state: next,
         ...(body.step === 'hecho' ? { status: 'terminado' as const } : {}),
+        // FR-018b: coming back to choose the name left for later.
+        ...(journey.step === 'hecho' ? { status: 'activo' as const } : {}),
       })
     })
     if (!updated) throw new ApiError({ code: 'no_encontrado' })
@@ -257,7 +273,12 @@ export function channelRoutes(deps: ChannelRoutesDeps) {
     if (proposal.status === 'descartada') throw new ApiError({ code: 'conflicto' })
 
     if (body.editedPayload !== undefined) {
-      const schema = proposal.kind === 'nichos' ? nichesEditedOutput : CHANNEL_OUTPUTS[useOf(proposal.kind)]
+      const schema =
+        proposal.kind === 'nichos'
+          ? nichesEditedOutput
+          : proposal.kind === 'nombres'
+            ? namesEditedOutput
+            : CHANNEL_OUTPUTS[useOf(proposal.kind)]
       if (!schema.safeParse(body.editedPayload).success) {
         throw new ApiError({ code: 'validacion', fields: { editedPayload: 'no_valido' } })
       }

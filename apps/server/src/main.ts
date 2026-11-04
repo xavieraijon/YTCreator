@@ -34,6 +34,7 @@ import { createAiConnectionsService, type ClaudeCodeStatus } from './services/ai
 import { createAiRunService } from './services/ai-run.ts'
 import { createClaudeRepair, officialInstaller } from './services/claude-repair.ts'
 import { createJobsService } from './services/jobs.ts'
+import { createNameCheck } from './services/name-check.ts'
 import { createNicheResearch } from './services/niche-research.ts'
 import { createYouTubeService } from './services/youtube.ts'
 import { createVersionCheck } from './updates/version-check.ts'
@@ -281,6 +282,14 @@ export async function startServer({
         jobs,
         thresholds: market.thresholds.data,
         thresholdsVersion: market.thresholds.version,
+        logger,
+        now,
+      }),
+      nameCheck: createNameCheck({
+        youtube,
+        names: channel.names,
+        jobs,
+        thresholds: market.thresholds.data.names,
         logger,
         now,
       }),

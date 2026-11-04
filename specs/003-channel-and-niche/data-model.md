@@ -102,6 +102,7 @@ intereses → preguntas → nichos → ritmo → conceptos → nombres → hecho
                           ↑  └──────── (cambiar nicho: FR-025, pide confirmación) ──┐
                           └─────────────────────────────────────────────────────────┘
 nombres ──(dejar para más tarde, FR-018b)──→ hecho   [channel.name_status = provisional]
+hecho ──(elegir el nombre aplazado, FR-018b)──→ nombres   [el recorrido vuelve a activo; al terminar, versión nueva del perfil con origen manual]
 ```
 
 Canal existente:
@@ -271,12 +272,12 @@ Comprobación de un nombre candidato (FR-016–FR-018).
 | `semaphore` | `'rojo' \| 'ambar' \| 'verde' \| 'sin_comprobar'` | |
 | `reasons` | `TEXT` (JSON) | Códigos: `handle_ocupado`, `nombre_igual`, `parecidos`, `titulos_con_nombre`, `largo`, `fallo` |
 | `handle_status` | `'libre' \| 'ocupado' \| 'sin_comprobar'` | Libre = 404; ocupado = respuesta correcta |
-| `similar_channels` | `TEXT` (JSON) | Hasta 5 `{title, handle, subscribers}` |
+| `similar_channels` | `TEXT` (JSON) | Hasta 5 `{title, handle, subscribers}`. Salen de la búsqueda, que solo da el título: `handle` y `subscribers` quedan en `null` |
 | `title_hits` | `INTEGER \| NULL` | Vídeos con el nombre en el título |
 | `checked_at` | `TEXT` | |
 
 Regla del semáforo: rojo si `handle_ocupado` o `nombre_igual`; si no, ámbar si `parecidos`, `title_hits ≥ 3` o más de
-30 caracteres; si no, verde. Cualquier fallo de la comprobación da `sin_comprobar`, nunca verde.
+30 caracteres; si no, verde. Cualquier fallo de la comprobación da `sin_comprobar`, nunca verde. Una búsqueda sin resultados no es un fallo. Canal parecido: el nombre contiene al otro (o al revés, con 4 letras o más) o se diferencia en 2 letras como mucho, con 5 letras o más.
 
 ## `channel_reading`
 

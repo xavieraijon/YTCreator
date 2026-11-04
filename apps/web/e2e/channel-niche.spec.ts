@@ -173,4 +173,58 @@ test('from the interests to the rhythm with the fakes (US1)', async ({ page: fir
   await concepts.first().getByRole('button', { name: 'Elegir este concepto' }).click()
   await page.getByRole('button', { name: 'Seguir', exact: true }).click()
   await expect(page).toHaveURL(/\/canal\/nuevo\/nombres$/)
+
+  // Names: each with its semaphore; a taken @ is red and asks, it does not forbid.
+  await expect(heading(page, 'El nombre de tu canal')).toBeVisible()
+  await expect(page.getByText(/la @ solo queda confirmada al crearla/)).toBeVisible()
+
+  // Left for later: the channel goes on with a provisional name and the start reminds it.
+  await page.getByRole('button', { name: 'Decidir más tarde' }).click()
+  await expect(page).toHaveURL(/\/canal$/)
+  await expect(page.getByRole('button', { name: 'Elegir el nombre' })).toBeVisible()
+  await page.goto(`${server.baseURL}/inicio`)
+  await expect(page.getByText('Te falta elegir el nombre.')).toBeVisible()
+  await page.getByRole('button', { name: 'Ver mi canal' }).click()
+  await page.getByRole('button', { name: 'Elegir el nombre' }).click()
+
+  await expect(heading(page, 'El nombre de tu canal')).toBeVisible()
+  await page.getByRole('button', { name: /Proponer nombres/ }).click()
+  const names = page.getByRole('article')
+  await expect(names.first().getByText('Camino libre')).toBeVisible()
+  await audit(page)
+
+  await page.getByText('Escribir el mío').click()
+  await page.getByLabel('Tu nombre').fill('Canal Ocupado')
+  await page.getByLabel('La @ que quieres').fill('a b')
+  await page.getByRole('button', { name: 'Comprobar mi nombre' }).click()
+  await expect(page.getByText('Esa @ no vale')).toBeVisible()
+  await page.getByLabel('La @ que quieres').fill('ocupado1')
+  await page.getByRole('button', { name: 'Comprobar mi nombre' }).click()
+  const mine = page.getByRole('article', { name: 'Canal Ocupado' })
+  await expect(mine.getByText('Problema')).toBeVisible()
+
+  await mine.getByRole('button', { name: 'Quedarme con este nombre' }).click()
+  const askRed = page.getByRole('dialog', { name: /Quedarte con «Canal Ocupado»/ })
+  await expect(askRed.getByText('Esa @ ya la tiene otro canal.')).toBeVisible()
+  await audit(page)
+  await askRed.getByRole('button', { name: 'Mirar otros' }).click()
+  await expect(mine.getByText('Nombre elegido')).toHaveCount(0)
+
+  // A name whose check fails is never green.
+  await page.getByLabel('Tu nombre').fill('nombre bloqueado')
+  await page.getByLabel('La @ que quieres').fill('')
+  await page.getByRole('button', { name: 'Comprobar mi nombre' }).click()
+  const blocked2 = page.getByRole('article', { name: 'nombre bloqueado' })
+  await expect(blocked2.getByText('Sin comprobar')).toBeVisible()
+  await expect(blocked2.getByText('Camino libre')).toHaveCount(0)
+
+  // Chooses one and the journey ends at the channel, with its name.
+  await names.first().getByRole('button', { name: 'Quedarme con este nombre' }).click()
+  await expect(names.first().getByText('Nombre elegido')).toBeVisible()
+  await page.getByRole('button', { name: 'Terminar' }).click()
+  await expect(page).toHaveURL(/\/canal$/)
+  await expect(page.getByRole('button', { name: 'Elegir el nombre' })).toHaveCount(0)
+  await audit(page)
+  await page.goto(`${server.baseURL}/inicio`)
+  await expect(page.getByText(/ya tiene tema, idea y nombre/)).toBeVisible()
 })

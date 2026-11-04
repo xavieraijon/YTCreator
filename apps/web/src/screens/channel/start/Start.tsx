@@ -111,6 +111,19 @@ export function Start() {
     }
   }
 
+  // FR-018b: the journey left at the end with no name opens again at the names.
+  const chooseName = async () => {
+    const journey = current?.channel ? current.journey : null
+    if (!journey) return
+    setError(null)
+    try {
+      await channelApi.step(journey.id, { revision: journey.revision, step: 'nombres' })
+      navigate({ page: 'channelStep', kind: 'nuevo', step: 'nombres' })
+    } catch (caught) {
+      setError(caught)
+    }
+  }
+
   return (
     <Screen title={text.title}>
       {error !== null && (
@@ -122,7 +135,7 @@ export function Start() {
           busy={busy}
           onCreate={(origin) => void create(origin)}
           onResume={(kind, step) => navigate({ page: 'channelStep', kind, step })}
-          onChooseName={() => navigate({ page: 'channelStep', kind: 'nuevo', step: 'nombres' })}
+          onChooseName={() => void chooseName()}
         />
       ) : (
         error === null && <p className={styles.why}>{es.app.loading}</p>

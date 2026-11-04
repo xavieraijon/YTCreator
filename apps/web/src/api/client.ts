@@ -135,6 +135,10 @@ export const channelApi = {
   back: (id: string) => apiClient.post(`/api/proposals/${id}/back`, {}, proposalSchema),
   measure: (id: string, body: { revision: number; niches: { label: string; queries: string[] }[]; force?: boolean }) =>
     apiClient.post(`/api/journeys/${id}/measures`, body, jobStartedSchema),
+  checkNames: (
+    id: string,
+    body: { revision: number; names: { displayName: string; handle: string; origin: 'ia' | 'creador' }[] },
+  ) => apiClient.post(`/api/journeys/${id}/name-checks`, body, jobStartedSchema),
   references: (id: string, body: { measureId: string; add?: string; remove?: string }) =>
     apiClient.post(`/api/journeys/${id}/references`, body, referenceChannelsSchema),
   decide: (id: string, body: { editedPayload?: unknown; selectedIndex?: number; status?: 'aprobada' | 'descartada' }) =>
