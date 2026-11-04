@@ -76,12 +76,15 @@ umbrales de mercado vienen de los conceptos de CanalYT (`docs/mercado.md`, `herr
   (y `search.list` con `maxResults=50` en Data API), en el idioma del canal y sin filtro de país (FR-014b):
   - **Demanda:** mediana de visitas de los resultados. Alta ≥ 50.000; media ≥ 5.000; baja por debajo.
   - **Puerta de entrada:** canales distintos de menos de 200.000 suscriptores cuyo vídeo tiene al menos tantas visitas
-    como suscriptores tiene el canal (multiplicador ≥ 1). Abierta ≥ 3 canales; entreabierta ≥ 1; cerrada 0.
+    como suscriptores tiene el canal. Abierta ≥ 3 canales; entreabierta ≥ 1; cerrada 0.
   - **Concentración:** parte de las visitas totales que se llevan los 3 canales con más visitas. Alta ≥ 0,70; media
     ≥ 0,40; baja por debajo.
   - **Saturación:** vídeos de los resultados publicados en los últimos 90 días, en número y porcentaje.
   - Contexto adicional: canales pequeños (< 10.000 suscriptores) y nuevos (primer vídeo hace ≤ 24 meses) que aparecen
     con ≥ 10.000 visitas, como evidencia de que se puede entrar.
+  - **Formatos:** todos los indicadores usan solo vídeos largos; los Shorts se cuentan aparte, sin nivel (FR-007b).
+  - **Lo normal del propio canal:** veces que un vídeo supera la mediana de sus 10 anteriores del mismo formato. Solo
+    en canales de referencia y lectura, fuera del veredicto (FR-012, FR-020b).
   - El veredicto (`verdict.ts`) combina los cuatro en `conviene` / `con_reservas` / `no_conviene` con reglas
     explícitas; la IA lo explica pero no lo cambia.
   - Los umbrales viven en `packages/knowledge/market/thresholds.json` con fuente (CanalYT, revisado 2026-10-31) para que
@@ -89,7 +92,10 @@ umbrales de mercado vienen de los conceptos de CanalYT (`docs/mercado.md`, `herr
 - **Motivo:** FR-007 y FR-009; las cifras salen de datos medidos y la IA solo opina sobre ellas (II, V). La mediana
   resiste a un vídeo viral que distorsiona la media.
 - **Alternativas:** media de visitas (un viral lo desfigura); pedir a la IA que estime demanda (prohibido por FR-009);
-  Google Trends (sin API oficial y no mide YouTube en castellano con fiabilidad).
+  Google Trends (sin API oficial y no mide YouTube en castellano con fiabilidad). Corregir por edad con una curva de
+  maduración, como hace `pandich93/youtube-niche-finder` (MIT, de donde salen estas dos ideas; no se usa su código):
+  sus porcentajes no tienen fuente, y aquí se resuelve dejando los vídeos recientes fuera de «peores». Comparar cada
+  canal de la muestra con su propia mediana: multiplicaría las peticiones por nicho.
 
 ## R7. Entrada de datos en `AiRequest`
 

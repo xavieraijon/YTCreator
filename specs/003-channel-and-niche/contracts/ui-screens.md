@@ -28,6 +28,7 @@ lista de términos prohibidos en la web con `RPM`, `YPP`, `CTR`, `handle` y `yt-
 | YPP | «programa de socios de YouTube» |
 | handle | «la @ de tu canal» |
 | yt-dlp | «el lector de YouTube» |
+| Multiplicador, outlier | «veces lo normal en su canal» |
 | YouTube Data API | «clave de YouTube» (en «Modo experto») |
 | URL | «enlace» |
 | JSON / Markdown | «Descargar como documento» (`.md`) y «Descargar como datos» (`.json`). El formato solo se ve en la extensión del fichero |
@@ -49,13 +50,13 @@ de la pantalla Intereses, no el test de glosario. «YouTube» es una marca permi
 | Inicio | — | «Crear mi canal» / «Ya tengo un canal» / «Seguir donde lo dejaste» | Sin canal: «Crear mi canal» principal y «Ya tengo un canal» secundaria, cada una con su frase; con un recorrido a medias: «Seguir donde lo dejaste»; con el canal listo: siguiente paso y recordatorio del nombre provisional |
 | Intereses | `intereses` | «Seguir» | Campo libre con ejemplos |
 | Preguntas | `preguntas` | «Seguir» | 0–3 preguntas; «Saltar» secundaria |
-| Nichos | `nichos` | «Elegir este nicho» | Tarjeta por nicho con indicadores, veredicto y razón; «Escribir mi propio nicho» |
+| Nichos | `nichos` | «Elegir este nicho» | Tarjeta por nicho con indicadores, veredicto y razón, y los Shorts como cifra aparte; canales de referencia con «veces lo normal en su canal»; «Escribir mi propio nicho» |
 | Ritmo | `ritmo` | «Seguir» | Horas por semana, cara/voz/ninguna, región del público |
 | Conceptos | `conceptos` | «Elegir este concepto» | Promesa, pilares, público, formato, ritmo, monetización en rangos, avisos |
 | Nombres | `nombres` | «Quedarme con este nombre» | Semáforo y razones por nombre; «Escribir el mío»; «Decidir más tarde» |
 | Enlace | `enlace` | «Buscar mi canal» | Acepta el enlace del canal, su @ o el enlace de un vídeo |
 | Confirmar | `confirmar` | «Sí, es mi canal» | Foto, nombre, @ y suscriptores |
-| Lectura | `lectura` | «Ver mi perfil actual» | Progreso de lectura; con menos de 5 vídeos, ofrece el recorrido de canal nuevo |
+| Lectura | `lectura` | «Ver mi perfil actual» | Progreso de lectura; cifras por formato, y mejores y peores vídeos según «veces lo normal en su canal»; con menos de 5 vídeos, ofrece el recorrido de canal nuevo |
 | Posicionamiento | `posicionamiento` | «Aprobar» | Perfil actual (con vídeos citados) y propuesta de cambios |
 | Perfil | `hecho` | «Descargar como documento» | Perfil vigente, versiones, restaurar, editar; siguiente paso: banco de ideas (próximamente) |
 | Ajustes → YouTube | — | «Guardar» | Fuente, clave opcional (solo `hint`), cupo, actualizar el lector |

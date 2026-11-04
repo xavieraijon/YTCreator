@@ -238,6 +238,8 @@ los ficheros exportados se leen sin la app y contienen lo mismo que la pantalla.
   (visitas de los vídeos que salen para esas búsquedas), puerta de entrada (cuántos canales de menos de 200.000
   suscriptores consiguen bastantes más visitas que suscriptores), concentración (qué parte de las visitas se llevan
   los canales más grandes) y saturación (cuántos vídeos recientes compiten).
+- **FR-007b**: Esas medidas y el veredicto DEBEN calcularse solo con vídeos largos, sin mezclar Shorts. Los Shorts que
+  salgan en las búsquedas DEBEN mostrarse como cifra aparte, sin nivel y sin influir en el veredicto.
 - **FR-008**: Cada cifra mostrada DEBE llevar su fuente y la fecha en que se obtuvo, y distinguirse visualmente de la
   opinión de la IA.
 - **FR-009**: Si un nicho no se puede medir, el sistema DEBE decirlo, explicar la causa y no mostrar cifras para él;
@@ -247,7 +249,8 @@ los ficheros exportados se leen sin la app y contienen lo mismo que la pantalla.
 - **FR-011**: El creador DEBE poder elegir un nicho, pedir otra tanda con indicaciones o escribir un nicho propio, que
   se mide igual.
 - **FR-012**: Para el nicho elegido, el sistema DEBE poder mostrar de 2 a 4 canales de referencia reales con sus cifras
-  públicas y el motivo de cada uno.
+  públicas y el motivo de cada uno, incluido su mejor vídeo comparado con lo normal en ese canal cuando se pueda
+  calcular.
 
 **Concepto**
 
@@ -280,6 +283,9 @@ los ficheros exportados se leen sin la app y contienen lo mismo que la pantalla.
   pedir al creador que confirme que es el suyo.
 - **FR-020**: El sistema DEBE leer los datos públicos del canal y de hasta sus 200 vídeos más recientes (título,
   visitas, duración, fecha) y mostrar un resumen con cifras marcadas como dato y con fecha.
+- **FR-020b**: El resumen DEBE separar vídeos largos y Shorts, y elegir los mejores y peores vídeos comparando cada uno
+  con lo normal en el canal para su formato, no por visitas totales. Un vídeo publicado hace menos de 30 días no DEBE
+  contar entre los peores.
 - **FR-021**: La IA DEBE proponer el perfil actual (nicho, pilares, público, lo que funciona y lo que no) y una
   propuesta de posicionamiento; cada afirmación sobre lo que funciona DEBE citar los vídeos en que se basa.
 - **FR-021b**: El posicionamiento aprobado DEBE tener la misma forma que el perfil de un canal nuevo (nicho y concepto

@@ -143,24 +143,27 @@ cifra lleva «Dato de YouTube · fecha», que un nicho `sin_datos` no muestra ci
 
 ### Tests para User Story 1 ⚠️
 
-- [ ] T066 [P] [US1] Test de medidas en `packages/core/test/market/measures.test.ts`: demanda (mediana de visitas de los resultados), puerta de entrada (canales < 200.000 suscriptores con visitas muy por encima de sus suscriptores), concentración (parte de visitas de los 3 primeros canales), saturación (vídeos de los resultados de los últimos 90 días, en número y porcentaje; sin nivel), máximo 20 canales, < 10 vídeos = `sin_datos`
+- [ ] T066 [P] [US1] Test de medidas en `packages/core/test/market/measures.test.ts`: demanda (mediana de visitas de los resultados), puerta de entrada (canales < 200.000 suscriptores con visitas muy por encima de sus suscriptores), concentración (parte de visitas de los 3 primeros canales), saturación (vídeos de los resultados de los últimos 90 días, en número y porcentaje; sin nivel), todo solo con vídeos largos (FR-007b: añadir Shorts o vídeos sin duración no cambia ningún indicador, y se cuentan aparte), máximo 20 canales, < 10 vídeos largos = `sin_datos` aunque haya muchos Shorts
+- [ ] T066b [P] [US1] Test de lo normal del canal en `packages/core/test/market/own-baseline.test.ts`: mediana de los 10 anteriores del mismo formato, `null` con menos de 3 anteriores o mediana 0, un viral entre los anteriores no la desfigura, formatos sin mezclar, destacado ≥ 3 veces, vídeos de menos de 30 días fuera de «peores» y vídeo sin fecha tratado como antiguo
 - [ ] T067 [P] [US1] Test del veredicto en `packages/core/test/market/verdict.test.ts`: reglas de research.md con los umbrales de `thresholds.json`, razón en llano y sin veredicto cuando hay `sin_datos`
 - [ ] T068 [P] [US1] Test del servicio `niche-research` en `apps/server/test/services/niche-research.test.ts`: mide cada nicho con sus consultas, guarda cada medida al acabar (lo medido sobrevive a un corte), un fallo no para el resto, reanuda los pendientes con «Seguir»
-- [ ] T069 [P] [US1] Tests de rutas en `apps/server/test/http/measures.test.ts`: `POST /api/journeys/:id/measures` (`202 {jobId}`, `revision`), `POST /api/journeys/:id/references` (`measureId`, `add`, `remove`, 2–4 canales), eventos `item` por nicho
+- [ ] T069 [P] [US1] Tests de rutas en `apps/server/test/http/measures.test.ts`: `POST /api/journeys/:id/measures` (`202 {jobId}`, `revision`), `POST /api/journeys/:id/references` (`measureId`, `add`, `remove`, 2–4 canales; `medianViews` y `bestRatio`, a `null` si falla la lectura de ese canal sin que falle la referencia), eventos `item` por nicho
 - [ ] T070 [P] [US1] Tests de pantallas en `apps/web/test/channel/new-us1.test.tsx`: Intereses explica «nicho» en una frase, Preguntas permite «Saltar», tarjeta de nicho con `DataSource`, veredicto y avisos de contenido infantil y de políticas con fuente, volver a la tanda anterior, «Escribir mi propio nicho», estado `no_disponible` enlaza a Ajustes → YouTube
 - [ ] T071 [P] [US1] E2E en `apps/web/e2e/channel-niche.spec.ts`: recorrido hasta Ritmo con los fakes, nicho `sin_datos`, nicho `bloqueado`, volver de Ritmo a Nichos y regresar, cerrar la pestaña midiendo y volver con «Seguir donde lo dejaste», axe sin fallos
 
 ### Implementation para User Story 1
 
-- [ ] T072 [P] [US1] Cálculo de medidas (demanda, puerta de entrada, concentración y saturación) en `packages/core/src/market/measures.ts`
+- [ ] T072c [US1] Ampliar lo ya hecho en la fase 2 para las medidas nuevas ([data-model](./data-model.md), todavía sin publicar): columnas en `apps/server/src/db/migrations/0002_channel.sql` y `db/repos/measures.ts`; `measureSchema` y `referenceChannelSchema` en `packages/core/src/api/channel.ts`; `ownChannel` (`baselineVideos` 10, `minBaseline` 3, `notableRatio` 3, `youngDays` 30, `referenceVideos` 30) en `packages/knowledge/market/thresholds.json` v3 y su esquema; actualizar sus tests y comprobar que el escenario fake normal da ≥ 10 vídeos largos
+- [ ] T072 [P] [US1] Cálculo de medidas (demanda, puerta de entrada, concentración y saturación, solo con vídeos largos, y Shorts aparte) en `packages/core/src/market/measures.ts`
+- [ ] T072b [P] [US1] Lo normal del canal en `packages/core/src/market/own-baseline.ts`
 - [ ] T073 [P] [US1] Veredicto en `packages/core/src/market/verdict.ts`
 - [ ] T074 [P] [US1] Prompts `packages/knowledge/prompts/preguntas/v1.md` y `packages/knowledge/prompts/nichos/v1.md` (cada nicho con 2–3 consultas de búsqueda; sin cifras propias; reglas de `writing/human.md`)
-- [ ] T075 [US1] Servicio `apps/server/src/services/niche-research.ts` sobre `services/youtube.ts` y `services/jobs.ts`
+- [ ] T075 [US1] Servicio `apps/server/src/services/niche-research.ts` sobre `services/youtube.ts` y `services/jobs.ts`; al fijar canales de referencia, lee sus 30 vídeos recientes y calcula `medianViews` y `bestRatio`
 - [ ] T076 [US1] Rutas `measures` y `references` en `apps/server/src/http/routes/youtube.ts` y montarlas en `apps/server/src/http/app.ts`
 - [ ] T077 [P] [US1] Pantalla `apps/web/src/screens/channel/new/Interests.tsx` (campo libre con ejemplos, 10–1.000 caracteres)
 - [ ] T078 [P] [US1] Pantalla `apps/web/src/screens/channel/new/Questions.tsx` (0–3 preguntas de la IA, «Seguir» y «Saltar»)
-- [ ] T079 [US1] Pantalla `apps/web/src/screens/channel/new/Niches.tsx` (propuesta de nichos, progreso «Midiendo 2 de 5 nichos», tarjetas con los cuatro indicadores (la saturación como cifra, sin semáforo) y los avisos de `warnings.ts`, «Elegir este nicho», «Escribir mi propio nicho», volver a la tanda anterior (US1 AS5), datos con más de 90 días con «Volver a medir»)
-- [ ] T080 [P] [US1] Pantalla `apps/web/src/screens/channel/new/References.tsx` (2–4 canales de referencia opcionales de la medida)
+- [ ] T079 [US1] Pantalla `apps/web/src/screens/channel/new/Niches.tsx` (propuesta de nichos, progreso «Midiendo 2 de 5 nichos», tarjetas con los cuatro indicadores (la saturación como cifra, sin semáforo), los Shorts como cifra aparte y los avisos de `warnings.ts`, «Elegir este nicho», «Escribir mi propio nicho», volver a la tanda anterior (US1 AS5), datos con más de 90 días con «Volver a medir»)
+- [ ] T080 [P] [US1] Pantalla `apps/web/src/screens/channel/new/References.tsx` (2–4 canales de referencia opcionales de la medida, con su mejor vídeo en «veces lo normal en su canal» y `DataSource`)
 - [ ] T081 [P] [US1] Pantalla `apps/web/src/screens/channel/new/Rhythm.tsx` (horas por semana 1–60, cara/voz/ninguna, región del público `espana|latam|mixto`)
 - [ ] T082 [US1] Confirmación antes de gastar (FR-029) en las acciones de IA de Preguntas y Nichos usando el importe de `POST /api/journeys/:id/estimate` en `apps/web/src/screens/channel/Proposal.tsx`
 
@@ -234,17 +237,17 @@ conservando nombre y @.
 ### Tests para User Story 4 ⚠️
 
 - [ ] T101 [P] [US4] Test de rutas en `apps/server/test/http/existing.test.ts`: `POST /api/journeys/:id/resolve` (`{channelId,title,handle,subscribers,thumbnailUrl}`, `404` si no existe), `POST /api/journeys/:id/reading` (`202`), `youtube_channel_id` repetido da `conflicto`
-- [ ] T102 [P] [US4] Test del servicio `channel-reading` en `apps/server/test/services/channel-reading.test.ts`: hasta 200 vídeos con título, visitas, duración y fecha (fecha exacta del RSS para los recientes), resumen con duración media, vídeos por semana y los 3 mejores y 3 peores por visitas, cada cifra marcada como dato con fecha (FR-020); menos de 5 vídeos marca `lowInfo`; lo que funciona cita vídeos de la lectura
+- [ ] T102 [P] [US4] Test del servicio `channel-reading` en `apps/server/test/services/channel-reading.test.ts`: hasta 200 vídeos con título, visitas, duración y fecha (fecha exacta del RSS para los recientes), resumen por formato con duración media, vídeos por semana y los 3 mejores y 3 peores según veces lo normal (FR-020b: los de menos de 30 días no cuentan como peores), cada cifra marcada como dato con fecha (FR-020); menos de 5 vídeos marca `lowInfo`; lo que funciona cita vídeos de la lectura
 - [ ] T103 [P] [US4] Test de posicionamiento en `apps/server/test/http/positioning.test.ts`: aprobar crea `profile_version` 1 con origen `ia` y la forma de `ChannelProfile`; editar antes de aprobar
 - [ ] T104 [P] [US4] Tests de pantallas en `apps/web/test/channel/existing.test.tsx` y E2E en `apps/web/e2e/channel-existing.spec.ts`: acepta enlace de canal, @ o enlace de vídeo; «Sí, es mi canal»; progreso de lectura; canal de 3 vídeos ofrece recorrido nuevo; axe sin fallos
 
 ### Implementation para User Story 4
 
-- [ ] T105 [P] [US4] Prompts `packages/knowledge/prompts/lectura_canal/v1.md` (perfil actual: nicho, pilares, público, lo que funciona y lo que no, citando vídeos por id) y `packages/knowledge/prompts/posicionamiento/v1.md`, los dos con las reglas de `writing/human.md`
-- [ ] T106 [US4] Servicio `apps/server/src/services/channel-reading.ts` (resolver, leer canal y vídeos, RSS, guardar `channel_reading`)
+- [ ] T105 [P] [US4] Prompts `packages/knowledge/prompts/lectura_canal/v1.md` (perfil actual: nicho, pilares, público, lo que funciona y lo que no, basándose en las veces lo normal y citando vídeos por id) y `packages/knowledge/prompts/posicionamiento/v1.md`, los dos con las reglas de `writing/human.md`
+- [ ] T106 [US4] Servicio `apps/server/src/services/channel-reading.ts` (resolver, leer canal y vídeos, RSS, calcular `ratio` con `own-baseline.ts`, guardar `channel_reading`)
 - [ ] T107 [US4] Rutas `resolve` y `reading` en `apps/server/src/http/routes/youtube.ts`
 - [ ] T108 [P] [US4] Pantallas `apps/web/src/screens/channel/existing/ChannelUrl.tsx` y `Confirm.tsx`
-- [ ] T109 [US4] Pantalla `apps/web/src/screens/channel/existing/Reading.tsx` (progreso, resumen de cifras con `DataSource` (duración media, frecuencia, mejores y peores vídeos), «Ver mi perfil actual», con menos de 5 vídeos ofrece el recorrido de canal nuevo conservando nombre y @)
+- [ ] T109 [US4] Pantalla `apps/web/src/screens/channel/existing/Reading.tsx` (progreso, resumen de cifras por formato con `DataSource` (duración media, frecuencia, mejores y peores vídeos con «veces lo normal en su canal»), «Ver mi perfil actual», con menos de 5 vídeos ofrece el recorrido de canal nuevo conservando nombre y @)
 - [ ] T110 [US4] Pantalla `apps/web/src/screens/channel/existing/Positioning.tsx` (perfil actual con vídeos citados, propuesta de cambios, «Aprobar»)
 
 **Checkpoint**: los dos recorridos acaban en el mismo perfil.
@@ -338,8 +341,8 @@ T059, T060, T061, T063c (componentes y textos)
 ### US1
 
 ```text
-T066, T067, T068, T069, T070, T071
-T072, T073, T074 → T075 → T076
+T066, T066b, T067, T068, T069, T070, T071
+T072c → T072, T072b, T073, T074 → T075 → T076
 T077, T078, T080, T081 (pantallas independientes) mientras se hace T079
 ```
 

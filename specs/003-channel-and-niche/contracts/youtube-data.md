@@ -36,7 +36,8 @@ Tipos:
 | `ChannelInfo` | `{channelId, title, handle \| null, description, subscribers \| null, videoCount \| null, country \| null}` |
 | `VideoInfo` | `{videoId, title, views \| null, durationSeconds \| null, publishedAt \| null, isShort}` |
 
-`isShort`: duración ≤ 180 s y relación vertical cuando la fuente la da; si no, solo duración. `publishedAt` de yt-dlp
+`isShort`: duración ≤ 180 s y relación vertical cuando la fuente la da; si no, solo duración. `VideoHit` no lleva
+`isShort`: las medidas clasifican por `durationSeconds` ([market](./market.md)). `publishedAt` de yt-dlp
 en listados planos puede venir vacío: el adaptador lo completa con el RSS del canal (15 más recientes) y deja `null`
 el resto.
 

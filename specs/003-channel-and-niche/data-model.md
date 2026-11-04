@@ -222,13 +222,16 @@ Una medida de un nicho (FR-007, FR-009).
 | `failure` | `YouTubeFailure \| NULL` | Si `fallida`; no hay cifras (FR-009) |
 | `demand_median_views` | `INTEGER \| NULL` | |
 | `demand_level` | `'alta' \| 'media' \| 'baja' \| NULL` | |
-| `entry_channels` | `INTEGER \| NULL` | Canales < 200.000 con multiplicador ≥ 1 |
+| `entry_channels` | `INTEGER \| NULL` | Canales < 200.000 con algún vídeo largo de visitas ≥ suscriptores |
 | `entry_level` | `'abierta' \| 'entreabierta' \| 'cerrada' \| NULL` | |
 | `concentration` | `REAL \| NULL` | 0–1 |
 | `concentration_level` | `'alta' \| 'media' \| 'baja' \| NULL` | |
 | `recent_videos` | `INTEGER \| NULL` | Últimos 90 días |
 | `recent_share` | `REAL \| NULL` | 0–1 |
-| `sample_size` | `INTEGER \| NULL` | Vídeos analizados |
+| `sample_size` | `INTEGER \| NULL` | Vídeos largos analizados |
+| `shorts_in_sample` | `INTEGER \| NULL` | Shorts de la búsqueda, fuera de los indicadores (FR-007b) |
+| `shorts_median_views` | `INTEGER \| NULL` | Si hay al menos `minVideos` Shorts |
+| `unknown_format_videos` | `INTEGER \| NULL` | Vídeos sin duración, fuera de los indicadores |
 | `verdict` | `'conviene' \| 'con_reservas' \| 'no_conviene' \| NULL` | Regla fija ([market](./contracts/market.md)) |
 | `thresholds_version` | `INTEGER` | Versión de `thresholds.json` usada |
 | `measured_at` | `TEXT \| NULL` | FR-008; si tiene más de 90 días, aviso (FR-027) |
@@ -246,6 +249,9 @@ De 2 a 4 canales de referencia reales del nicho elegido (FR-012).
 | `title`, `handle` | `TEXT`, `TEXT \| NULL` | |
 | `subscribers` | `INTEGER \| NULL` | `NULL` si el canal oculta la cifra |
 | `top_video_views` | `INTEGER` | |
+| `median_views` | `INTEGER \| NULL` | Mediana de sus vídeos largos recientes; `NULL` si no se pudieron leer |
+| `best_ratio` | `REAL \| NULL` | Mayores «veces lo normal» de sus vídeos largos ([market](./contracts/market.md)) |
+| `best_video_id`, `best_video_title` | `TEXT \| NULL` | El vídeo de `best_ratio` |
 | `reason` | `TEXT` | Por qué es referencia; generado por la IA y marcado como opinión |
 | `fetched_at` | `TEXT` | |
 
@@ -283,8 +289,8 @@ Lo que se leyó de un canal existente (FR-020).
 | `title`, `handle`, `description` | `TEXT` | |
 | `subscribers` | `INTEGER \| NULL` | |
 | `video_count` | `INTEGER` | Total público |
-| `videos` | `TEXT` (JSON) | Hasta 200 `{id, title, views, durationSeconds, publishedAt, isShort}` |
-| `summary` | `TEXT` (JSON) | Cifras calculadas: mediana de visitas, ritmo, reparto largo/Shorts, mejores y peores |
+| `videos` | `TEXT` (JSON) | Hasta 200 `{id, title, views, durationSeconds, publishedAt, isShort, ratio \| null}`; `ratio` = veces lo normal |
+| `summary` | `TEXT` (JSON) | Cifras calculadas, separadas por formato: mediana de visitas, ritmo, reparto largo/Shorts, mejores y peores según `ratio` |
 | `fetched_at` | `TEXT` | |
 
 ## `background_job`

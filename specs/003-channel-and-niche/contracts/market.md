@@ -10,8 +10,13 @@ las cifras salen de aquí y la IA solo las comenta (principio II).
 
 - Entrada: 1–3 búsquedas por nicho (las propone la IA con el nicho, el creador las ve), `ytsearch40` cada una,
   resultados unidos sin vídeos repetidos.
-- Si quedan menos de 10 vídeos con visitas, la medida es `fallida` con `sin_datos`: no se muestra ninguna cifra ni
-  veredicto (FR-009).
+- **Formatos sin mezclar (FR-007b):** un vídeo es Short si `durationSeconds ≤ SHORT_MAX_SECONDS` (180 s) y largo si
+  dura más. Todos los indicadores y el veredicto se calculan **solo con los vídeos largos**, porque son el formato
+  principal del concepto y las visitas de un Short no son comparables. Los vídeos sin duración no se clasifican y
+  quedan fuera. La duración es la única señal en una búsqueda, así que un vídeo largo de menos de 3 minutos cuenta como
+  Short: se acepta ese error.
+- Si quedan menos de 10 vídeos largos con visitas, la medida es `fallida` con `sin_datos`: no se muestra ninguna cifra
+  ni veredicto (FR-009), aunque haya muchos Shorts.
 - Las suscripciones de cada canal se piden aparte con `getChannel` (como mucho 20 canales distintos por nicho).
 - Todos los umbrales vienen de `packages/knowledge/market/thresholds.json` y su `version` se guarda en la medida.
 
@@ -24,6 +29,7 @@ las cifras salen de aquí y la IA solo las comenta (principio II).
 | Concentración | Parte de las visitas de la muestra que se llevan los 3 canales con más visitas | `alta` ≥ 0,70; `media` ≥ 0,40; si no, `baja` |
 | Saturación | Vídeos de la muestra publicados en los últimos 90 días y su parte del total | Se muestra la cifra; sin nivel |
 | Contexto | Canales < 10.000 suscriptores en la muestra; canales de menos de 24 meses con algún vídeo ≥ 10.000 visitas | Se muestran como cifras |
+| Shorts aparte | Shorts de la búsqueda; mediana de sus visitas si hay al menos `minVideos` | Se muestran como cifras; sin nivel y fuera del veredicto |
 
 Canales con suscriptores ocultos no cuentan en la puerta de entrada y se indica cuántos se dejaron fuera.
 
@@ -43,7 +49,31 @@ La pantalla muestra el veredicto con la razón (qué indicador lo decide) usando
 Del nicho elegido se proponen de 2 a 4 canales (FR-012): primero los que cuentan para la puerta de entrada, luego
 por visitas del mejor vídeo. El creador puede quitar o añadir (pegando una @, que se resuelve con el puerto).
 
+De cada canal de referencia se piden sus `ownChannel.referenceVideos` (30) vídeos más recientes para calcular lo normal
+en ese canal (abajo). Si esa petición falla, el canal se queda como referencia con esas cifras a `null`.
+
+## Comparación con lo normal del propio canal
+
+Dice si un vídeo funcionó bien **para ese canal**, que es distinto de la puerta de entrada (visitas frente a
+suscriptores). Función pura en `packages/core/src/market/own-baseline.ts`, sobre `VideoInfo[]` de más nuevo a más viejo,
+así que no necesita fechas y vale con yt-dlp.
+
+- **Lo normal de un vídeo:** mediana de las visitas de los `ownChannel.baselineVideos` (10) vídeos anteriores **del mismo
+  formato**. Con menos de `ownChannel.minBaseline` (3) anteriores con visitas, o con mediana 0, no hay comparación: `null`.
+- **Veces lo normal:** visitas del vídeo ÷ esa mediana. Se usa la mediana porque un solo viral desfigura la media.
+- **Destacado:** `≥ ownChannel.notableRatio` (3) veces lo normal.
+- **Sin corrección por edad:** un vídeo reciente aún no ha acumulado visitas y sale por debajo de lo que acabará
+  teniendo. Por eso los vídeos de menos de `ownChannel.youngDays` (30) días nunca cuentan como «peores». Un vídeo sin
+  fecha se trata como antiguo, porque el RSS da fecha a los 15 más recientes. No se usa una curva de maduración: no
+  tenemos fuente para esos porcentajes (principio V).
+- **Fuera del veredicto:** calcularlo en la medida exigiría pedir los vídeos de hasta 20 canales por nicho. Solo se usa
+  en los canales de referencia y en la lectura de un canal existente.
+- En pantalla se llama «veces lo normal en su canal», nunca «multiplicador» ni «outlier», y se etiqueta como dato de
+  YouTube con su fecha, porque se calcula solo con cifras públicas.
+
 ## Pruebas
 
 Tabla de casos con muestras sintéticas que cubren cada nivel, cada rama del veredicto, suscriptores ocultos, menos de
-10 vídeos y empates en el top 3.
+10 vídeos largos (también con muchos Shorts), Shorts que no alteran ningún indicador, vídeos sin duración y empates en
+el top 3. Para la comparación: menos de 3 anteriores, mediana 0, un viral entre los anteriores, formatos sin mezclar y
+vídeos recientes fuera de «peores».

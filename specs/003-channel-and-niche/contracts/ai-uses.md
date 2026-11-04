@@ -29,7 +29,7 @@ modelo.
 | `nichos` | Sonnet 5.5 | 120 s | `interests`, `answers` | 3–5 `{label, summary, queries[1..3], whyItFits}` |
 | `conceptos` | Sonnet 5.5 | 120 s | nicho, medida, referencias, `hoursPerWeek`, `onCamera`, `audienceRegion`, fragmentos de conocimiento (`ypp`, `rpm`, `made-for-kids`, `inauthentic`, `shorts`) | 2–3 `Concept` (forma de `ChannelProfile.concept`) |
 | `nombres` | Haiku 5.5 | 60 s | concepto elegido, nombres ya descartados | 6–8 `{displayName, handle, why}` |
-| `lectura_canal` | Sonnet 5.5 | 120 s | lectura del canal (`summary` + vídeos) | `{niche, pillars, audience, works[], doesNotWork[]}`; cada punto con `videoIds[]` |
+| `lectura_canal` | Sonnet 5.5 | 120 s | lectura del canal (`summary` + vídeos con sus veces lo normal) | `{niche, pillars, audience, works[], doesNotWork[]}`; cada punto con `videoIds[]` |
 | `posicionamiento` | Sonnet 5.5 | 120 s | perfil actual, lectura, conocimiento | `Concept` + `changes[]` `{what, why, videoIds[]}` |
 
 Reglas de forma (además del esquema):
