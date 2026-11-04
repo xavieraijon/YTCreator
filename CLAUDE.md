@@ -8,6 +8,10 @@ Spec-Driven Development with GitHub Spec Kit (`/speckit-*`).
 - **Reference project (concepts only, not code):** `/Users/vueling/CanalYT`.
 - Reply in Spanish. Code in English; specs and the interface in Spanish.
 - Git identity of this repo: `Xavi Aijon <xavi.aijon@gmail.com>` (local).
+- **Autonomía demostrada (constitución, principio XI):** cada fase o historia cierra con `/puerta-a`; informe en
+  `checklists/validation.md`.
+- **Huecos:** no se rellenan por suposición. Van a `specs/NNN/decisions.md`; el riesgo lo fija `.specify/memory/riesgo.md`.
+- **Revisores:** `.claude/agents/revisor-*.md`, solo lectura y contexto limpio. `usuario-novato` sigue como puerta final.
 
 ## Status
 

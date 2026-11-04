@@ -46,6 +46,9 @@ La feature empieza en la pantalla de inicio que deja el onboarding (002): si aú
 
 ## User Scenarios & Testing *(mandatory)*
 
+> **Nota (2026-11-04):** US1, US2 y US3 se entregaron antes de la constitución 2.1.0 y no llevan los cinco campos del
+> principio XI. No se reescriben. US4 y US5 sí los llevan.
+
 ### User Story 1 - Elegir nicho con datos reales (Priority: P1)
 
 Un creador que empieza de cero cuenta en sus palabras qué le interesa («me gustan la historia y los misterios»). La IA
@@ -168,6 +171,22 @@ con cifras, recibe el perfil y la propuesta, edita un pilar y lo aprueba.
 5. **Given** un canal sin vídeos o con muy pocos, **When** se lee, **Then** la app dice que hay poca información para
    sacar conclusiones y ofrece seguir con el recorrido de canal nuevo usando lo que ya existe (nombre y @).
 
+**Qué podrá hacer el creador**: Pegar la URL o la @ de su canal, confirmar que es el suyo, ver lo que la app ha leído y
+aprobar, editar o pedir de nuevo la propuesta de posicionamiento. Necesita conexión y la IA configurada; la lectura de
+datos públicos no pide clave.
+
+**Resultado observable**: Pantalla de confirmación con nombre, @ e imagen; resumen con cifras marcadas como dato con su
+fecha; perfil actual que cita vídeos, con las opiniones marcadas; al aprobar, un perfil guardado como versión 1.
+
+**Qué debe respetar**: Principios I, II, III, IV, V y IX. El mismo `ChannelProfile` y los contratos de
+`contracts/` que el recorrido de canal nuevo; yt-dlp con argumentos en lista; los cinco fallos tipados de IA. Regresión:
+`channel-niche.spec.ts`, `a11y.spec.ts` y el test de glosario.
+
+**Cómo se demuestra**: T101 a T104 con los proveedores falsos, axe a 375 y 1280 px en claro y oscuro (T123), y el
+recorrido de «Independent Test». Evidencia en la sección «US4» de `checklists/validation.md`.
+
+**Huecos abiertos**: Ninguno conocido a 2026-11-04.
+
 ---
 
 ### User Story 5 - Ver, editar y exportar el perfil del canal (Priority: P3)
@@ -192,6 +211,22 @@ los ficheros exportados se leen sin la app y contienen lo mismo que la pantalla.
    documento legible o un fichero de datos con el mismo contenido, incluidas las fuentes y fechas de las cifras.
 4. **Given** unos datos de mercado de hace más de 90 días, **When** el creador abre el perfil, **Then** ve un aviso de
    que las cifras pueden haber cambiado y la opción de volver a medir.
+
+**Qué podrá hacer el creador**: Abrir «Mi canal» con un perfil terminado, editar o regenerar una parte, volver a una
+versión anterior, descargar el perfil y gestionar YouTube y el consumo en Ajustes. Regenerar con IA necesita la IA
+configurada; lo demás funciona sin conexión.
+
+**Resultado observable**: Página con nicho, concepto, nombre y @, con datos y su fecha; una versión nueva por cada
+cambio, también al restaurar; ficheros `.md` y `.json` con el mismo contenido y sus fuentes; aviso si los datos tienen
+más de 90 días.
+
+**Qué debe respetar**: Principios II, III, V, VII y IX. `Secret` y `SecretStore`: la clave de YouTube solo por su
+`hint`, y nunca en base de datos, logs, URL ni Git. Regresión: los ajustes de 002 y `secrets-leak.spec.ts`.
+
+**Cómo se demuestra**: T111 a T114, fuga de la clave (T124), axe (T123) y el recorrido de «Independent Test». Evidencia
+en la sección «US5» de `checklists/validation.md`.
+
+**Huecos abiertos**: Si la edición de un concepto necesita historial propio (ver P2 en `decisions.md`).
 
 ---
 

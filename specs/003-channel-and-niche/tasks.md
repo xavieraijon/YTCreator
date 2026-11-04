@@ -18,6 +18,8 @@ separado.
 
 - **[P]**: se puede hacer en paralelo (ficheros distintos, sin dependencias pendientes)
 - **[Story]**: historia a la que pertenece (US1…US5)
+- **[A]**: tarea de Puerta A que cierra una fase o historia (constitución, principio XI). Las fases 1 a 5 se cerraron
+  antes de existir y no la llevan; tienen una revisión retroactiva en `checklists/validation.md`
 - Cada descripción lleva la ruta exacta del fichero
 
 ## Convenciones comunes
@@ -237,6 +239,10 @@ actual (citando vídeos) y propone cómo posicionarlo.
 el perfil tiene la misma forma que uno nuevo. Con el canal de 3 vídeos se ofrece el recorrido de canal nuevo
 conservando nombre y @.
 
+### Control adelantado para la Puerta A
+
+- [ ] T123 E2E de accesibilidad a 375 y 1280 px en tema claro y oscuro, con teclado y `prefers-reduced-motion`, para las pantallas de US1, US2 y US3 en `apps/web/e2e/a11y.spec.ts`; cada historia añade las suyas antes de su Puerta A
+
 ### Tests para User Story 4 ⚠️
 
 - [ ] T101 [P] [US4] Test de rutas en `apps/server/test/http/existing.test.ts`: `POST /api/journeys/:id/resolve` (`{channelId,title,handle,subscribers,thumbnailUrl}`, `404` si no existe), `POST /api/journeys/:id/reading` (`202`), `youtube_channel_id` repetido da `conflicto`
@@ -252,6 +258,8 @@ conservando nombre y @.
 - [ ] T108 [P] [US4] Pantallas `apps/web/src/screens/channel/existing/ChannelUrl.tsx` y `Confirm.tsx`
 - [ ] T109 [US4] Pantalla `apps/web/src/screens/channel/existing/Reading.tsx` (progreso, resumen de cifras por formato con `DataSource` (duración media, frecuencia, mejores y peores vídeos con «veces lo normal en su canal»), «Ver mi perfil actual», con menos de 5 vídeos ofrece el recorrido de canal nuevo conservando nombre y @)
 - [ ] T110 [US4] Pantalla `apps/web/src/screens/channel/existing/Positioning.tsx` (perfil actual con vídeos citados, propuesta de cambios, «Aprobar»)
+
+- [ ] T110b [A] [US4] Puerta A de US4: ejecutar `/puerta-a US4`. No se marca `[X]` hasta que la skill diga «pasada»; el informe queda en `specs/003-channel-and-niche/checklists/validation.md`
 
 **Checkpoint**: los dos recorridos acaban en el mismo perfil.
 
@@ -273,6 +281,8 @@ que solo se ve por su `hint`.
 - [ ] T113 [P] [US5] Tests de ajustes en `apps/server/test/http/youtube-settings.test.ts` y `usage.test.ts`: `GET/PUT /api/settings/youtube/source`, `PUT api-key` comprueba con una llamada de 1 unidad y nunca devuelve la clave, `400` si no vale, `DELETE` (`204`), `update-reader` (`202`), `GET /api/usage?from&to` con `todayCents` y `monthCents`; buscar la clave de prueba en todo lo escrito (base de datos, logs, respuestas) no da resultados
 - [ ] T114 [P] [US5] Tests de pantallas en `apps/web/test/channel/profile.test.tsx` y `apps/web/test/settings/youtube.test.tsx`: «Descargar como documento» y «Descargar como datos», historial, restaurar, aviso de datos con más de 90 días con «Volver a medir», clave solo con `hint`, consumo con totales
 
+- [ ] T124 [P] E2E de fuga de la clave de YouTube en `apps/web/e2e/secrets-leak.spec.ts` (base de datos, logs, carpeta de trabajo, Git, respuestas HTTP) (se escribe antes que T117, que guarda la clave; fallará hasta entonces)
+
 ### Implementation para User Story 5
 
 - [ ] T115 [P] [US5] Exportación en `packages/core/src/channel/export.ts`
@@ -283,6 +293,8 @@ que solo se ve por su `hint`.
 - [ ] T120 [P] [US5] Pantalla `apps/web/src/screens/settings/YouTubeSettings.tsx` (fuente, «clave de YouTube» en «Modo experto», `hint`, cupo con aviso al pasar del 80 % del día (FR-030), «Actualizar el lector») enlazada en `apps/web/src/screens/settings/Settings.tsx`
 - [ ] T121 [P] [US5] Pantalla `apps/web/src/screens/settings/UsageLog.tsx` y lista de conocimiento con más de 180 días en Ajustes
 
+- [ ] T121b [A] [US5] Puerta A de US5: ejecutar `/puerta-a US5`. No se marca `[X]` hasta que la skill diga «pasada»; el informe queda en `specs/003-channel-and-niche/checklists/validation.md`
+
 **Checkpoint**: todas las historias funcionan por separado.
 
 ---
@@ -291,12 +303,11 @@ que solo se ve por su `hint`.
 
 - [ ] T122 [P] Revisar todos los textos nuevos con `apps/web/test/glossary.test.ts` y `packages/knowledge/writing/human.md`
 - [ ] T122b [P] Test en `apps/web/test/channel/why.test.tsx`: cada pantalla de los dos recorridos tiene su frase de por qué importa el paso (FR-004)
-- [ ] T123 [P] E2E de accesibilidad a 375 px en tema claro y oscuro para las pantallas nuevas en `apps/web/e2e/a11y.spec.ts`
-- [ ] T124 [P] E2E de fuga de la clave de YouTube en `apps/web/e2e/secrets-leak.spec.ts` (base de datos, logs, carpeta de trabajo, Git, respuestas HTTP)
 - [ ] T125 [P] E2E de casos difíciles de quickstart §4 que falten (sin lector, límite de 1 céntimo, cifra inventada, versiones) en `apps/web/e2e/channel-hard-cases.spec.ts`
 - [ ] T125b [P] Pruebas con YouTube real en `packages/youtube/test/youtube.real.test.ts` (`pnpm test:real-youtube`, fuera de CI): 10 @ conocidas y ocupadas salen en rojo (SC-004), medir 5 nichos tarda menos de 2 min (SC-003) y analizar un canal menos de 1 min (SC-005)
 - [ ] T126 Pasar `specs/003-channel-and-niche/quickstart.md` §1–§5 entero, ejecutar T125b y anotar resultados en `specs/003-channel-and-niche/checklists/validation.md`
 - [ ] T127 Auditoría de novato (§6) con el agente `usuario-novato` sobre los dos recorridos; anotar en `specs/003-channel-and-niche/novice-audit.md` y corregir los bloqueos
+- [ ] T128b [A] Puerta A de Polish: ejecutar `/puerta-a Polish`. No se marca `[X]` hasta que la skill diga «pasada»; el informe queda en `specs/003-channel-and-niche/checklists/validation.md`
 - [ ] T128 Actualizar el estado de la 003 en `CLAUDE.md`
 
 ---
