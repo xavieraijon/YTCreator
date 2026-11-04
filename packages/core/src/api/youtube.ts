@@ -11,7 +11,9 @@ export const measuresBodySchema = z.object({
   niches: z
     .array(z.object({ label: z.string().trim().min(1), queries: z.array(z.string().trim().min(1)).min(1).max(3) }))
     .min(1)
-    .max(5),
+    .max(6),
+  // «Volver a medir»: measures again what is already measured (FR-027).
+  force: z.boolean().optional(),
 })
 
 // POST /api/journeys/:id/name-checks

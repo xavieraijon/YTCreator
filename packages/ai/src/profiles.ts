@@ -20,6 +20,7 @@ const CHANNEL_USES = {
   nichos: long(4096),
   conceptos: long(6144),
   nombres: short(2048),
+  recomendacion: long(2048),
   lectura_canal: long(6144),
   posicionamiento: long(6144),
 } satisfies Record<Exclude<AiUse, 'comprobacion'>, AiProfile>
@@ -34,6 +35,7 @@ export const PROFILES: Record<ProviderId, Record<AiUse, AiProfile>> = {
     nichos: withEffort('medium', CHANNEL_USES.nichos),
     conceptos: withEffort('medium', CHANNEL_USES.conceptos),
     nombres: withEffort('low', CHANNEL_USES.nombres),
+    recomendacion: withEffort('medium', CHANNEL_USES.recomendacion),
     lectura_canal: withEffort('medium', CHANNEL_USES.lectura_canal),
     posicionamiento: withEffort('medium', CHANNEL_USES.posicionamiento),
   },

@@ -39,6 +39,7 @@ const valid = {
     works: [{ text: 'Recetas de 10 minutos', videoIds: ['abc'] }],
     doesNotWork: [],
   },
+  recomendacion: { recommendedLabel: 'Uno', why: 'Creo que encaja.', cautions: [] },
   posicionamiento: { ...concept, changes: [{ what: 'Más shorts', why: 'Funcionan mejor', videoIds: ['abc'] }] },
 } as const
 
@@ -46,7 +47,7 @@ describe('AI uses of the 003', () => {
   it('every channel use is an AI use with its output schema', () => {
     for (const use of Object.keys(CHANNEL_OUTPUTS)) expect(AI_USES).toContain(use)
     expect(Object.keys(CHANNEL_OUTPUTS).sort()).toEqual(
-      ['conceptos', 'lectura_canal', 'nichos', 'nombres', 'posicionamiento', 'preguntas'].sort(),
+      ['conceptos', 'lectura_canal', 'nichos', 'nombres', 'posicionamiento', 'preguntas', 'recomendacion'].sort(),
     )
   })
 

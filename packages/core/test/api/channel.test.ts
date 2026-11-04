@@ -82,7 +82,15 @@ describe('channel schemas', () => {
   })
 
   it('GET /api/journeys/:id brings what the journey has', () => {
-    const view = { ...journey, proposals: [proposal], measures: [], nameChecks: [], jobs: [] }
+    const view = {
+      ...journey,
+      proposals: [proposal],
+      measures: [],
+      warnings: {},
+      measureStaleDays: 90,
+      nameChecks: [],
+      jobs: [],
+    }
     expect(journeyViewSchema.parse(view)).toEqual(view)
   })
 

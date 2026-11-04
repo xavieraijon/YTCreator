@@ -19,6 +19,21 @@ export const nichesOutput = z.object({
     .max(5),
 })
 
+// The creator's own niche joins the list, so an edited list may have one more than the AI can propose (FR-011).
+export const nichesEditedOutput = z.object({
+  niches: z
+    .array(z.object({ label: text, summary: text, queries: z.array(text).min(1).max(3), whyItFits: text }))
+    .min(1)
+    .max(6),
+})
+
+// Marked as an opinion on screen; the verdict of each niche is a fixed rule it cannot change (FR-010).
+export const recommendationOutput = z.object({
+  recommendedLabel: text,
+  why: text,
+  cautions: z.array(z.object({ label: text, why: text })),
+})
+
 export const conceptSchema = z.object({
   promise: text.max(160),
   pillars: z
@@ -63,6 +78,7 @@ export const positioningOutput = conceptSchema.extend({
 export const CHANNEL_OUTPUTS = {
   preguntas: questionsOutput,
   nichos: nichesOutput,
+  recomendacion: recommendationOutput,
   conceptos: conceptsOutput,
   nombres: namesOutput,
   lectura_canal: channelReadingOutput,

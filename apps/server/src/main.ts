@@ -5,7 +5,9 @@ import type { AddressInfo } from 'node:net'
 import { createAdaptorServer } from '@hono/node-server'
 import { claudeVersion, createRegistry, resolveClaudeBin } from '@ytcreator/ai'
 import { type ChannelUse, type Pricing } from '@ytcreator/core'
-import { loadMarket, promptFor } from '@ytcreator/knowledge'
+import { join } from 'node:path'
+import { loadMarket, promptFor, warningKnowledge } from '@ytcreator/knowledge'
+import { createYouTubeAdapters } from '@ytcreator/youtube'
 import { migrate, MIGRATIONS } from './db/migrate.ts'
 import { openDatabase } from './db/open.ts'
 import { createAccountsRepo } from './db/repos/accounts.ts'
@@ -21,7 +23,7 @@ import { createProfilesRepo } from './db/repos/profiles.ts'
 import { createProposalsRepo } from './db/repos/proposals.ts'
 import { createSettingsRepo } from './db/repos/settings.ts'
 import { createUsageRepo } from './db/repos/usage.ts'
-import { createYtCacheRepo } from './db/repos/yt-cache.ts'
+import { createYtCacheRepo, createYtQuotaRepo } from './db/repos/yt-cache.ts'
 import { createApp } from './http/app.ts'
 import { acquireInstance, releaseInstance } from './instance.ts'
 import { createLogger } from './logging.ts'
@@ -32,6 +34,8 @@ import { createAiConnectionsService, type ClaudeCodeStatus } from './services/ai
 import { createAiRunService } from './services/ai-run.ts'
 import { createClaudeRepair, officialInstaller } from './services/claude-repair.ts'
 import { createJobsService } from './services/jobs.ts'
+import { createNicheResearch } from './services/niche-research.ts'
+import { createYouTubeService } from './services/youtube.ts'
 import { createVersionCheck } from './updates/version-check.ts'
 
 export const HOST = '127.0.0.1'
@@ -137,14 +141,15 @@ export async function startServer({
       if (exitCode === 0) await ai.recheckNotInstalled()
     },
   })
+  // With the fake AI the test credentials never reach the system keychain (nor wait for it to unlock).
+  const secrets = fake
+    ? createFileStore(paths.secrets, logger)
+    : await selectSecretStore({ platform: process.platform, settings, logger, fileDir: paths.secrets })
   const ai = createAiConnectionsService({
     connections,
     accounts: createAccountsRepo(db, now),
     settings,
-    // With the fake AI the test credentials never reach the system keychain (nor wait for it to unlock).
-    secrets: fake
-      ? createFileStore(paths.secrets, logger)
-      : await selectSecretStore({ platform: process.platform, settings, logger, fileDir: paths.secrets }),
+    secrets,
     registry: createRegistry({ env, now, logger }),
     logger,
     now,
@@ -167,7 +172,36 @@ export async function startServer({
   const jobsRepo = createJobsRepo(db, now)
   const jobs = createJobsService({ jobs: jobsRepo, logger })
   jobs.interruptRunning()
-  createYtCacheRepo(db, now).purgeExpired()
+  const ytCache = createYtCacheRepo(db, now)
+  ytCache.purgeExpired()
+  const ytQuota = createYtQuotaRepo(db, now)
+  const { dataApi: dataApiLimits } = market.thresholds.data
+  const youtube = createYouTubeService({
+    adapters: createYouTubeAdapters({
+      env,
+      binPath: join(paths.appHome, 'bin', 'yt-dlp'),
+      fetch: globalThis.fetch,
+      getKey: async () => {
+        const ref = settings.get('youtube.api_key_ref')
+        if (!ref) return null
+        const stored = await secrets.get(ref)
+        return stored.ok ? stored.value : null
+      },
+      quota: ytQuota,
+      limits: dataApiLimits,
+      now,
+    }),
+    source: () => settings.get('youtube.source') ?? 'auto',
+    hasKey: () => settings.get('youtube.api_key_ref') !== undefined,
+    quota: {
+      used: () => ytQuota.used(),
+      limit: dataApiLimits.dailyUnits,
+      nearLimitRatio: dataApiLimits.nearLimitRatio,
+    },
+    cache: ytCache,
+    logger,
+    now,
+  })
   const channelPrompt = (use: ChannelUse) => promptFor(use)
   const channel = {
     db,
@@ -179,6 +213,8 @@ export async function startServer({
     names: createNamesRepo(db, now),
     jobs: jobsRepo,
     promptFor: channelPrompt,
+    warningKnowledge: warningKnowledge(market),
+    measureStaleDays: market.thresholds.data.staleDays,
     aiRun: createAiRunService({
       usage: createUsageRepo(db, now),
       limits,
@@ -235,6 +271,19 @@ export async function startServer({
     settings,
     channel,
     jobs,
+    youtube: {
+      journeys: channel.journeys,
+      measures: channel.measures,
+      research: createNicheResearch({
+        youtube,
+        measures: channel.measures,
+        jobs,
+        thresholds: market.thresholds.data,
+        thresholdsVersion: market.thresholds.version,
+        logger,
+        now,
+      }),
+    },
   })
   logger.info('server_started', { port, version })
 

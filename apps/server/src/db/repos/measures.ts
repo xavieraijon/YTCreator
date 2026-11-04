@@ -1,20 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import type { DatabaseSync } from 'node:sqlite'
-import type { EntryLevel, Level, MeasureStatus, Verdict, YouTubeFailureCode, YouTubeSource } from '@ytcreator/core'
+import type { MeasureFigures, MeasureStatus, ReferenceReason, YouTubeFailureCode, YouTubeSource } from '@ytcreator/core'
 import { inTransaction } from '../transaction.ts'
-
-export interface MeasureFigures {
-  demandMedianViews: number
-  demandLevel: Level
-  entryChannels: number
-  entryLevel: EntryLevel
-  concentration: number
-  concentrationLevel: Level
-  recentVideos: number
-  recentShare: number
-  sampleSize: number
-  verdict: Verdict
-}
 
 type Nullable<T> = { [K in keyof T]: T[K] | null }
 
@@ -45,7 +32,11 @@ export interface NewReference {
   handle: string | null
   subscribers: number | null
   topVideoViews: number
-  reason: string
+  medianViews: number | null
+  bestRatio: number | null
+  bestVideoId: string | null
+  bestVideoTitle: string | null
+  reason: ReferenceReason
 }
 
 export interface ReferenceChannel extends NewReference {
@@ -63,15 +54,20 @@ interface Row {
   status: MeasureStatus
   failure: YouTubeFailureCode | null
   demand_median_views: number | null
-  demand_level: Level | null
+  demand_level: MeasureFigures['demandLevel'] | null
   entry_channels: number | null
-  entry_level: EntryLevel | null
+  entry_level: MeasureFigures['entryLevel'] | null
   concentration: number | null
-  concentration_level: Level | null
+  concentration_level: MeasureFigures['concentrationLevel'] | null
   recent_videos: number | null
   recent_share: number | null
   sample_size: number | null
-  verdict: Verdict | null
+  shorts_in_sample: number | null
+  shorts_median_views: number | null
+  unknown_format_videos: number | null
+  small_channels: number | null
+  hidden_subscribers: number | null
+  verdict: MeasureFigures['verdict'] | null
   thresholds_version: number
   measured_at: string | null
   created_at: string
@@ -85,7 +81,11 @@ interface ReferenceRow {
   handle: string | null
   subscribers: number | null
   top_video_views: number
-  reason: string
+  median_views: number | null
+  best_ratio: number | null
+  best_video_id: string | null
+  best_video_title: string | null
+  reason: ReferenceReason
   fetched_at: string
 }
 
@@ -106,6 +106,11 @@ const fromRow = (row: Row): Measure => ({
   recentVideos: row.recent_videos,
   recentShare: row.recent_share,
   sampleSize: row.sample_size,
+  shortsInSample: row.shorts_in_sample,
+  shortsMedianViews: row.shorts_median_views,
+  unknownFormatVideos: row.unknown_format_videos,
+  smallChannels: row.small_channels,
+  hiddenSubscribers: row.hidden_subscribers,
   verdict: row.verdict,
   thresholdsVersion: row.thresholds_version,
   measuredAt: row.measured_at,
@@ -120,6 +125,10 @@ const fromReferenceRow = (row: ReferenceRow): ReferenceChannel => ({
   handle: row.handle,
   subscribers: row.subscribers,
   topVideoViews: row.top_video_views,
+  medianViews: row.median_views,
+  bestRatio: row.best_ratio,
+  bestVideoId: row.best_video_id,
+  bestVideoTitle: row.best_video_title,
   reason: row.reason,
   fetchedAt: row.fetched_at,
 })
@@ -134,20 +143,27 @@ export function createMeasuresRepo(db: DatabaseSync, now: () => Date = () => new
   const updateFigures = db.prepare(
     `UPDATE market_measure SET status = 'medida', failure = NULL, demand_median_views = ?, demand_level = ?,
        entry_channels = ?, entry_level = ?, concentration = ?, concentration_level = ?, recent_videos = ?,
-       recent_share = ?, sample_size = ?, verdict = ?, measured_at = ?
+       recent_share = ?, sample_size = ?, shorts_in_sample = ?, shorts_median_views = ?, unknown_format_videos = ?,
+       small_channels = ?, hidden_subscribers = ?, verdict = ?, measured_at = ?
      WHERE id = ?`,
   )
   const updateFailure = db.prepare(
     `UPDATE market_measure SET status = 'fallida', failure = ?, demand_median_views = NULL, demand_level = NULL,
        entry_channels = NULL, entry_level = NULL, concentration = NULL, concentration_level = NULL,
-       recent_videos = NULL, recent_share = NULL, sample_size = NULL, verdict = NULL
+       recent_videos = NULL, recent_share = NULL, sample_size = NULL, shorts_in_sample = NULL,
+       shorts_median_views = NULL, unknown_format_videos = NULL, small_channels = NULL, hidden_subscribers = NULL,
+       verdict = NULL
+     WHERE id = ?`,
+  )
+  const updateRestart = db.prepare(
+    `UPDATE market_measure SET status = 'en_curso', failure = NULL, queries = ?, source = ?, thresholds_version = ?
      WHERE id = ?`,
   )
   const deleteReferences = db.prepare('DELETE FROM reference_channel WHERE measure_id = ?')
   const insertReference = db.prepare(
     `INSERT INTO reference_channel (id, measure_id, youtube_channel_id, title, handle, subscribers, top_video_views,
-       reason, fetched_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       median_views, best_ratio, best_video_id, best_video_title, reason, fetched_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   )
   const selectReferences = db.prepare('SELECT * FROM reference_channel WHERE measure_id = ? ORDER BY rowid')
 
@@ -177,6 +193,12 @@ export function createMeasuresRepo(db: DatabaseSync, now: () => Date = () => new
       return get(id)!
     },
 
+    // Measuring again (a retry, an interrupted job): keeps its row, so a niche never has two.
+    restart(id: string, again: Pick<NewMeasure, 'queries' | 'source' | 'thresholdsVersion'>): Measure | null {
+      updateRestart.run(JSON.stringify(again.queries), again.source, again.thresholdsVersion, id)
+      return get(id)
+    },
+
     complete(id: string, f: MeasureFigures): Measure | null {
       updateFigures.run(
         f.demandMedianViews,
@@ -188,6 +210,11 @@ export function createMeasuresRepo(db: DatabaseSync, now: () => Date = () => new
         f.recentVideos,
         f.recentShare,
         f.sampleSize,
+        f.shortsInSample,
+        f.shortsMedianViews,
+        f.unknownFormatVideos,
+        f.smallChannels,
+        f.hiddenSubscribers,
         f.verdict,
         now().toISOString(),
         id,
@@ -213,6 +240,10 @@ export function createMeasuresRepo(db: DatabaseSync, now: () => Date = () => new
             r.handle,
             r.subscribers,
             r.topVideoViews,
+            r.medianViews,
+            r.bestRatio,
+            r.bestVideoId,
+            r.bestVideoTitle,
             r.reason,
             at,
           )

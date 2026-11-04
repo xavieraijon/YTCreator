@@ -35,6 +35,41 @@
     gap: var(--s-space-4);
   }
 
+  .niche {
+    display: grid;
+    gap: var(--s-space-3);
+    padding: var(--s-space-4);
+  }
+
+  .indicator-row {
+    display: grid;
+    justify-items: start;
+    gap: var(--s-space-1);
+  }
+
+  .figures {
+    display: grid;
+    gap: var(--s-space-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .form {
+    display: grid;
+    justify-items: start;
+    gap: var(--s-space-4);
+    max-width: 40rem;
+  }
+
+  .form > * {
+    width: 100%;
+  }
+
+  .form > .actions {
+    width: auto;
+  }
+
   .notice {
     color: var(--s-color-text-secondary);
     font-size: var(--s-font-size-sm);

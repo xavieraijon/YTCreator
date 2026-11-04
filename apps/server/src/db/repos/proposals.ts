@@ -128,6 +128,17 @@ export function createProposalsRepo(db: DatabaseSync, now: () => Date = () => ne
       })
     },
 
+    // «Volver a la tanda anterior»: this one is discarded and the one it replaced can be chosen again (US1 AS5).
+    goBack(id: string): Proposal | null {
+      const current = get(id)
+      if (!current?.parentId) return null
+      return inTransaction(db, () => {
+        setDecision.run('descartada', null, now().toISOString(), id)
+        setDecision.run('propuesta', null, now().toISOString(), current.parentId)
+        return get(current.parentId!)
+      })
+    },
+
     approve(id: string, selectedIndex: number | null = null): Proposal | null {
       setDecision.run('aprobada', selectedIndex, now().toISOString(), id)
       return get(id)

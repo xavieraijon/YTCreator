@@ -78,6 +78,18 @@ function normal(use: ChannelUse, input: Record<string, unknown>): Record<string,
           },
         ],
       }
+    case 'recomendacion': {
+      const niches = (input.niches ?? []) as { label: string; verdict: string | null }[]
+      const measured = niches.filter((n) => n.verdict !== null)
+      const best = measured.find((n) => n.verdict === 'conviene') ?? measured[0] ?? niches[0]
+      return {
+        recommendedLabel: best?.label ?? 'Cocina rápida',
+        why: 'Creo que es el que mejor une lo que te gusta con lo que se ve en YouTube.',
+        cautions: measured
+          .filter((n) => n.verdict === 'no_conviene')
+          .map((n) => ({ label: n.label, why: 'A mi juicio te costaría mucho conseguir visitas.' })),
+      }
+    }
     case 'conceptos':
       return {
         concepts: [
@@ -123,6 +135,8 @@ function invent(use: ChannelUse, output: Record<string, unknown>): Record<string
       const [first, ...rest] = output.niches as { summary: string }[]
       return { niches: [{ ...first, summary: add(first!.summary) }, ...rest] }
     }
+    case 'recomendacion':
+      return { ...output, why: add(output.why as string) }
     case 'conceptos': {
       const [first, ...rest] = output.concepts as { promise: string }[]
       return { concepts: [{ ...first, promise: add(first!.promise).slice(0, 160) }, ...rest] }

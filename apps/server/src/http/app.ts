@@ -14,6 +14,7 @@ import { guard } from './guard.ts'
 import { aiRoutes } from './routes/ai.ts'
 import { channelRoutes, type ChannelRoutesDeps } from './routes/channel.ts'
 import { jobsRoutes } from './routes/jobs.ts'
+import { youtubeRoutes, type YouTubeRoutesDeps } from './routes/youtube.ts'
 import { onboardingRoutes } from './routes/onboarding.ts'
 import { settingsRoutes } from './routes/settings.ts'
 import { updatesRoutes } from './routes/updates.ts'
@@ -35,6 +36,7 @@ export interface AppDeps {
   settings?: SettingsRepo
   channel?: ChannelRoutesDeps
   jobs?: JobsService
+  youtube?: YouTubeRoutesDeps
 }
 
 const MIME: Record<string, string> = {
@@ -101,6 +103,7 @@ export function createApp(deps: AppDeps) {
   if (deps.settings) app.route('/api/updates', updatesRoutes({ settings: deps.settings, version: deps.version }))
 
   if (deps.channel) app.route('/api', channelRoutes(deps.channel))
+  if (deps.youtube) app.route('/api', youtubeRoutes(deps.youtube))
   if (deps.jobs) app.route('/api/jobs', jobsRoutes(deps.jobs))
 
   // Fallback after every route, so routes registered later still match: static files, else the SPA.

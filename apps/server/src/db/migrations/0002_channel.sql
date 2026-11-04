@@ -55,7 +55,7 @@ CREATE INDEX ai_usage_created_at ON ai_usage (created_at);
 CREATE TABLE proposal (
   id TEXT PRIMARY KEY,
   journey_id TEXT NOT NULL REFERENCES journey (id),
-  kind TEXT NOT NULL CHECK (kind IN ('preguntas', 'nichos', 'conceptos', 'nombres', 'perfil_actual',
+  kind TEXT NOT NULL CHECK (kind IN ('preguntas', 'nichos', 'recomendacion', 'conceptos', 'nombres', 'perfil_actual',
     'posicionamiento')),
   payload TEXT NOT NULL,
   edited_payload TEXT,
@@ -108,6 +108,11 @@ CREATE TABLE market_measure (
   recent_videos INTEGER,
   recent_share REAL CHECK (recent_share IS NULL OR recent_share BETWEEN 0 AND 1),
   sample_size INTEGER,
+  shorts_in_sample INTEGER,
+  shorts_median_views INTEGER,
+  unknown_format_videos INTEGER,
+  small_channels INTEGER,
+  hidden_subscribers INTEGER,
   verdict TEXT CHECK (verdict IS NULL OR verdict IN ('conviene', 'con_reservas', 'no_conviene')),
   thresholds_version INTEGER NOT NULL,
   measured_at TEXT,
@@ -123,7 +128,11 @@ CREATE TABLE reference_channel (
   handle TEXT,
   subscribers INTEGER,
   top_video_views INTEGER NOT NULL,
-  reason TEXT NOT NULL,
+  median_views INTEGER,
+  best_ratio REAL,
+  best_video_id TEXT,
+  best_video_title TEXT,
+  reason TEXT NOT NULL CHECK (reason IN ('puerta_de_entrada', 'mejor_video', 'anadido_por_ti')),
   fetched_at TEXT NOT NULL,
   UNIQUE (measure_id, youtube_channel_id)
 );

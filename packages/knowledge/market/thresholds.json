@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "reviewedAt": "2026-11-01",
   "source": [
     {
@@ -21,6 +21,7 @@
     "staleDays": 90,
     "saturationDays": 90,
     "references": { "min": 2, "max": 4 },
+    "ownChannel": { "baselineVideos": 10, "minBaseline": 3, "notableRatio": 3, "youngDays": 30, "referenceVideos": 30 },
     "context": {
       "smallChannelSubscribers": 10000,
       "youngChannelMonths": 24,

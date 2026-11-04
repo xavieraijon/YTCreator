@@ -1,6 +1,6 @@
 import type { DatabaseSync } from 'node:sqlite'
 import { beforeEach, describe, expect, it } from 'vitest'
-import { createMeasuresRepo, type MeasuresRepo } from '../../../src/db/repos/measures.ts'
+import { createMeasuresRepo, type MeasuresRepo, type NewReference } from '../../../src/db/repos/measures.ts'
 import { freshDb, manualClock, seedJourney } from './helpers.ts'
 
 const figures = {
@@ -13,6 +13,11 @@ const figures = {
   recentVideos: 9,
   recentShare: 0.3,
   sampleSize: 40,
+  shortsInSample: 5,
+  shortsMedianViews: null,
+  unknownFormatVideos: 1,
+  smallChannels: 2,
+  hiddenSubscribers: 1,
   verdict: 'con_reservas',
 } as const
 
@@ -67,7 +72,11 @@ describe('measures repo', () => {
         handle: 'a',
         subscribers: null,
         topVideoViews: 5000,
-        reason: 'r',
+        medianViews: 1000,
+        bestRatio: 5,
+        bestVideoId: 'v1',
+        bestVideoTitle: 'Título',
+        reason: 'mejor_video',
       },
       {
         youtubeChannelId: 'UCbbbbbbbbbbbbbbbbbbbbbb',
@@ -75,7 +84,11 @@ describe('measures repo', () => {
         handle: null,
         subscribers: 900,
         topVideoViews: 8000,
-        reason: 'r',
+        medianViews: null,
+        bestRatio: null,
+        bestVideoId: null,
+        bestVideoTitle: null,
+        reason: 'mejor_video',
       },
     ])
     expect(measures.listByJourney(journeyId).map((m) => m.id)).toEqual([measure.id])
@@ -86,13 +99,17 @@ describe('measures repo', () => {
 
   it('replacing references drops the old ones', () => {
     const measure = start()
-    const ref = {
+    const ref: NewReference = {
       youtubeChannelId: 'UCaaaaaaaaaaaaaaaaaaaaaa',
       title: 'A',
       handle: null,
       subscribers: 1,
       topVideoViews: 1,
-      reason: 'r',
+      medianViews: null,
+      bestRatio: null,
+      bestVideoId: null,
+      bestVideoTitle: null,
+      reason: 'mejor_video',
     }
     measures.setReferences(measure.id, [ref])
     measures.setReferences(measure.id, [{ ...ref, title: 'A2' }])

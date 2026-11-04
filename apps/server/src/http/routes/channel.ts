@@ -2,7 +2,11 @@ import {
   type ApprovalState,
   CHANNEL_OUTPUTS,
   type ChannelUse,
+  type ChannelWarning,
   type JourneyState,
+  nichesEditedOutput,
+  nicheWarnings,
+  type WarningKnowledge,
   type ProposalKind,
   initialStep,
   planStep,
@@ -40,6 +44,8 @@ export interface ChannelRoutesDeps {
   jobs: JobsRepo
   aiRun: AiRunService
   promptFor: (use: ChannelUse) => PromptRef
+  warningKnowledge: WarningKnowledge
+  measureStaleDays: number
 }
 
 // `perfil_actual` is what the use `lectura_canal` produces; the other kinds have the name of their use.
@@ -86,6 +92,32 @@ export function channelRoutes(deps: ChannelRoutesDeps) {
     positioning: isApproved(journey.id, 'posicionamiento'),
   })
 
+  const sourceLabel = ({ sourceId }: ChannelWarning) => {
+    const { madeForKids, inauthentic, shorts } = deps.warningKnowledge
+    if (sourceId === 'made-for-kids') return madeForKids.label
+    if (sourceId === 'inauthentic') return inauthentic.label
+    if (sourceId === 'shorts') return shorts.label
+    return null
+  }
+
+  // A niche the creator wrote is checked the same as one the AI proposed.
+  const warningsOf = (journeyId: string) => {
+    const latest = proposals.latest(journeyId, 'nichos')
+    const payload = (latest?.editedPayload ?? latest?.payload ?? {}) as {
+      niches?: { label: string; summary: string }[]
+    }
+    return Object.fromEntries(
+      (payload.niches ?? []).map((niche) => [
+        niche.label,
+        nicheWarnings(niche, deps.warningKnowledge).map((warning) => ({
+          code: warning.code,
+          sourceLabel: sourceLabel(warning),
+          reviewedAt: warning.reviewedAt,
+        })),
+      ]),
+    )
+  }
+
   routes.get('/channels/current', (c) => {
     const channel = channels.getCurrent()
     if (!channel) return c.json({ channel: null })
@@ -114,6 +146,8 @@ export function channelRoutes(deps: ChannelRoutesDeps) {
       measures: measures.listByJourney(journey.id),
       nameChecks: names.listByJourney(journey.id),
       jobs: jobs.listByJourney(journey.id),
+      warnings: warningsOf(journey.id),
+      measureStaleDays: deps.measureStaleDays,
     })
   })
 
@@ -155,7 +189,9 @@ export function channelRoutes(deps: ChannelRoutesDeps) {
   routes.post('/journeys/:id/estimate', async (c) => {
     const journey = findJourney(c.req.param('id'))
     const { use } = await parseBody(c, estimateBodySchema)
-    return c.json(aiRun.estimate({ journeyId: journey.id, use, input: channelInput(use, journey, proposals) }))
+    return c.json(
+      aiRun.estimate({ journeyId: journey.id, use, input: channelInput(use, journey, proposals, measures) }),
+    )
   })
 
   routes.post('/journeys/:id/proposals', async (c) => {
@@ -169,7 +205,7 @@ export function channelRoutes(deps: ChannelRoutesDeps) {
     }
 
     const use = useOf(body.kind)
-    const base = channelInput(use, journey, proposals)
+    const base = channelInput(use, journey, proposals, measures)
     const input = parent ? { ...base, previous: parent.editedPayload ?? parent.payload } : base
     const result = await aiRun.run({
       estimateId: body.estimateId,
@@ -193,6 +229,13 @@ export function channelRoutes(deps: ChannelRoutesDeps) {
     return c.json(parent ? proposals.regenerate(parent.id, fresh) : proposals.create(fresh))
   })
 
+  routes.post('/proposals/:id/back', (c) => {
+    const proposal = proposals.get(c.req.param('id'))
+    if (!proposal) throw new ApiError({ code: 'no_encontrado' })
+    if (proposal.status === 'descartada' || !proposal.parentId) throw new ApiError({ code: 'conflicto' })
+    return c.json(proposals.goBack(proposal.id))
+  })
+
   routes.patch('/proposals/:id', async (c) => {
     const proposal = proposals.get(c.req.param('id'))
     if (!proposal) throw new ApiError({ code: 'no_encontrado' })
@@ -200,7 +243,7 @@ export function channelRoutes(deps: ChannelRoutesDeps) {
     if (proposal.status === 'descartada') throw new ApiError({ code: 'conflicto' })
 
     if (body.editedPayload !== undefined) {
-      const schema = CHANNEL_OUTPUTS[useOf(proposal.kind)]
+      const schema = proposal.kind === 'nichos' ? nichesEditedOutput : CHANNEL_OUTPUTS[useOf(proposal.kind)]
       if (!schema.safeParse(body.editedPayload).success) {
         throw new ApiError({ code: 'validacion', fields: { editedPayload: 'no_valido' } })
       }

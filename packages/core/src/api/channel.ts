@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { FAILURE_KINDS } from '../ai/failures.ts'
 import { journeyStateSchema } from '../channel/journey.ts'
+import { REFERENCE_REASONS } from '../market/measures.ts'
 import {
   AUDIENCE_REGIONS,
   CHANNEL_ORIGINS,
@@ -105,6 +106,11 @@ export const measureSchema = z.object({
   recentVideos: count.nullable(),
   recentShare: z.number().min(0).max(1).nullable(),
   sampleSize: count.nullable(),
+  shortsInSample: count.nullable(),
+  shortsMedianViews: count.nullable(),
+  unknownFormatVideos: count.nullable(),
+  smallChannels: count.nullable(),
+  hiddenSubscribers: count.nullable(),
   verdict: z.enum(['conviene', 'con_reservas', 'no_conviene']).nullable(),
   thresholdsVersion: z.number().int().positive(),
   measuredAt: z.string().nullable(),
@@ -120,7 +126,11 @@ export const referenceChannelSchema = z.object({
   handle: z.string().nullable(),
   subscribers: count.nullable(),
   topVideoViews: count,
-  reason: z.string(),
+  medianViews: count.nullable(),
+  bestRatio: z.number().min(0).nullable(),
+  bestVideoId: z.string().nullable(),
+  bestVideoTitle: z.string().nullable(),
+  reason: z.enum(REFERENCE_REASONS),
   fetchedAt: z.string(),
 })
 export type ReferenceChannelView = z.infer<typeof referenceChannelSchema>
@@ -177,11 +187,24 @@ export const createChannelBodySchema = z.object({ origin: z.enum(CHANNEL_ORIGINS
 export const createChannelResponseSchema = z.object({ channel: channelSchema, journey: journeySchema })
 
 // GET /api/journeys/:id
+export const referenceChannelsSchema = z.array(referenceChannelSchema)
+
+export const channelWarningViewSchema = z.object({
+  code: z.enum(['infantil', 'solo_shorts', 'no_autentico', 'ritmo_insostenible']),
+  sourceLabel: z.string().nullable(),
+  reviewedAt: z.string().nullable(),
+})
+export type ChannelWarningView = z.infer<typeof channelWarningViewSchema>
+
 export const journeyViewSchema = journeySchema.extend({
   proposals: z.array(proposalSchema),
   measures: z.array(measureSchema),
   nameChecks: z.array(nameCheckSchema),
   jobs: z.array(jobSchema),
+  // By niche label, for the latest batch: domain rules with their source (FR-015, US1 AS7).
+  warnings: z.record(z.string(), z.array(channelWarningViewSchema)),
+  // Older measures ask to be measured again (FR-027).
+  measureStaleDays: z.number().int().positive(),
 })
 export type JourneyFullView = z.infer<typeof journeyViewSchema>
 
@@ -227,7 +250,11 @@ export const patchProposalBodySchema = z.object({
 })
 
 // POST /api/journeys/:id/references
-export const referencesBodySchema = z.object({ measureId: id, add: id.optional(), remove: id.optional() })
+export const referencesBodySchema = z.object({
+  measureId: id,
+  add: z.string().trim().min(1).max(500).optional(),
+  remove: id.optional(),
+})
 
 // POST …/measures, …/name-checks, …/reading and /api/settings/youtube/update-reader
 export const jobStartedSchema = z.object({ jobId: id })

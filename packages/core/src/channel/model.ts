@@ -18,6 +18,7 @@ export type JourneyStatus = (typeof JOURNEY_STATUSES)[number]
 export const PROPOSAL_KINDS = [
   'preguntas',
   'nichos',
+  'recomendacion',
   'conceptos',
   'nombres',
   'perfil_actual',

@@ -246,6 +246,7 @@ export const es = {
     conflicto: 'Algo ha cambiado en otra pestaña. Te llevamos al paso en el que estás.',
     no_encontrado: 'Eso ya no existe. Puede que lo hayas borrado en otra pestaña.',
     ia: 'La IA no ha podido hacerlo.',
+    youtube: 'No hemos podido leer YouTube ahora mismo.',
     prohibido: 'YTCreator ha bloqueado esta acción por seguridad. Recarga la página.',
     interno:
       'Algo ha fallado dentro de YTCreator. Vuelve a intentarlo y, si sigue pasando, ciérralo y ábrelo otra vez.',

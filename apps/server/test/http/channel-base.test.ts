@@ -267,6 +267,27 @@ describe('POST /api/journeys/:id/proposals', () => {
     const view = journeyViewSchema.parse((await call(t, 'GET', `/api/journeys/${id}`)).body)
     expect(view.proposals.map((p) => p.id)).toEqual([second.body.id])
   })
+
+  it('goes back to the previous batch (US1 AS5)', async () => {
+    const t = makeTestApp({ fakeAi: 'ok' })
+    await connect(t)
+    const { id, revision } = await atQuestions(t)
+    const first = proposalSchema.parse((await generate(t, id, revision)).body)
+    const estimate = await call(t, 'POST', `/api/journeys/${id}/estimate`, { use: 'preguntas' })
+    const second = await call(t, 'POST', `/api/journeys/${id}/proposals`, {
+      revision,
+      kind: 'preguntas',
+      estimateId: estimate.body.estimateId,
+      parentId: first.id,
+    })
+    const back = await call(t, 'POST', `/api/proposals/${String(second.body.id)}/back`, {})
+    expect(back.status).toBe(200)
+    expect(back.body).toMatchObject({ id: first.id, status: 'propuesta' })
+    const view = journeyViewSchema.parse((await call(t, 'GET', `/api/journeys/${id}`)).body)
+    expect(view.proposals.map((p) => p.id)).toEqual([first.id])
+    // The first of all has nothing to go back to.
+    expect((await call(t, 'POST', `/api/proposals/${first.id}/back`, {})).status).toBe(409)
+  })
 })
 
 describe('PATCH /api/proposals/:id', () => {

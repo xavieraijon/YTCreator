@@ -3,6 +3,8 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { createRegistry } from '@ytcreator/ai'
 import type { Pricing } from '@ytcreator/core'
+import { loadMarket, warningKnowledge } from '@ytcreator/knowledge'
+import { createFakeYouTube } from '@ytcreator/youtube'
 import { afterEach } from 'vitest'
 import { migrate, MIGRATIONS } from '../src/db/migrate.ts'
 import { openDatabase } from '../src/db/open.ts'
@@ -26,6 +28,7 @@ import { createAiConnectionsService } from '../src/services/ai-connections.ts'
 import { createAiRunService } from '../src/services/ai-run.ts'
 import { createClaudeRepair, type InstallerRunner } from '../src/services/claude-repair.ts'
 import { createJobsService } from '../src/services/jobs.ts'
+import { createNicheResearch } from '../src/services/niche-research.ts'
 
 // Fixed prices, so no test depends on the knowledge package.
 const PRICING: Pricing = {
@@ -99,6 +102,7 @@ export function makeTestApp({ fakeAi, now = () => new Date(), installer }: TestA
   const channels = createChannelsRepo(db, now)
   const jobsRepo = createJobsRepo(db, now)
   const jobs = createJobsService({ jobs: jobsRepo, logger })
+  const market = loadMarket()
   // The prompts of the channel uses arrive with each story; the fake provider does not read them.
   const promptFor = (use: string) => ({ id: use, version: 1, text: `Prompt de prueba de ${use}.` })
   const aiRun = createAiRunService({
@@ -121,7 +125,19 @@ export function makeTestApp({ fakeAi, now = () => new Date(), installer }: TestA
     jobs: jobsRepo,
     aiRun,
     promptFor,
+    warningKnowledge: warningKnowledge(market),
+    measureStaleDays: market.thresholds.data.staleDays,
   }
+  const fakeYouTube = createFakeYouTube({ now })
+  const research = createNicheResearch({
+    youtube: { ...fakeYouTube, effectiveSource: () => 'fake' as const },
+    measures: channel.measures,
+    jobs,
+    thresholds: market.thresholds.data,
+    thresholdsVersion: market.thresholds.version,
+    logger,
+    now,
+  })
   const version = '0.1.0'
   const app = createApp({
     port: TEST_PORT,
@@ -136,6 +152,7 @@ export function makeTestApp({ fakeAi, now = () => new Date(), installer }: TestA
     settings,
     channel,
     jobs,
+    youtube: { journeys: channel.journeys, measures: channel.measures, research },
   })
 
   // A request as the local SPA sends it: local Host and Origin, JSON body.
@@ -164,6 +181,9 @@ export function makeTestApp({ fakeAi, now = () => new Date(), installer }: TestA
     channels,
     jobs,
     jobsRepo,
+    measures: channel.measures,
+    channelProposals: channel.proposals,
+    research,
     request,
     now,
   }

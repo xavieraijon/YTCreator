@@ -6,11 +6,13 @@ import {
   createChannelResponseSchema,
   estimateSchema,
   type JobEvent,
+  jobStartedSchema,
   jobEventSchema,
   journeySchema,
   journeyViewSchema,
   proposalOutcomeSchema,
   proposalSchema,
+  referenceChannelsSchema,
   usageListSchema,
 } from '@ytcreator/core/api'
 
@@ -130,6 +132,11 @@ export const channelApi = {
     body: { revision: number; kind: ProposalKind; estimateId: string; instructions?: string; parentId?: string },
     options?: RequestOptions,
   ) => apiClient.post(`/api/journeys/${id}/proposals`, body, proposalOutcomeSchema, options),
+  back: (id: string) => apiClient.post(`/api/proposals/${id}/back`, {}, proposalSchema),
+  measure: (id: string, body: { revision: number; niches: { label: string; queries: string[] }[]; force?: boolean }) =>
+    apiClient.post(`/api/journeys/${id}/measures`, body, jobStartedSchema),
+  references: (id: string, body: { measureId: string; add?: string; remove?: string }) =>
+    apiClient.post(`/api/journeys/${id}/references`, body, referenceChannelsSchema),
   decide: (id: string, body: { editedPayload?: unknown; selectedIndex?: number; status?: 'aprobada' | 'descartada' }) =>
     apiClient.patch(`/api/proposals/${id}`, body, proposalSchema),
 }

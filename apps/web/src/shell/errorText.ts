@@ -1,10 +1,13 @@
 import type { AiFailure } from '@ytcreator/core'
 import { ApiClientError } from '../api/client.ts'
 import { es } from '../strings/es.ts'
+import { youtubeFailuresEs } from '../strings/youtube-failures.es.ts'
 
 // Text of a failed request that is not an AI failure (those go through AiFailureMessage).
 export function errorText(error: unknown): string {
   if (error instanceof ApiClientError && error.body?.guard) return es.guard[error.body.guard]
+  if (error instanceof ApiClientError && error.body?.youtubeFailure)
+    return youtubeFailuresEs[error.body.youtubeFailure].what
   if (error instanceof ApiClientError && error.body) return es.apiError[error.body.code]
   if (error instanceof ApiClientError && error.kind === 'red') return es.clientError.red
   return es.clientError.respuesta

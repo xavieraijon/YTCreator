@@ -27,6 +27,7 @@ modelo.
 |---|---|---|---|---|
 | `preguntas` | Haiku 5.5 | 60 s | `interests` | 0–3 `{id, question, why}` (FR-005) |
 | `nichos` | Sonnet 5.5 | 120 s | `interests`, `answers` | 3–5 `{label, summary, queries[1..3], whyItFits}` |
+| `recomendacion` | Sonnet 5.5 | 120 s | `interests`, `answers`, nichos con sus cifras medidas | `{recommendedLabel, why, cautions[]}` `{label, why}`: opinión marcada como IA, a petición y con su coste (FR-010, US1 AS4) |
 | `conceptos` | Sonnet 5.5 | 120 s | nicho, medida, referencias, `hoursPerWeek`, `onCamera`, `audienceRegion`, fragmentos de conocimiento (`ypp`, `rpm`, `made-for-kids`, `inauthentic`, `shorts`) | 2–3 `Concept` (forma de `ChannelProfile.concept`) |
 | `nombres` | Haiku 5.5 | 60 s | concepto elegido, nombres ya descartados | 6–8 `{displayName, handle, why}` |
 | `lectura_canal` | Sonnet 5.5 | 120 s | lectura del canal (`summary` + vídeos con sus veces lo normal) | `{niche, pillars, audience, works[], doesNotWork[]}`; cada punto con `videoIds[]` |

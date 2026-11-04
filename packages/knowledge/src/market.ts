@@ -99,6 +99,13 @@ export const MARKET_SCHEMAS = {
       staleDays: z.number().int().positive(),
       saturationDays: z.number().int().positive(),
       references: z.object({ min: z.number().int().positive(), max: z.number().int().positive() }),
+      ownChannel: z.object({
+        baselineVideos: z.number().int().positive(),
+        minBaseline: z.number().int().positive(),
+        notableRatio: z.number().positive(),
+        youngDays: z.number().int().positive(),
+        referenceVideos: z.number().int().positive(),
+      }),
       context: z.object({
         smallChannelSubscribers: z.number().int().positive(),
         youngChannelMonths: z.number().int().positive(),

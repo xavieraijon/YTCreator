@@ -27,8 +27,9 @@ export interface ProposalProps {
   readonly busy?: boolean
   /** The step's own name for approving («Elegir este nicho»). */
   readonly approveLabel?: string
-  readonly onApprove: () => void
-  readonly onEdit: () => void
+  /** A list where each item is chosen on its own has no general approval or editing. */
+  readonly onApprove?: () => void
+  readonly onEdit?: () => void
   readonly onRegenerate: (instructions: string) => void
 }
 
@@ -76,18 +77,61 @@ export function Proposal({
         <ErrorMessage title={text.blocked[blockedBy]} action={{ label: text.goLimits, onClick: toLimits }} />
       )}
       <div className={styles.actions}>
-        <Button variant="primary" disabled={busy} onClick={onApprove}>
-          {approveLabel}
-        </Button>
-        <Button disabled={busy} onClick={onEdit}>
-          {text.edit}
-        </Button>
+        {onApprove && (
+          <Button variant="primary" disabled={busy} onClick={onApprove}>
+            {approveLabel}
+          </Button>
+        )}
+        {onEdit && (
+          <Button disabled={busy} onClick={onEdit}>
+            {text.edit}
+          </Button>
+        )}
         <Button
           disabled={busy || blockedBy !== null || !estimate}
           loading={busy}
           onClick={() => onRegenerate(instructions)}
         >
           {costLabel(text.regenerate, estimate)}
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+export interface AiActionProps {
+  readonly label: string
+  readonly estimate: EstimateView | null
+  readonly failure?: AiRunFailure | null
+  readonly busy?: boolean
+  readonly primary?: boolean
+  readonly onRun: () => void
+}
+
+// An AI action on its own: the amount on the button, and pressing it is the confirmation (FR-029).
+export function AiAction({ label, estimate, failure = null, busy = false, primary = true, onRun }: AiActionProps) {
+  const blockedBy = estimate?.blockedBy ?? null
+  const toLimits = () => navigate({ page: 'aiSettings' })
+  return (
+    <div className={styles.proposal}>
+      {failure === 'limite_de_gasto' ? (
+        <ErrorMessage live title={channelEs.aiFailure[failure]} action={{ label: text.goLimits, onClick: toLimits }} />
+      ) : (
+        failure && (
+          <ErrorMessage live title={channelEs.aiFailure[failure]} action={{ label: text.retry, onClick: onRun }} />
+        )
+      )}
+      {blockedBy && (
+        <ErrorMessage title={text.blocked[blockedBy]} action={{ label: text.goLimits, onClick: toLimits }} />
+      )}
+      <div className={styles.actions}>
+        <Button
+          variant={primary ? 'primary' : 'secondary'}
+          loading={busy}
+          disabled={busy || blockedBy !== null || !estimate}
+          onClick={onRun}
+        >
+          {costLabel(label, estimate)}
         </Button>
       </div>
     </div>

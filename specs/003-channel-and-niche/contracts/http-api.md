@@ -31,6 +31,7 @@ Las mismas de la 002:
 | `POST /api/journeys/:id/estimate` | `{use, proposalId?}` | `Estimate` |
 | `POST /api/journeys/:id/proposals` | `{revision, kind, estimateId, instructions?, parentId?}` | `Proposal` (con `failure` si falló) |
 | `PATCH /api/proposals/:id` | `{editedPayload?, selectedIndex?, status?}` | `Proposal` |
+| `POST /api/proposals/:id/back` | `{}` | `Proposal`: descarta esta y recupera la que sustituyó (US1 AS5); `409 conflicto` si no hay anterior |
 
 ## YouTube
 

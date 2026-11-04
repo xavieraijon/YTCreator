@@ -127,7 +127,7 @@ Toda salida de la IA que el creador puede aprobar, editar o regenerar (FR-023).
 |---|---|---|
 | `id` | `TEXT` PK | |
 | `journey_id` | `TEXT` FK → `journey` | |
-| `kind` | `'preguntas' \| 'nichos' \| 'conceptos' \| 'nombres' \| 'perfil_actual' \| 'posicionamiento'` | |
+| `kind` | `'preguntas' \| 'nichos' \| 'recomendacion' \| 'conceptos' \| 'nombres' \| 'perfil_actual' \| 'posicionamiento'` | |
 | `payload` | `TEXT` (JSON) | Validado con el esquema del `kind` ([ai-uses](./contracts/ai-uses.md)) |
 | `edited_payload` | `TEXT \| NULL` | Versión editada a mano; si existe, manda sobre `payload` |
 | `selected_index` | `INTEGER \| NULL` | Elemento elegido (nicho, concepto, nombre) |
@@ -232,6 +232,8 @@ Una medida de un nicho (FR-007, FR-009).
 | `shorts_in_sample` | `INTEGER \| NULL` | Shorts de la búsqueda, fuera de los indicadores (FR-007b) |
 | `shorts_median_views` | `INTEGER \| NULL` | Si hay al menos `minVideos` Shorts |
 | `unknown_format_videos` | `INTEGER \| NULL` | Vídeos sin duración, fuera de los indicadores |
+| `small_channels` | `INTEGER \| NULL` | Canales de menos de 200.000 suscriptores en la muestra |
+| `hidden_subscribers` | `INTEGER \| NULL` | Canales que ocultan la cifra: no cuentan en la puerta de entrada y se dice cuántos son |
 | `verdict` | `'conviene' \| 'con_reservas' \| 'no_conviene' \| NULL` | Regla fija ([market](./contracts/market.md)) |
 | `thresholds_version` | `INTEGER` | Versión de `thresholds.json` usada |
 | `measured_at` | `TEXT \| NULL` | FR-008; si tiene más de 90 días, aviso (FR-027) |
@@ -252,7 +254,7 @@ De 2 a 4 canales de referencia reales del nicho elegido (FR-012).
 | `median_views` | `INTEGER \| NULL` | Mediana de sus vídeos largos recientes; `NULL` si no se pudieron leer |
 | `best_ratio` | `REAL \| NULL` | Mayores «veces lo normal» de sus vídeos largos ([market](./contracts/market.md)) |
 | `best_video_id`, `best_video_title` | `TEXT \| NULL` | El vídeo de `best_ratio` |
-| `reason` | `TEXT` | Por qué es referencia; generado por la IA y marcado como opinión |
+| `reason` | `TEXT` | Código de por qué es referencia: `puerta_de_entrada`, `mejor_video` o `anadido_por_ti`. Sale de una regla fija, no de la IA, porque ningún uso de IA lo cubre; la pantalla lo traduce |
 | `fetched_at` | `TEXT` | |
 
 ## `name_check`

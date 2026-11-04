@@ -106,7 +106,7 @@ una tabla con caducidad (R4, R15).
 
 - 1 creador, N canales en el modelo de datos (gestión de varios fuera de alcance);
 - 2 recorridos, unas 12 pantallas o pasos y unas 20 rutas de API nuevas;
-- 6 usos de IA, 3 adaptadores de YouTube y 1 migración.
+- 7 usos de IA (`recomendacion` añadido en la fase 3, FR-010), 3 adaptadores de YouTube y 1 migración.
 
 ## Constitution Check
 

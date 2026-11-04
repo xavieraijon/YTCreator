@@ -3,6 +3,7 @@ export const AI_USES = [
   'comprobacion',
   'preguntas',
   'nichos',
+  'recomendacion',
   'conceptos',
   'nombres',
   'lectura_canal',
