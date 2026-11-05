@@ -5,6 +5,7 @@ import {
   type AiProvider,
   type AiRequest,
   type AiResult,
+  type AiUsage,
   type Billing,
   type ChannelUse,
   type CheckResult,
@@ -12,6 +13,7 @@ import {
   type Secret,
 } from '@ytcreator/core'
 import { resolveProfile } from '../profiles.ts'
+import { addUsage } from '../usage.ts'
 import { buildPrompt } from '../prompt.ts'
 import { fakeChannelOutput } from './outputs.ts'
 import type { FakeOutcome, FakeScenario } from './scenarios.ts'
@@ -128,18 +130,20 @@ export function createFakeProvider(
     async generate<T>(request: AiRequest<T>): Promise<AiResult<T>> {
       // A structured output that does not validate is asked for once more (principle IV).
       const prompt = buildPrompt(request.prompt.text, request.input)
+      let usage: AiUsage = {}
       for (let attempt = 1; attempt <= 2; attempt++) {
         const result = await call('generate', request.signal, prompt, request as AiRequest<unknown>)
         if (!result.ok) {
           logResult('generate', result)
-          return result
+          return { ...result, ...(attempt > 1 ? { usage } : {}) }
         }
-        if (!request.schema) return result as AiResult<T>
+        usage = addUsage(usage, result.usage)
+        if (!request.schema) return { ...result, usage } as AiResult<T>
         const parsed = request.schema.safeParse(result.value)
-        if (parsed.success) return { ok: true, value: parsed.data, usage: result.usage }
+        if (parsed.success) return { ok: true, value: parsed.data, usage }
         deps.logger.warn('ai.output_invalid', { provider: 'fake', attempt, issues: parsed.error.issues.length })
       }
-      return { ok: false, failure: UNKNOWN_FAILURE, invalidOutput: true }
+      return { ok: false, failure: UNKNOWN_FAILURE, invalidOutput: true, usage }
     },
   }
 }

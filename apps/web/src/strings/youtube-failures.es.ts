@@ -10,7 +10,7 @@ export interface YouTubeFailureText {
 // What each failure of the YouTube reader says and what the screen offers (contracts/ui-screens.md).
 export const youtubeFailuresEs: Record<YouTubeFailureCode, YouTubeFailureText> = {
   sin_datos: {
-    what: 'No hemos encontrado suficientes vídeos para medir este tema.',
+    what: 'No hemos encontrado datos suficientes para medir este tema.',
     action: 'volver_a_intentar',
   },
   no_encontrado: {

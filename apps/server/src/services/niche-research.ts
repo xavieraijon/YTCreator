@@ -39,46 +39,66 @@ export interface NicheResearchDeps {
 }
 
 type Read<T> = { ok: true; value: T } | { ok: false; failure: YouTubeFailureCode }
+// One channel that fails does not count, like one left out (contracts/market.md). Its cause is kept for when too few are left.
+type ChannelsRead = { channels: Map<string, ChannelInfo>; failures: YouTubeFailureCode[] }
 type References =
   | { ok: true; references: ReferenceChannel[] }
   | { ok: false; failure: YouTubeFailureCode }
   | { ok: false; invalid: true }
 
 const SEARCH_LIMIT = 40
-// A failure of the reader must not turn into figures: only these mean «nothing here», the rest stop the measure.
+// A failure of the reader must not turn into figures: only these mean «nothing here». Any other stops a search, and
+// leaves a channel as not read.
 const NOTHING_THERE: readonly YouTubeFailureCode[] = ['sin_datos', 'no_encontrado']
+
+function mostRepeated(failures: readonly YouTubeFailureCode[]): YouTubeFailureCode {
+  const times = (code: YouTubeFailureCode) => failures.filter((failure) => failure === code).length
+  return failures.reduce((most, code) => (times(code) > times(most) ? code : most))
+}
+
+// Why a measure fell short: the failures, if they explain it better than channels hiding their figure.
+function causeOf({ channels, failures }: ChannelsRead): YouTubeFailureCode {
+  const hidden = [...channels.values()].filter((channel) => channel.subscribers === null).length
+  return failures.length <= hidden ? 'sin_datos' : mostRepeated(failures)
+}
 
 export function createNicheResearch(deps: NicheResearchDeps) {
   const { youtube, measures, jobs, thresholds, thresholdsVersion, logger, now } = deps
 
-  async function readHits(queries: readonly string[]): Promise<Read<VideoHit[]>> {
+  async function readHits(queries: readonly string[]): Promise<Read<{ hits: VideoHit[]; source: YouTubeSource }>> {
     const results = await Promise.all(queries.map((query) => youtube.search(query, { limit: SEARCH_LIMIT })))
     const lists: VideoHit[][] = []
+    const sources = new Set<YouTubeSource>()
     for (const result of results) {
-      if (result.ok) lists.push(result.value.data)
-      else if (!NOTHING_THERE.includes(result.failure.code)) return { ok: false, failure: result.failure.code }
+      if (result.ok) {
+        lists.push(result.value.data)
+        sources.add(result.value.source)
+      } else if (!NOTHING_THERE.includes(result.failure.code)) return { ok: false, failure: result.failure.code }
     }
-    return { ok: true, value: mergeHits(lists) }
+    // What answered, not what was going to: yt-dlp may have stepped in. If any search went through it, its limits apply.
+    const source = sources.has('ytdlp') ? 'ytdlp' : ([...sources][0] ?? youtube.effectiveSource())
+    return { ok: true, value: { hits: mergeHits(lists), source } }
   }
 
-  async function readChannels(ids: readonly string[]): Promise<Read<Map<string, ChannelInfo>>> {
+  async function readChannels(ids: readonly string[]): Promise<ChannelsRead> {
     const results = await Promise.all(ids.map((channelId) => youtube.getChannel({ channelId })))
     const channels = new Map<string, ChannelInfo>()
+    const failures: YouTubeFailureCode[] = []
     for (const result of results) {
       if (result.ok) channels.set(result.value.data.channelId, result.value.data)
-      else if (!NOTHING_THERE.includes(result.failure.code)) return { ok: false, failure: result.failure.code }
+      else if (!NOTHING_THERE.includes(result.failure.code)) failures.push(result.failure.code)
     }
-    return { ok: true, value: channels }
+    return { channels, failures }
   }
 
   async function measureOne(measure: Measure): Promise<Measure | null> {
-    const hits = await readHits(measure.queries)
-    if (!hits.ok) return measures.fail(measure.id, hits.failure)
-    if (!hasEnoughVideos(hits.value, thresholds)) return measures.fail(measure.id, 'sin_datos')
-    const channels = await readChannels(channelsToAsk(hits.value, thresholds))
-    if (!channels.ok) return measures.fail(measure.id, channels.failure)
-    const figures = measureNiche({ hits: hits.value, channels: channels.value, thresholds, now: now() })
-    return figures ? measures.complete(measure.id, figures) : measures.fail(measure.id, 'sin_datos')
+    const read = await readHits(measure.queries)
+    if (!read.ok) return measures.fail(measure.id, read.failure)
+    const { hits, source } = read.value
+    if (!hasEnoughVideos(hits, thresholds)) return measures.fail(measure.id, 'sin_datos')
+    const channelsRead = await readChannels(channelsToAsk(hits, thresholds))
+    const figures = measureNiche({ hits, channels: channelsRead.channels, thresholds, now: now() })
+    return figures ? measures.complete(measure.id, figures, source) : measures.fail(measure.id, causeOf(channelsRead))
   }
 
   // A niche already measured with the same searches is kept: that is what «Seguir» resumes from (SC-006).
@@ -177,11 +197,15 @@ export function createNicheResearch(deps: NicheResearchDeps) {
       if (current.length > 0) return { ok: true, references: current }
 
       // The first time: the same searches as the measure, which the cache of the service usually has.
-      const hits = await readHits(measure.queries)
-      if (!hits.ok) return { ok: false, failure: hits.failure }
-      const channels = await readChannels(channelsToAsk(hits.value, thresholds))
-      if (!channels.ok) return { ok: false, failure: channels.failure }
-      const picked = pickReferences(hits.value, channels.value, thresholds)
+      const read = await readHits(measure.queries)
+      if (!read.ok) return { ok: false, failure: read.failure }
+      const { hits } = read.value
+      const channelsRead = await readChannels(channelsToAsk(hits, thresholds))
+      const picked = pickReferences(hits, channelsRead.channels, thresholds)
+      // Saved, a short list would never be read again: better a failure the creator can retry (FR-012).
+      if (picked.length < thresholds.references.min && channelsRead.failures.length > 0) {
+        return { ok: false, failure: mostRepeated(channelsRead.failures) }
+      }
       const fresh = await Promise.all(
         picked.map(({ channel, topVideoViews, reason }) => withFigures(channel, { reason, topVideoViews })),
       )

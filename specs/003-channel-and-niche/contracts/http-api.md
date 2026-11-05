@@ -26,7 +26,7 @@ Las mismas de la 002:
 |---|---|---|
 | `GET /api/channels/current` | — | `{channel, profile, journey}` o `{channel: null}` |
 | `POST /api/channels` | `{origin}` | `201 {channel, journey}`; `409` guard `ya_hay_canal` |
-| `GET /api/journeys/:id` | — | `Journey` con `state`, propuestas vigentes, medidas, comprobaciones y trabajos |
+| `GET /api/journeys/:id` | — | `Journey` con `state`, propuestas vigentes, medidas, comprobaciones y trabajos. La propuesta de conceptos trae las cifras de ahora, `basedOn` (nicho, horas y forma de salir en vídeo para los que se escribió) y `stale` |
 | `POST /api/journeys/:id/step` | `{revision, step, data?}` | `Journey`; `400` si falta la aprobación del paso |
 | `POST /api/journeys/:id/estimate` | `{use, proposalId?}` | `Estimate` |
 | `POST /api/journeys/:id/proposals` | `{revision, kind, estimateId, instructions?, parentId?}` | `Proposal` (con `failure` si falló) |

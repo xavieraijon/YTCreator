@@ -67,6 +67,7 @@ interface Row {
   unknown_format_videos: number | null
   small_channels: number | null
   hidden_subscribers: number | null
+  unread_channels: number | null
   verdict: MeasureFigures['verdict'] | null
   thresholds_version: number
   measured_at: string | null
@@ -111,6 +112,7 @@ const fromRow = (row: Row): Measure => ({
   unknownFormatVideos: row.unknown_format_videos,
   smallChannels: row.small_channels,
   hiddenSubscribers: row.hidden_subscribers,
+  unreadChannels: row.unread_channels,
   verdict: row.verdict,
   thresholdsVersion: row.thresholds_version,
   measuredAt: row.measured_at,
@@ -144,7 +146,8 @@ export function createMeasuresRepo(db: DatabaseSync, now: () => Date = () => new
     `UPDATE market_measure SET status = 'medida', failure = NULL, demand_median_views = ?, demand_level = ?,
        entry_channels = ?, entry_level = ?, concentration = ?, concentration_level = ?, recent_videos = ?,
        recent_share = ?, sample_size = ?, shorts_in_sample = ?, shorts_median_views = ?, unknown_format_videos = ?,
-       small_channels = ?, hidden_subscribers = ?, verdict = ?, measured_at = ?
+       small_channels = ?, hidden_subscribers = ?, unread_channels = ?, verdict = ?, measured_at = ?,
+       source = COALESCE(?, source)
      WHERE id = ?`,
   )
   const updateFailure = db.prepare(
@@ -152,6 +155,7 @@ export function createMeasuresRepo(db: DatabaseSync, now: () => Date = () => new
        entry_channels = NULL, entry_level = NULL, concentration = NULL, concentration_level = NULL,
        recent_videos = NULL, recent_share = NULL, sample_size = NULL, shorts_in_sample = NULL,
        shorts_median_views = NULL, unknown_format_videos = NULL, small_channels = NULL, hidden_subscribers = NULL,
+       unread_channels = NULL,
        verdict = NULL
      WHERE id = ?`,
   )
@@ -199,7 +203,8 @@ export function createMeasuresRepo(db: DatabaseSync, now: () => Date = () => new
       return get(id)
     },
 
-    complete(id: string, f: MeasureFigures): Measure | null {
+    // `source`: what really answered, which may not be the source expected when the measure started.
+    complete(id: string, f: MeasureFigures, source?: YouTubeSource): Measure | null {
       updateFigures.run(
         f.demandMedianViews,
         f.demandLevel,
@@ -215,8 +220,10 @@ export function createMeasuresRepo(db: DatabaseSync, now: () => Date = () => new
         f.unknownFormatVideos,
         f.smallChannels,
         f.hiddenSubscribers,
+        f.unreadChannels,
         f.verdict,
         now().toISOString(),
+        source ?? null,
         id,
       )
       return get(id)

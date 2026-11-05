@@ -1,5 +1,5 @@
 import { AUDIENCE_REGIONS, type ConceptOutput, ON_CAMERA } from '@ytcreator/core'
-import type { ConceptFigures, JourneyFullView, ProposalView } from '@ytcreator/core/api'
+import { type ConceptFigures, conceptsViewSchema, type JourneyFullView, type ProposalView } from '@ytcreator/core/api'
 import {
   Button,
   Card,
@@ -61,6 +61,7 @@ function Money({ concept }: { concept: Concept }) {
         <p>{text.moneyUnknown}</p>
       )}
       <p>{format(text.moneyPerThousand, { min: euros(rate.min), max: euros(rate.max) })}</p>
+      <p>{text.moneyConfidence[monetization.rpmSource.confidence]}</p>
       <DataSource kind="conocimiento" label={monetization.rpmSource.label} date={monetization.rpmSource.reviewedAt} />
       {concept.monetization.assumptions.length > 0 && (
         <>
@@ -309,6 +310,9 @@ export function ConceptEditor({ concept, busy = false, onSave, onCancel }: Conce
   )
 }
 
+export const isStale = (proposal: Pick<ProposalView, 'payload' | 'editedPayload'>) =>
+  conceptsViewSchema.safeParse(proposal.editedPayload ?? proposal.payload).data?.stale === true
+
 export interface ConceptsProps {
   readonly view: JourneyFullView
   readonly busy: boolean
@@ -328,7 +332,11 @@ export function Concepts({ view, busy, reload, onStep }: ConceptsProps) {
   return (
     <div className={styles.options}>
       <p className={styles.why}>{text.why}</p>
-      {view.state.conceptNeedsReview && <p role="status">{text.needsReview}</p>}
+      {view.state.conceptNeedsReview ? (
+        <p role="status">{text.needsReview}</p>
+      ) : (
+        proposal && isStale(proposal) && <p role="status">{text.stale}</p>
+      )}
       {failed !== null && (
         <ErrorMessage live title={errorText(failed)} action={{ label: es.app.retry, onClick: () => void refresh() }} />
       )}

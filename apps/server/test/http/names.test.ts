@@ -95,6 +95,45 @@ describe('the end of the journey', () => {
     expect((await step(t, id, 'hecho')).status).not.toBe(200)
   })
 
+  it('the profile keeps the figures of the journey as it stands, and how sure they are', async () => {
+    const t = makeTestApp({ fakeAi: 'ok' })
+    const id = await atNames(t)
+    const names = await propose(t, id, 'nombres')
+    await choose(t, names.id, 1)
+
+    const chosen = (await view(t, id)).proposals.findLast((p) => p.kind === 'conceptos')!
+    const { concepts } = chosen.payload as { concepts: { figures: { monetization: { rpmEurRange: unknown } } }[] }
+    const written = concepts[0]!.figures.monetization.rpmEurRange
+
+    await step(t, id, 'conceptos')
+    await step(t, id, 'ritmo')
+    await step(t, id, 'conceptos', { data: { audienceRegion: 'latam' } })
+    await step(t, id, 'nombres')
+    expect((await step(t, id, 'hecho')).status).toBe(200)
+
+    const channel = await channelOf(t)
+    const { concept } = channelProfileSchema.parse(t.channel.profiles.getCurrent(String(channel['id']))!.profile)
+    expect(concept.audience.region).toBe('latam')
+    expect(concept.monetization.rpmEurRange).not.toEqual(written)
+    expect(concept.monetization.confidence).toBe('baja')
+  })
+
+  it('the region the creator set by hand on the chosen concept reaches the profile', async () => {
+    const t = makeTestApp({ fakeAi: 'ok' })
+    const id = await atNames(t)
+    const shown = (await view(t, id)).proposals.findLast((p) => p.kind === 'conceptos')!
+    const { concepts } = shown.payload as { concepts: { audience: { region: string } }[] }
+    concepts[0]!.audience.region = 'mixto'
+    concepts[1]!.audience.region = 'mixto'
+    await call(t, 'PATCH', `/api/proposals/${shown.id}`, { editedPayload: { concepts } })
+    const names = await propose(t, id, 'nombres')
+    await choose(t, names.id, 1)
+    expect((await step(t, id, 'hecho')).status).toBe(200)
+    const channel = await channelOf(t)
+    const { concept } = channelProfileSchema.parse(t.channel.profiles.getCurrent(String(channel['id']))!.profile)
+    expect(concept.audience.region).toBe('mixto')
+  })
+
   it('choosing a name saves profile version 1, from the AI, complete', async () => {
     const t = makeTestApp({ fakeAi: 'ok' })
     const id = await atNames(t)

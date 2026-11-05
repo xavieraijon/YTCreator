@@ -18,6 +18,7 @@ const figures = {
   unknownFormatVideos: 1,
   smallChannels: 2,
   hiddenSubscribers: 1,
+  unreadChannels: 0,
   verdict: 'con_reservas',
 } as const
 

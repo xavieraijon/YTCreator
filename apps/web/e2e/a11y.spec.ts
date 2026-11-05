@@ -1,9 +1,10 @@
-import AxeBuilder from '@axe-core/playwright'
-import { expect, test, type Locator, type Page } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
+import { auditor, tabTo } from './audit.ts'
 import {
   blockExternal,
   choose,
   closeClaudePage,
+  connectAccount,
   FAKE_CODE,
   FAKE_KEY,
   heading,
@@ -14,45 +15,6 @@ import {
 // SC-010: every screen of contracts/ui-screens.md without axe violations in both themes, at 375 px and at 200 %
 // zoom, and the wizard done with the keyboard alone and a visible focus. Ports outside 4310–4329, other than the
 // ones the other specs use.
-const tags = ['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa']
-
-// 200 % zoom on a 1280 × 800 window leaves a 640 × 400 CSS viewport.
-const sizes = [
-  { name: 'escritorio', width: 1280, height: 800 },
-  { name: '375 px', width: 375, height: 800 },
-  { name: 'zoom 200 %', width: 640, height: 400 },
-] as const
-
-// Each screen in each theme and size: axe, and no horizontal scroll (reflow, WCAG 1.4.10). Collected, not thrown, so
-// one run lists them all.
-function auditor(page: Page) {
-  const failures: string[] = []
-  const audit = async (screen: string) => {
-    for (const colorScheme of ['light', 'dark'] as const) {
-      await page.emulateMedia({ colorScheme, reducedMotion: 'reduce' })
-      for (const size of sizes) {
-        await page.setViewportSize(size)
-        // The colours of a control just clicked or of the theme just switched are measured once settled.
-        await page.evaluate(async () => {
-          await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))
-          await Promise.all(document.getAnimations().map((animation) => animation.finished.catch(() => undefined)))
-        })
-        const where = `${screen} · ${colorScheme} · ${size.name}`
-        const { violations } = await new AxeBuilder({ page }).withTags(tags).analyze()
-        for (const violation of violations) {
-          failures.push(
-            `${where}: ${violation.id} (${violation.nodes.map((node) => node.target.join(' ')).join(', ')})`,
-          )
-        }
-        if (await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)) {
-          failures.push(`${where}: desplazamiento horizontal`)
-        }
-      }
-    }
-    await page.setViewportSize(sizes[0])
-  }
-  return { failures, audit }
-}
 
 // The new-version band only shows after the daily check, which never runs in these builds: its answer is faked.
 async function withUpdateNotice(page: Page) {
@@ -173,7 +135,7 @@ test('the pay-per-use wizard screens pass axe in both themes, at 375 px and at 2
   page,
   context,
 }) => {
-  test.setTimeout(120_000)
+  test.setTimeout(180_000)
   const server = await startServer({ port: 4386 })
   try {
     await blockExternal(context)
@@ -208,25 +170,6 @@ test('the pay-per-use wizard screens pass axe in both themes, at 375 px and at 2
     await server.stop()
   }
 })
-
-// Tabs until `target` has the focus, and checks a focus ring shows: on it (base.css) or on the box around it, as
-// the fields of packages/ui draw it.
-async function tabTo(page: Page, target: Locator) {
-  for (let tabs = 0; tabs < 40; tabs++) {
-    if (await target.evaluate((element) => element === document.activeElement)) break
-    await page.keyboard.press('Tab')
-  }
-  await expect(target).toBeFocused()
-  const ring = await target.evaluate((element) => {
-    if (!element.matches(':focus-visible')) return false
-    for (let node: Element | null = element, up = 0; node && up < 3; node = node.parentElement, up++) {
-      const style = getComputedStyle(node)
-      if (style.outlineStyle !== 'none' && parseFloat(style.outlineWidth) > 0) return true
-    }
-    return false
-  })
-  expect(ring, 'foco visible').toBe(true)
-}
 
 test('the whole wizard with the keyboard alone, the focus always visible (SC-010)', async ({ page, context }) => {
   const server = await startServer({ port: 4385 })
@@ -272,6 +215,113 @@ test('the whole wizard with the keyboard alone, the focus always visible (SC-010
     await tabTo(page, page.getByRole('button', { name: 'Crear mi primer canal' }))
     await page.keyboard.press('Enter')
     await expect(heading(page, 'Tu canal')).toBeVisible()
+  } finally {
+    await server.stop()
+  }
+})
+
+test('a new channel from the interests to the name with the keyboard alone (T123)', async ({ page, context }) => {
+  test.setTimeout(180_000)
+  const server = await startServer({ port: 4386 })
+  const press = async (name: string | RegExp) => {
+    await tabTo(page, page.getByRole('button', { name }).first())
+    await page.keyboard.press('Enter')
+  }
+  try {
+    await blockExternal(context)
+    await page.goto(server.baseURL)
+    await toConnect(page, 'Usar mi suscripción de Claude')
+    await connectAccount(page)
+    await page.getByRole('button', { name: 'Continuar' }).click()
+    await page.getByRole('button', { name: 'Ir al inicio' }).click()
+    await press('Crear mi primer canal')
+    await press('Crear mi canal')
+
+    await expect(heading(page, '¿Qué te interesa?')).toBeVisible()
+    await tabTo(page, page.getByLabel('Cuéntalo con tus palabras'))
+    await page.keyboard.type('Me gusta cocinar rápido y explicar recetas.')
+    await press('Seguir')
+
+    await expect(heading(page, 'Unas preguntas')).toBeVisible()
+    await press(/Preparar las preguntas/)
+    await expect(page.getByRole('button', { name: 'Saltar' })).toBeVisible()
+    await press('Saltar')
+
+    await expect(heading(page, 'Elige el tema de tu canal')).toBeVisible()
+    await press(/Proponer nichos/)
+    await expect(page.getByRole('button', { name: 'Elegir este nicho' }).first()).toBeEnabled()
+
+    // The niche of your own: the disclosure opens with the keyboard, the same as its form.
+    await tabTo(page, page.locator('summary', { hasText: 'Escribir mi propio nicho' }))
+    await page.keyboard.press('Enter')
+    await tabTo(page, page.getByLabel('Tu nicho'))
+    await page.keyboard.type('Cocina de aprovechamiento')
+    await press('Medir mi nicho')
+    await expect(page.getByRole('article', { name: 'Cocina de aprovechamiento' })).toBeVisible()
+
+    await press('Elegir este nicho')
+    await expect(page.getByText('Nicho elegido')).toBeVisible()
+    await press('Ver canales de referencia')
+    const references = page.getByRole('region', { name: 'Canales de referencia' })
+    await expect(references.getByRole('article').first()).toBeVisible()
+    await tabTo(page, references.getByRole('button', { name: 'Quitar' }).first())
+    await tabTo(page, page.getByRole('button', { name: 'Seguir', exact: true }).last())
+    await page.keyboard.press('Enter')
+
+    await expect(heading(page, 'Tu ritmo')).toBeVisible()
+    await tabTo(page, page.getByLabel(/Horas por semana/))
+    await page.keyboard.type('8')
+    await tabTo(page, page.getByRole('radio').first())
+    await page.keyboard.press('Space')
+    await press('Seguir')
+
+    await expect(heading(page, 'La idea de tu canal')).toBeVisible()
+    await press(/Proponer ideas/)
+    await expect(page.getByRole('button', { name: 'Elegir este concepto' }).first()).toBeVisible()
+
+    // Changing something in a concept, without leaving the keyboard.
+    await press('Cambiar algo')
+    await tabTo(page, page.getByLabel('La promesa'))
+    await page.keyboard.press('ControlOrMeta+A')
+    await page.keyboard.type('Cenas de diario sin complicarte la vida.')
+    await press('Guardar cambios')
+    await expect(page.getByRole('article', { name: 'Cenas de diario sin complicarte la vida.' })).toBeVisible()
+
+    await press('Elegir este concepto')
+    await tabTo(page, page.getByRole('button', { name: 'Seguir', exact: true }))
+    await page.keyboard.press('Enter')
+
+    await expect(heading(page, 'El nombre de tu canal')).toBeVisible()
+    await press('Decidir más tarde')
+    await expect(page.getByRole('button', { name: 'Elegir el nombre' })).toBeVisible()
+    await press('Elegir el nombre')
+
+    await expect(heading(page, 'El nombre de tu canal')).toBeVisible()
+    await press(/Proponer nombres/)
+    await expect(page.getByRole('article').first().getByText('Camino libre')).toBeVisible()
+
+    // A name of your own, taken: the question that comes up is answered with the keyboard too.
+    await tabTo(page, page.locator('summary', { hasText: 'Escribir el mío' }))
+    await page.keyboard.press('Enter')
+    await tabTo(page, page.getByLabel('Tu nombre'))
+    await page.keyboard.type('Canal Ocupado')
+    await tabTo(page, page.getByLabel('La @ que quieres'))
+    await page.keyboard.type('ocupado1')
+    await press('Comprobar mi nombre')
+    const mine = page.getByRole('article', { name: 'Canal Ocupado' })
+    await expect(mine.getByText('Problema')).toBeVisible()
+    await tabTo(page, mine.getByRole('button', { name: 'Quedarme con este nombre' }))
+    await page.keyboard.press('Enter')
+    const ask = page.getByRole('dialog', { name: /Quedarte con «Canal Ocupado»/ })
+    await expect(ask).toBeVisible()
+    await tabTo(page, ask.getByRole('button', { name: 'Mirar otros' }))
+    await page.keyboard.press('Enter')
+    await expect(ask).toHaveCount(0)
+
+    await press('Quedarme con este nombre')
+    await expect(page.getByText('Nombre elegido')).toBeVisible()
+    await press('Terminar')
+    await expect(page).toHaveURL(/\/canal$/)
   } finally {
     await server.stop()
   }

@@ -53,6 +53,44 @@ describe('checkClaims', () => {
 })
 
 describe('trimClaims', () => {
+  describe('the assumptions behind the money stay visible (FR-014)', () => {
+    const unbacked = 'Supone 80.000 visitas al mes.'
+    const concept = (promise: string, assumptions: string[]) => ({ promise, monetization: { assumptions } })
+
+    it('losing some of them keeps the concept', () => {
+      const output = { concepts: [concept('A', ['Es estable.', unbacked])] }
+      expect(trimClaims(output, input).output).toEqual({ concepts: [concept('A', ['Es estable.'])] })
+    })
+
+    it('losing all of them takes the concept away, as there is no way to show it', () => {
+      const output = { concepts: [concept('A', [unbacked]), concept('B', ['Es estable.'])] }
+      expect(trimClaims(output, input).output).toEqual({ concepts: [concept('B', ['Es estable.'])] })
+    })
+
+    it('outside a list, it leaves an empty text for the schema to reject', () => {
+      expect(trimClaims(concept('A', [unbacked]), input).output).toEqual(concept('A', ['']))
+    })
+
+    it('a concept written without assumptions is left alone', () => {
+      const output = { concepts: [concept('A', []), concept('B', [unbacked])] }
+      expect(trimClaims(output, input).output).toEqual({ concepts: [concept('A', [])] })
+    })
+  })
+
+  it('an item of a list that loses its only sentence goes away, whole', () => {
+    const output = {
+      assumptions: ['Es un tema estable.', 'Supone 80.000 visitas al mes.'],
+      cautions: [
+        { label: 'A', why: 'Supone 80.000 visitas al mes.' },
+        { label: 'B', why: 'Hay pocos canales.' },
+      ],
+    }
+    expect(trimClaims(output, input).output).toEqual({
+      assumptions: ['Es un tema estable.'],
+      cautions: [{ label: 'B', why: 'Hay pocos canales.' }],
+    })
+  })
+
   it('drops the failing sentences and marks the output as trimmed', () => {
     const output = {
       summary: 'Es un buen nicho. Los vídeos tienen 80.000 visitas de media.',

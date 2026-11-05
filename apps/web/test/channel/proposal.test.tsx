@@ -86,6 +86,8 @@ describe('Proposal', () => {
 
   it('explains when sentences with figures were taken out', () => {
     expect(render({ claimsTrimmed: true })).toContain(text.claimsTrimmed)
+    // A whole option may have gone, not only a sentence.
+    expect(text.claimsTrimmed).toContain('opciones')
     expect(render()).not.toContain(text.claimsTrimmed)
   })
 })

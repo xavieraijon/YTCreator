@@ -11,6 +11,8 @@ const range = z.object({ min: z.number().nonnegative(), max: z.number().nonnegat
 export const monetizationSchema = z
   .object({
     rpmEurRange: range,
+    // How sure the earnings per 1.000 views are (rpm.json): the spec asks to say it wherever they show.
+    confidence: z.enum(['alta', 'media', 'baja']).default('baja'),
     // Null when there is no measure behind it: no figure rather than a made-up one.
     monthlyViewsAssumption: range.nullable(),
     monthlyEurRange: range.nullable(),

@@ -11,13 +11,15 @@ import {
   type Secret,
 } from '@ytcreator/core'
 import { resolveProfile, type AiProfile } from '../profiles.ts'
+import { addUsage } from '../usage.ts'
 import { buildPrompt } from '../prompt.ts'
 import { classifyAnthropicError } from './classify.ts'
 
 const API_URL = 'https://api.anthropic.com'
 const REFUSED: AiFailure = { kind: 'contenido_filtrado', reason: 'rechazo_del_modelo' }
 
-type Outcome = { ok: true; text: string; usage: AiUsage } | { ok: false; failure: AiFailure; status?: number }
+type Outcome =
+  { ok: true; text: string; usage: AiUsage } | { ok: false; failure: AiFailure; status?: number; usage?: AiUsage }
 
 // Anthropic API with the creator's key, paid per use (research R10). The SDK retries nothing (C12) and reads
 // nothing from the environment: the URL, the key and the logs are fixed here.
@@ -61,9 +63,9 @@ export function createAnthropicProvider(credentials: Secret, deps: ProviderDeps)
         },
         { signal, timeout: use.timeoutMs },
       )
-      if (message.stop_reason === 'refusal') return { ok: false, failure: REFUSED } satisfies Outcome
-      const text = message.content.flatMap((block) => (block.type === 'text' ? [block.text] : [])).join('')
       const usage = { inputTokens: message.usage.input_tokens, outputTokens: message.usage.output_tokens }
+      if (message.stop_reason === 'refusal') return { ok: false, failure: REFUSED, usage } satisfies Outcome
+      const text = message.content.flatMap((block) => (block.type === 'text' ? [block.text] : [])).join('')
       return { ok: true, text, usage } satisfies Outcome
     } catch (error) {
       return failed(error)
@@ -99,20 +101,25 @@ export function createAnthropicProvider(credentials: Secret, deps: ProviderDeps)
       const schema = request.schema ? zodOutputFormat(request.schema).schema : undefined
       const prompt = buildPrompt(request.prompt.text, request.input)
       const useProfile = resolveProfile('anthropic', request.use, { aiTimeoutSeconds: deps.aiTimeoutSeconds })
+      // Every answer is paid for, also those that do not count: what comes back adds them all.
+      let usage: AiUsage = {}
       // A structured output that does not validate is asked for once more (principle IV).
       for (let attempt = 1; attempt <= 2; attempt++) {
         const outcome = await call(prompt, schema, request.signal, useProfile)
+        const consumed = outcome.usage !== undefined || attempt > 1
+        usage = addUsage(usage, outcome.usage)
         if (!outcome.ok) {
           logResult('generate', outcome)
-          return { ok: false, failure: outcome.failure }
+          // An error from the API, on the first try, consumed nothing.
+          return { ok: false, failure: outcome.failure, ...(consumed ? { usage } : {}) }
         }
-        if (!request.schema) return { ok: true, value: outcome.text as T, usage: outcome.usage }
+        if (!request.schema) return { ok: true, value: outcome.text as T, usage }
         const parsed = request.schema.safeParse(parseJson(outcome.text))
-        if (parsed.success) return { ok: true, value: parsed.data, usage: outcome.usage }
+        if (parsed.success) return { ok: true, value: parsed.data, usage }
         const issues = parsed.error.issues.length
         deps.logger.warn('ai.output_invalid', { provider: 'anthropic', attempt, issues })
       }
-      return { ok: false, failure: UNKNOWN_FAILURE, invalidOutput: true }
+      return { ok: false, failure: UNKNOWN_FAILURE, invalidOutput: true, usage }
     },
   }
 }

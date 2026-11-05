@@ -100,6 +100,7 @@ export const MARKET_SCHEMAS = {
       }),
       minVideos: z.number().int().positive(),
       maxChannels: z.number().int().positive(),
+      minKnownChannelsShare: z.number().min(0).max(1),
       staleDays: z.number().int().positive(),
       saturationDays: z.number().int().positive(),
       references: z.object({ min: z.number().int().positive(), max: z.number().int().positive() }),
@@ -232,7 +233,7 @@ export function conceptKnowledge(market: MarketKnowledge) {
       url: entry.source[0]!.url,
       date: entry.reviewedAt,
     })),
-    rpmSource: { label: rpm.source[0]!.label, reviewedAt: rpm.reviewedAt },
+    rpmSource: { label: rpm.source[0]!.label, reviewedAt: rpm.reviewedAt, confidence: rpm.data.confidence },
     yppSource: { label: ypp.source[0]!.label, reviewedAt: ypp.reviewedAt },
     forPrompt: {
       partnerProgram: { subscribers: ads.subscribers, watchHours: ads.watchHours.hours },

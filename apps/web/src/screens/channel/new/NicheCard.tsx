@@ -22,6 +22,9 @@ const SEMAPHORE: Record<'conviene' | 'con_reservas' | 'no_conviene', SemaphoreSt
 export const isStale = (measure: MeasureView, days: number, now: Date) =>
   measure.measuredAt !== null && now.getTime() - Date.parse(measure.measuredAt) > days * DAY_MS
 
+const countText = (count: number, one: string, many: string) =>
+  count === 1 ? one : format(many, { canales: number(count) })
+
 export interface Niche {
   readonly label: string
   readonly summary: string
@@ -68,10 +71,11 @@ function Measured({ measure, date }: { measure: MeasureView; date: string }) {
         title={figures.entry}
         level={figures.entryLevel[measure.entryLevel!]}
         body={[
-          format(figures.entryText, { canales: number(measure.entryChannels!) }),
+          countText(measure.entryChannels!, figures.entryTextOne, figures.entryText),
           ...(measure.hiddenSubscribers
-            ? [format(figures.hidden, { canales: number(measure.hiddenSubscribers) })]
+            ? [countText(measure.hiddenSubscribers, figures.hiddenOne, figures.hidden)]
             : []),
+          ...(measure.unreadChannels ? [countText(measure.unreadChannels, figures.unreadOne, figures.unread)] : []),
         ].join(' ')}
         date={date}
       />
@@ -86,10 +90,12 @@ function Measured({ measure, date }: { measure: MeasureView; date: string }) {
         body={
           measure.recentVideos === null || measure.recentShare === null
             ? figures.saturationUnknown
-            : format(figures.saturationText, {
-                videos: number(measure.recentVideos),
-                porcentaje: percent(measure.recentShare),
-              })
+            : measure.source === 'ytdlp'
+              ? format(figures.saturationPartial, { videos: number(measure.recentVideos) })
+              : format(figures.saturationText, {
+                  videos: number(measure.recentVideos),
+                  porcentaje: percent(measure.recentShare),
+                })
         }
         date={date}
       />

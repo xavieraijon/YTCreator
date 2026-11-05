@@ -50,9 +50,9 @@ de la pantalla Intereses, no el test de glosario. «YouTube» es una marca permi
 | Inicio | — | «Crear mi canal» / «Ya tengo un canal» / «Seguir donde lo dejaste» | Sin canal: «Crear mi canal» principal y «Ya tengo un canal» secundaria, cada una con su frase; con un recorrido a medias: «Seguir donde lo dejaste»; con el canal listo: siguiente paso y recordatorio del nombre provisional |
 | Intereses | `intereses` | «Seguir» | Campo libre con ejemplos |
 | Preguntas | `preguntas` | «Seguir» | 0–3 preguntas; «Saltar» secundaria |
-| Nichos | `nichos` | «Elegir este nicho» | Tarjeta por nicho con indicadores, veredicto y razón, y los Shorts como cifra aparte; canales de referencia con «veces lo normal en su canal»; «Escribir mi propio nicho» |
+| Nichos | `nichos` | «Elegir este nicho» | Tarjeta por nicho con indicadores, veredicto y razón, y los Shorts como cifra aparte; cuántos canales ocultan la cifra o no se miraron, y si las fechas son parciales; canales de referencia con «veces lo normal en su canal»; «Escribir mi propio nicho» |
 | Ritmo | `ritmo` | «Seguir» | Horas por semana, cara/voz/ninguna, región del público |
-| Conceptos | `conceptos` | «Elegir este concepto» | Promesa, pilares, público, formato, ritmo, monetización en rangos, avisos |
+| Conceptos | `conceptos` | «Elegir este concepto» | Promesa, pilares, público, formato, ritmo, monetización en rangos con su fiabilidad, avisos; aviso si se escribieron con otras respuestas |
 | Nombres | `nombres` | «Quedarme con este nombre» | Semáforo y razones por nombre; «Escribir el mío»; «Decidir más tarde» |
 | Enlace | `enlace` | «Buscar mi canal» | Acepta el enlace del canal, su @ o el enlace de un vídeo |
 | Confirmar | `confirmar` | «Sí, es mi canal» | Foto, nombre, @ y suscriptores |
@@ -67,7 +67,7 @@ de la pantalla Intereses, no el test de glosario. «YouTube» es una marca permi
 | Estado | Qué se ve |
 |---|---|
 | Cargando | Esqueleto y texto de lo que se está haciendo |
-| Sin datos (`sin_datos`) | «No hemos encontrado suficientes vídeos para medir este nicho.» Sin cifras inventadas |
+| Sin datos (`sin_datos`) | «No hemos encontrado datos suficientes para medir este tema.» Sin cifras inventadas |
 | Bloqueado / tiempo agotado | Explicación llana y «Volver a intentarlo» |
 | Sin lector (`no_disponible`) | Enlace a Ajustes → YouTube |
 | Fallo de IA | Mensaje de la 002 por código; `limite_de_gasto` enlaza a Ajustes → Límites |

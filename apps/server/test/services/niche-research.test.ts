@@ -138,6 +138,70 @@ describe('niche research', () => {
     expect(measures.listByJourney(journeyId)).toHaveLength(1)
   })
 
+  it('the measure says what really answered, not what was going to (yt-dlp stepping in for the Data API)', async () => {
+    const fake = createFakeYouTube({ now })
+    const steppedIn: YouTubeData = {
+      ...fake,
+      search: async (query, options) => {
+        const result = await fake.search(query, options)
+        return result.ok ? { ok: true, value: { ...result.value, source: 'ytdlp' } } : result
+      },
+    }
+    const { run } = research(steppedIn)
+    await run([{ label: 'Cocina', queries: ['cocina rapida'] }])
+    expect(measures.listByJourney(journeyId)[0]).toMatchObject({ status: 'medida', source: 'ytdlp' })
+  })
+
+  it('with no channel read there is no verdict: the door is not «cerrada» because nobody looked', async () => {
+    const fake = createFakeYouTube({ now })
+    const { run } = research({ ...fake, getChannel: async () => youtubeFailure('no_encontrado') })
+    await run([{ label: 'Cocina', queries: ['cocina rapida'] }])
+    expect(measures.listByJourney(journeyId)[0]).toMatchObject({
+      status: 'fallida',
+      failure: 'sin_datos',
+      verdict: null,
+    })
+  })
+
+  it('a channel that fails counts as not read: the others still give the measure', async () => {
+    const fake = createFakeYouTube({ now })
+    let asked = 0
+    const { run } = research({
+      ...fake,
+      getChannel: async (ref) => (asked++ === 0 ? youtubeFailure('no_disponible') : fake.getChannel(ref)),
+    })
+    await run([{ label: 'Cocina', queries: ['cocina rapida'] }])
+    const [measure] = measures.listByJourney(journeyId)
+    expect(measure).toMatchObject({ status: 'medida' })
+    expect(measure!.unreadChannels).toBeGreaterThan(0)
+  })
+
+  it('when too few are left, the failure is the cause only if it explains them better than hidden figures', async () => {
+    const fake = createFakeYouTube({ now })
+    let asked = 0
+    const { run } = research({
+      ...fake,
+      getChannel: async (ref) => {
+        if (asked++ === 0) return youtubeFailure('no_disponible')
+        const read = await fake.getChannel(ref)
+        return read.ok ? { ...read, value: { ...read.value, data: { ...read.value.data, subscribers: null } } } : read
+      },
+    })
+    await run([{ label: 'Cocina', queries: ['cocina rapida'] }])
+    expect(measures.listByJourney(journeyId)[0]).toMatchObject({ status: 'fallida', failure: 'sin_datos' })
+  })
+
+  it('when too few are left because of failures, the measure tells the one most repeated', async () => {
+    const fake = createFakeYouTube({ now })
+    let asked = 0
+    const { run } = research({
+      ...fake,
+      getChannel: async () => youtubeFailure(asked++ === 0 ? 'no_disponible' : 'bloqueado'),
+    })
+    await run([{ label: 'Cocina', queries: ['cocina rapida'] }])
+    expect(measures.listByJourney(journeyId)[0]).toMatchObject({ status: 'fallida', failure: 'bloqueado' })
+  })
+
   it('a reader that stops while reading channels fails the measure instead of closing the entry door', async () => {
     const fake = createFakeYouTube({ now })
     const { run } = research({ ...fake, getChannel: async () => youtubeFailure('bloqueado') })
@@ -179,6 +243,64 @@ describe('niche research', () => {
       if (!result.ok) throw new Error('should work')
       expect(result.references.length).toBeGreaterThanOrEqual(2)
       expect(result.references[0]).toMatchObject({ medianViews: null, bestRatio: null, bestVideoId: null })
+    })
+
+    it('below the minimum, the failure told is the one most repeated, not the first', async () => {
+      const fake = createFakeYouTube({ now })
+      let cut = false
+      let answered = 0
+      const youtube = {
+        ...fake,
+        getChannel: async (ref: Parameters<typeof fake.getChannel>[0]) => {
+          if (!cut) return fake.getChannel(ref)
+          answered += 1
+          return youtubeFailure(answered === 1 ? 'no_disponible' : 'bloqueado')
+        },
+      }
+      const { service, run } = research(youtube)
+      await run([{ label: 'Cocina', queries: ['cocina rapida'] }])
+      cut = true
+      const [measure] = measures.listByJourney(journeyId)
+      expect(await service.references(measure!)).toEqual({ ok: false, failure: 'bloqueado' })
+    })
+
+    it('below the minimum, a channel hiding its figure does not hide the failure: it could be a reference', async () => {
+      const fake = createFakeYouTube({ now })
+      let cut = false
+      let answered = 0
+      const youtube = {
+        ...fake,
+        getChannel: async (ref: Parameters<typeof fake.getChannel>[0]) => {
+          if (!cut) return fake.getChannel(ref)
+          if (answered++ > 0) return youtubeFailure('bloqueado')
+          const read = await fake.getChannel(ref)
+          return read.ok ? { ...read, value: { ...read.value, data: { ...read.value.data, subscribers: null } } } : read
+        },
+      }
+      const { service, run } = research(youtube)
+      await run([{ label: 'Cocina', queries: ['cocina rapida'] }])
+      cut = true
+      const [measure] = measures.listByJourney(journeyId)
+      expect(await service.references(measure!)).toEqual({ ok: false, failure: 'bloqueado' })
+    })
+
+    it('below the minimum, a failure is told and can be retried instead of keeping a short list', async () => {
+      const fake = createFakeYouTube({ now })
+      let cut = false
+      let answered = 0
+      const youtube = {
+        ...fake,
+        getChannel: async (ref: Parameters<typeof fake.getChannel>[0]) =>
+          cut && answered++ > 0 ? youtubeFailure('bloqueado') : fake.getChannel(ref),
+      }
+      const { service, run } = research(youtube)
+      await run([{ label: 'Cocina', queries: ['cocina rapida'] }])
+      cut = true
+      const [measure] = measures.listByJourney(journeyId)
+      expect(await service.references(measure!)).toEqual({ ok: false, failure: 'bloqueado' })
+      cut = false
+      const again = await service.references(measure!)
+      expect(again.ok && again.references.length).toBeGreaterThanOrEqual(2)
     })
 
     it('the first read fails if the search does', async () => {

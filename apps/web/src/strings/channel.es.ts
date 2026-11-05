@@ -46,6 +46,8 @@ export const channelEs = {
     why: 'Te hacemos hasta 3 preguntas para afinar los temas. Puedes saltártelas.',
     generate: 'Preparar las preguntas',
     none: 'Con lo que nos has contado es suficiente. No hace falta preguntarte nada.',
+    noneTrimmed:
+      'Hemos quitado las preguntas que nos salieron porque daban cifras que no podíamos comprobar. Puedes seguir sin ellas.',
     optional: 'Puedes dejarla en blanco.',
     next: 'Seguir',
     skip: 'Saltar',
@@ -82,12 +84,18 @@ export const channelEs = {
       entryLevel: { abierta: 'Abierta', entreabierta: 'Entreabierta', cerrada: 'Cerrada' },
       entryText:
         '{canales} canales de menos de 200.000 suscriptores tienen algún vídeo con más visitas que suscriptores.',
+      entryTextOne: 'Un canal de menos de 200.000 suscriptores tiene algún vídeo con más visitas que suscriptores.',
       hidden: '{canales} canales no enseñan sus suscriptores y no cuentan aquí.',
+      hiddenOne: 'Un canal no enseña sus suscriptores y no cuenta aquí.',
+      unread: 'De {canales} canales de los resultados no hemos mirado los suscriptores y no cuentan aquí.',
+      unreadOne: 'De un canal de los resultados no hemos mirado los suscriptores y no cuenta aquí.',
       concentration: 'Reparto de las visitas',
       concentrationLevel: { alta: 'Muy repartidas entre pocos', media: 'Algo repartidas', baja: 'Bien repartidas' },
       concentrationText: 'Los 3 canales con más visitas se llevan el {porcentaje} %.',
       saturation: 'Competencia reciente',
       saturationText: '{videos} vídeos publicados en los últimos 90 días, el {porcentaje} % de los que tienen fecha.',
+      saturationPartial:
+        '{videos} de los vídeos que hemos podido fechar se publicaron en los últimos 90 días. YouTube solo da la fecha de lo más nuevo de cada canal, así que puede haber más.',
       saturationUnknown: 'Sin dato: YouTube no nos ha dado las fechas de estos vídeos.',
       shorts: 'Shorts',
       shortsText: 'Han salido {shorts} Shorts. Se cuentan aparte y no influyen en el resultado.',
@@ -98,10 +106,10 @@ export const channelEs = {
     verdict: { conviene: 'Conviene', con_reservas: 'Con reservas', no_conviene: 'No conviene' },
     reason: {
       demanda_baja: 'Muy poca gente ve vídeos de este tema.',
-      puerta_cerrada: 'Los canales pequeños casi no consiguen visitas aquí.',
+      puerta_cerrada: 'En los canales que hemos mirado, los pequeños casi no consiguen visitas.',
       concentracion_alta: 'Hay público, pero unos pocos canales se llevan casi todo.',
-      puerta_entreabierta: 'Hay público, pero pocos canales pequeños consiguen entrar.',
-      buen_equilibrio: 'Hay público y los canales pequeños consiguen visitas.',
+      puerta_entreabierta: 'Hay público, pero en los canales que hemos mirado pocos pequeños consiguen entrar.',
+      buen_equilibrio: 'Hay público y, en los canales que hemos mirado, los pequeños consiguen visitas.',
     },
     warnings: {
       infantil: 'Parece contenido para niños: YouTube paga mucho menos por él y limita los comentarios.',
@@ -110,6 +118,7 @@ export const channelEs = {
       ritmo_insostenible: 'Este ritmo no te cabe en las horas que tienes.',
     },
     opinion: {
+      trimmed: 'Hemos quitado parte de esta opinión, quizá algún aviso, porque daba cifras que no podíamos comprobar.',
       title: 'La opinión de la IA',
       ask: 'Pedir la opinión de la IA',
       again: 'Pedir otra opinión',
@@ -159,6 +168,8 @@ export const channelEs = {
     chosen: 'Concepto elegido',
     edit: 'Cambiar algo',
     next: 'Seguir',
+    stale:
+      'Estos conceptos se escribieron con otras respuestas tuyas: otro nicho, horas o forma de salir en vídeo. El texto y el ritmo que proponen pueden no encajar. Puedes elegir uno igualmente o pedir otra propuesta.',
     needsReview: 'Este concepto se basaba en el nicho anterior. Elige uno de nuevo o pide otros.',
     promise: 'Qué se lleva quien ve tus vídeos',
     promiseWhy: 'Es la frase que une todo el canal: si un vídeo no la cumple, no va en este canal.',
@@ -180,6 +191,11 @@ export const channelEs = {
     moneyUnknown:
       'Sin dato: no tenemos cifras de este nicho o el ritmo no incluye vídeos largos, así que no te damos una cantidad.',
     moneyPerThousand: 'Lo que ganas por cada 1.000 visitas: de {min} a {max} €.',
+    moneyConfidence: {
+      alta: 'Fiabilidad de esta cifra: alta.',
+      media: 'Fiabilidad de esta cifra: media.',
+      baja: 'Fiabilidad de esta cifra: baja. Las fuentes no separan el español, así que el ajuste por región es una estimación nuestra, sin fuente que lo respalde.',
+    },
     assumptions: 'Lo que estamos suponiendo',
     partnerProgram:
       'Para cobrar por anuncios, el programa de socios de YouTube pide {suscriptores} suscriptores y {horas} horas vistas en un año, o {shorts} visitas de Shorts en 90 días.',
@@ -271,7 +287,7 @@ export const channelEs = {
     estimateCost: 'unos {importe} €',
     included: 'Incluido en tu suscripción',
     actionWithCost: '{accion} · {importe}',
-    claimsTrimmed: 'Hemos quitado algunas frases porque daban cifras que no podíamos comprobar.',
+    claimsTrimmed: 'Hemos quitado frases u opciones que daban cifras que no podíamos comprobar.',
     blocked: {
       por_operacion: 'Esto se pasa de tu límite por operación.',
       diario: 'Esto se pasa de tu límite de hoy.',

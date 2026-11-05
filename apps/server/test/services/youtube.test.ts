@@ -1,9 +1,15 @@
 import type { HandleStatus, Sourced, VideoHit, YouTubeData, YouTubeFailureCode, YouTubeResult } from '@ytcreator/core'
 import { youtubeFailure } from '@ytcreator/core'
 import { describe, expect, it } from 'vitest'
-import { CACHE_TTL_MS, HANDLE_CACHE_TTL_MS, createYtCacheRepo } from '../../src/db/repos/yt-cache.ts'
+import {
+  CACHE_TTL_MS,
+  HANDLE_CACHE_TTL_MS,
+  PARTIAL_CACHE_TTL_MS,
+  createYtCacheRepo,
+} from '../../src/db/repos/yt-cache.ts'
 import { createMemoryLogger } from '../../src/logging.ts'
-import { createYouTubeService, type YouTubeServiceDeps } from '../../src/services/youtube.ts'
+import { createSettingsRepo } from '../../src/db/repos/settings.ts'
+import { createYouTubeService, youtubeChoice, type YouTubeServiceDeps } from '../../src/services/youtube.ts'
 import { freshDb, manualClock } from '../db/repos/helpers.ts'
 
 const KEY = 'AIzaSyFAKE-clave-de-prueba-0123456789abc'
@@ -276,5 +282,92 @@ describe('youtube service: logs', () => {
     await service.search('receta secreta', { limit: 5 })
     await service.checkHandle('micanalsecreto')
     expect(logger.lines.join('\n')).not.toMatch(/receta secreta|micanalsecreto/)
+  })
+})
+
+describe('which source answers (G1)', () => {
+  it('without a key saved the real settings choose yt-dlp, with a key the Data API', () => {
+    const settings = createSettingsRepo(freshDb())
+    const none = setup(youtubeChoice(settings))
+    expect(none.service.effectiveSource()).toBe('ytdlp')
+    settings.set('youtube.api_key_ref', 'youtube-api-key')
+    const withKey = setup(youtubeChoice(settings))
+    expect(withKey.service.effectiveSource()).toBe('data_api')
+  })
+
+  it('`auto` falls back to yt-dlp when the Data API is not available, for instance with a key it rejects', async () => {
+    const { service, calls } = setup({ hasKey: () => true, apiFailure: 'no_disponible' })
+    const result = await service.search('recetas', { limit: 10 })
+    expect(result.ok).toBe(true)
+    expect(calls).toEqual(['data_api:search:recetas', 'ytdlp:search:recetas'])
+  })
+
+  it('`auto` also falls back when the Data API takes too long', async () => {
+    const { service, calls } = setup({ hasKey: () => true, apiFailure: 'tiempo_agotado' })
+    const result = await service.search('recetas', { limit: 10 })
+    expect(result).toMatchObject({ ok: true, value: { source: 'ytdlp' } })
+    expect(calls.map((call) => call.split(':')[0])).toEqual(['data_api', 'ytdlp'])
+  })
+
+  it('a source chosen by hand stays that one', async () => {
+    const { service, calls } = setup({ source: () => 'data_api', hasKey: () => true, apiFailure: 'no_disponible' })
+    const result = await service.search('recetas', { limit: 10 })
+    expect(result.ok).toBe(false)
+    expect(calls).toEqual(['data_api:search:recetas'])
+  })
+})
+
+describe('what falls back and for how long it is kept', () => {
+  it('after falling back, what yt-dlp answered is used again: no second read', async () => {
+    const { service, calls } = setup({ hasKey: () => true, apiFailure: 'no_disponible' })
+    await service.search('cocina', { limit: 40 })
+    await service.search('cocina', { limit: 40 })
+    expect(calls.filter((call) => call.startsWith('ytdlp:'))).toEqual(['ytdlp:search:cocina'])
+  })
+
+  it('a handle that fails is not asked again elsewhere: both sources read the same page', async () => {
+    const calls: string[] = []
+    const dataApi: YouTubeData = {
+      ...stubAdapter('data_api', calls),
+      checkHandle: async () => youtubeFailure('no_disponible'),
+    }
+    const { service } = setup({ hasKey: () => true, adapters: { ytdlp: stubAdapter('ytdlp', calls), dataApi } })
+    expect((await service.checkHandle('mi-canal')).ok).toBe(false)
+    expect(calls).toEqual([])
+  })
+
+  it('what came incomplete lasts 1 h instead of 24 h', async () => {
+    const calls: string[] = []
+    const ytdlp: YouTubeData = {
+      ...stubAdapter('ytdlp', calls),
+      search: async (query) => {
+        calls.push(query)
+        return { ok: true, value: { data: [HIT], source: 'ytdlp', fetchedAt: 'x', partial: true } }
+      },
+    }
+    const { service, clock } = setup({ adapters: { ytdlp, dataApi: stubAdapter('data_api', calls) } })
+    await service.search('cocina', { limit: 40 })
+    await service.search('cocina', { limit: 40 })
+    expect(calls).toHaveLength(1)
+    clock.advance(PARTIAL_CACHE_TTL_MS + 1)
+    await service.search('cocina', { limit: 40 })
+    expect(calls).toHaveLength(2)
+  })
+
+  it('without dates is another question, asked and kept apart', async () => {
+    const options: unknown[] = []
+    const calls: string[] = []
+    const ytdlp: YouTubeData = {
+      ...stubAdapter('ytdlp', calls),
+      search: async (_query, option) => {
+        options.push(option)
+        return { ok: true, value: { data: [HIT], source: 'ytdlp', fetchedAt: 'x' } }
+      },
+    }
+    const { service } = setup({ adapters: { ytdlp, dataApi: stubAdapter('data_api', calls) } })
+    await service.search('cocina', { limit: 40, withoutDates: true })
+    await service.search('cocina', { limit: 40 })
+    await service.search('cocina', { limit: 40, withoutDates: true })
+    expect(options).toEqual([{ limit: 40, withoutDates: true }, { limit: 40 }])
   })
 })

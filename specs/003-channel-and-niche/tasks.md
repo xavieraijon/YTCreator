@@ -230,6 +230,27 @@ recomendada, «Decidir más tarde» guarda el perfil con nombre provisional.
 
 ---
 
+## Phase 5b: Correcciones de la revisión retroactiva
+
+**Goal**: Cerrar los seis hallazgos graves de `checklists/validation.md`, con las recomendaciones P10, P11 y P12 de
+`decisions.md`, que el creador aprobó el 2026-11-04.
+
+- [X] T129 [P] G1: sin clave, `auto` usa yt-dlp, con una prueba del cableado real; una clave que la Data API rechaza también cae a yt-dlp, en `apps/server/src/services/youtube.ts` y `apps/server/src/main.ts`
+- [X] T130 [P] G2: las búsquedas de yt-dlp completan fechas con el RSS en `packages/youtube/src/ytdlp/adapter.ts`, y la pantalla dice que solo se conoce la fecha de lo más nuevo
+- [X] T131 [P] G3: muestra repartida de canales y `unread_channels` separado de los que ocultan la cifra, en `packages/core/src/market/measures.ts` y migración `0003`
+- [X] T132 G4: cifras de los conceptos calculadas con el nicho, el ritmo y la medida actuales al leer y al cerrar el perfil, y aviso si el concepto se escribió con otro nicho, horas o forma de salir en vídeo (la región no avisa, entrada 32), en `apps/server/src/services/concepts.ts`
+- [X] T133 [P] G5: confianza de los ingresos en pantalla y en el perfil, y nota de `rpm.json` sin afirmaciones sin fuente
+- [X] T134 [P] G6: el gasto de una respuesta inválida se registra, en `packages/ai/src/anthropic/adapter.ts` y `apps/server/src/services/ai-run.ts`
+- [X] T134b Segunda ronda tras la revisión: región de las cifras, fuente real de la medida, caché del respaldo, límites de los feeds, entrada de la IA, perfiles antiguos, medida sin canales leídos y contratos. Tercera ronda: marca de región puesta a mano, aviso también por horas y forma de salir en vídeo, cifras fuera de `previous`, muestra con los 4 canales con más visitas, feeds que no se repiten al fallar y la propuesta anterior fuera de las fuentes de cifras
+- [X] T134c P16 a): sin veredicto si se conoce la cifra de menos de la mitad de los canales preguntados, en `packages/core/src/market/measures.ts`
+- [X] T134d Cuarta ronda tras la Puerta A: un canal que falla cuenta como no leído, lo recortado se vuelve a validar, `auto` cae también por tiempo agotado, textos de lo mirado y singular, etiqueta de la estimación de euros y comprobación de que con `prefers-reduced-motion` no queda ningún bucle en marcha. Quinta ronda: referencias por debajo del mínimo, causa del fallo, elementos de lista recortados y glosario en las fuentes del conocimiento
+- [X] T134e P18 b): lo que el recorte quita se dice en todas las pantallas (preguntas, opinión y propuestas), y la IA no puede dar un concepto sin supuestos, ni se muestra si los pierde todos, en `packages/core/src/channel/claims.ts`, `Questions.tsx` y `Niches.tsx`
+- [X] T135 [A] Puerta A de las correcciones: ejecutar `/puerta-a Correcciones`. No se marca `[X]` hasta que la skill diga «pasada»; el informe queda en `specs/003-channel-and-niche/checklists/validation.md`
+
+**Checkpoint**: el camino real por defecto mide con yt-dlp, sin clave, en las pruebas con un binario falso.
+
+---
+
 ## Phase 6: User Story 4 - Posicionar un canal que ya existe (Priority: P2)
 
 **Goal**: El creador pega el enlace o la @ de su canal, lo confirma, la app lee sus vídeos y la IA saca el perfil
@@ -241,7 +262,7 @@ conservando nombre y @.
 
 ### Control adelantado para la Puerta A
 
-- [ ] T123 E2E de accesibilidad a 375 y 1280 px en tema claro y oscuro, con teclado y `prefers-reduced-motion`, para las pantallas de US1, US2 y US3 en `apps/web/e2e/a11y.spec.ts`; cada historia añade las suyas antes de su Puerta A
+- [X] T123 E2E de accesibilidad a 375 y 1280 px en tema claro y oscuro, con teclado y `prefers-reduced-motion`, para las pantallas de US1, US2 y US3 en `apps/web/e2e/channel-niche.spec.ts` (auditoría compartida en `audit.ts`) y `a11y.spec.ts` (teclado); cada historia añade las suyas antes de su Puerta A
 
 ### Tests para User Story 4 ⚠️
 
@@ -287,10 +308,10 @@ que solo se ve por su `hint`.
 
 - [ ] T115 [P] [US5] Exportación en `packages/core/src/channel/export.ts`
 - [ ] T116 [US5] Rutas de perfil y exportación en `apps/server/src/http/routes/channel.ts` sobre `apps/server/src/services/profile.ts`
-- [ ] T117 [US5] Ajustes de YouTube: guardar la clave en el `SecretStore` (`apps/server/src/secrets/`), fuente, cupo y actualizar el lector (descarga verificada por SHA256 con `installer/versions.json`) en `apps/server/src/http/routes/youtube-settings.ts`
+- [ ] T117 [US5] Ajustes de YouTube: guardar la clave en el `SecretStore` (`apps/server/src/secrets/`), fuente, cupo y actualizar el lector (descarga verificada por SHA256 con `installer/versions.json`) en `apps/server/src/http/routes/youtube-settings.ts`; una clave que YouTube rechaza se marca y deja de probarse (P15 a))
 - [ ] T118 [P] [US5] Ruta `GET /api/usage` en `apps/server/src/http/routes/usage.ts`
 - [ ] T119 [US5] Pantallas `apps/web/src/screens/channel/profile/Profile.tsx`, `ProfileHistory.tsx` y `Export.tsx` (siguiente paso: banco de ideas «próximamente»)
-- [ ] T120 [P] [US5] Pantalla `apps/web/src/screens/settings/YouTubeSettings.tsx` (fuente, «clave de YouTube» en «Modo experto», `hint`, cupo con aviso al pasar del 80 % del día (FR-030), «Actualizar el lector») enlazada en `apps/web/src/screens/settings/Settings.tsx`
+- [ ] T120 [P] [US5] Pantalla `apps/web/src/screens/settings/YouTubeSettings.tsx` (fuente, «clave de YouTube» en «Modo experto», `hint`, cupo con aviso al pasar del 80 % del día (FR-030), «Actualizar el lector», aviso de clave rechazada (P15 a)) enlazada en `apps/web/src/screens/settings/Settings.tsx`
 - [ ] T121 [P] [US5] Pantalla `apps/web/src/screens/settings/UsageLog.tsx` y lista de conocimiento con más de 180 días en Ajustes
 
 - [ ] T121b [A] [US5] Puerta A de US5: ejecutar `/puerta-a US5`. No se marca `[X]` hasta que la skill diga «pasada»; el informe queda en `specs/003-channel-and-niche/checklists/validation.md`

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { AI_USES, CHANNEL_OUTPUTS } from '../../src/index.ts'
+import { AI_USES, CHANNEL_OUTPUTS, conceptsEditedOutput } from '../../src/index.ts'
 
 const concept = {
   promise: 'Recetas de 15 minutos para gente que vuelve tarde del trabajo',
@@ -65,6 +65,10 @@ describe('AI uses of the 003', () => {
     const noQueries = { ...valid.nichos.niches[0], queries: [] }
     expect(CHANNEL_OUTPUTS.nichos.safeParse({ niches: [noQueries, noQueries, noQueries] }).success).toBe(false)
     expect(CHANNEL_OUTPUTS.conceptos.safeParse({ concepts: [concept] }).success).toBe(false)
+    const noAssumptions = { ...concept, monetization: { ...concept.monetization, assumptions: [] } }
+    expect(CHANNEL_OUTPUTS.conceptos.safeParse({ concepts: [noAssumptions, concept] }).success).toBe(false)
+    expect(CHANNEL_OUTPUTS.posicionamiento.safeParse({ ...noAssumptions, changes: [] }).success).toBe(false)
+    expect(conceptsEditedOutput.safeParse({ concepts: [noAssumptions, concept] }).success).toBe(true)
     const longPromise = { ...concept, promise: 'x'.repeat(161) }
     expect(CHANNEL_OUTPUTS.conceptos.safeParse({ concepts: [longPromise, concept] }).success).toBe(false)
     const twoPillars = { ...concept, pillars: concept.pillars.slice(0, 2) }

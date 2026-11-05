@@ -1,23 +1,23 @@
 {
-  "version": 1,
-  "reviewedAt": "2026-11-01",
+  "version": 3,
+  "reviewedAt": "2026-11-04",
   "source": [
     {
-      "label": "AIR Media-Tech: RPM real de 300 canales (2026)",
+      "label": "Estimación de YTCreator a partir de lo que ganan 300 canales según AIR Media-Tech (2026)",
       "url": "https://air.io/en/air-data-findings/how-much-does-youtube-really-pay-in-2026-real-rpm-data-from-300-channels"
     },
     {
-      "label": "AIR Media-Tech: nichos que más pagan por RPM (2026)",
+      "label": "AIR Media-Tech: los temas que más pagan por cada 1.000 visitas (2026)",
       "url": "https://air.io/en/air-data-findings/which-youtube-niche-makes-the-most-money-in-2026-ranked-by-real-rpm-and-cpm"
     },
     {
-      "label": "AIR Media-Tech: RPM de Shorts por nicho (2026)",
+      "label": "AIR Media-Tech: lo que pagan los Shorts según el tema (2026)",
       "url": "https://air.io/en/air-data-findings/what-is-youtube-shorts-rpm-in-your-niche-in-2026"
     }
   ],
   "data": {
     "unit": "EUR por 1.000 visualizaciones de vídeos largos, lo que cobra el creador",
-    "note": "Los datos públicos son sobre todo de canales en inglés. En castellano el RPM suele ser entre la mitad y la cuarta parte; por eso los rangos son amplios y la confianza es baja.",
+    "note": "Las fuentes públicas no separan el español, España ni Latinoamérica. Partimos de sus cifras globales y aplicamos un recorte por región que es una estimación nuestra, sin fuente que lo respalde; por eso los rangos son amplios y la confianza es baja.",
     "confidence": "baja",
     "categories": {
       "educacion": {

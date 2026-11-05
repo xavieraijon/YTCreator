@@ -10,10 +10,12 @@ import {
   type CheckResult,
   type ProviderDeps,
   type Secret,
+  type AiUsage,
 } from '@ytcreator/core'
 import { COMPROBACION } from '@ytcreator/knowledge'
 import { z } from 'zod'
 import { resolveProfile, type AiProfile } from '../profiles.ts'
+import { addUsage } from '../usage.ts'
 import { buildPrompt } from '../prompt.ts'
 import { classifyClaudeResult, type ClaudeOutcome } from './classify.ts'
 import { buildClaudeCommand, cleanEnv, resolveClaudeBin, type Env } from './command.ts'
@@ -119,18 +121,21 @@ export function createClaudeCodeProvider(
       const prompt = buildPrompt(request.prompt.text, request.input)
       const useProfile = resolveProfile('claude-code', request.use, { aiTimeoutSeconds: deps.aiTimeoutSeconds })
       // A structured output that does not validate is asked for once more (principle IV).
+      let usage: AiUsage = {}
       for (let attempt = 1; attempt <= 2; attempt++) {
         const outcome = await call(prompt, jsonSchema, request.signal, useProfile)
         if (!outcome.ok) {
           logResult('generate', outcome)
-          return { ok: false, failure: outcome.failure }
+          // Only the attempt before it consumed anything: a failure gives no count.
+          return { ok: false, failure: outcome.failure, ...(attempt > 1 ? { usage } : {}) }
         }
-        if (!request.schema) return { ok: true, value: outcome.text as T, usage: outcome.usage }
+        usage = addUsage(usage, outcome.usage)
+        if (!request.schema) return { ok: true, value: outcome.text as T, usage }
         const parsed = request.schema.safeParse(outcome.structured)
-        if (parsed.success) return { ok: true, value: parsed.data, usage: outcome.usage }
+        if (parsed.success) return { ok: true, value: parsed.data, usage }
         deps.logger.warn('ai.output_invalid', { provider: 'claude-code', attempt, issues: parsed.error.issues.length })
       }
-      return { ok: false, failure: UNKNOWN_FAILURE, invalidOutput: true }
+      return { ok: false, failure: UNKNOWN_FAILURE, invalidOutput: true, usage }
     },
   }
 }

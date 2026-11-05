@@ -35,7 +35,8 @@ export function createNameCheck({ youtube, names, jobs, thresholds, logger, now 
   const check = async (journeyId: string, name: NameToCheck): Promise<NameCheck> => {
     const [handle, search] = await Promise.all([
       youtube.checkHandle(name.handle),
-      youtube.search(name.displayName, { limit: SEARCH_LIMIT }),
+      // Names look at titles and channels, so no dates: nothing else is asked to YouTube.
+      youtube.search(name.displayName, { limit: SEARCH_LIMIT, withoutDates: true }),
     ])
     const handleStatus: StoredHandleStatus = handle.ok ? handle.value.data : 'sin_comprobar'
     // A search with no results is good news for a name, not a failure.

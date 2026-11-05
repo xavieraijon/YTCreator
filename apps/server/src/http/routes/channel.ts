@@ -1,6 +1,7 @@
 import {
   type ApprovalState,
   CHANNEL_OUTPUTS,
+  conceptsEditedOutput,
   type ChannelUse,
   type ChannelWarning,
   type JourneyState,
@@ -28,10 +29,10 @@ import type { Journey, JourneysRepo } from '../../db/repos/journeys.ts'
 import type { MeasuresRepo } from '../../db/repos/measures.ts'
 import type { NamesRepo } from '../../db/repos/names.ts'
 import type { ProfilesRepo } from '../../db/repos/profiles.ts'
-import type { ProposalsRepo } from '../../db/repos/proposals.ts'
+import type { Proposal, ProposalsRepo } from '../../db/repos/proposals.ts'
 import { inTransaction } from '../../db/transaction.ts'
 import type { AiRunService, PromptRef } from '../../services/ai-run.ts'
-import { channelInput } from '../../services/channel-input.ts'
+import { channelInput, previousOf } from '../../services/channel-input.ts'
 import { createConcepts } from '../../services/concepts.ts'
 import { createProfile } from '../../services/profile.ts'
 import { ApiError } from '../errors.ts'
@@ -120,6 +121,8 @@ export function channelRoutes(deps: ChannelRoutesDeps) {
     names,
     profiles,
     sources: deps.conceptKnowledge.sources,
+    conceptNow: (journey, concept, regionByHand) =>
+      concepts.conceptNow(journey, nicheOf(journey), concept, regionByHand),
   })
   const inputOf = (use: ChannelUse, journey: Journey) => {
     const base = channelInput(use, journey, proposals, measures)
@@ -143,6 +146,15 @@ export function channelRoutes(deps: ChannelRoutesDeps) {
         })),
       ]),
     )
+  }
+
+  const withCurrentFigures = (journey: Journey, proposal: Proposal): Proposal => {
+    const niche = nicheOf(journey)
+    return {
+      ...proposal,
+      payload: concepts.current(journey, niche, proposal.payload),
+      ...(proposal.editedPayload ? { editedPayload: concepts.current(journey, niche, proposal.editedPayload) } : {}),
+    }
   }
 
   routes.get('/channels/current', (c) => {
@@ -169,7 +181,10 @@ export function channelRoutes(deps: ChannelRoutesDeps) {
     const journey = findJourney(c.req.param('id'))
     return c.json({
       ...journey,
-      proposals: proposals.list(journey.id).filter((p) => p.status !== 'descartada'),
+      proposals: proposals
+        .list(journey.id)
+        .filter((p) => p.status !== 'descartada')
+        .map((p) => (p.kind === 'conceptos' ? withCurrentFigures(journey, p) : p)),
       measures: measures.listByJourney(journey.id),
       nameChecks: names.listByJourney(journey.id),
       jobs: jobs.listByJourney(journey.id),
@@ -236,7 +251,9 @@ export function channelRoutes(deps: ChannelRoutesDeps) {
 
     const use = useOf(body.kind)
     const base = inputOf(use, journey)
-    const input = parent ? { ...base, previous: parent.editedPayload ?? parent.payload } : base
+    const input = parent ? { ...base, previous: previousOf(parent.editedPayload ?? parent.payload) } : base
+    // Taken before asking: what the concepts are written for, even if something changes while the AI answers.
+    const niche = nicheOf(journey)
     const result = await aiRun.run({
       estimateId: body.estimateId,
       use,
@@ -249,7 +266,7 @@ export function channelRoutes(deps: ChannelRoutesDeps) {
     const fresh = {
       journeyId: journey.id,
       kind: body.kind,
-      payload: body.kind === 'conceptos' ? concepts.withFigures(journey, nicheOf(journey), result.value) : result.value,
+      payload: body.kind === 'conceptos' ? concepts.written(journey, niche, result.value) : result.value,
       promptId: prompt.id,
       promptVersion: prompt.version,
       instructions: body.instructions ?? null,
@@ -278,7 +295,9 @@ export function channelRoutes(deps: ChannelRoutesDeps) {
           ? nichesEditedOutput
           : proposal.kind === 'nombres'
             ? namesEditedOutput
-            : CHANNEL_OUTPUTS[useOf(proposal.kind)]
+            : proposal.kind === 'conceptos'
+              ? conceptsEditedOutput
+              : CHANNEL_OUTPUTS[useOf(proposal.kind)]
       if (!schema.safeParse(body.editedPayload).success) {
         throw new ApiError({ code: 'validacion', fields: { editedPayload: 'no_valido' } })
       }
@@ -286,7 +305,7 @@ export function channelRoutes(deps: ChannelRoutesDeps) {
       proposals.edit(
         proposal.id,
         proposal.kind === 'conceptos' && owner
-          ? concepts.withFigures(owner, nicheOf(owner), body.editedPayload)
+          ? concepts.edited(owner, nicheOf(owner), body.editedPayload, proposal.editedPayload ?? proposal.payload)
           : body.editedPayload,
       )
     }

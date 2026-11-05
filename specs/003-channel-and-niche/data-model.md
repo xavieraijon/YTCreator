@@ -2,7 +2,7 @@
 
 **Feature**: `003-channel-and-niche` | **Fecha**: 2026-10-31
 
-Todo vive en la misma base de datos `~/YTCreator/ytcreator.db` con la migración `0002_channel.sql`. La base de datos
+Todo vive en la misma base de datos `~/YTCreator/ytcreator.db` con las migraciones `0002_channel.sql` y `0003_measure_unread_channels.sql`. La base de datos
 **nunca contiene secretos**: la clave opcional de la YouTube Data API va en el `SecretStore` de la 002 y aquí solo se
 guardan su referencia y su `hint`, en `app_settings`.
 
@@ -129,7 +129,7 @@ Toda salida de la IA que el creador puede aprobar, editar o regenerar (FR-023).
 | `id` | `TEXT` PK | |
 | `journey_id` | `TEXT` FK → `journey` | |
 | `kind` | `'preguntas' \| 'nichos' \| 'recomendacion' \| 'conceptos' \| 'nombres' \| 'perfil_actual' \| 'posicionamiento'` | |
-| `payload` | `TEXT` (JSON) | Validado con el esquema del `kind` ([ai-uses](./contracts/ai-uses.md)) |
+| `payload` | `TEXT` (JSON) | Validado con el esquema del `kind` ([ai-uses](./contracts/ai-uses.md)). En `conceptos` lleva además `figures` y `regionByHand` por concepto, y `basedOn` |
 | `edited_payload` | `TEXT \| NULL` | Versión editada a mano; si existe, manda sobre `payload` |
 | `selected_index` | `INTEGER \| NULL` | Elemento elegido (nicho, concepto, nombre) |
 | `status` | `'propuesta' \| 'aprobada' \| 'descartada'` | Al regenerar, la anterior pasa a `descartada` |
@@ -195,6 +195,7 @@ La misma forma para canales nuevos y existentes (FR-021b).
 | `monthlyViewsAssumption` | `{min, max} \| null` | Supuesto visible, no medida: vídeos largos al mes × mediana del nicho × `monetization.viewsShareOfMedian`. `null` sin medida o sin vídeos largos |
 | `monthlyEurRange` | `{min, max} \| null` | `views × rpm / 1000`, redondeado. `null` si no hay supuesto: sin datos no hay cifra |
 | `yppRequirements` | `{subscribers, watchHours, shortsViews}` | De `ypp.json` |
+| `confidence` | `alta \| media \| baja` | De `rpm.json`; un perfil guardado sin este campo se lee como `baja` |
 | `assumptions` | `string[]` | Textos generados por la IA, pasados por las reglas de escritura |
 | `sourceIds` | `string[]` | |
 
@@ -233,8 +234,9 @@ Una medida de un nicho (FR-007, FR-009).
 | `shorts_in_sample` | `INTEGER \| NULL` | Shorts de la búsqueda, fuera de los indicadores (FR-007b) |
 | `shorts_median_views` | `INTEGER \| NULL` | Si hay al menos `minVideos` Shorts |
 | `unknown_format_videos` | `INTEGER \| NULL` | Vídeos sin duración, fuera de los indicadores |
-| `small_channels` | `INTEGER \| NULL` | Canales de menos de 200.000 suscriptores en la muestra |
+| `small_channels` | `INTEGER \| NULL` | Canales de menos de 10.000 suscriptores en la muestra |
 | `hidden_subscribers` | `INTEGER \| NULL` | Canales que ocultan la cifra: no cuentan en la puerta de entrada y se dice cuántos son |
+| `unread_channels` | `INTEGER \| NULL` | Canales de los resultados cuyos suscriptores no se han leído (fuera de la muestra o sin respuesta). No cuentan en la puerta de entrada y se dice en pantalla |
 | `verdict` | `'conviene' \| 'con_reservas' \| 'no_conviene' \| NULL` | Regla fija ([market](./contracts/market.md)) |
 | `thresholds_version` | `INTEGER` | Versión de `thresholds.json` usada |
 | `measured_at` | `TEXT \| NULL` | FR-008; si tiene más de 90 días, aviso (FR-027) |

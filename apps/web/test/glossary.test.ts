@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs'
+import { readdirSync, readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { findForbiddenTerms, forbiddenTerms } from '../../../packages/ui/test/forbidden-terms.ts'
 import { channelEs } from '../src/strings/channel.es.ts'
@@ -32,6 +32,19 @@ describe('glossary of the web (FR-032, principle I)', () => {
     expect(
       findForbiddenTerms({ es, failuresEs, channelEs, youtubeFailuresEs, youtubeFailureActionsEs }, webTerms),
     ).toEqual([])
+  })
+
+  it('no source of the knowledge files uses one either: they are shown under the figures', () => {
+    const dir = new URL('../../../packages/knowledge/market/', import.meta.url)
+    const labels: Record<string, string> = {}
+    for (const file of readdirSync(dir).filter((name) => name.endsWith('.json'))) {
+      const { source } = JSON.parse(readFileSync(new URL(file, dir), 'utf8')) as { source: { label: string }[] }
+      source.forEach(({ label }, index) => {
+        labels[`${file}.${index}`] = label
+      })
+    }
+    expect(Object.keys(labels).length).toBeGreaterThan(0)
+    expect(findForbiddenTerms(labels, webTerms)).toEqual([])
   })
 
   it('forbids the YouTube jargon of 003 too', () => {

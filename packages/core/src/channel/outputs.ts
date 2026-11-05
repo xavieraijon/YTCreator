@@ -54,7 +54,14 @@ export const conceptSchema = z.object({
 })
 export type ConceptOutput = z.infer<typeof conceptSchema>
 
-export const conceptsOutput = z.object({ concepts: z.array(conceptSchema).min(2).max(3) })
+// What the creator can save: the editor lets them delete the assumptions.
+export const conceptsEditedOutput = z.object({ concepts: z.array(conceptSchema).min(2).max(3) })
+
+// What the AI has to give: the money always comes with what it assumes (FR-014).
+const generatedConcept = conceptSchema.extend({
+  monetization: conceptSchema.shape.monetization.extend({ assumptions: z.array(text).min(1) }),
+})
+export const conceptsOutput = z.object({ concepts: z.array(generatedConcept).min(2).max(3) })
 
 // With the creator's own names added to the proposal (FR-016): they are not limited to what the AI may give.
 export const namesEditedOutput = z.object({
@@ -80,7 +87,7 @@ export const channelReadingOutput = z.object({
   doesNotWork: z.array(cited),
 })
 
-export const positioningOutput = conceptSchema.extend({
+export const positioningOutput = generatedConcept.extend({
   changes: z.array(z.object({ what: text, why: text, videoIds: z.array(text) })),
 })
 

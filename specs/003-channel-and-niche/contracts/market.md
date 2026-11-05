@@ -17,7 +17,13 @@ las cifras salen de aquí y la IA solo las comenta (principio II).
   Short: se acepta ese error.
 - Si quedan menos de 10 vídeos largos con visitas, la medida es `fallida` con `sin_datos`: no se muestra ninguna cifra
   ni veredicto (FR-009), aunque haya muchos Shorts.
-- Las suscripciones de cada canal se piden aparte con `getChannel` (como mucho 20 canales distintos por nicho).
+- Las suscripciones de cada canal se piden aparte con `getChannel`: como mucho 20 canales distintos por nicho, los 4 con
+  más visitas y el resto repartidos por igual en ese orden, para que entren canales pequeños. Los que quedan fuera, o fallan, cuentan en
+  `unread_channels`, aparte de los que ocultan la cifra (`hidden_subscribers`).
+- Si se conoce la cifra de menos de la mitad de los canales preguntados (`minKnownChannelsShare`), la medida es `fallida`: no hay
+  veredicto. El fallo es `sin_datos`, salvo que los canales que fallaron sean más que los que ocultan la cifra: entonces es
+  el fallo más repetido. Quien oculta la cifra no cuenta como conocido, y justo la mitad sí vale.
+- La medida guarda la fuente que respondió, que puede no ser la prevista al empezar.
 - Todos los umbrales vienen de `packages/knowledge/market/thresholds.json` y su `version` se guarda en la medida.
 
 ## Indicadores
@@ -25,10 +31,10 @@ las cifras salen de aquí y la IA solo las comenta (principio II).
 | Indicador | Cálculo | Niveles (umbrales por defecto) |
 |---|---|---|
 | Demanda | Mediana de visitas de la muestra | `alta` ≥ 50.000; `media` ≥ 5.000; si no, `baja` |
-| Puerta de entrada | Canales < 200.000 suscriptores con algún vídeo de la muestra cuyas visitas ≥ suscriptores | `abierta` ≥ 3; `entreabierta` ≥ 1; `cerrada` 0 |
+| Puerta de entrada | Canales < 200.000 suscriptores, de los leídos, con algún vídeo de la muestra cuyas visitas ≥ suscriptores | `abierta` ≥ 3; `entreabierta` ≥ 1; `cerrada` 0 |
 | Concentración | Parte de las visitas de la muestra que se llevan los 3 canales con más visitas | `alta` ≥ 0,70; `media` ≥ 0,40; si no, `baja` |
-| Saturación | Vídeos de la muestra publicados en los últimos 90 días y su parte del total | Se muestra la cifra; sin nivel |
-| Contexto | Canales < 10.000 suscriptores en la muestra; canales de menos de 24 meses con algún vídeo ≥ 10.000 visitas | Se muestran como cifras |
+| Saturación | Vídeos de la muestra publicados en los últimos 90 días y su parte de los que tienen fecha. Sin clave, solo hay fecha de los 15 vídeos más nuevos de cada canal: la pantalla lo dice y la IA no recibe la cifra | Se muestra la cifra; sin nivel |
+| Contexto | Canales < 10.000 suscriptores en la muestra | Se guarda la cifra; hoy no se muestra |
 | Shorts aparte | Shorts de la búsqueda; mediana de sus visitas si hay al menos `minVideos` | Se muestran como cifras; sin nivel y fuera del veredicto |
 
 Canales con suscriptores ocultos no cuentan en la puerta de entrada y se indica cuántos se dejaron fuera.
@@ -47,7 +53,9 @@ La pantalla muestra el veredicto con la razón (qué indicador lo decide) usando
 ## Canales de referencia
 
 Del nicho elegido se proponen de 2 a 4 canales (FR-012): primero los que cuentan para la puerta de entrada, luego
-por visitas del mejor vídeo. El creador puede quitar o añadir (pegando una @, que se resuelve con el puerto).
+por visitas del mejor vídeo. El creador puede quitar o añadir (pegando una @, que se resuelve con el puerto). Si fallan
+canales y quedan menos de 2, no se guarda nada y se dice el fallo más repetido; con 2 o más, se
+guardan (P19).
 
 De cada canal de referencia se piden sus `ownChannel.referenceVideos` (30) vídeos más recientes para calcular lo normal
 en ese canal (abajo). Si esa petición falla, el canal se queda como referencia con esas cifras a `null`.
@@ -92,5 +100,5 @@ Regla del dominio en `packages/core/src/channel/monetization.ts`, con `monetizat
 
 ## Contexto de canal joven
 
-No se calcula: el puerto de YouTube no da la fecha de creación del canal. La medida guarda `small_channels` y
-`hidden_subscribers`.
+No se calcula: el puerto de YouTube no da la fecha de creación del canal. La medida guarda `small_channels`,
+`hidden_subscribers` y `unread_channels`.

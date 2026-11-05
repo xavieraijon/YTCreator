@@ -61,7 +61,7 @@ describe('migration 0002', () => {
     migrate(db, MIGRATIONS)
   })
 
-  it('creates every table and records version 2', () => {
+  it('creates every table and leaves version 2 recorded', () => {
     const names = db
       .prepare(`SELECT name FROM sqlite_master WHERE type = 'table'`)
       .all()
@@ -71,7 +71,7 @@ describe('migration 0002', () => {
       .prepare('SELECT version FROM schema_migrations ORDER BY version')
       .all()
       .map((r) => r.version)
-    expect(versions).toEqual([1, 2])
+    expect(versions).toEqual([1, 2, 3])
   })
 
   it('keeps 0001 intact', () => {
@@ -159,5 +159,28 @@ describe('migration 0002', () => {
     )
     expect(() => insert.run('p1', 'x'.repeat(500), NOW)).not.toThrow()
     expect(() => insert.run('p2', 'x'.repeat(501), NOW)).toThrow()
+  })
+})
+
+describe('migration 0003: channels not read', () => {
+  it('a measure saved before it is still there and says «not known»', () => {
+    const old = openDatabase(':memory:')
+    migrate(old, MIGRATIONS.slice(0, 2))
+    insertChannel(old, 'c')
+    insertJourney(old, 'j', 'c')
+    old
+      .prepare(
+        `INSERT INTO market_measure (id, journey_id, niche_label, queries, source, status, thresholds_version,
+           hidden_subscribers, created_at)
+         VALUES ('m', 'j', 'Cocina', '[]', 'ytdlp', 'medida', 1, 7, ?)`,
+      )
+      .run(NOW)
+    migrate(old, MIGRATIONS)
+    expect(old.prepare('SELECT niche_label, hidden_subscribers, unread_channels FROM market_measure').get()).toEqual({
+      niche_label: 'Cocina',
+      hidden_subscribers: 7,
+      unread_channels: null,
+    })
+    old.close()
   })
 })

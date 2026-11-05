@@ -291,7 +291,8 @@ en la sección «US5» de `checklists/validation.md`.
 
 - **FR-012b**: Antes de proponer conceptos, el sistema DEBE preguntar cuántas horas por semana puede dedicar el creador
   y si quiere salir en cámara, poner solo la voz o ninguna de las dos; el ritmo y el formato propuestos DEBEN encajar
-  con esas respuestas.
+  con esas respuestas. Excepción aceptada por el creador (`decisions.md`, entrada 31): si elige un concepto escrito con
+  otras respuestas, tras el aviso, el perfil puede guardar el ritmo y el formato de ese concepto.
 - **FR-013**: La IA DEBE proponer de 2 a 3 conceptos con promesa (una frase), 3-4 pilares, público, formato, ritmo de
   publicación y monetización.
 - **FR-014**: La monetización DEBE expresarse en rangos con sus supuestos visibles, basarse en el conocimiento

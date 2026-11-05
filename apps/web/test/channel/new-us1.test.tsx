@@ -40,6 +40,7 @@ const measure: MeasureView = {
   unknownFormatVideos: 0,
   smallChannels: 2,
   hiddenSubscribers: 1,
+  unreadChannels: 0,
   verdict: 'conviene',
   thresholdsVersion: 3,
   measuredAt: at,
@@ -60,6 +61,7 @@ const failed = (failure: MeasureView['failure']): MeasureView => ({
   sampleSize: null,
   shortsInSample: null,
   hiddenSubscribers: null,
+  unreadChannels: null,
   verdict: null,
   measuredAt: null,
 })
@@ -113,8 +115,21 @@ describe('NicheCard', () => {
   it('shows Shorts apart, and says who was left out', () => {
     const html = card()
     expect(html).toContain('Han salido 5 Shorts')
-    expect(html).toContain('1 canales no enseñan')
+    expect(html).toContain('Un canal no enseña')
     expect(card({ measure: { ...measure, shortsInSample: 0 } })).not.toContain('Han salido')
+  })
+
+  it('channels outside the sample are not said to hide their subscribers (G3)', () => {
+    const html = card({ measure: { ...measure, hiddenSubscribers: 0, unreadChannels: 12 } })
+    expect(html).toContain('De 12 canales de los resultados no hemos mirado los suscriptores')
+    expect(html).not.toContain('no enseñan sus suscriptores')
+    expect(card({ measure: { ...measure, hiddenSubscribers: 0, unreadChannels: 1 } })).toContain('De un canal')
+  })
+
+  it('with yt-dlp, recent videos say only the newest of each channel have a date (G2)', () => {
+    const html = card({ measure: { ...measure, source: 'ytdlp', recentVideos: 7, recentShare: 0.5 } })
+    expect(html).toContain('puede haber más')
+    expect(html).not.toContain('50 %')
   })
 
   it('saturation without dates says there is no data', () => {

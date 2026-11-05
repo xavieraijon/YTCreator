@@ -21,11 +21,20 @@ export interface QuestionsViewProps {
   readonly questions: readonly Question[]
   readonly initial?: readonly Answer[]
   readonly busy?: boolean
+  // The check of figures took something away (`claimsTrimmed`).
+  readonly trimmed?: boolean
   readonly onNext: (answers: Answer[]) => void
   readonly onSkip: () => void
 }
 
-export function QuestionsView({ questions, initial = [], busy = false, onNext, onSkip }: QuestionsViewProps) {
+export function QuestionsView({
+  questions,
+  initial = [],
+  busy = false,
+  trimmed = false,
+  onNext,
+  onSkip,
+}: QuestionsViewProps) {
   const [values, setValues] = useState<Record<string, string>>(() =>
     Object.fromEntries(initial.map(({ questionId, answer }) => [questionId, answer])),
   )
@@ -42,7 +51,8 @@ export function QuestionsView({ questions, initial = [], busy = false, onNext, o
         )
       }}
     >
-      {questions.length === 0 && <p className={styles.why}>{text.none}</p>}
+      {questions.length === 0 && <p className={styles.why}>{trimmed ? text.noneTrimmed : text.none}</p>}
+      {questions.length > 0 && trimmed && <p className={styles.notice}>{channelEs.proposal.claimsTrimmed}</p>}
       {questions.map(({ id, question, why }) => (
         <TextArea
           key={id}
@@ -88,6 +98,7 @@ export function Questions({ view, busy, reload, onStep }: QuestionsProps) {
         questions={payloadOf<{ questions: Question[] }>(proposal).questions}
         {...(view.state.answers ? { initial: view.state.answers } : {})}
         busy={busy}
+        trimmed={proposal.claimsTrimmed}
         onNext={(answers) => onStep({ answers })}
         onSkip={() => onStep({ answers: [] })}
       />

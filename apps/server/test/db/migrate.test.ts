@@ -38,7 +38,7 @@ describe('migrate', () => {
   it('applies every migration once and records it', () => {
     expect(migrate(db, MIGRATIONS)).toEqual({ applied: [] })
     const rows = db.prepare('SELECT version FROM schema_migrations').all()
-    expect(rows.map((r) => r.version)).toEqual([1, 2])
+    expect(rows.map((r) => r.version)).toEqual([1, 2, 3])
   })
 
   it('creates the wizard row in bienvenida with revision 0', () => {
@@ -93,7 +93,7 @@ describe('migrate', () => {
 
   it('rolls back a migration that fails', () => {
     const fresh = openDatabase(':memory:')
-    const broken = [...MIGRATIONS, { version: 3, sql: 'CREATE TABLE ok (id INTEGER); SELECT nope FROM missing;' }]
+    const broken = [...MIGRATIONS, { version: 4, sql: 'CREATE TABLE ok (id INTEGER); SELECT nope FROM missing;' }]
     expect(() => migrate(fresh, broken)).toThrow()
     expect(fresh.prepare(`SELECT name FROM sqlite_master WHERE name = 'ok'`).get()).toBeUndefined()
     expect(
@@ -101,6 +101,6 @@ describe('migrate', () => {
         .prepare('SELECT version FROM schema_migrations')
         .all()
         .map((r) => r.version),
-    ).toEqual([1, 2])
+    ).toEqual([1, 2, 3])
   })
 })

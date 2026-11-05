@@ -58,7 +58,7 @@ del instalador.
 paquetes npm nuevos. Un binario externo nuevo: **yt-dlp**, que instala el instalador con suma de verificación (R2). La
 YouTube Data API se llama con `fetch`, sin SDK de Google (R3).
 
-**Storage**: la misma SQLite (`~/YTCreator/ytcreator.db`) con la migración `0002_channel.sql`. La clave opcional de la
+**Storage**: la misma SQLite (`~/YTCreator/ytcreator.db`) con las migraciones `0002_channel.sql` y `0003_measure_unread_channels.sql`. La clave opcional de la
 YouTube Data API va en el `SecretStore` de la 002 (llavero o fichero `0600`). La caché de consultas de YouTube va en
 una tabla con caducidad (R4, R15).
 
@@ -106,7 +106,7 @@ una tabla con caducidad (R4, R15).
 
 - 1 creador, N canales en el modelo de datos (gestión de varios fuera de alcance);
 - 2 recorridos, unas 12 pantallas o pasos y unas 20 rutas de API nuevas;
-- 7 usos de IA (`recomendacion` añadido en la fase 3, FR-010), 3 adaptadores de YouTube y 1 migración.
+- 7 usos de IA (`recomendacion` añadido en la fase 3, FR-010), 3 adaptadores de YouTube y 2 migraciones.
 
 ## Constitution Check
 
@@ -236,7 +236,7 @@ packages/knowledge/
 
 apps/server/src/
 ├── db/
-│   ├── migrations/0002_channel.sql
+│   ├── migrations/0002_channel.sql, 0003_measure_unread_channels.sql
 │   └── repos/               # channels, journeys, proposals, profiles, measures, names, readings, usage, yt-cache, jobs
 ├── services/
 │   ├── ai-run.ts            # estimación → presupuesto → generate → validar → registrar consumo

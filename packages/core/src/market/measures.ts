@@ -12,8 +12,11 @@ export interface MarketThresholds {
   concentration: { high: number; medium: number; topChannels: number }
   minVideos: number
   maxChannels: number
+  // The share of the channels asked whose subscribers must be known for a verdict.
+  minKnownChannelsShare: number
   saturationDays: number
   context: { smallChannelSubscribers: number }
+  references: { max: number }
 }
 
 export interface MeasureFigures {
@@ -32,6 +35,8 @@ export interface MeasureFigures {
   unknownFormatVideos: number
   smallChannels: number
   hiddenSubscribers: number
+  // Channels in the results whose subscribers were not read: outside the sample, or no answer.
+  unreadChannels: number
   verdict: Verdict
 }
 
@@ -59,12 +64,21 @@ function viewsByChannel(long: readonly LongHit[]): Map<string, number> {
   return totals
 }
 
-// Which channels to ask for their subscribers: those with most views, up to the limit.
-export function channelsToAsk(hits: readonly VideoHit[], thresholds: Pick<MarketThresholds, 'maxChannels'>): string[] {
-  return [...viewsByChannel(longHits(hits))]
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, thresholds.maxChannels)
-    .map(([channelId]) => channelId)
+// Which channels to ask for their subscribers, up to the limit: spread from most to fewest views, because the entry
+// door is about small channels and those are the ones with fewest views.
+export function channelsToAsk(
+  hits: readonly VideoHit[],
+  thresholds: Pick<MarketThresholds, 'maxChannels' | 'references'>,
+): string[] {
+  const ranked = [...viewsByChannel(longHits(hits))].sort((a, b) => b[1] - a[1]).map(([channelId]) => channelId)
+  const max = thresholds.maxChannels
+  if (ranked.length <= max) return ranked
+  // Those with most views, which the references may need, and then an even spread that reaches the smallest ones.
+  const top = ranked.slice(0, Math.min(thresholds.references.max, max))
+  const rest = ranked.slice(top.length)
+  const left = max - top.length
+  if (left <= 1) return [...top, ...rest.slice(0, left)]
+  return [...top, ...Array.from({ length: left }, (_, i) => rest[Math.round((i * (rest.length - 1)) / (left - 1))]!)]
 }
 
 const levelOf = (value: number, { high, medium }: { high: number; medium: number }): Level =>
@@ -77,10 +91,16 @@ export interface MeasureInput {
   now: Date
 }
 
-// Pure: the figures come from here and the AI only comments on them (principle II). Null means too few videos.
+// Pure: the figures come from here and the AI only comments on them (principle II). Null means too little to measure:
+// too few videos, or the subscribers of too few of the channels asked.
 export function measureNiche({ hits, channels, thresholds, now }: MeasureInput): MeasureFigures | null {
   const long = longHits(hits)
   if (long.length < thresholds.minVideos) return null
+
+  // A verdict from a handful of channels would be made up, and «cerrada» with nobody looked at even more (FR-009, P16).
+  const asked = channelsToAsk(hits, thresholds)
+  const known = asked.filter((channelId) => (channels.get(channelId)?.subscribers ?? null) !== null)
+  if (known.length < asked.length * thresholds.minKnownChannelsShare) return null
 
   const demandMedianViews = Math.round(median(long.map((hit) => hit.views))!)
   const demandLevel = levelOf(demandMedianViews, thresholds.demand)
@@ -91,8 +111,14 @@ export function measureNiche({ hits, channels, thresholds, now }: MeasureInput):
   let entryChannels = 0
   let smallChannels = 0
   let hiddenSubscribers = 0
+  let unreadChannels = 0
   for (const [channelId, views] of bestViews) {
-    const subscribers = channels.get(channelId)?.subscribers ?? null
+    const channel = channels.get(channelId)
+    if (!channel) {
+      unreadChannels += 1
+      continue
+    }
+    const { subscribers } = channel
     if (subscribers === null) {
       hiddenSubscribers += 1
       continue
@@ -100,6 +126,7 @@ export function measureNiche({ hits, channels, thresholds, now }: MeasureInput):
     if (subscribers < thresholds.context.smallChannelSubscribers) smallChannels += 1
     if (subscribers < thresholds.entryDoor.maxSubscribers && views >= subscribers) entryChannels += 1
   }
+
   const entryLevel: EntryLevel =
     entryChannels >= thresholds.entryDoor.open
       ? 'abierta'
@@ -137,6 +164,7 @@ export function measureNiche({ hits, channels, thresholds, now }: MeasureInput):
     unknownFormatVideos: hits.filter((hit) => hit.durationSeconds === null).length,
     smallChannels,
     hiddenSubscribers,
+    unreadChannels,
     verdict: verdictOf({ demandLevel, entryLevel, concentrationLevel }).verdict,
   }
 }

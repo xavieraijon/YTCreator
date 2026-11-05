@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { feedXml } from './feed-xml.ts'
 import { feedFetch } from './youtube-fetch.ts'
 import { classifyRun } from '../src/ytdlp/classify.ts'
 import { HANDLE_TIMEOUT_MS, YTDLP_TIMEOUT_MS, createYtDlpYouTube } from '../src/ytdlp/adapter.ts'
@@ -59,12 +60,32 @@ describe('yt-dlp adapter', () => {
     expect(result.value.data.slice(15).every((v) => v.publishedAt === null)).toBe(true)
   })
 
-  it('search hits have no date: flat yt-dlp output never carries one (S1)', async () => {
-    const yt = createYtDlpYouTube({ binPath: createFakeYtDlp().bin, fetch: feedFetch() })
+  it('search hits take their date from the channel feed, and stay without one if it is not there (G2)', async () => {
+    const published = '2026-10-20T10:00:00.000Z'
+    const urls: string[] = []
+    const feed = (async (input: string | URL | Request) => {
+      urls.push(String(input))
+      return new Response(feedXml([{ videoId: 'srch000xxxx', published }]))
+    }) as typeof fetch
+    const yt = createYtDlpYouTube({ binPath: createFakeYtDlp().bin, fetch: feed })
+    const result = await yt.search(INPUTS.query, { limit: 40 })
+    if (!result.ok) throw new Error(result.failure.code)
+    const dated = result.value.data.filter((hit) => hit.publishedAt !== null)
+    expect(dated.map((hit) => hit.videoId)).toEqual(['srch000xxxx'])
+    expect(Date.parse(dated[0]!.publishedAt!)).toBe(Date.parse(published))
+    expect(result.value.data.some((hit) => hit.views === null)).toBe(true)
+    // One feed per channel, however many of its videos came up.
+    expect(urls).toHaveLength(1)
+  })
+
+  it('a search still answers when the feed fails', async () => {
+    const down = (async () => {
+      throw new Error('sin red')
+    }) as typeof fetch
+    const yt = createYtDlpYouTube({ binPath: createFakeYtDlp().bin, fetch: down })
     const result = await yt.search(INPUTS.query, { limit: 40 })
     if (!result.ok) throw new Error(result.failure.code)
     expect(result.value.data.every((hit) => hit.publishedAt === null)).toBe(true)
-    expect(result.value.data.some((hit) => hit.views === null)).toBe(true)
   })
 
   it('is no_disponible without network', async () => {

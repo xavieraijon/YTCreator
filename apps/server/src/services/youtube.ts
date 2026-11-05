@@ -4,6 +4,7 @@ import {
   type Logger,
   type Sourced,
   type YouTubeData,
+  type YouTubeFailureCode,
   type YouTubeHealth,
   type YouTubeResult,
   type YouTubeSource,
@@ -11,7 +12,8 @@ import {
 } from '@ytcreator/core'
 import type { YouTubeSourceSetting } from '@ytcreator/core/api'
 import type { YouTubeAdapters } from '@ytcreator/youtube'
-import { CACHE_TTL_MS, HANDLE_CACHE_TTL_MS, type YtCacheRepo } from '../db/repos/yt-cache.ts'
+import type { SettingsRepo } from '../db/repos/settings.ts'
+import { CACHE_TTL_MS, HANDLE_CACHE_TTL_MS, PARTIAL_CACHE_TTL_MS, type YtCacheRepo } from '../db/repos/yt-cache.ts'
 
 export const MAX_YTDLP_PROCESSES = 3
 export const MAX_HANDLE_CHECKS = 4
@@ -25,6 +27,12 @@ export interface YouTubeServiceDeps {
   logger: Logger
   now: () => Date
 }
+
+// What the settings say about the source. `get` answers null for a key never saved.
+export const youtubeChoice = (settings: Pick<SettingsRepo, 'get'>): Pick<YouTubeServiceDeps, 'source' | 'hasKey'> => ({
+  source: () => settings.get('youtube.source') ?? 'auto',
+  hasKey: () => settings.get('youtube.api_key_ref') !== null,
+})
 
 const normalize = (text: string) => text.trim().replace(/\s+/g, ' ').toLowerCase()
 
@@ -47,6 +55,10 @@ export function createYouTubeService(deps: YouTubeServiceDeps): YouTubeData & {
     if (setting === 'data_api') return adapters.dataApi
     return deps.hasKey() && quota.used() < quota.limit ? adapters.dataApi : adapters.ytdlp
   }
+
+  // Out of units always; a Data API that does not answer, or rejects the key, only if nobody chose it.
+  const fallsBack = (code: YouTubeFailureCode) =>
+    code === 'cupo_agotado' || ((code === 'no_disponible' || code === 'tiempo_agotado') && deps.source() === 'auto')
 
   const isNearLimit = () => quota.used() >= quota.limit * quota.nearLimitRatio
 
@@ -73,22 +85,35 @@ export function createYouTubeService(deps: YouTubeServiceDeps): YouTubeData & {
     key: string,
     ttlMs: number,
     run: (adapter: YouTubeData) => Promise<YouTubeResult<Sourced<T>>>,
-    limitFor: (adapter: YouTubeData) => Limiter = processLimit,
+    {
+      limitFor = processLimit,
+      canFallBack = true,
+    }: { limitFor?: (adapter: YouTubeData) => Limiter; canFallBack?: boolean } = {},
   ): Promise<YouTubeResult<Sourced<T>>> {
+    const cacheKeyOf = (source: YouTubeSource) => `${source}:${operation}:${key}`
+    const kept = (result: YouTubeResult<Sourced<T>>) => {
+      if (result.ok) {
+        const { value } = result
+        cache.set(cacheKeyOf(value.source), value, value.partial ? Math.min(ttlMs, PARTIAL_CACHE_TTL_MS) : ttlMs)
+      }
+      return result
+    }
+
     const adapter = picked()
-    const cacheKey = `${adapter.source}:${operation}:${key}`
-    const cached = cache.get(cacheKey) as Sourced<T> | null
+    const cached = cache.get(cacheKeyOf(adapter.source)) as Sourced<T> | null
     if (cached) return { ok: true, value: cached }
 
-    let result = await timed(operation, adapter, run, limitFor(adapter))
-    if (!result.ok && result.failure.code === 'cupo_agotado' && 'ytdlp' in adapters && adapter !== adapters.ytdlp) {
-      result = await timed(operation, adapters.ytdlp, run, limitFor(adapters.ytdlp))
-    }
-    if (result.ok) cache.set(`${result.value.source}:${operation}:${key}`, result.value, ttlMs)
+    const first = await timed(operation, adapter, run, limitFor(adapter))
     if (adapter.source === 'data_api' && isNearLimit()) {
       logger.warn('youtube.quota_near_limit', { used: quota.used(), limit: quota.limit })
     }
-    return result
+    const fellBack = !first.ok && canFallBack && fallsBack(first.failure.code)
+    if (!fellBack || !('ytdlp' in adapters) || adapter === adapters.ytdlp) return kept(first)
+
+    // What yt-dlp already answered is not asked again each time the Data API says no.
+    const saved = cache.get(cacheKeyOf('ytdlp')) as Sourced<T> | null
+    if (saved) return { ok: true, value: saved }
+    return kept(await timed(operation, adapters.ytdlp, run, limitFor(adapters.ytdlp)))
   }
 
   return {
@@ -97,9 +122,9 @@ export function createYouTubeService(deps: YouTubeServiceDeps): YouTubeData & {
     },
     effectiveSource: () => picked().source,
 
-    search: (query, { limit, signal }) =>
-      call('search', `${limit}:${normalize(query)}`, CACHE_TTL_MS, (a) =>
-        a.search(query, { limit, ...(signal ? { signal } : {}) }),
+    search: (query, { limit, signal, withoutDates }) =>
+      call('search', `${limit}:${withoutDates ? 'sin-fechas:' : ''}${normalize(query)}`, CACHE_TTL_MS, (a) =>
+        a.search(query, { limit, ...(signal ? { signal } : {}), ...(withoutDates ? { withoutDates } : {}) }),
       ),
 
     getChannel: (ref, signal) => call('channel', ref.channelId, CACHE_TTL_MS, (a) => a.getChannel(ref, signal)),
@@ -109,15 +134,13 @@ export function createYouTubeService(deps: YouTubeServiceDeps): YouTubeData & {
         a.listChannelVideos(channelId, { limit, ...(signal ? { signal } : {}) }),
       ),
 
-    // A handle check is a page read, not a process: it has a limit of its own.
+    // A handle check is a page read, not a process: it has a limit of its own. Both sources read that same page, so
+    // when it fails there is nowhere else to ask.
     checkHandle: (handle, signal) =>
-      call<HandleStatus>(
-        'handle',
-        normalize(handle),
-        HANDLE_CACHE_TTL_MS,
-        (a) => a.checkHandle(handle, signal),
-        () => handles,
-      ),
+      call<HandleStatus>('handle', normalize(handle), HANDLE_CACHE_TTL_MS, (a) => a.checkHandle(handle, signal), {
+        limitFor: () => handles,
+        canFallBack: false,
+      }),
 
     resolve: (input, signal) => call('resolve', normalize(input), CACHE_TTL_MS, (a) => a.resolve(input, signal)),
 

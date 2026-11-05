@@ -1,6 +1,7 @@
 import {
   type ChannelRef,
   type Sourced,
+  type VideoHit,
   type YouTubeData,
   type YouTubeFailureCode,
   type YouTubeResult,
@@ -9,7 +10,7 @@ import {
   youtubeFailure,
 } from '@ytcreator/core'
 import { checkHandleAt } from '../handle.ts'
-import { readRecentDates } from '../rss/feed.ts'
+import { createFeedReader } from '../rss/feed.ts'
 import { classifyRun } from './classify.ts'
 import { channelVideosArgs, handleVideosArgs, searchArgs, versionArgs, videoChannelArgs } from './command.ts'
 import { type Listing, parseListing, toChannel, toHits, toVideos } from './parse.ts'
@@ -33,9 +34,10 @@ export function createYtDlpYouTube(options: YtDlpYouTubeOptions): YouTubeData {
   const now = options.now ?? (() => new Date())
   const processMs = options.timeouts?.processMs ?? YTDLP_TIMEOUT_MS
   const handleMs = options.timeouts?.handleMs ?? HANDLE_TIMEOUT_MS
-  const sourced = <T>(data: T): YouTubeResult<Sourced<T>> => ({
+  const feeds = createFeedReader(options.fetch, now)
+  const sourced = <T>(data: T, complete = true): YouTubeResult<Sourced<T>> => ({
     ok: true,
-    value: { data, source: 'ytdlp', fetchedAt: now().toISOString() },
+    value: { data, source: 'ytdlp', fetchedAt: now().toISOString(), ...(complete ? {} : { partial: true }) },
   })
   const withTimeout = (ms: number, signal?: AbortSignal) =>
     signal ? AbortSignal.any([signal, AbortSignal.timeout(ms)]) : AbortSignal.timeout(ms)
@@ -60,14 +62,28 @@ export function createYtDlpYouTube(options: YtDlpYouTubeOptions): YouTubeData {
     return result
   }
 
+  // The flat listing has no dates (S1): each channel's feed gives those of its 15 newest videos, the rest stay null.
+  // All the feeds of a search share one time limit, and a feed that fails only leaves its videos without a date.
+  async function withFeedDates(hits: VideoHit[], signal?: AbortSignal): Promise<YouTubeResult<Sourced<VideoHit[]>>> {
+    const channels = [...new Set(hits.map((hit) => hit.channelId))].filter(isChannelId)
+    const deadline = withTimeout(handleMs, signal)
+    const reads = await Promise.all(channels.map((channelId) => feeds.read(channelId, deadline)))
+    const dates = new Map(reads.flatMap((read) => [...read.dates]))
+    return sourced(
+      hits.map((hit) => ({ ...hit, publishedAt: dates.get(hit.videoId) ?? hit.publishedAt })),
+      reads.every((read) => read.complete),
+    )
+  }
+
   return {
     source: 'ytdlp',
 
-    async search(query, { limit, signal }) {
+    async search(query, { limit, signal, withoutDates }) {
       const result = await listing(searchArgs(query, limit), signal)
       if (isFailed(result)) return result
       const hits = toHits(result).slice(0, limit)
-      return hits.length > 0 ? sourced(hits) : youtubeFailure('sin_datos')
+      if (hits.length === 0) return youtubeFailure('sin_datos')
+      return withoutDates ? sourced(hits) : withFeedDates(hits, signal)
     },
 
     async getChannel(ref, signal) {
@@ -78,15 +94,15 @@ export function createYtDlpYouTube(options: YtDlpYouTubeOptions): YouTubeData {
     },
 
     async listChannelVideos(channelId, { limit, signal }) {
-      const [result, dates] = await Promise.all([
+      const [result, feed] = await Promise.all([
         channelListing(channelId, limit, signal),
-        readRecentDates(options.fetch, channelId, withTimeout(handleMs, signal)),
+        feeds.read(channelId, withTimeout(handleMs, signal)),
       ])
       if (isFailed(result)) return result
       const videos = toVideos(result)
         .slice(0, limit)
-        .map((video) => ({ ...video, publishedAt: dates.get(video.videoId) ?? video.publishedAt }))
-      return sourced(videos)
+        .map((video) => ({ ...video, publishedAt: feed.dates.get(video.videoId) ?? video.publishedAt }))
+      return sourced(videos, feed.complete)
     },
 
     checkHandle(handle, signal) {

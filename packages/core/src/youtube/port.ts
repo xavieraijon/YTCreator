@@ -10,6 +10,8 @@ export interface Sourced<T> {
   data: T
   source: YouTubeSource
   fetchedAt: string // ISO 8601 UTC
+  // Part of it could not be read this time, for instance the dates of a feed: worth asking again soon.
+  partial?: true
 }
 
 export interface ChannelRef {
@@ -60,7 +62,11 @@ export const SHORT_MAX_SECONDS = 180
 
 export interface YouTubeData {
   readonly source: YouTubeSource
-  search(query: string, options: { limit: number; signal?: AbortSignal }): Promise<YouTubeResult<Sourced<VideoHit[]>>>
+  // `withoutDates`: the dates are not needed, so nothing extra is asked to YouTube to get them.
+  search(
+    query: string,
+    options: { limit: number; signal?: AbortSignal; withoutDates?: true },
+  ): Promise<YouTubeResult<Sourced<VideoHit[]>>>
   getChannel(ref: ChannelRef, signal?: AbortSignal): Promise<YouTubeResult<Sourced<ChannelInfo>>>
   listChannelVideos(
     channelId: string,

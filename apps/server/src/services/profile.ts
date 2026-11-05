@@ -16,6 +16,11 @@ export interface ProfileDeps {
   names: Pick<NamesRepo, 'listByJourney'>
   profiles: ProfilesRepo
   sources: ConceptKnowledge['sources']
+  conceptNow: (
+    journey: Journey,
+    concept: ConceptOutput,
+    regionByHand: boolean,
+  ) => { concept: ConceptOutput; figures: ConceptFigures }
 }
 
 const WARNING_SOURCE: Record<string, string | undefined> = {
@@ -25,12 +30,12 @@ const WARNING_SOURCE: Record<string, string | undefined> = {
 }
 
 // The end of a new channel's journey: niche + concept + name make the profile, the same shape for every channel.
-export function createProfile({ channels, proposals, measures, names, profiles, sources }: ProfileDeps) {
+export function createProfile({ channels, proposals, measures, names, profiles, sources, conceptNow }: ProfileDeps) {
   return {
     finish(journey: Journey, { nameLater }: { nameLater: boolean }) {
       const niche = chosenOf<{ label: string; summary: string }>(proposals, journey.id, 'nichos')
-      const concept = chosenOf<ConceptOutput & { figures: ConceptFigures }>(proposals, journey.id, 'conceptos')
-      if (!niche || !concept) throw new Error('El recorrido no tiene nicho y concepto elegidos')
+      const chosen = chosenOf<ConceptOutput & { regionByHand?: boolean }>(proposals, journey.id, 'conceptos')
+      if (!niche || !chosen) throw new Error('El recorrido no tiene nicho y concepto elegidos')
       const name = nameLater
         ? null
         : chosenOf<{ displayName: string; handle: string }>(proposals, journey.id, 'nombres')
@@ -41,7 +46,10 @@ export function createProfile({ channels, proposals, measures, names, profiles, 
         name &&
         names.listByJourney(journey.id).findLast((c) => c.displayName === name.displayName && c.handle === name.handle)
 
-      const { figures, monetization } = { figures: concept.figures, monetization: concept.monetization }
+      // The money and the warnings are worked out now, with the journey as it stands. What the AI wrote, such as the
+      // hours in the cadence, stays: if the answers changed, the screen said so before choosing.
+      const { concept, figures } = conceptNow(journey, chosen, chosen.regionByHand === true)
+      const { monetization } = concept
       const warnings = figures.warnings.flatMap(({ code }) => {
         const sourceId = WARNING_SOURCE[code]
         return sourceId ? [{ code, sourceId }] : []
@@ -56,7 +64,12 @@ export function createProfile({ channels, proposals, measures, names, profiles, 
           audience: concept.audience,
           format: concept.format,
           cadence: concept.cadence,
-          monetization: { ...figures.monetization, assumptions: monetization.assumptions, sourceIds: ['rpm', 'ypp'] },
+          monetization: {
+            ...figures.monetization,
+            confidence: figures.monetization.rpmSource.confidence,
+            assumptions: monetization.assumptions,
+            sourceIds: ['rpm', 'ypp'],
+          },
           warnings,
         },
         name: {

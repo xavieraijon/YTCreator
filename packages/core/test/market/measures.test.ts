@@ -8,6 +8,7 @@ const thresholds = {
   concentration: { high: 0.7, medium: 0.4, topChannels: 3 },
   minVideos: 10,
   maxChannels: 20,
+  minKnownChannelsShare: 0.5,
   saturationDays: 90,
   context: { smallChannelSubscribers: 10_000 },
   references: { max: 4 },
@@ -81,11 +82,13 @@ describe('entry door', () => {
     expect(run(sample(900_000), map)!.entryChannels).toBe(0)
   })
 
-  it('hidden subscribers are left out and counted, and a channel not asked for too', () => {
-    const map = channels({ c0: null, c1: 100 })
+  it('a channel that hides its subscribers and one not read are counted apart (G3)', () => {
+    const known = Object.fromEntries(Array.from({ length: 5 }, (_, i) => [`c${i}`, 1_000_000]))
+    const map = channels({ ...known, c0: 100, c5: null })
     const measure = run(sample(1000), map)!
     expect(measure.entryChannels).toBe(1)
-    expect(measure.hiddenSubscribers).toBe(9)
+    expect(measure.hiddenSubscribers).toBe(1)
+    expect(measure.unreadChannels).toBe(4)
     expect(measure.smallChannels).toBe(1)
   })
 })
@@ -97,19 +100,55 @@ describe('concentration', () => {
     hit('c', top),
     ...Array.from({ length: 7 }, (_, i) => hit(`r${i}`, rest)),
   ]
+  const someRead = channels({ a: 1_000_000, b: 1_000_000, c: 1_000_000, r0: 1_000_000, r1: 1_000_000 })
   it('is the share of views of the top 3 channels', () => {
-    expect(run(share(700, (300 / 7) * 3))!.concentration).toBeCloseTo(0.7)
+    expect(run(share(700, (300 / 7) * 3), someRead)!.concentration).toBeCloseTo(0.7)
   })
   it.each([
     [3000, 100, 'alta'],
     [1000, 300, 'media'],
     [100, 300, 'baja'],
   ])('top %i, rest %i → %s', (top, rest, level) => {
-    expect(run(share(top, rest))!.concentrationLevel).toBe(level)
+    expect(run(share(top, rest), someRead)!.concentrationLevel).toBe(level)
   })
   it('channels in a tie still count as three', () => {
     const tied = Array.from({ length: 10 }, (_, i) => hit(`c${i}`, 100))
     expect(run(tied)!.concentration).toBeCloseTo(0.3)
+  })
+})
+
+describe('with too few channels to look at', () => {
+  it('there is no measure, whether they could not be read or hide their subscribers: «cerrada» would be made up', () => {
+    expect(run(sample(100_000), new Map())).toBeNull()
+    expect(
+      run(sample(100_000), channels(Object.fromEntries(Array.from({ length: 10 }, (_, i) => [`c${i}`, null])))),
+    ).toBeNull()
+  })
+
+  const known = (count: number, rest: Record<string, number | null> = {}) =>
+    channels({ ...rest, ...Object.fromEntries(Array.from({ length: count }, (_, i) => [`c${i}`, 100])) })
+
+  it('with the figure of fewer than half of those asked there is no verdict (P16)', () => {
+    expect(run(sample(1000), known(4))).toBeNull()
+    expect(run(sample(1000), known(1))).toBeNull()
+  })
+
+  it('exactly half is enough (P16)', () => {
+    expect(run(sample(1000), known(5))?.verdict).toBeDefined()
+  })
+
+  it('a channel that hides its figure does not count as known (P16)', () => {
+    const hidden = Object.fromEntries(Array.from({ length: 6 }, (_, i) => [`c${i + 4}`, null]))
+    expect(run(sample(1000), known(4, hidden))).toBeNull()
+  })
+
+  it('the half is over those asked, not over all those in the results (P16)', () => {
+    const hits = Array.from({ length: 120 }, (_, i) => hit(`c${i}`, 1000 + i))
+    const asked = channelsToAsk(hits, thresholds)
+    expect(asked).toHaveLength(20)
+    const answers = (count: number) => channels(Object.fromEntries(asked.slice(0, count).map((id) => [id, 100])))
+    expect(run(hits, answers(9))).toBeNull()
+    expect(run(hits, answers(10))?.unreadChannels).toBe(110)
   })
 })
 
@@ -188,8 +227,32 @@ describe('sample', () => {
     expect(asked).not.toContain('short')
   })
 
+  it('the sample spreads over the whole list, so the channels with fewest views are asked too (G3)', () => {
+    const big = Array.from({ length: 20 }, (_, i) => hit(`big${i}`, 100_000 + i))
+    const small = Array.from({ length: 10 }, (_, i) => hit(`small${i}`, 500 + i))
+    const asked = channelsToAsk([...big, ...small], thresholds)
+    expect(asked).toHaveLength(20)
+    expect(new Set(asked).size).toBe(20)
+    expect(asked[0]).toBe('big19')
+    expect(asked.at(-1)).toBe('small0')
+    expect(asked.filter((id) => id.startsWith('small')).length).toBeGreaterThanOrEqual(6)
+  })
+
+  it('the channels with most views are always asked: the references may need them', () => {
+    const many = Array.from({ length: 60 }, (_, i) => hit(`ch${i}`, 100_000 - i))
+    const asked = channelsToAsk(many, thresholds)
+    expect(asked).toHaveLength(20)
+    expect(new Set(asked).size).toBe(20)
+    expect(asked.slice(0, 4)).toEqual(['ch0', 'ch1', 'ch2', 'ch3'])
+    expect(asked.at(-1)).toBe('ch59')
+  })
+
+  it('a few channels are all asked', () => {
+    expect(channelsToAsk(sample(1000, 10), thresholds)).toHaveLength(10)
+  })
+
   it('the verdict comes with the figures', () => {
-    const map = channels({ c0: 1, c1: 1, c2: 1 })
+    const map = channels({ c0: 1, c1: 1, c2: 1, c3: 1_000_000, c4: 1_000_000 })
     expect(run(sample(60_000), map)!.verdict).toBe('conviene')
     expect(run(sample(10), map)!.verdict).toBe('no_conviene')
   })

@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createAnthropicProvider } from '../../src/anthropic/adapter.ts'
 import { resolveProfile } from '../../src/profiles.ts'
 import {
+  CONTRACT_SCHEMA,
   INVALID_OUTPUT,
   runProviderContract,
   useOutputs,
@@ -191,10 +192,36 @@ describe('anthropic: casos propios', () => {
     expect(result).toEqual({ ok: false, failure: { kind: 'cupo_agotado', reason: 'sin_saldo' } })
   })
 
+  const GENERATE_REQUEST = {
+    use: 'comprobacion',
+    prompt: { id: 'prueba', version: 1, text: 'hola' },
+    schema: CONTRACT_SCHEMA,
+  } as const
+
+  it('AN3b two invalid outputs were both paid for, so their usage comes back with the failure (G6)', async () => {
+    const { provider } = providerFor(replies(message(JSON.stringify(INVALID_OUTPUT))))
+    const result = await provider.generate(GENERATE_REQUEST)
+    expect(result).toMatchObject({ ok: false, invalidOutput: true, usage: { inputTokens: 24, outputTokens: 8 } })
+  })
+
+  it('AN3c an invalid output and then a valid one count both calls (G6)', async () => {
+    const { provider } = providerFor(
+      replies(message(JSON.stringify(INVALID_OUTPUT)), message(JSON.stringify(VALID_OUTPUT))),
+    )
+    const result = await provider.generate(GENERATE_REQUEST)
+    expect(result).toMatchObject({ ok: true, usage: { inputTokens: 24, outputTokens: 8 } })
+  })
+
+  it('AN3d a refusal keeps its usage (G6)', async () => {
+    const { provider } = providerFor(replies(message('', 'refusal')))
+    const result = await provider.generate(GENERATE_REQUEST)
+    expect(result).toMatchObject({ ok: false, usage: { inputTokens: 12, outputTokens: 4 } })
+  })
+
   it('AN3 stop_reason refusal → contenido_filtrado', async () => {
     const { provider } = providerFor(RESPONDERS.filtered)
     const result = await provider.generate({ use: 'comprobacion', prompt: { id: 'prueba', version: 1, text: 'hola' } })
-    expect(result).toEqual({ ok: false, failure: { kind: 'contenido_filtrado', reason: 'rechazo_del_modelo' } })
+    expect(result).toMatchObject({ ok: false, failure: { kind: 'contenido_filtrado', reason: 'rechazo_del_modelo' } })
   })
 
   it('generate usa el perfil y pide la salida estructurada solo con esquema', async () => {

@@ -2,6 +2,8 @@ import type { DatabaseSync } from 'node:sqlite'
 
 export const CACHE_TTL_MS = 24 * 60 * 60 * 1000
 export const HANDLE_CACHE_TTL_MS = 60 * 60 * 1000
+// What came incomplete, such as dates from feeds that failed: long enough not to repeat the requests at once.
+export const PARTIAL_CACHE_TTL_MS = 60 * 60 * 1000
 
 export function createYtCacheRepo(db: DatabaseSync, now: () => Date = () => new Date()) {
   const selectOne = db.prepare('SELECT payload FROM yt_cache WHERE key = ? AND expires_at > ?')

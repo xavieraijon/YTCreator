@@ -275,4 +275,4 @@ umbrales de mercado vienen de los conceptos de CanalYT (`docs/mercado.md`, `herr
   para las visitas (10) y 5 `channels.list` por lotes de 50 (5); la comprobación de 5 nombres, 5 `search.list` (500).
   Total ≈ 1.515 unidades: unos 6 recorridos al día con el cupo gratuito de 10.000. Reparto: la Data API mide nichos y
   nombres mientras quede cupo; la @ libre se comprueba siempre por URL pública (0 unidades) y, al llegar al 100 %, el
-  registro cae a yt-dlp.
+  registro cae a yt-dlp. Actualizado: con `auto` también cae si la Data API no responde (`decisions.md`, 25).

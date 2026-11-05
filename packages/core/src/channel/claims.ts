@@ -108,6 +108,15 @@ export function claimsFeedback(violations: ClaimViolation[]): string {
   return `Tu respuesta anterior tenía afirmaciones sin respaldo. Usa solo cifras y vídeos de <datos>:\n${lines.join('\n')}`
 }
 
+const hasEmptyText = (value: unknown): boolean => {
+  if (value === '') return true
+  if (Array.isArray(value)) return value.some(hasEmptyText)
+  return value !== null && typeof value === 'object' && Object.values(value).some(hasEmptyText)
+}
+
+// Lists the creator has to see something in: left empty, an empty text remains for the schema to reject (FR-014).
+const MUST_KEEP_ONE = new Set(['assumptions'])
+
 function trim(value: unknown, known: Facts): unknown {
   if (typeof value === 'string') {
     return sentences(value)
@@ -115,7 +124,11 @@ function trim(value: unknown, known: Facts): unknown {
       .join(' ')
   }
   if (Array.isArray(value)) {
-    return value.filter((item) => !citesUnknownVideo(item, known.videoIds)).map((item) => trim(item, known))
+    // An item of a list that loses a text goes away with it: the list may do without it, its fields may not.
+    return value
+      .filter((item) => !citesUnknownVideo(item, known.videoIds))
+      .map((item) => trim(item, known))
+      .filter((item) => !hasEmptyText(item))
   }
   if (value && typeof value === 'object') {
     if (citesUnknownVideo(value, known.videoIds)) {
@@ -123,7 +136,12 @@ function trim(value: unknown, known: Facts): unknown {
       value = { ...value, videoIds: ids.filter((id) => typeof id === 'string' && known.videoIds.has(id)) }
     }
     return Object.fromEntries(
-      Object.entries(value as object).map(([k, v]) => [k, k === 'videoIds' ? v : trim(v, known)]),
+      Object.entries(value as object).map(([k, v]) => {
+        if (k === 'videoIds') return [k, v]
+        const trimmed = trim(v, known)
+        const lostAll = Array.isArray(v) && v.length > 0 && Array.isArray(trimmed) && trimmed.length === 0
+        return [k, lostAll && MUST_KEEP_ONE.has(k) ? [''] : trimmed]
+      }),
     )
   }
   return value

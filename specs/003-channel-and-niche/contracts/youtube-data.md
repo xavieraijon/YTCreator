@@ -12,8 +12,10 @@ llama a la Data API.
 - Si un dato no se pudo leer, el campo es `null`; el puerto **nunca** rellena ni estima (FR-009).
 - La clave de la Data API se lee del `SecretStore` en cada uso y va en la cabecera `X-Goog-Api-Key`, nunca en la URL.
   Los logs registran operación, fuente, duración y código de fallo, nunca la URL completa ni cabeceras.
-- Todo pasa por la caché `yt_cache` (24 h; 1 h para `checkHandle`) y por el limitador de concurrencia (máximo 3
-  procesos de yt-dlp, 4 comprobaciones de nombre a la vez).
+- Todo pasa por la caché `yt_cache` (24 h; 1 h para `checkHandle` y para lo que llega incompleto, `Sourced.partial`) y
+  por el limitador de concurrencia (máximo 3 procesos de yt-dlp, 4 comprobaciones de nombre a la vez).
+- Feeds RSS de yt-dlp: 5 a la vez en toda la app; cada canal una vez por hora y, si falla, una vez cada 10 minutos; pausa
+  de 10 minutos tras un 403 o un 429; 15 s de tope por búsqueda. Una respuesta sin fechas cuenta como no leída. `search` con `withoutDates` no los pide.
 - Tiempos máximos: yt-dlp 45 s por proceso, Data API 15 s por petición.
 
 ## Operaciones
@@ -49,8 +51,8 @@ el resto.
 | `no_encontrado` | El canal o la @ no existen (en `resolve` y `getChannel`) |
 | `bloqueado` | YouTube corta las peticiones (429, «Sign in to confirm», bot check) |
 | `cupo_agotado` | Data API sin unidades hoy; el registro cae a yt-dlp |
-| `tiempo_agotado` | Se pasó el tiempo máximo |
-| `no_disponible` | No hay yt-dlp instalado ni clave válida |
+| `tiempo_agotado` | Se pasó el tiempo máximo; con `auto`, la Data API cae a yt-dlp |
+| `no_disponible` | No hay yt-dlp instalado ni clave válida; con `auto`, la Data API que no responde cae a yt-dlp |
 
 ## Adaptadores
 

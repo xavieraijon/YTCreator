@@ -188,6 +188,18 @@ describe('ai-run', () => {
     expect(usage.list().map((u) => u.outcome)).toEqual(['tiempo_agotado', 'respuesta_invalida'])
   })
 
+  it('records what a failed call cost: usage comes back with the failure (G6)', async () => {
+    const paid = { inputTokens: 1_000, outputTokens: 5_000 }
+    const { service, journeyId, usage } = setup([
+      { ok: false, failure: { kind: 'no_disponible', reason: 'servicio_caido' }, invalidOutput: true, usage: paid },
+    ])
+    const est = service.estimate({ journeyId, use: 'preguntas', input: {} })
+    await service.run({ estimateId: est.estimateId, use: 'preguntas', input: {} })
+    const [row] = usage.list()
+    expect(row).toMatchObject({ outcome: 'respuesta_invalida', inputTokens: 1_000, outputTokens: 5_000 })
+    expect(row!.costCents).toBeGreaterThan(0)
+  })
+
   it('retries once with feedback when a figure is invented', async () => {
     const invented = { questions: [{ id: 'q1', question: '¿Te va bien?', why: 'Hay 5.000 visitas al mes.' }] }
     const { service, journeyId, calls, usage } = setup([ok(invented), ok(VALID)])
@@ -201,14 +213,82 @@ describe('ai-run', () => {
     expect(usage.list()[0]).toMatchObject({ inputTokens: 200, outputTokens: 100 })
   })
 
+  it('what trimming would leave without a required field is an invalid answer, and is still paid for (M6)', async () => {
+    const invented = { recommendedLabel: 'Cocina', why: 'Hay 5.000 visitas al mes.', cautions: [] }
+    const { service, journeyId, usage } = setup([ok(invented), ok(invented)])
+    const est = service.estimate({ journeyId, use: 'recomendacion', input: {} })
+    const result = await service.run({ estimateId: est.estimateId, use: 'recomendacion', input: {} })
+    expect(result).toEqual({ ok: false, failure: 'respuesta_invalida' })
+    const [row] = usage.list()
+    expect(row).toMatchObject({ outcome: 'respuesta_invalida', inputTokens: 200, outputTokens: 100 })
+  })
+
+  describe('a concept that loses all its assumptions (P18, FR-014)', () => {
+    const concept = (promise: string, assumptions: string[]) => ({
+      promise,
+      pillars: ['a', 'b', 'c'].map((title) => ({ title, description: 'Una idea.' })),
+      audience: { description: 'Gente con prisa.', region: 'espana', madeForKids: false },
+      format: { presence: 'voz', longForm: 'Recetas cortas.', shortsRole: 'Avances.' },
+      cadence: { longPerWeek: 1, shortsPerWeek: 0, hoursPerWeek: 4 },
+      monetization: { category: 'general', assumptions },
+    })
+    const unbacked = 'Supone 5.000 visitas al mes.'
+    const runWith = async (concepts: unknown[]) => {
+      const answer = { concepts }
+      const { service, journeyId } = setup([ok(answer), ok(answer)])
+      const est = service.estimate({ journeyId, use: 'conceptos', input: {} })
+      return service.run({ estimateId: est.estimateId, use: 'conceptos', input: {} })
+    }
+
+    it('goes away if 2 concepts are left, and it is told', async () => {
+      const result = await runWith([concept('A', [unbacked]), concept('B', ['Sin datos.']), concept('C', ['Otro.'])])
+      expect(result).toMatchObject({ ok: true, claimsTrimmed: true })
+      const { concepts } = (result as unknown as { value: { concepts: { promise: string }[] } }).value
+      expect(concepts.map((c) => c.promise)).toEqual(['B', 'C'])
+    })
+
+    it('fails, in sight, if fewer than 2 are left', async () => {
+      expect(await runWith([concept('A', [unbacked]), concept('B', ['Sin datos.'])])).toEqual({
+        ok: false,
+        failure: 'respuesta_invalida',
+      })
+    })
+  })
+
+  it('a sentence of a list that may do without it does not lose the paid answer', async () => {
+    const invented = {
+      recommendedLabel: 'Cocina',
+      why: 'Es el más equilibrado.',
+      cautions: [{ label: 'Cocina', why: 'Supone 5.000 visitas al mes.' }],
+    }
+    const { service, journeyId } = setup([ok(invented), ok(invented)])
+    const est = service.estimate({ journeyId, use: 'recomendacion', input: {} })
+    const result = await service.run({ estimateId: est.estimateId, use: 'recomendacion', input: {} })
+    expect(result).toMatchObject({ ok: true, claimsTrimmed: true, value: { cautions: [] } })
+  })
+
   it('trims what is still unbacked after the retry', async () => {
-    const invented = { questions: [{ id: 'q1', question: '¿Te va bien?', why: 'Hay 5.000 visitas al mes.' }] }
+    const invented = {
+      questions: [{ id: 'q1', question: '¿Te va bien?', why: 'Para afinar. Hay 5.000 visitas al mes.' }],
+    }
     const { service, journeyId, calls } = setup([ok(invented), ok(invented)])
     const est = service.estimate({ journeyId, use: 'preguntas', input: {} })
     const result = await service.run({ estimateId: est.estimateId, use: 'preguntas', input: {} })
     expect(calls).toHaveLength(2)
     expect(result).toMatchObject({ ok: true, claimsTrimmed: true })
     if (result.ok) expect(JSON.stringify(result.value)).not.toContain('5.000')
+  })
+
+  it('a figure in the proposal being redone does not back the new one', async () => {
+    const invented = {
+      questions: [{ id: 'q1', question: '¿Te va bien?', why: 'Para afinar. Hay 5.000 visitas al mes.' }],
+    }
+    const { service, journeyId, calls } = setup([ok(invented), ok(invented)])
+    const input = { previous: invented }
+    const est = service.estimate({ journeyId, use: 'preguntas', input })
+    const result = await service.run({ estimateId: est.estimateId, use: 'preguntas', input })
+    expect(calls).toHaveLength(2)
+    expect(result).toMatchObject({ ok: true, claimsTrimmed: true })
   })
 
   it('warns in the log, without creator data, when the real cost overruns the estimate', async () => {

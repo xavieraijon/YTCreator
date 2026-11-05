@@ -111,6 +111,7 @@ export const measureSchema = z.object({
   unknownFormatVideos: count.nullable(),
   smallChannels: count.nullable(),
   hiddenSubscribers: count.nullable(),
+  unreadChannels: count.nullable(),
   verdict: z.enum(['conviene', 'con_reservas', 'no_conviene']).nullable(),
   thresholdsVersion: z.number().int().positive(),
   measuredAt: z.string().nullable(),
@@ -203,12 +204,23 @@ export const conceptFiguresSchema = z.object({
     monthlyViewsAssumption: z.object({ min: z.number(), max: z.number() }).nullable(),
     monthlyEurRange: z.object({ min: z.number(), max: z.number() }).nullable(),
     yppRequirements: z.object({ subscribers: z.number(), watchHours: z.number(), shortsViews: z.number() }),
-    rpmSource: z.object({ label: z.string(), reviewedAt: z.string() }),
+    rpmSource: z.object({ label: z.string(), reviewedAt: z.string(), confidence: z.enum(['alta', 'media', 'baja']) }),
     yppSource: z.object({ label: z.string(), reviewedAt: z.string() }),
   }),
   warnings: z.array(channelWarningViewSchema),
 })
 export type ConceptFigures = z.infer<typeof conceptFiguresSchema>
+
+// The answers the concepts were written for: with others, their text may not fit any more.
+export const basedOnSchema = z.object({
+  nicheLabel: z.string().nullable(),
+  hoursPerWeek: z.number().nullable().optional(),
+  onCamera: z.string().nullable().optional(),
+})
+export type BasedOn = z.infer<typeof basedOnSchema>
+
+// What the server says around the concepts of a journey (contracts/http-api.md).
+export const conceptsViewSchema = z.object({ basedOn: basedOnSchema, stale: z.boolean() })
 
 export const journeyViewSchema = journeySchema.extend({
   proposals: z.array(proposalSchema),

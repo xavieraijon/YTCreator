@@ -166,7 +166,10 @@ export function runProviderContract(name: string, factory: ContractFactory, opti
           ok: false,
           failure: { kind: 'no_disponible', reason: 'servicio_caido' },
           invalidOutput: true,
+          usage: expect.any(Object),
         })
+        // The two attempts were consumed even if nothing came out of them.
+        expect((result as { usage?: { inputTokens?: number } }).usage?.inputTokens).toBeGreaterThan(0)
         expect(subject.calls()).toBe(2)
         // The validation failure is logged without the content.
         expect(lines.join('\n')).not.toContain('42')

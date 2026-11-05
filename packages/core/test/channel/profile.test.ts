@@ -14,6 +14,7 @@ const profile = {
     cadence: { longPerWeek: 1, shortsPerWeek: 3, hoursPerWeek: 6 },
     monetization: {
       rpmEurRange: { min: 1, max: 3 },
+      confidence: 'baja',
       monthlyViewsAssumption: { min: 10_000, max: 50_000 },
       monthlyEurRange: { min: 10, max: 150 },
       yppRequirements: { subscribers: 1000, watchHours: 4000, shortsViews: 10_000_000 },
@@ -64,5 +65,17 @@ describe('monthlyEurRange', () => {
   it('multiplies views by the rate per 1.000 and rounds', () => {
     expect(monthlyEurRange({ min: 10_000, max: 50_000 }, { min: 1, max: 3 })).toEqual({ min: 10, max: 150 })
     expect(monthlyEurRange({ min: 1_234, max: 5_678 }, { min: 1.5, max: 2.5 })).toEqual({ min: 2, max: 14 })
+  })
+})
+
+describe('profiles saved before the confidence was recorded', () => {
+  it('still read, and say the least sure', () => {
+    const older: Partial<typeof profile.concept.monetization> = { ...profile.concept.monetization }
+    delete older.confidence
+    const parsed = channelProfileSchema.parse({
+      ...profile,
+      concept: { ...profile.concept, monetization: older },
+    })
+    expect(parsed.concept.monetization.confidence).toBe('baja')
   })
 })

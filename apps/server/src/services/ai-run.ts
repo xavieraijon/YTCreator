@@ -177,10 +177,9 @@ export function createAiRunService(deps: AiRunDeps) {
           schema,
           ...(signal ? { signal } : {}),
         })
-        if (result.ok) {
-          inputTokens += result.usage.inputTokens ?? 0
-          outputTokens += result.usage.outputTokens ?? 0
-        }
+        // Also on a failure: an answer that did not validate was paid for all the same (principle III).
+        inputTokens += result.usage?.inputTokens ?? 0
+        outputTokens += result.usage?.outputTokens ?? 0
         return result
       }
       const finish = (outcome: RunFailure | 'ok') => {
@@ -192,9 +191,13 @@ export function createAiRunService(deps: AiRunDeps) {
         return row.id
       }
 
+      // What the AI wrote the last time is not a source: a figure in it may be out of date, or its own invention.
+      const sources: Record<string, unknown> = { ...(input as Record<string, unknown>) }
+      delete sources['previous']
+
       let result = await call(prompt.text)
       if (result.ok) {
-        const violations = checkClaims(result.value, input)
+        const violations = checkClaims(result.value, sources)
         if (violations.length > 0) {
           result = await call(`${prompt.text}\n\n${claimsFeedback(violations)}`)
         }
@@ -204,7 +207,12 @@ export function createAiRunService(deps: AiRunDeps) {
         finish(failure)
         return { ok: false, failure }
       }
-      const { output, trimmed } = trimClaims(result.value, input)
+      const { output, trimmed } = trimClaims(result.value, sources)
+      // Trimming can empty a field its schema requires: saved like that, the journey could not end later.
+      if (trimmed && !CHANNEL_OUTPUTS[use].safeParse(output).success) {
+        finish('respuesta_invalida')
+        return { ok: false, failure: 'respuesta_invalida' }
+      }
       return { ok: true, value: output, claimsTrimmed: trimmed, usageId: finish('ok') }
     },
   }

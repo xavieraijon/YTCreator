@@ -21,7 +21,7 @@ export interface Recommendation {
   readonly cautions: readonly { label: string; why: string }[]
 }
 
-export function OpinionCard({ opinion }: { opinion: Recommendation }) {
+export function OpinionCard({ opinion, trimmed = false }: { opinion: Recommendation; trimmed?: boolean }) {
   return (
     <Card as="section" className={styles.niche} aria-label={text.opinion.title}>
       <h2>{text.opinion.title}</h2>
@@ -41,6 +41,7 @@ export function OpinionCard({ opinion }: { opinion: Recommendation }) {
           </ul>
         </>
       )}
+      {trimmed && <p className={styles.notice}>{text.opinion.trimmed}</p>}
     </Card>
   )
 }
@@ -286,7 +287,7 @@ function Batch({ view, proposal, busy, reload, onStep, proposalActions }: BatchP
   )
 }
 
-function Opinion({ view, reload }: { view: JourneyFullView; reload: () => Promise<unknown> }) {
+export function Opinion({ view, reload }: { view: JourneyFullView; reload: () => Promise<unknown> }) {
   const latest = latestOf(view, 'recomendacion')
   const { estimate, refresh } = useEstimate(view.id, 'recomendacion')
   const generate = useGenerate(view, estimate, async () => {
@@ -295,7 +296,7 @@ function Opinion({ view, reload }: { view: JourneyFullView; reload: () => Promis
   })
   return (
     <>
-      {latest && <OpinionCard opinion={payloadOf<Recommendation>(latest)} />}
+      {latest && <OpinionCard opinion={payloadOf<Recommendation>(latest)} trimmed={latest.claimsTrimmed} />}
       <AiAction
         label={latest ? text.opinion.again : text.opinion.ask}
         estimate={estimate}

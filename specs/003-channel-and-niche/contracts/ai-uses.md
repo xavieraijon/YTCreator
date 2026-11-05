@@ -17,7 +17,11 @@ modelo.
   fallo `respuesta_invalida` y la pantalla ofrece «Volver a intentarlo».
 - **Validador de cifras** (R8): toda cifra de la salida debe aparecer en `input` (con tolerancia de redondeo) y toda
   afirmación sobre la lectura de un canal debe citar un `videoId` de `input`. Si no: un reintento; después se quitan
-  las frases que no pasan y la propuesta queda con `claimsTrimmed = true`, que la pantalla explica.
+  las frases que no pasan y la propuesta queda con `claimsTrimmed = true`, que la pantalla explica siempre: también en
+  las preguntas y en la opinión. Un elemento de una lista que se queda sin un texto se quita entero. Un concepto que se
+  queda sin ningún supuesto se quita igual, y la IA no puede escribir uno sin supuestos: esa salida no pasa el esquema
+  (FR-014). El creador sí puede borrarlos al editar. Si lo que queda no cumple su esquema, el fallo es
+  `respuesta_invalida`, y el gasto se registra.
 - Cada llamada pasa antes por el presupuesto ([cost](./cost.md)) y deja una fila en `ai_usage`.
 - Regenerar acepta `instructions` (0–500 caracteres) y la propuesta anterior como contexto.
 
@@ -37,6 +41,12 @@ Reglas de forma (además del esquema):
 
 - `handle`: 3–30 caracteres `[A-Za-z0-9._-]`, sin `@`.
 - `Concept.pillars`: 3–4; `promise` ≤ 160 caracteres.
+- `audience.region`: la manda la respuesta del recorrido, no la IA; un concepto la sigue salvo que el creador le haya
+  puesto otra a mano (`regionByHand`, guardado junto al concepto).
+- `measure` y `niches`: sin `recentVideos` si la medida se leyó con yt-dlp, porque esa cifra sale de fechas parciales.
+- `previous`, al pedir otra propuesta: sin `figures`, y no sirve de fuente al validar las cifras de la respuesta.
+- `AiResult`: amplía el contrato de la 002 con `usage` opcional en el fallo, para que el gasto de una respuesta inválida
+  se registre.
 - `monetization`: la IA solo escribe `category` (la categoría de `rpm.json`) y `assumptions`; los rangos los calcula el dominio con `rpm.json` y `ypp.json`, y se guardan aparte en `figures` junto con los avisos. Al editar un concepto, `figures` se descarta y se recalcula.
 - `warnings`: la IA puede proponerlas, pero `infantil` lo decide también una regla del dominio sobre el público.
 

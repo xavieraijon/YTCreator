@@ -36,7 +36,7 @@ import { createClaudeRepair, officialInstaller } from './services/claude-repair.
 import { createJobsService } from './services/jobs.ts'
 import { createNameCheck } from './services/name-check.ts'
 import { createNicheResearch } from './services/niche-research.ts'
-import { createYouTubeService } from './services/youtube.ts'
+import { createYouTubeService, youtubeChoice } from './services/youtube.ts'
 import { createVersionCheck } from './updates/version-check.ts'
 
 export const HOST = '127.0.0.1'
@@ -192,8 +192,7 @@ export async function startServer({
       limits: dataApiLimits,
       now,
     }),
-    source: () => settings.get('youtube.source') ?? 'auto',
-    hasKey: () => settings.get('youtube.api_key_ref') !== undefined,
+    ...youtubeChoice(settings),
     quota: {
       used: () => ytQuota.used(),
       limit: dataApiLimits.dailyUnits,

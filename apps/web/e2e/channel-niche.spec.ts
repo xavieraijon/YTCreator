@@ -1,5 +1,5 @@
-import AxeBuilder from '@axe-core/playwright'
 import { expect, type Page, test } from '@playwright/test'
+import { auditor } from './audit.ts'
 import { blockExternal, connectAccount, heading, startServer, toConnect, type TestServer } from './server.ts'
 
 let server: TestServer
@@ -12,14 +12,11 @@ test.afterAll(async () => {
   await server.stop()
 })
 
+// Every screen of the journey in both themes, at 1280 and 375 px and at 200 % zoom (T123).
 const audit = async (page: Page) => {
-  // As in a11y.spec.ts: the colours are measured once the animations have settled.
-  await page.evaluate(async () => {
-    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))
-    await Promise.all(document.getAnimations().map((animation) => animation.finished.catch(() => undefined)))
-  })
-  const { violations } = await new AxeBuilder({ page }).analyze()
-  expect(violations.map(({ id, nodes }) => `${id}: ${nodes.map((node) => node.target).join(', ')}`)).toEqual([])
+  const { failures, audit: check } = auditor(page, { onlyWcag: false })
+  await check(await page.locator('h1').first().innerText())
+  expect(failures).toEqual([])
 }
 
 const addOwn = async (page: Page, label: string) => {
@@ -31,7 +28,7 @@ const addOwn = async (page: Page, label: string) => {
 }
 
 test('from the interests to the rhythm with the fakes (US1)', async ({ page: first, context }) => {
-  test.setTimeout(120_000)
+  test.setTimeout(300_000)
   let page = first
   await blockExternal(context)
   await page.goto(server.baseURL)
@@ -217,6 +214,7 @@ test('from the interests to the rhythm with the fakes (US1)', async ({ page: fir
   const blocked2 = page.getByRole('article', { name: 'nombre bloqueado' })
   await expect(blocked2.getByText('Sin comprobar')).toBeVisible()
   await expect(blocked2.getByText('Camino libre')).toHaveCount(0)
+  await audit(page)
 
   // Chooses one and the journey ends at the channel, with its name.
   await names.first().getByRole('button', { name: 'Quedarme con este nombre' }).click()
