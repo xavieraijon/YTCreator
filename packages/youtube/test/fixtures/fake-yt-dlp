@@ -24,6 +24,11 @@ const CHANNELS = [
     followers: null,
   },
 ]
+// A channel with only Shorts, and one with nothing: no list of videos, as yt-dlp says it.
+const ONLY_SHORTS = { handle: 'solocortos', id: 'UCsolocortos000000000000', title: 'Solo Cortos', prefix: 'solo', count: 20 }
+const EMPTY = { handle: 'canalvacio', id: 'UCcanalvacio000000000000', title: 'Canal Vacío' }
+// Its list of videos answers 404, and it does have Shorts.
+const NO_VIDEOS_LIST = { handle: 'listarota', id: 'UClistarota0000000000000', title: 'Lista Rota', prefix: 'rota', count: 20 }
 
 const dir = process.env.FAKE_YTDLP_DIR
 const state = JSON.parse(readFileSync(join(dir, 'state.json'), 'utf8'))
@@ -57,12 +62,42 @@ function run() {
   const search = /^ytsearch(\d+):(.*)$/s.exec(target)
   if (search) return answerSearch(Number(search[1]), search[2])
 
+  const about = (c) => ({
+    _type: 'playlist',
+    id: c.id,
+    channel_id: c.id,
+    channel: c.title,
+    uploader_id: `@${c.handle}`,
+    channel_follower_count: 10,
+    entries: [],
+  })
+  const urlsOf = (c) => [`https://www.youtube.com/@${c.handle}`, `https://www.youtube.com/channel/${c.id}`]
+  for (const c of [ONLY_SHORTS, EMPTY]) {
+    if (urlsOf(c).some((url) => target === `${url}/videos`)) {
+      fail(`[youtube:tab] ${c.id}: This channel does not have a videos tab`)
+    }
+  }
+  if (urlsOf(ONLY_SHORTS).some((url) => target === `${url}/shorts`)) {
+    return print({ ...about(ONLY_SHORTS), entries: [] })
+  }
+  if (urlsOf(EMPTY).some((url) => target === `${url}/shorts`)) {
+    fail(`[youtube:tab] ${EMPTY.id}: This channel does not have a shorts tab`)
+  }
+  if (urlsOf(EMPTY).includes(target)) return print(about(EMPTY))
+
+  if (target === `https://www.youtube.com/channel/${NO_VIDEOS_LIST.id}/videos`) {
+    fail(`[youtube:tab] ${NO_VIDEOS_LIST.id}: HTTP Error 404: Not Found`)
+  }
+  if (target === `https://www.youtube.com/channel/${NO_VIDEOS_LIST.id}/shorts`) return answerShorts(NO_VIDEOS_LIST, end)
+
   const channel = CHANNELS.find(
     (c) =>
       target === `https://www.youtube.com/@${c.handle}/videos` ||
       target === `https://www.youtube.com/channel/${c.id}/videos`,
   )
   if (channel) return answerChannel(channel, end)
+  const shorts = CHANNELS.find((c) => target === `https://www.youtube.com/channel/${c.id}/shorts`)
+  if (shorts) return answerShorts(shorts, end)
   if (/\/videos$/.test(target)) fail('[youtube:tab] noexiste: HTTP Error 404: Not Found')
 
   const video = /[?&]v=([A-Za-z0-9_-]{11})/.exec(target)
@@ -122,8 +157,27 @@ function answerChannel(channel, end) {
     uploader_id: `@${channel.handle}`,
     channel_follower_count: channel.followers,
     description: `Canal de prueba «${channel.title}».`,
+    thumbnails: [
+      { id: 'banner_uncropped', url: `https://yt3.googleusercontent.com/${channel.prefix}-banner` },
+      { id: 'avatar_uncropped', url: `https://yt3.googleusercontent.com/${channel.prefix}-avatar` },
+    ],
     entries,
   })
+}
+
+// Only the big channel has Shorts, with no duration, as yt-dlp lists them. The other one has no list of them.
+function answerShorts(channel, end) {
+  if (channel.count < 10) fail(`[youtube:tab] ${channel.id}: This channel does not have a shorts tab`)
+  const entries = ['s000', 's001'].slice(0, end).map((suffix, i) => ({
+    _type: 'url',
+    ie_key: 'YoutubeShorts',
+    id: `${channel.prefix}${suffix}`.padEnd(11, 'x').slice(0, 11),
+    url: `https://www.youtube.com/shorts/${channel.prefix}${suffix}`,
+    title: `Short ${i + 1}`,
+    view_count: 300 + i,
+    duration: null,
+  }))
+  print({ _type: 'playlist', id: channel.id, channel_id: channel.id, entries })
 }
 
 function print(value) {

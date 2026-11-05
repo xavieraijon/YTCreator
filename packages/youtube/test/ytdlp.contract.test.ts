@@ -60,6 +60,88 @@ describe('yt-dlp adapter', () => {
     expect(result.value.data.slice(15).every((v) => v.publishedAt === null)).toBe(true)
   })
 
+  it('without asking, the Shorts list is not read', async () => {
+    const fake = createFakeYtDlp()
+    const yt = createYtDlpYouTube({ binPath: fake.bin, fetch: feedFetch() })
+    await yt.listChannelVideos(INPUTS.channelId, { limit: 30 })
+    expect(fake.calls().map((argv) => argv.at(-1))).toEqual([
+      `https://www.youtube.com/channel/${INPUTS.channelId}/videos`,
+    ])
+  })
+
+  it('asked for, it reads the Shorts too, marked as such though they have no duration (FR-020b)', async () => {
+    const fake = createFakeYtDlp()
+    const yt = createYtDlpYouTube({ binPath: fake.bin, fetch: feedFetch() })
+    const result = await yt.listChannelVideos(INPUTS.channelId, { limit: 200, withShorts: true })
+    if (!result.ok) throw new Error(result.failure.code)
+    expect(fake.calls().map((argv) => argv.at(-1))).toEqual([
+      `https://www.youtube.com/channel/${INPUTS.channelId}/videos`,
+      `https://www.youtube.com/channel/${INPUTS.channelId}/shorts`,
+    ])
+    const short = result.value.data.find((video) => video.videoId === 'co30s000xxx')
+    expect(short).toMatchObject({ isShort: true, durationSeconds: null, views: 300 })
+    expect(result.value.data).toHaveLength(32)
+  })
+
+  it('the limit keeps both formats: many long videos do not leave the Shorts out', async () => {
+    const yt = createYtDlpYouTube({ binPath: createFakeYtDlp().bin, fetch: feedFetch() })
+    const result = await yt.listChannelVideos(INPUTS.channelId, { limit: 20, withShorts: true })
+    if (!result.ok) throw new Error(result.failure.code)
+    expect(result.value.data).toHaveLength(20)
+    expect(result.value.data.some((video) => video.videoId === 'co30s000xxx')).toBe(true)
+  })
+
+  it('a channel with no Shorts is not something missing', async () => {
+    const yt = createYtDlpYouTube({ binPath: createFakeYtDlp().bin, fetch: feedFetch() })
+    const result = await yt.listChannelVideos(INPUTS.smallChannelId, { limit: 200, withShorts: true })
+    if (!result.ok) throw new Error(result.failure.code)
+    expect(result.value.data).toHaveLength(3)
+    expect(result.value.partial).toBeUndefined()
+  })
+
+  it('a channel with no long videos, or with nothing at all, is still found (US4 AS5)', async () => {
+    const yt = createYtDlpYouTube({ binPath: createFakeYtDlp().bin, fetch: feedFetch() })
+    for (const [handle, channelId] of [
+      ['solocortos', 'UCsolocortos000000000000'],
+      ['canalvacio', 'UCcanalvacio000000000000'],
+    ] as const) {
+      const resolved = await yt.resolve(`@${handle}`)
+      if (!resolved.ok) throw new Error(resolved.failure.code)
+      expect(resolved.value.data).toEqual({ channelId })
+      const channel = await yt.getChannel({ channelId })
+      if (!channel.ok) throw new Error(channel.failure.code)
+      expect(channel.value.data).toMatchObject({ channelId, handle })
+    }
+    const none = await yt.listChannelVideos('UCcanalvacio000000000000', { limit: 200, withShorts: true })
+    expect(none.ok ? 'ok' : none.failure.code).toBe('sin_datos')
+  })
+
+  it('a list of videos that is not there does not hide the Shorts', async () => {
+    const yt = createYtDlpYouTube({ binPath: createFakeYtDlp().bin, fetch: feedFetch() })
+    const channelId = 'UClistarota0000000000000'
+    const read = await yt.listChannelVideos(channelId, { limit: 200, withShorts: true })
+    if (!read.ok) throw new Error(read.failure.code)
+    expect(read.value.data.map((video) => video.isShort)).toEqual([true, true])
+    // Without asking for the Shorts, the failure is the answer: the measure of a niche goes on as it did.
+    const alone = await yt.listChannelVideos(channelId, { limit: 200 })
+    expect(alone.ok ? 'ok' : alone.failure.code).toBe('no_encontrado')
+  })
+
+  it('a channel that does not exist is not looked for in its other lists', async () => {
+    const fake = createFakeYtDlp()
+    const yt = createYtDlpYouTube({ binPath: fake.bin, fetch: feedFetch() })
+    const result = await yt.resolve('@nadietieneesto')
+    expect(result.ok ? 'ok' : result.failure.code).toBe('no_encontrado')
+    expect(fake.calls()).toHaveLength(1)
+  })
+
+  it('takes the image of the channel, not its banner', async () => {
+    const yt = createYtDlpYouTube({ binPath: createFakeYtDlp().bin, fetch: feedFetch() })
+    const result = await yt.getChannel({ channelId: INPUTS.channelId })
+    if (!result.ok) throw new Error(result.failure.code)
+    expect(result.value.data.thumbnailUrl).toBe('https://yt3.googleusercontent.com/co30-avatar')
+  })
+
   it('search hits take their date from the channel feed, and stay without one if it is not there (G2)', async () => {
     const published = '2026-10-20T10:00:00.000Z'
     const urls: string[] = []

@@ -39,6 +39,7 @@ export const resolvedChannelSchema = z.object({
   handle: z.string().nullable(),
   subscribers: z.number().int().nonnegative().nullable(),
   thumbnailUrl: z.string().nullable(),
+  fetchedAt: z.string(),
 })
 export type ResolvedChannel = z.infer<typeof resolvedChannelSchema>
 

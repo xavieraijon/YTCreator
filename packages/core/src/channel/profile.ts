@@ -2,7 +2,8 @@ import { z } from 'zod'
 import { ON_CAMERA } from './journey.ts'
 import { monthlyEurRange } from './monetization.ts'
 import { AUDIENCE_REGIONS, NAME_STATUSES } from './model.ts'
-import { HANDLE_PATTERN, WARNING_CODES } from './outputs.ts'
+import { CHANNEL_HANDLE_PATTERN } from '../youtube/handle.ts'
+import { WARNING_CODES } from './outputs.ts'
 
 // The channel profile, the same for new and existing channels (data-model.md, FR-021b).
 const text = z.string().trim().min(1)
@@ -64,7 +65,7 @@ export const channelProfileSchema = z.object({
   name: z.object({
     // Null while the name is left for later (FR-018b).
     displayName: text.max(100).nullable(),
-    handle: z.string().regex(HANDLE_PATTERN).nullable(),
+    handle: z.string().regex(CHANNEL_HANDLE_PATTERN).nullable(),
     status: z.enum(NAME_STATUSES),
     checkId: z.string().nullable(),
   }),

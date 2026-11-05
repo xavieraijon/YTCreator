@@ -12,7 +12,7 @@ import {
   TextArea,
   TextField,
 } from '@ytcreator/ui'
-import { useState } from 'react'
+import { type ReactNode, useState } from 'react'
 import { channelApi } from '../../../api/client.ts'
 import { errorText } from '../../../shell/errorText.ts'
 import { channelEs } from '../../../strings/channel.es.ts'
@@ -40,7 +40,7 @@ function Part({ title, why, children }: { title: string; why: string; children: 
   )
 }
 
-function Money({ concept }: { concept: Concept }) {
+function Money({ concept, own }: { concept: Concept; own: OwnVideos | undefined }) {
   const { monetization } = concept.figures
   const {
     monthlyEurRange: month,
@@ -55,10 +55,20 @@ function Money({ concept }: { concept: Concept }) {
           <p>
             <strong>{format(text.moneyRange, { min: number(month.min), max: number(month.max) })}</strong>
           </p>
-          <p>{format(text.moneyViews, { min: number(views.min), max: number(views.max) })}</p>
+          <p>
+            {own
+              ? format(text.moneyViewsOwn, { visitas: number(views.min) })
+              : format(text.moneyViews, { min: number(views.min), max: number(views.max) })}
+          </p>
         </>
       ) : (
-        <p>{text.moneyUnknown}</p>
+        <p>{own ? text.moneyUnknownOwn : text.moneyUnknown}</p>
+      )}
+      {own && own.medianViews !== null && (
+        <>
+          <p>{format(text.moneyMedianOwn, { visitas: number(own.medianViews) })}</p>
+          <DataSource kind="youtube" date={own.readAt} />
+        </>
       )}
       <p>{format(text.moneyPerThousand, { min: euros(rate.min), max: euros(rate.max) })}</p>
       <p>{text.moneyConfidence[monetization.rpmSource.confidence]}</p>
@@ -94,10 +104,17 @@ export interface ConceptCardProps {
   readonly onEdit: () => void
 }
 
-export function ConceptCard({ concept, chosen = false, busy = false, onChoose, onEdit }: ConceptCardProps) {
+// What a concept says; a positioning has the same parts (FR-021b).
+// For a channel that exists: what a long video of its own gets, the data the money is worked out from (FR-008).
+export interface OwnVideos {
+  readonly medianViews: number | null
+  readonly readAt: string
+}
+
+export function ConceptDetails({ concept, own }: { concept: Concept; own?: OwnVideos | undefined }) {
   const { promise, pillars, audience, format: shape, cadence, figures } = concept
   return (
-    <Card as="article" className={styles.niche} aria-label={promise}>
+    <>
       <Part title={text.promise} why={text.promiseWhy}>
         <p>
           <strong>{promise}</strong>
@@ -139,7 +156,15 @@ export function ConceptCard({ concept, chosen = false, busy = false, onChoose, o
           )}
         </div>
       ))}
-      <Money concept={concept} />
+      <Money concept={concept} own={own} />
+    </>
+  )
+}
+
+export function ConceptCard({ concept, chosen = false, busy = false, onChoose, onEdit }: ConceptCardProps) {
+  return (
+    <Card as="article" className={styles.niche} aria-label={concept.promise}>
+      <ConceptDetails concept={concept} />
       <div className={styles.actions}>
         {chosen ? (
           <Semaphore state="verde">{text.chosen}</Semaphore>
@@ -166,9 +191,11 @@ export interface ConceptEditorProps {
   readonly busy?: boolean
   readonly onSave: (concept: ConceptOutput) => void
   readonly onCancel: () => void
+  /** More fields of the same form, for what only this screen has. */
+  readonly extra?: ReactNode
 }
 
-export function ConceptEditor({ concept, busy = false, onSave, onCancel }: ConceptEditorProps) {
+export function ConceptEditor({ concept, busy = false, onSave, onCancel, extra }: ConceptEditorProps) {
   const [draft, setDraft] = useState(concept)
   const [long, setLong] = useState(String(concept.cadence.longPerWeek))
   const [shorts, setShorts] = useState(String(concept.cadence.shortsPerWeek))
@@ -298,6 +325,7 @@ export function ConceptEditor({ concept, busy = false, onSave, onCancel }: Conce
         value={assumptions}
         onChange={(event) => setAssumptions(event.target.value)}
       />
+      {extra}
       <div className={styles.actions}>
         <Button type="submit" variant="primary" loading={busy}>
           {form.save}

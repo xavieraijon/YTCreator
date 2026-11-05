@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { isChannelId, isValidHandle, parseChannelInput } from '../../src/youtube/handle.ts'
+import { CHANNEL_HANDLE_PATTERN, isChannelId, isValidHandle, parseChannelInput } from '../../src/youtube/handle.ts'
 
 const ID = 'UCabcdefghijklmnopqrstuv'
 
@@ -40,6 +40,10 @@ describe('handle and channel id rules', () => {
     expect(isValidHandle('a'.repeat(31))).toBe(false)
     expect(isValidHandle('@abc')).toBe(false)
     expect(isValidHandle('ñandú')).toBe(false)
+    expect(CHANNEL_HANDLE_PATTERN.test('ñandú')).toBe(true)
+    expect(CHANNEL_HANDLE_PATTERN.test('n\u0303andu\u0301')).toBe(true)
+    expect(CHANNEL_HANDLE_PATTERN.test('con espacio')).toBe(false)
+    expect(CHANNEL_HANDLE_PATTERN.test('a/b/c')).toBe(false)
   })
 
   it('channel ids start with UC and have 24 chars', () => {

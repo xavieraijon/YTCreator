@@ -8,6 +8,10 @@ import { Screen } from '../../shell/Screen.tsx'
 import { channelEs } from '../../strings/channel.es.ts'
 import { es } from '../../strings/es.ts'
 import styles from './channel.module.css'
+import { ChannelUrl } from './existing/ChannelUrl.tsx'
+import { Confirm } from './existing/Confirm.tsx'
+import { Positioning } from './existing/Positioning.tsx'
+import { Reading } from './existing/Reading.tsx'
 import { Concepts } from './new/Concepts.tsx'
 import { Interests } from './new/Interests.tsx'
 import { Names } from './new/Names.tsx'
@@ -25,6 +29,10 @@ const TITLES: Partial<Record<JourneyStep, string>> = {
   ritmo: channelEs.rhythm.title,
   conceptos: channelEs.concepts.title,
   nombres: channelEs.names.title,
+  enlace: channelEs.existing.url.title,
+  confirmar: channelEs.existing.confirm.title,
+  lectura: channelEs.existing.reading.title,
+  posicionamiento: channelEs.existing.positioning.title,
 }
 
 // The step comes from the server, so the address and a reload can never skip one (FR-002).
@@ -100,6 +108,12 @@ export function ChannelStep({ kind, step }: { kind: ChannelOrigin; step: Journey
       {ready && step === 'nombres' && (
         <Names view={ready} busy={busy} reload={reload} onFinish={(nameLater) => void moveTo('hecho', { nameLater })} />
       )}
+      {ready && step === 'enlace' && <ChannelUrl view={ready} busy={busy} onStep={onStep} />}
+      {ready && step === 'confirmar' && (
+        <Confirm view={ready} busy={busy} reload={reload} onReject={() => void moveTo('enlace')} />
+      )}
+      {ready && step === 'lectura' && <Reading view={ready} busy={busy} reload={reload} onStep={onStep} />}
+      {ready && step === 'posicionamiento' && <Positioning view={ready} busy={busy} reload={reload} onStep={onStep} />}
       <NicheChange
         open={askNicheChange}
         busy={busy}

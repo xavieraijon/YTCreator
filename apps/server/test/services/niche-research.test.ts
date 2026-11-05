@@ -325,6 +325,7 @@ describe('niche research', () => {
         subscribers: 1,
         videoCount: 1,
         country: null,
+        thumbnailUrl: null,
       })
       const fake = createFakeYouTube({ now })
       const hit = (i: number): VideoHit => ({

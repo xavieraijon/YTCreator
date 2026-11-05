@@ -326,3 +326,67 @@ test('a new channel from the interests to the name with the keyboard alone (T123
     await server.stop()
   }
 })
+
+test('an existing channel from its link to the profile with the keyboard alone (T123)', async ({ page, context }) => {
+  test.setTimeout(180_000)
+  const server = await startServer({ port: 4382 })
+  const press = async (name: string | RegExp) => {
+    await tabTo(page, page.getByRole('button', { name }).first())
+    await page.keyboard.press('Enter')
+  }
+  try {
+    await blockExternal(context)
+    await page.goto(server.baseURL)
+    await toConnect(page, 'Usar mi suscripción de Claude')
+    await connectAccount(page)
+    await page.getByRole('button', { name: 'Continuar' }).click()
+    await page.getByRole('button', { name: 'Ir al inicio' }).click()
+    await press('Crear mi primer canal')
+    await press('Ya tengo un canal')
+
+    await expect(heading(page, 'Busca tu canal')).toBeVisible()
+    await tabTo(page, page.getByLabel('El enlace de tu canal o su @'))
+    await page.keyboard.type('@cocinacorta30')
+    await press('Buscar mi canal')
+
+    await expect(heading(page, '¿Es este tu canal?')).toBeVisible()
+    await tabTo(page, page.getByRole('button', { name: 'No, buscar otro' }))
+    await press('Sí, es mi canal')
+
+    await expect(heading(page, 'Lo que hemos leído de tu canal')).toBeVisible()
+    await expect(page.getByRole('button', { name: /Ver mi perfil actual/ })).toBeEnabled()
+    await press(/Ver mi perfil actual/)
+
+    const profile = page.getByRole('region', { name: 'Tu perfil actual' })
+    await tabTo(page, profile.getByRole('button', { name: 'Aprobar' }))
+    await page.keyboard.press('Enter')
+
+    await expect(heading(page, 'Tu ritmo')).toBeVisible()
+    await tabTo(page, page.getByLabel(/Horas por semana/))
+    await page.keyboard.type('8')
+    await tabTo(page, page.getByRole('radio').first())
+    await page.keyboard.press('Space')
+    await press('Seguir')
+
+    await expect(heading(page, 'Cómo enfocar tu canal')).toBeVisible()
+    await tabTo(page, profile.getByRole('button', { name: 'Editar' }))
+    await page.keyboard.press('Enter')
+    await tabTo(page, profile.getByLabel('De qué va tu canal'))
+    await page.keyboard.press('ControlOrMeta+A')
+    await page.keyboard.type('Recetas de diario para gente con prisa.')
+    await tabTo(page, profile.getByRole('button', { name: 'Guardar cambios' }))
+    await page.keyboard.press('Enter')
+    await expect(profile.getByText('Recetas de diario para gente con prisa.')).toBeVisible()
+
+    await press(/Proponer cómo enfocarlo/)
+    const proposal = page.getByRole('region', { name: 'Lo que te proponemos' })
+    await expect(proposal.getByRole('button', { name: 'Aprobar' })).toBeVisible()
+    await tabTo(page, proposal.getByRole('button', { name: 'Editar' }))
+    await tabTo(page, proposal.getByRole('button', { name: 'Aprobar' }))
+    await page.keyboard.press('Enter')
+
+    await expect(page.getByRole('heading', { name: 'Cocina Corta' })).toBeVisible()
+  } finally {
+    await server.stop()
+  }
+})

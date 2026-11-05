@@ -10,12 +10,18 @@ const allNew: ApprovalState = {
   concept: true,
   name: true,
 }
-const allExisting: ApprovalState = { channelInput: true, channelConfirmed: true, reading: true, positioning: true }
+const allExisting: ApprovalState = {
+  rhythm: true,
+  channelInput: true,
+  channelConfirmed: true,
+  reading: true,
+  positioning: true,
+}
 
 describe('journey steps', () => {
   it('lists the steps of each journey in order', () => {
     expect(stepsOf('nuevo')).toEqual(['intereses', 'preguntas', 'nichos', 'ritmo', 'conceptos', 'nombres', 'hecho'])
-    expect(stepsOf('existente')).toEqual(['enlace', 'confirmar', 'lectura', 'posicionamiento', 'hecho'])
+    expect(stepsOf('existente')).toEqual(['enlace', 'confirmar', 'lectura', 'ritmo', 'posicionamiento', 'hecho'])
     expect(initialStep('nuevo')).toBe('intereses')
     expect(initialStep('existente')).toBe('enlace')
   })
@@ -34,7 +40,8 @@ describe('journey steps', () => {
   it.each([
     ['enlace', 'confirmar'],
     ['confirmar', 'lectura'],
-    ['lectura', 'posicionamiento'],
+    ['lectura', 'ritmo'],
+    ['ritmo', 'posicionamiento'],
     ['posicionamiento', 'hecho'],
   ] as const)('existing channel: %s → %s with its approval', (from, to) => {
     expect(planStep({ kind: 'existente', from, to, approvals: allExisting })).toEqual({ ok: true, needsReview: false })
@@ -88,6 +95,15 @@ describe('journey steps', () => {
     expect(planStep({ kind: 'nuevo', from: 'ritmo', to: 'nichos', approvals: { ...allNew, concept: false } })).toEqual({
       ok: true,
       needsReview: false,
+    })
+  })
+
+  it('only a new channel comes back to choose its name: an existing journey has no such step', () => {
+    const approvals = { ...allNew, nameProvisional: true }
+    expect(planStep({ kind: 'nuevo', from: 'hecho', to: 'nombres', approvals }).ok).toBe(true)
+    expect(planStep({ kind: 'existente', from: 'hecho', to: 'nombres', approvals })).toEqual({
+      ok: false,
+      reason: 'salto_no_permitido',
     })
   })
 

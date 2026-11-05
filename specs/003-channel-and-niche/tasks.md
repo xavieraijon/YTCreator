@@ -256,7 +256,7 @@ recomendada, «Decidir más tarde» guarda el perfil con nombre provisional.
 **Goal**: El creador pega el enlace o la @ de su canal, lo confirma, la app lee sus vídeos y la IA saca el perfil
 actual (citando vídeos) y propone cómo posicionarlo.
 
-**Independent Test**: Con el canal fake de 30 vídeos, recorrer Enlace → Confirmar → Lectura → Posicionamiento y aprobar;
+**Independent Test**: Con el canal fake de 30 vídeos, recorrer Enlace → Confirmar → Lectura → Ritmo → Posicionamiento y aprobar;
 el perfil tiene la misma forma que uno nuevo. Con el canal de 3 vídeos se ofrece el recorrido de canal nuevo
 conservando nombre y @.
 
@@ -266,21 +266,21 @@ conservando nombre y @.
 
 ### Tests para User Story 4 ⚠️
 
-- [ ] T101 [P] [US4] Test de rutas en `apps/server/test/http/existing.test.ts`: `POST /api/journeys/:id/resolve` (`{channelId,title,handle,subscribers,thumbnailUrl}`, `404` si no existe), `POST /api/journeys/:id/reading` (`202`), `youtube_channel_id` repetido da `conflicto`
-- [ ] T102 [P] [US4] Test del servicio `channel-reading` en `apps/server/test/services/channel-reading.test.ts`: hasta 200 vídeos con título, visitas, duración y fecha (fecha exacta del RSS para los recientes), resumen por formato con duración media, vídeos por semana y los 3 mejores y 3 peores según veces lo normal (FR-020b: los de menos de 30 días no cuentan como peores), cada cifra marcada como dato con fecha (FR-020); menos de 5 vídeos marca `lowInfo`; lo que funciona cita vídeos de la lectura
-- [ ] T103 [P] [US4] Test de posicionamiento en `apps/server/test/http/positioning.test.ts`: aprobar crea `profile_version` 1 con origen `ia` y la forma de `ChannelProfile`; editar antes de aprobar
-- [ ] T104 [P] [US4] Tests de pantallas en `apps/web/test/channel/existing.test.tsx` y E2E en `apps/web/e2e/channel-existing.spec.ts`: acepta enlace de canal, @ o enlace de vídeo; «Sí, es mi canal»; progreso de lectura; canal de 3 vídeos ofrece recorrido nuevo; axe sin fallos
+- [X] T101 [P] [US4] Test de rutas en `apps/server/test/http/existing.test.ts`: `POST /api/journeys/:id/resolve` (`{channelId,title,handle,subscribers,thumbnailUrl}`, `404` si no existe), `POST /api/journeys/:id/reading` (`202`), `youtube_channel_id` repetido da `conflicto`
+- [X] T102 [P] [US4] Test del servicio `channel-reading` en `apps/server/test/services/channel-reading.test.ts`: hasta 200 vídeos con título, visitas, duración y fecha (fecha exacta del RSS para los recientes), resumen por formato con duración media, vídeos por semana y los 3 mejores y 3 peores según veces lo normal (FR-020b: los de menos de 30 días no cuentan como peores), cada cifra marcada como dato con fecha (FR-020); menos de 5 vídeos marca `lowInfo`; lo que funciona cita vídeos de la lectura
+- [X] T103 [P] [US4] Test de posicionamiento en `apps/server/test/http/positioning.test.ts`: aprobar crea `profile_version` 1 con origen `ia` y la forma de `ChannelProfile`; editar antes de aprobar
+- [X] T104 [P] [US4] Tests de pantallas en `apps/web/test/channel/existing.test.tsx` y E2E en `apps/web/e2e/channel-existing.spec.ts`: acepta enlace de canal, @ o enlace de vídeo; «Sí, es mi canal»; progreso de lectura; canal de 3 vídeos ofrece recorrido nuevo; axe sin fallos
 
 ### Implementation para User Story 4
 
-- [ ] T105 [P] [US4] Prompts `packages/knowledge/prompts/lectura_canal/v1.md` (perfil actual: nicho, pilares, público, lo que funciona y lo que no, basándose en las veces lo normal y citando vídeos por id) y `packages/knowledge/prompts/posicionamiento/v1.md`, los dos con las reglas de `writing/human.md`
-- [ ] T106 [US4] Servicio `apps/server/src/services/channel-reading.ts` (resolver, leer canal y vídeos, RSS, calcular `ratio` con `own-baseline.ts`, guardar `channel_reading`)
-- [ ] T107 [US4] Rutas `resolve` y `reading` en `apps/server/src/http/routes/youtube.ts`
-- [ ] T108 [P] [US4] Pantallas `apps/web/src/screens/channel/existing/ChannelUrl.tsx` y `Confirm.tsx`
-- [ ] T109 [US4] Pantalla `apps/web/src/screens/channel/existing/Reading.tsx` (progreso, resumen de cifras por formato con `DataSource` (duración media, frecuencia, mejores y peores vídeos con «veces lo normal en su canal»), «Ver mi perfil actual», con menos de 5 vídeos ofrece el recorrido de canal nuevo conservando nombre y @)
-- [ ] T110 [US4] Pantalla `apps/web/src/screens/channel/existing/Positioning.tsx` (perfil actual con vídeos citados, propuesta de cambios, «Aprobar»)
+- [X] T105 [P] [US4] Prompts `packages/knowledge/prompts/lectura_canal/v1.md` (perfil actual: nicho, pilares, público, lo que funciona y lo que no, basándose en las veces lo normal y citando vídeos por id) y `packages/knowledge/prompts/posicionamiento/v1.md`, los dos con las reglas de `writing/human.md`
+- [X] T106 [US4] Servicio `apps/server/src/services/channel-reading.ts` (resolver, leer canal y vídeos, RSS, calcular `ratio` con `own-baseline.ts`, guardar `channel_reading`)
+- [X] T107 [US4] Rutas `resolve` y `reading` en `apps/server/src/http/routes/youtube.ts`
+- [X] T108 [P] [US4] Pantallas `apps/web/src/screens/channel/existing/ChannelUrl.tsx` y `Confirm.tsx`
+- [X] T109 [US4] Pantalla `apps/web/src/screens/channel/existing/Reading.tsx` (progreso, resumen de cifras por formato con `DataSource` (duración media, frecuencia, mejores y peores vídeos con «veces lo normal en su canal»), «Ver mi perfil actual», con menos de 5 vídeos ofrece el recorrido de canal nuevo conservando nombre y @)
+- [X] T110 [US4] Pantalla `apps/web/src/screens/channel/existing/Positioning.tsx` (perfil actual con vídeos citados, propuesta de cambios, «Aprobar»)
 
-- [ ] T110b [A] [US4] Puerta A de US4: ejecutar `/puerta-a US4`. No se marca `[X]` hasta que la skill diga «pasada»; el informe queda en `specs/003-channel-and-niche/checklists/validation.md`
+- [X] T110b [A] [US4] Puerta A de US4: ejecutar `/puerta-a US4`. No se marca `[X]` hasta que la skill diga «pasada»; el informe queda en `specs/003-channel-and-niche/checklists/validation.md`
 
 **Checkpoint**: los dos recorridos acaban en el mismo perfil.
 
@@ -325,7 +325,7 @@ que solo se ve por su `hint`.
 - [ ] T122 [P] Revisar todos los textos nuevos con `apps/web/test/glossary.test.ts` y `packages/knowledge/writing/human.md`
 - [ ] T122b [P] Test en `apps/web/test/channel/why.test.tsx`: cada pantalla de los dos recorridos tiene su frase de por qué importa el paso (FR-004)
 - [ ] T125 [P] E2E de casos difíciles de quickstart §4 que falten (sin lector, límite de 1 céntimo, cifra inventada, versiones) en `apps/web/e2e/channel-hard-cases.spec.ts`
-- [ ] T125b [P] Pruebas con YouTube real en `packages/youtube/test/youtube.real.test.ts` (`pnpm test:real-youtube`, fuera de CI): 10 @ conocidas y ocupadas salen en rojo (SC-004), medir 5 nichos tarda menos de 2 min (SC-003) y analizar un canal menos de 1 min (SC-005)
+- [ ] T125b [P] Pruebas con YouTube real en `packages/youtube/test/youtube.real.test.ts` (`pnpm test:real-youtube`, fuera de CI): 10 @ conocidas y ocupadas salen en rojo (SC-004), medir 5 nichos tarda menos de 2 min (SC-003) y analizar un canal menos de 1 min (SC-005). También lo que US4 deja por comprobar: la imagen del canal (entrada 56), `/shorts` y canales grandes (57), canales sin lista de vídeos (68), canal sin título y 404 en `/videos` (81), una @ con ñ (84) y las URL `/c/` y `/user/` (88)
 - [ ] T126 Pasar `specs/003-channel-and-niche/quickstart.md` §1–§5 entero, ejecutar T125b y anotar resultados en `specs/003-channel-and-niche/checklists/validation.md`
 - [ ] T127 Auditoría de novato (§6) con el agente `usuario-novato` sobre los dos recorridos; anotar en `specs/003-channel-and-niche/novice-audit.md` y corregir los bloqueos
 - [ ] T128b [A] Puerta A de Polish: ejecutar `/puerta-a Polish`. No se marca `[X]` hasta que la skill diga «pasada»; el informe queda en `specs/003-channel-and-niche/checklists/validation.md`

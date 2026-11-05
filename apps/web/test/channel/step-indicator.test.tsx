@@ -20,7 +20,7 @@ describe('StepIndicator (FR-002)', () => {
 
   it('shows the steps of the existing channel', () => {
     const html = render('existente', 'lectura')
-    expect(html).toContain('Paso 3 de 4')
+    expect(html).toContain('Paso 3 de 5')
     expect(html).toContain(channelEs.steps.posicionamiento)
     expect(html).not.toContain(channelEs.steps.nichos)
   })

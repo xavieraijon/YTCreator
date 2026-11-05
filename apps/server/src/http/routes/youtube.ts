@@ -1,7 +1,15 @@
-import { measuresBodySchema, nameChecksBodySchema, referencesBodySchema } from '@ytcreator/core/api'
+import type { YouTubeFailureCode } from '@ytcreator/core'
+import {
+  measuresBodySchema,
+  nameChecksBodySchema,
+  readingBodySchema,
+  referencesBodySchema,
+  resolveBodySchema,
+} from '@ytcreator/core/api'
 import { Hono } from 'hono'
 import type { JourneysRepo } from '../../db/repos/journeys.ts'
 import type { MeasuresRepo } from '../../db/repos/measures.ts'
+import type { ChannelReadingService } from '../../services/channel-reading.ts'
 import type { NameCheckService } from '../../services/name-check.ts'
 import type { NicheResearch } from '../../services/niche-research.ts'
 import { ApiError } from '../errors.ts'
@@ -12,10 +20,42 @@ export interface YouTubeRoutesDeps {
   measures: MeasuresRepo
   research: NicheResearch
   nameCheck: NameCheckService
+  reading: ChannelReadingService
 }
 
-export function youtubeRoutes({ journeys, measures, research, nameCheck }: YouTubeRoutesDeps) {
+// A channel that does not exist is a 404 (contracts/http-api.md); the rest is why YouTube could not be read.
+const lookUpError = (failure: YouTubeFailureCode) =>
+  failure === 'no_encontrado' || failure === 'sin_datos'
+    ? new ApiError({ code: 'no_encontrado' })
+    : new ApiError({ code: 'youtube', youtubeFailure: failure })
+
+export function youtubeRoutes({ journeys, measures, research, nameCheck, reading }: YouTubeRoutesDeps) {
   const routes = new Hono()
+
+  routes.post('/journeys/:id/resolve', async (c) => {
+    const journey = journeys.get(c.req.param('id'))
+    if (!journey) throw new ApiError({ code: 'no_encontrado' })
+    const { input } = await parseBody(c, resolveBodySchema)
+    const looked = await reading.lookUp(input)
+    if (!looked.ok) throw lookUpError(looked.failure)
+    return c.json(looked.channel)
+  })
+
+  routes.post('/journeys/:id/reading', async (c) => {
+    const journey = journeys.get(c.req.param('id'))
+    if (!journey) throw new ApiError({ code: 'no_encontrado' })
+    const body = await parseBody(c, readingBodySchema)
+    if (journey.revision !== body.revision) throw new ApiError({ code: 'conflicto', current: journey as never })
+    if (journey.kind !== 'existente' || (journey.step !== 'confirmar' && journey.step !== 'lectura')) {
+      throw new ApiError({ code: 'validacion', fields: { step: 'no_valido' } })
+    }
+    const looked = await reading.lookUp(body.input)
+    if (!looked.ok) throw lookUpError(looked.failure)
+    if (reading.isTaken(journey, looked.channel.channelId)) {
+      throw new ApiError({ code: 'conflicto', guard: 'ya_hay_canal' })
+    }
+    return c.json({ jobId: reading.start(journey, body.input, looked).id }, 202)
+  })
 
   routes.post('/journeys/:id/measures', async (c) => {
     const journey = journeys.get(c.req.param('id'))

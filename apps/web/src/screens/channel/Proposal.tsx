@@ -60,7 +60,7 @@ export function Proposal({
           <ErrorMessage
             live
             title={channelEs.aiFailure[failure]}
-            action={{ label: text.retry, onClick: () => onRegenerate(instructions) }}
+            action={{ label: costLabel(text.retry, estimate), onClick: () => onRegenerate(instructions) }}
           />
         )
       )}
@@ -118,7 +118,11 @@ export function AiAction({ label, estimate, failure = null, busy = false, primar
         <ErrorMessage live title={channelEs.aiFailure[failure]} action={{ label: text.goLimits, onClick: toLimits }} />
       ) : (
         failure && (
-          <ErrorMessage live title={channelEs.aiFailure[failure]} action={{ label: text.retry, onClick: onRun }} />
+          <ErrorMessage
+            live
+            title={channelEs.aiFailure[failure]}
+            action={{ label: costLabel(text.retry, estimate), onClick: onRun }}
+          />
         )
       )}
       {blockedBy && (

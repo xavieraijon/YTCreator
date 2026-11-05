@@ -19,6 +19,7 @@ import {
 } from '../channel/model.ts'
 import { CHANNEL_OUTPUTS, type ChannelUse } from '../channel/outputs.ts'
 import { channelProfileSchema } from '../channel/profile.ts'
+import { readingSummarySchema } from '../channel/reading.ts'
 import { YOUTUBE_FAILURES } from '../youtube/failures.ts'
 import { YOUTUBE_SOURCES } from '../youtube/port.ts'
 
@@ -222,6 +223,33 @@ export type BasedOn = z.infer<typeof basedOnSchema>
 // What the server says around the concepts of a journey (contracts/http-api.md).
 export const conceptsViewSchema = z.object({ basedOn: basedOnSchema, stale: z.boolean() })
 
+// What was read of an existing channel (data-model.md, `channel_reading`).
+export const channelReadingSchema = z.object({
+  id,
+  channelId: id,
+  youtubeChannelId: z.string(),
+  source: z.enum(YOUTUBE_SOURCES),
+  title: z.string(),
+  handle: z.string().nullable(),
+  description: z.string(),
+  subscribers: count.nullable(),
+  videoCount: count.nullable(),
+  videos: z.array(
+    z.object({
+      id: z.string(),
+      title: z.string(),
+      views: count.nullable(),
+      durationSeconds: z.number().nonnegative().nullable(),
+      publishedAt: z.string().nullable(),
+      isShort: z.boolean(),
+      ratio: z.number().nonnegative().nullable(),
+    }),
+  ),
+  summary: readingSummarySchema,
+  fetchedAt: z.string(),
+})
+export type ChannelReadingView = z.infer<typeof channelReadingSchema>
+
 export const journeyViewSchema = journeySchema.extend({
   proposals: z.array(proposalSchema),
   measures: z.array(measureSchema),
@@ -231,6 +259,8 @@ export const journeyViewSchema = journeySchema.extend({
   warnings: z.record(z.string(), z.array(channelWarningViewSchema)),
   // Older measures ask to be measured again (FR-027).
   measureStaleDays: z.number().int().positive(),
+  // What was read of the channel the journey is about: not the one of a channel it no longer is.
+  reading: channelReadingSchema.nullable(),
 })
 export type JourneyFullView = z.infer<typeof journeyViewSchema>
 
@@ -284,6 +314,9 @@ export const referencesBodySchema = z.object({
 
 // POST …/measures, …/name-checks, …/reading and /api/settings/youtube/update-reader
 export const jobStartedSchema = z.object({ jobId: id })
+
+// POST /api/journeys/:id/as-new (FR-022)
+export const asNewBodySchema = z.object({ revision })
 
 // One event of GET /api/jobs/:id/events.
 export const jobEventSchema = z.discriminatedUnion('type', [

@@ -74,4 +74,9 @@ describe('Start (FR-001)', () => {
     expect(html).toContain(text.nameMissing)
     expect(button(html, text.chooseName)).toBeTruthy()
   })
+
+  it('a channel that exists has no step to choose a name, so it is not offered', () => {
+    const done = { ...journey, kind: 'existente' as const, step: 'hecho' as const, status: 'terminado' as const }
+    expect(render({ channel, profile: null, journey: done })).not.toContain(text.nameMissing)
+  })
 })

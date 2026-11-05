@@ -52,6 +52,7 @@ function channelItem(channel: FakeChannel) {
       title: channel.info.title,
       description: channel.info.description,
       customUrl: `@${channel.info.handle}`,
+      thumbnails: { default: { url: 'https://yt3.ggpht.com/foto=s88' } },
       ...(channel.info.country ? { country: channel.info.country } : {}),
     },
     statistics: {

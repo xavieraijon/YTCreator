@@ -24,7 +24,7 @@ llama a la Data API.
 |---|---|---|
 | `search(query, {limit})` | texto en el idioma del canal; `limit` ≤ 40 | `VideoHit[]` |
 | `getChannel(ref)` | `ChannelRef` | `ChannelInfo` |
-| `listChannelVideos(channelId, {limit})` | `limit` ≤ 200 | `VideoInfo[]`, de más nuevo a más viejo |
+| `listChannelVideos(channelId, {limit, withShorts?, fresh?})` | `limit` ≤ 200; `withShorts` también lee los Shorts con yt-dlp, cuya lista de vídeos no los trae, y un 404 en esa lista no los oculta; `fresh` no responde con la copia guardada del servicio (el lector de fechas mantiene su pausa) | `VideoInfo[]`, de más nuevo a más viejo dentro de cada formato; los que no tienen fecha, en turnos de cada lista si no caben todos; `partial` si no se pudo leer todo |
 | `checkHandle(handle)` | sin `@` | `'libre' \| 'ocupado'` |
 | `resolve(input)` | URL de canal, `@`, URL de vídeo | `ChannelRef` |
 | `health()` | — | `{source, available, version?, quota?: {used, limit, nearLimit}}`; `nearLimit` al pasar el umbral de `thresholds.json` (FR-030) |
@@ -35,7 +35,7 @@ Tipos:
 |---|---|
 | `ChannelRef` | `{channelId}` (siempre resuelto a `UC…`) |
 | `VideoHit` | `{videoId, title, channelId, channelTitle, views \| null, publishedAt \| null, durationSeconds \| null}` |
-| `ChannelInfo` | `{channelId, title, handle \| null, description, subscribers \| null, videoCount \| null, country \| null}` |
+| `ChannelInfo` | `{channelId, title, handle \| null, description, subscribers \| null, videoCount \| null, country \| null, thumbnailUrl \| null}` |
 | `VideoInfo` | `{videoId, title, views \| null, durationSeconds \| null, publishedAt \| null, isShort}` |
 
 `isShort`: duración ≤ 180 s y relación vertical cuando la fuente la da; si no, solo duración. `VideoHit` no lleva

@@ -2,6 +2,7 @@ import {
   type ChannelRef,
   type Sourced,
   type VideoHit,
+  type VideoInfo,
   type YouTubeData,
   type YouTubeFailureCode,
   type YouTubeResult,
@@ -12,7 +13,17 @@ import {
 import { checkHandleAt } from '../handle.ts'
 import { createFeedReader } from '../rss/feed.ts'
 import { classifyRun } from './classify.ts'
-import { channelVideosArgs, handleVideosArgs, searchArgs, versionArgs, videoChannelArgs } from './command.ts'
+import {
+  channelPageArgs,
+  channelShortsArgs,
+  handlePageArgs,
+  handleShortsArgs,
+  channelVideosArgs,
+  handleVideosArgs,
+  searchArgs,
+  versionArgs,
+  videoChannelArgs,
+} from './command.ts'
 import { type Listing, parseListing, toChannel, toHits, toVideos } from './parse.ts'
 import { type YtDlpRun, runYtDlp } from './process.ts'
 
@@ -75,6 +86,38 @@ export function createYtDlpYouTube(options: YtDlpYouTubeOptions): YouTubeData {
     )
   }
 
+  // A channel says who it is in any of its lists: with no long videos, or none at all, it is still a channel (US4 AS5).
+  async function channelInAnyList(lists: string[][], signal?: AbortSignal): Promise<Listing | Failed> {
+    for (const args of lists) {
+      const result = await run(args, signal)
+      const failure = classifyRun(result)
+      if (failure === 'sin_datos') continue
+      if (failure) return youtubeFailure(failure)
+      const parsed = parseListing(result.stdout)
+      if (parsed && toChannel(parsed)) return parsed
+    }
+    return youtubeFailure('no_encontrado')
+  }
+
+  // Each list comes from newest to oldest and only the newest have a date: those go first. Nothing says which of the
+  // rest is newer, so what fits takes from both lists in turn: a channel with many long videos still shows its Shorts.
+  const newestFirst = (long: readonly VideoInfo[], shorts: readonly VideoInfo[], limit: number): VideoInfo[] => {
+    const hasDate = (video: VideoInfo) => video.publishedAt !== null
+    const dated = [...long, ...shorts].filter(hasDate).sort((a, b) => b.publishedAt!.localeCompare(a.publishedAt!))
+    const [restLong, restShorts] = [long, shorts].map((list) => list.filter((video) => !hasDate(video))) as [
+      VideoInfo[],
+      VideoInfo[],
+    ]
+    const taken = [...dated]
+    for (let i = 0; taken.length < limit && i < Math.max(restLong.length, restShorts.length); i++) {
+      for (const list of [restLong, restShorts]) {
+        const video = list[i]
+        if (video && taken.length < limit) taken.push(video)
+      }
+    }
+    return taken.slice(0, limit)
+  }
+
   return {
     source: 'ytdlp',
 
@@ -87,22 +130,37 @@ export function createYtDlpYouTube(options: YtDlpYouTubeOptions): YouTubeData {
     },
 
     async getChannel(ref, signal) {
-      const result = await channelListing(ref.channelId, 1, signal)
+      if (!isChannelId(ref.channelId)) return youtubeFailure('no_encontrado')
+      const result = await channelInAnyList(
+        [channelVideosArgs(ref.channelId, 1), channelShortsArgs(ref.channelId, 1), channelPageArgs(ref.channelId)],
+        signal,
+      )
       if (isFailed(result)) return result
       const info = toChannel(result)
       return info ? sourced(info) : youtubeFailure('no_encontrado')
     },
 
-    async listChannelVideos(channelId, { limit, signal }) {
+    async listChannelVideos(channelId, { limit, signal, withShorts }) {
       const [result, feed] = await Promise.all([
         channelListing(channelId, limit, signal),
         feeds.read(channelId, withTimeout(handleMs, signal)),
       ])
-      if (isFailed(result)) return result
-      const videos = toVideos(result)
-        .slice(0, limit)
-        .map((video) => ({ ...video, publishedAt: feed.dates.get(video.videoId) ?? video.publishedAt }))
-      return sourced(videos, feed.complete)
+      // With the Shorts asked for, a list of videos that is not there does not say the channel has nothing.
+      const noVideos =
+        isFailed(result) &&
+        (result.failure.code === 'sin_datos' || (withShorts && result.failure.code === 'no_encontrado'))
+      if (isFailed(result) && !noVideos) return result
+      // One after the other: the service gives each call a single place among the processes it allows.
+      const shorts = withShorts ? await listing(channelShortsArgs(channelId, limit), signal) : null
+      const videosRead = isFailed(result) ? [] : toVideos(result)
+      // The channel has none, or could not be read: a list of Shorts never takes the videos down with it.
+      const shortsFailed = shorts !== null && isFailed(shorts) && shorts.failure.code !== 'sin_datos'
+      if (isFailed(result) && shortsFailed) return shorts as Failed
+      if (isFailed(result) && (shorts === null || isFailed(shorts))) return result
+      const shortsRead = shorts === null || isFailed(shorts) ? [] : toVideos(shorts, { allShorts: true })
+      const dated = (list: readonly VideoInfo[]) =>
+        list.map((video) => ({ ...video, publishedAt: feed.dates.get(video.videoId) ?? video.publishedAt }))
+      return sourced(newestFirst(dated(videosRead), dated(shortsRead), limit), feed.complete && !shortsFailed)
     },
 
     checkHandle(handle, signal) {
@@ -114,8 +172,11 @@ export function createYtDlpYouTube(options: YtDlpYouTubeOptions): YouTubeData {
       if (!parsed) return youtubeFailure('no_encontrado')
       if (parsed.kind === 'channel') return sourced<ChannelRef>({ channelId: parsed.channelId })
       if (parsed.kind === 'handle') {
-        const result = await listing(handleVideosArgs(parsed.handle), signal)
-        if (isFailed(result)) return result.failure.code === 'sin_datos' ? youtubeFailure('no_encontrado') : result
+        const result = await channelInAnyList(
+          [handleVideosArgs(parsed.handle), handleShortsArgs(parsed.handle), handlePageArgs(parsed.handle)],
+          signal,
+        )
+        if (isFailed(result)) return result
         const channelId = typeof result.root.channel_id === 'string' ? result.root.channel_id : ''
         return isChannelId(channelId) ? sourced<ChannelRef>({ channelId }) : youtubeFailure('no_encontrado')
       }

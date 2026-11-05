@@ -8,7 +8,7 @@
 
 Esta feature es la primera que **usa** la IA para producir algo y la primera que lee **datos reales de YouTube**. Da
 al creador un perfil de canal guardado, con versiones, por dos recorridos: canal nuevo (intereses → nichos medidos →
-concepto → nombre) y canal que ya existe (URL o @ → lectura → perfil actual → posicionamiento). Tiene seis piezas:
+concepto → nombre) y canal que ya existe (URL o @ → lectura → perfil actual → ritmo → posicionamiento). Tiene seis piezas:
 
 - **Puerto `YouTubeData`** (`packages/core/src/youtube`) con tres adaptadores en `packages/youtube`:
   - **yt-dlp + RSS** (por defecto, sin clave, sin coste): búsqueda de vídeos, pestañas de un canal, comprobación de

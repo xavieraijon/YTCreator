@@ -13,7 +13,8 @@ Las mismas de la 002:
 - El servidor devuelve códigos; la web los traduce (`strings/`). Ninguna respuesta lleva secretos; la clave de YouTube
   como mucho su `hint` de 4 caracteres.
 - Fechas ISO 8601 UTC; importes en céntimos enteros.
-- Un fallo de la IA o de YouTube es un `200` con el estado nuevo (la propuesta o la medida con su `failure`).
+- Un fallo de la IA o de YouTube es un `200` con el estado nuevo (la propuesta o la medida con su `failure`). Las
+  excepciones son `resolve`, `reading` y `references`, que no tienen estado que devolver: `502 youtube` con su fallo.
 - Errores con `ApiError`: `400 validacion`, `403 prohibido`, `404 no_encontrado`, `409 conflicto`, `422 ia`.
 - `GUARDS` gana `ya_hay_canal` (la v1 solo deja crear un canal, FR-028).
 - Las rutas que cambian un recorrido piden `revision`; si no coincide, `409 conflicto` con `current` (evita dobles
@@ -26,11 +27,12 @@ Las mismas de la 002:
 |---|---|---|
 | `GET /api/channels/current` | — | `{channel, profile, journey}` o `{channel: null}` |
 | `POST /api/channels` | `{origin}` | `201 {channel, journey}`; `409` guard `ya_hay_canal` |
-| `GET /api/journeys/:id` | — | `Journey` con `state`, propuestas vigentes, medidas, comprobaciones y trabajos. La propuesta de conceptos trae las cifras de ahora, `basedOn` (nicho, horas y forma de salir en vídeo para los que se escribió) y `stale` |
+| `GET /api/journeys/:id` | — | `Journey` con `state`, propuestas vigentes, medidas, comprobaciones, trabajos y `reading` (la lectura del canal elegido o `null`). La propuesta de conceptos trae las cifras de ahora, `basedOn` (nicho, horas y forma de salir en vídeo para los que se escribió) y `stale` |
 | `POST /api/journeys/:id/step` | `{revision, step, data?}` | `Journey`; `400` si falta la aprobación del paso |
-| `POST /api/journeys/:id/estimate` | `{use, proposalId?}` | `Estimate` |
-| `POST /api/journeys/:id/proposals` | `{revision, kind, estimateId, instructions?, parentId?}` | `Proposal` (con `failure` si falló) |
+| `POST /api/journeys/:id/estimate` | `{use, proposalId?}` | `Estimate`; `400` en `posicionamiento` sin perfil actual aprobado o sin respuestas de ritmo |
+| `POST /api/journeys/:id/proposals` | `{revision, kind, estimateId, instructions?, parentId?}` | `Proposal` (con `failure` si falló); `400` como en `estimate`; `409 conflicto` si el recorrido pasó a otro canal mientras la IA respondía |
 | `PATCH /api/proposals/:id` | `{editedPayload?, selectedIndex?, status?}` | `Proposal` |
+| `POST /api/journeys/:id/as-new` | `{revision}` | `201 {channel, journey}`: canal con pocos vídeos (FR-022). El recorrido viejo queda `abandonado`, el nuevo guarda `keptName`; `400` con 5 vídeos o más; `409 conflicto` con una revisión vieja |
 | `POST /api/proposals/:id/back` | `{}` | `Proposal`: descarta esta y recupera la que sustituyó (US1 AS5); `409 conflicto` si no hay anterior |
 
 ## YouTube
@@ -39,8 +41,8 @@ Las mismas de la 002:
 |---|---|---|
 | `POST /api/journeys/:id/measures` | `{revision, niches: {label, queries}[]}` | `202 {jobId}` |
 | `POST /api/journeys/:id/name-checks` | `{revision, names: {displayName, handle, origin}[]}` | `202 {jobId}` |
-| `POST /api/journeys/:id/reading` | `{revision, input}` | `202 {jobId}`; `404` si el canal no existe |
-| `POST /api/journeys/:id/resolve` | `{input}` | `{channelId, title, handle, subscribers, thumbnailUrl}` para confirmar |
+| `POST /api/journeys/:id/reading` | `{revision, input}` | `202 {jobId}`: confirma el canal, pasa a `lectura` y lee; con el mismo canal en curso, el mismo trabajo. `404` si el canal no existe; `409 conflicto` si otro canal de la app ya es ese, guard `ya_hay_canal`; `502 youtube` con su fallo si YouTube no se pudo leer |
+| `POST /api/journeys/:id/resolve` | `{input}` | `{channelId, title, handle, subscribers, thumbnailUrl, fetchedAt}` para confirmar; `404` si no existe; `502 youtube` con su fallo si YouTube no se pudo leer |
 | `GET /api/jobs/:id/events` | — | `text/event-stream`: `progress`, `item` (una medida o comprobación), `done`, `failed` |
 | `POST /api/journeys/:id/references` | `{measureId, add?: string, remove?: string}` | `ReferenceChannel[]` |
 

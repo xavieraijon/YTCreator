@@ -19,6 +19,23 @@ const input: MonetizationInput = {
   medianViews: 10_000,
 }
 
+describe('a channel that already exists (P21)', () => {
+  it('counts its own typical video in full: views × videos × earnings, with no share of a niche', () => {
+    const own = estimateMonetization({ ...input, medianViews: 1000, ownChannel: true }, knowledge)
+    const views = Math.round((input.longPerWeek * knowledge.weeksPerMonth * 1000) / 100) * 100
+    expect(own.monthlyViewsAssumption).toEqual({ min: views, max: views })
+    expect(own.monthlyEurRange).toEqual(monthlyEurRange({ min: views, max: views }, own.rpmEurRange))
+    expect(own.monthlyEurRange!.min).toBeLessThan(own.monthlyEurRange!.max)
+  })
+
+  it('with no long videos, or too few visits to count, there is no figure', () => {
+    for (const change of [{ medianViews: null }, { longPerWeek: 0 }, { medianViews: 1, longPerWeek: 1 }]) {
+      const own = estimateMonetization({ ...input, medianViews: 1000, ownChannel: true, ...change }, knowledge)
+      expect(own.monthlyEurRange).toBeNull()
+    }
+  })
+})
+
 describe('monetization (FR-014)', () => {
   it('is views × earnings per 1.000 / 1.000, always a range', () => {
     expect(monthlyEurRange({ min: 4000, max: 20_000 }, { min: 2, max: 5 })).toEqual({ min: 8, max: 100 })

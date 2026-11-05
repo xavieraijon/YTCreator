@@ -1,8 +1,10 @@
 import {
   type ChannelWarning,
+  type JourneyState,
   conceptsEditedOutput,
   type ConceptOutput,
   conceptWarnings,
+  positioningEditedOutput,
   estimateMonetization,
   warningOfCode,
   type WarningKnowledge,
@@ -43,7 +45,12 @@ export function createConcepts({ measures, knowledge, warningKnowledge, sourceLa
   const measureOf = (journeyId: string, label: string | undefined) =>
     measures.listByJourney(journeyId).findLast((m) => m.nicheLabel === label && m.status === 'medida') ?? null
 
-  const figuresOf = (journey: Journey, niche: NicheChosen, concept: ConceptOutput): ConceptFigures => {
+  const figuresOf = (
+    journey: Journey,
+    niche: NicheChosen,
+    concept: ConceptOutput,
+    ownMedianViews?: number | null,
+  ): ConceptFigures => {
     const { hoursPerWeek } = journey.state as { hoursPerWeek?: number }
     const warnings = conceptWarnings(concept, hoursPerWeek === undefined ? {} : { hoursPerWeek }, warningKnowledge)
     for (const code of concept.warnings ?? []) {
@@ -55,7 +62,9 @@ export function createConcepts({ measures, knowledge, warningKnowledge, sourceLa
         region: concept.audience.region,
         madeForKids: warnings.some(({ code }) => code === 'infantil'),
         longPerWeek: concept.cadence.longPerWeek,
-        medianViews: measureOf(journey.id, niche?.label)?.demandMedianViews ?? null,
+        ...(ownMedianViews === undefined
+          ? { medianViews: measureOf(journey.id, niche?.label)?.demandMedianViews ?? null }
+          : { medianViews: ownMedianViews, ownChannel: true }),
       },
       knowledge.monetization,
     )
@@ -69,9 +78,30 @@ export function createConcepts({ measures, knowledge, warningKnowledge, sourceLa
     }
   }
 
-  const conceptNow = (journey: Journey, niche: unknown, concept: ConceptOutput, regionByHand: boolean) => {
-    const now = followingJourney(journey, concept, regionByHand)
-    return { concept: now, figures: figuresOf(journey, niche as NicheChosen, now) }
+  // The hours and the way to appear of a positioning are what the creator answered, not what the AI wrote (entry 72).
+  const answered = (journey: Journey, concept: ConceptOutput): ConceptOutput => {
+    const { hoursPerWeek, onCamera } = journey.state as JourneyState
+    return {
+      ...concept,
+      cadence: { ...concept.cadence, hoursPerWeek: hoursPerWeek ?? concept.cadence.hoursPerWeek },
+      format: { ...concept.format, presence: onCamera ?? concept.format.presence },
+    }
+  }
+
+  // `ownMedianViews`, for a channel that exists: what a long video of its own gets, in place of a measure of the niche.
+  const conceptNow = (
+    journey: Journey,
+    niche: unknown,
+    concept: ConceptOutput,
+    regionByHand: boolean,
+    ownMedianViews?: number | null,
+  ) => {
+    const now = followingJourney(
+      journey,
+      ownMedianViews === undefined ? concept : answered(journey, concept),
+      regionByHand,
+    )
+    return { concept: now, figures: figuresOf(journey, niche as NicheChosen, now, ownMedianViews) }
   }
 
   const build = (
@@ -138,6 +168,24 @@ export function createConcepts({ measures, knowledge, warningKnowledge, sourceLa
           return region !== audienceRegion || (was?.regionByHand === true && was.audience?.region === region)
         },
       )
+    },
+
+    /** A positioning is one concept with its changes, and its figures: the money comes from the channel's own videos.
+     * It keeps what it was written from, to say so if that changes later. */
+    positioned(journey: Journey, payload: unknown, currentProfile: unknown, ownMedianViews: number | null) {
+      const parsed = positioningEditedOutput.parse(payload)
+      const now = conceptNow(journey, null, parsed, false, ownMedianViews)
+      const { hoursPerWeek, onCamera } = journey.state as JourneyState
+      return { ...now.concept, figures: now.figures, basedOn: { currentProfile, hoursPerWeek, onCamera } }
+    },
+
+    /** As it stands now: the answers, the audience and the channel's own videos may have changed since it was saved. An
+     * edit takes this way too: the route has already taken what it changed of the answers. */
+    positioningNow(journey: Journey, payload: unknown, stored: unknown, ownMedianViews: number | null) {
+      const parsed = positioningEditedOutput.parse(payload)
+      const now = conceptNow(journey, null, parsed, false, ownMedianViews)
+      const { basedOn } = (stored ?? {}) as { basedOn?: unknown }
+      return { ...now.concept, figures: now.figures, basedOn }
     },
 
     /** The stored figures are only what they were when written: what is shown is worked out from the journey as it is. */

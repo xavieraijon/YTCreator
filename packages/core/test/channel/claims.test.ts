@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { checkClaims, claimsFeedback, parseFigures, trimClaims } from '../../src/index.ts'
+import { checkClaims, claimsFeedback, parseFigures, parseTimesNormal, trimClaims } from '../../src/index.ts'
 
 const input = {
   measure: { medianViews: 12_345, topShare: 0.42, recentVideos: 18 },
@@ -18,6 +18,25 @@ describe('figures in free text', () => {
 
   it('ignores numbers that are not market figures', () => {
     expect(parseFigures('Recetas de 15 minutos, 3 pilares y 2 vídeos a la semana.')).toEqual([])
+  })
+})
+
+describe('times the normal of a channel', () => {
+  const reading = { videos: [{ videoId: 'abc', ratio: 3.24 }] }
+
+  it('is a figure, however small', () => {
+    expect(parseTimesNormal('Tuvo 3,2 veces lo normal en su canal.')).toEqual([3.2])
+    expect(parseTimesNormal('Tuvo 3 veces más de lo normal y 2,5 veces por encima de lo normal.')).toEqual([3, 2.5])
+    expect(parseTimesNormal('Publica 2 veces por semana.')).toEqual([])
+  })
+
+  it('has to be in the data', () => {
+    expect(checkClaims({ text: 'Tuvo 3,2 veces lo normal.' }, reading)).toEqual([])
+    expect(checkClaims({ text: 'Tuvo 50 veces lo normal.' }, reading)).toHaveLength(1)
+    // It has to be the ratio of a video, not any number that happens to match.
+    const others = { videos: [{ videoId: 'a', ratio: 0.5, views: 50, durationSeconds: 600 }] }
+    expect(checkClaims({ text: 'Tuvo 50 veces lo normal.' }, others)).toHaveLength(1)
+    expect(checkClaims({ text: 'Ganarás 600 € al mes.' }, others)).toHaveLength(1)
   })
 })
 
@@ -49,6 +68,44 @@ describe('checkClaims', () => {
   it('turns the violations into the message for the retry', () => {
     const feedback = claimsFeedback([{ path: 'summary', text: 'Tienen 80.000 visitas.', reason: 'cifra_sin_respaldo' }])
     expect(feedback).toContain('Tienen 80.000 visitas.')
+  })
+})
+
+describe('«X veces lo normal» (decisions.md, entry 58)', () => {
+  const videos = { videos: [{ videoId: 'a', ratio: 3.2 }] }
+
+  it.each([
+    'Tuvo 50 veces lo normal.',
+    'Tuvo 50 veces tu media.',
+    'Tuvo 50 veces lo habitual.',
+    'Tuvo 50 veces más que la media.',
+    'Tuvo el triple de lo normal.',
+    'Tuvo el doble de su media.',
+    'Tuvo cinco veces lo normal.',
+    'Tuvo 1.000 veces lo normal.',
+  ])('«%s», with nothing behind it, is flagged and taken away', (text) => {
+    expect(checkClaims({ text }, videos)).toHaveLength(1)
+    const { output, trimmed } = trimClaims({ text: `Va bien. ${text}` }, videos)
+    expect(trimmed).toBe(true)
+    expect(output).toEqual({ text: 'Va bien.' })
+  })
+
+  it('the ratio of a video stays, in figures or close to it in words', () => {
+    expect(checkClaims({ text: 'Tuvo 3,2 veces lo normal.' }, videos)).toEqual([])
+    expect(checkClaims({ text: 'Tuvo el triple de lo normal.' }, { videos: [{ videoId: 'a', ratio: 3 }] })).toEqual([])
+    expect(checkClaims({ text: 'Tuvo tres veces lo normal.' }, { videos: [{ videoId: 'a', ratio: 3 }] })).toEqual([])
+    // A ratio of 1 does not back a thousand.
+    expect(checkClaims({ text: 'Tuvo 1.000 veces lo normal.' }, { videos: [{ videoId: 'a', ratio: 1 }] })).toHaveLength(
+      1,
+    )
+  })
+
+  it('how often something is done is not a figure of the reading', () => {
+    expect(checkClaims({ text: 'Publica 2 veces por semana.' }, videos)).toEqual([])
+    expect(checkClaims({ text: 'Es el doble de trabajo.' }, videos)).toEqual([])
+    for (const text of ['Publica 2 veces normalmente.', 'Graba 2 veces media hora.', 'Es el doble de media hora.']) {
+      expect(checkClaims({ text }, videos)).toEqual([])
+    }
   })
 })
 

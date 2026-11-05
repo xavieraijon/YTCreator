@@ -1,5 +1,199 @@
 # Validación: 003 canal y nicho
 
+## US4: Puerta A de la fase 6, T101 a T110b (2026-11-05): PASADA
+
+**Resultado: pasada, en 3 vueltas.** Controles sin fallos en su última ejecución, sin hallazgos graves abiertos y sin
+pendientes de riesgo alto que bloqueen la fase. Lo corregido tras la tercera vuelta no lo ha visto ningún revisor
+(apartado 3), y nada se ha comprobado con YouTube real ni con IA real.
+
+### 1. Resumen
+
+Un canal que ya existe va del enlace al mismo perfil que uno nuevo: Enlace → Confirmar → Lectura → Ritmo → Posicionamiento.
+Las decisiones de riesgo alto las tomó el creador (P20 a P26 y las entradas 88 a 90). Sigue probado solo con proveedores
+falsos: T125b tiene la lista de lo que falta comprobar de verdad, y SC-005 está sin medir.
+
+### 2. Requisitos
+
+| Requisito | Estado | Evidencia | Fecha |
+|---|---|---|---|
+| FR-012b: preguntar horas y forma de aparecer antes del enfoque | Cumplido, con la excepción de la entrada 89 | `positioning.test.ts` («the answers of the creator», «the answers change…»), `channel-existing.spec.ts` | 2026-11-05 |
+| FR-014b: el público mueve los euros | Cumplido | `positioning.test.ts` («the answers change…») | 2026-11-05 |
+| FR-019: URL de canal, @ o URL de vídeo, y confirmar | **Parcial:** las URL `/c/` y `/user/` no se reconocen (entrada 88, decidido por el creador) | `existing.test.ts`, `handle.test.ts`, `channel-existing.spec.ts` | 2026-11-05 |
+| FR-020: hasta 200 vídeos recientes, cifras como dato y con fecha | **Parcial:** sin fechas, los dos formatos se reparten el sitio (entrada 87, decidido por el creador) | `channel-reading.test.ts`, `ytdlp.contract.test.ts` | 2026-11-05 |
+| FR-020b: formatos aparte, mejores y peores por veces lo normal, 30 días | Cumplido | `channel-reading.test.ts` | 2026-11-05 |
+| FR-021: perfil actual y posicionamiento, citando vídeos | Cumplido; la entrada 78 lo amplía a todo cambio propuesto | `positioning.test.ts`, `claims.test.ts`, `existing.test.tsx` | 2026-11-05 |
+| FR-021b: mismo perfil que un canal nuevo, con su contexto | Cumplido; el contexto pierde las citas (entrada 83), que siguen en la lectura | `positioning.test.ts`, `channel-existing.spec.ts` | 2026-11-05 |
+| FR-022: menos de 5 vídeos, recorrido nuevo con nombre y @ | Cumplido, también con ñ (entrada 84) | `existing.test.ts`, `channel-reading.test.ts`, `channel-existing.spec.ts` | 2026-11-05 |
+| FR-008: fuente y fecha en cada cifra | Cumplido: la visita típica lleva sello de YouTube y las visitas al mes son estimación | `existing.test.tsx` | 2026-11-05 |
+| SC-002: ninguna cifra solo de la IA | Cumplido en las formas que reconoce el validador; otras no se detectan (entrada 77) | `claims.test.ts` | 2026-11-05 |
+| SC-005: resumen en menos de 1 minuto | **Sin comprobar:** necesita YouTube real (T125b) | No ejecutado | — |
+
+Los cinco campos de la historia en `spec.md` están cubiertos, y sus «Huecos abiertos» se han actualizado.
+
+### 3. Cómo se comprobó
+
+Con Node 24, cada comando por separado y leyendo su propio código de salida. Última ejecución:
+
+| Comando | Resultado |
+|---|---|
+| `pnpm lint` | Código 0 |
+| `pnpm typecheck` | Código 0 |
+| `pnpm test`, con `node_modules/.vitest-cache` borrada | Código 0: 1251 correctas, 2 omitidas, 111 ficheros |
+| `pnpm --filter @ytcreator/web test:e2e` | Código 0: 29 correctas |
+| `pnpm --filter @ytcreator/catalog test:e2e` | Código 0: 97 correctas, 2 omitidas |
+| `pnpm test:installer` | Código 0: 29 correctas |
+
+**Antes de quedar en verde fallaron:**
+
+- **Catálogo, axe en Chromium:** agotó sus 2 minutos en dos ejecuciones con la máquina muy cargada por otras sesiones
+  (carga de 28 a 80). Solo, pasó en 1,5 minutos.
+- **Catálogo, `theme.spec.ts` «10 cargas sin destello» en WebKit:** falló una vez y pasó al repetirlo. Lee el fondo en
+  `DOMContentLoaded` y recibió `rgba(0, 0, 0, 0)`. Esta rama no toca el catálogo, `packages/ui` ni `packages/tokens`, pero
+  no se ha averiguado más: es una prueba intermitente con carga, no un fallo descartado de otra forma.
+- **Web, `channel-existing.spec.ts`:** falló de verdad tras separar la visita típica de la estimación, porque el
+  localizador pasó a encontrar dos textos. Se corrigió la prueba, que ahora comprueba los dos.
+
+**Lo que ningún revisor ha visto:** las correcciones de la tercera vuelta, porque es el máximo de la Puerta A. Son el
+apartado «Vuelta 3» de abajo y solo las respaldan las pruebas. `test:installer` se ejecutó antes de los últimos cambios,
+que solo tocaron pruebas.
+
+### 4. Controles obligatorios
+
+**Pasados**
+
+- `lint`, `typecheck`, `test`, `test:e2e` y `test:installer` (apartado 3).
+- Glosario: `apps/web/test/glossary.test.ts` y los de catálogo y `packages/ui`, dentro de `pnpm test`.
+- Fuga de secretos: `apps/web/e2e/secrets-leak.spec.ts`, dentro del e2e de la web.
+- Axe en claro y oscuro a 1280 y 375 px y al 200 %, con `prefers-reduced-motion`, en cada pantalla de US4
+  (`channel-existing.spec.ts`, con `audit.ts`). T123.
+- Teclado: «an existing channel from its link to the profile with the keyboard alone» (`a11y.spec.ts`).
+- Fallos de IA: `sin_sesion`, `cupo_agotado`, `tiempo_agotado`, `contenido_filtrado` y `no_disponible`, en la lectura y en
+  el posicionamiento (`positioning.test.ts`). Es la respuesta del servidor; en pantalla se apoya en el componente común.
+- «Cómo se demuestra»: T101 a T104 y el recorrido del «Independent Test» con el canal falso de 30 vídeos
+  (`channel-existing.spec.ts`).
+
+**Fallidos en la última ejecución:** ninguno.
+
+**No ejecutados**
+
+- YouTube real e IA real: necesitan la aprobación del creador. La lista está en T125b.
+- La auditoría de novato: es la puerta final de la feature, no de esta fase.
+
+### 5. Hallazgos de revisión
+
+Cuatro revisores en cada vuelta, con contexto limpio. Cada hallazgo se contrastó con el código.
+
+**Vuelta 1, corregidos**
+
+- Grave: con yt-dlp, un canal sin vídeos largos no pasaba de la búsqueda (entrada 68).
+- El perfil actual se aprobaba sin que nadie lo pidiera (entrada 62).
+- El validador daba por buena cualquier cifra de «veces lo normal» (entrada 58).
+- También: vídeos sin fecha, reparto de Shorts, doble lectura del mismo canal, respuesta tardía de la IA, región, @ con otras
+  letras y fecha de la lectura.
+
+**Vuelta 2, corregidos**
+
+- Grave: una cifra inventada de «X veces lo normal» llegaba a la pantalla, porque se avisaba del recorte sin quitarla
+  (entrada 77).
+- Se aprobaban unos euros y una región y se guardaban otros (entrada 75).
+- «Volver a leer» daba lo mismo durante una hora (entrada 76).
+- Un cambio podía afirmar qué funciona sin citar vídeos (entrada 78).
+- El servidor no exigía el perfil aprobado ni las respuestas (entrada 79).
+- Menores: ritmo inflado con pocos días, imagen fuera de la política, `keptName` sin límites, canal sin título, 404 en
+  `/videos`, contrato contradictorio, código sin uso.
+
+**Vuelta 3, sin graves; corregidos**
+
+- Un canal sin título acababa en un recorrido sin salida: ahora toma su @ como nombre y un recorrido existente no vuelve a
+  elegir nombre (entrada 81).
+- Un enfoque guardado que ya no valida tumbaba toda la vista (entrada 92).
+- El sello de YouTube estaba sobre una estimación: ahora está sobre la visita típica (entrada 82).
+- El prompt no decía que todo cambio cita un vídeo (entrada 78).
+- «Ir a Ajustes» quitaba el reintento y lleva a una pantalla aún sin YouTube: ahora salen los dos (entrada 91).
+- El validador marcaba «normalmente» o «media hora» y leía «1.000 veces» como 1; ahora reconoce números en letra hasta diez.
+- Contratos y T125b al día.
+
+**Descartados, con su justificación**
+
+- La entrada 70 como riesgo alto: tirar una respuesta ya pagada no añade gasto, solo evita mezclar dos canales, y el gasto
+  consta. Se queda en medio.
+- `keptName` no escribible por `POST /step`: basta con limitarlo, porque solo se enseña.
+- Una imagen con puerto explícito pasa `safeThumbnail` y la política la bloquea: se vería rota, sin riesgo.
+
+**Elevados al creador:** las entradas 56, 57, 60, 64, 69, 75 y «Volver a la anterior», con riesgo mal clasificado. Ver el
+apartado 7.
+
+**Abiertos**
+
+- Menor: una edición desde una pestaña vieja puede deshacer una respuesta, porque `PATCH /proposals/:id` no pide `revision`.
+  Es el riesgo que el creador ya aceptó para la región (entradas 32 y 41), ampliado a la forma de aparecer (75).
+- Menor: el texto del perfil actual se escribe en español en el servidor (entrada 83).
+- Menor: el validador no reconoce todas las formas de decir una cifra, y una de visitas o euros puede coincidir por
+  casualidad con un número de la lectura (diseño R8).
+- Menor: «Volver a leer» no salta los 10 minutos de pausa del lector de fechas (entrada 76); el texto dice «dentro de un rato».
+- Menor, de antes: la estimación no cuenta `previous` ni las indicaciones (relacionado con P17).
+- Sin comprobar con YouTube real: los de T125b.
+
+### 6. Desviaciones respecto a la spec
+
+**De menos**
+
+- FR-019: sin las URL `/c/` y `/user/` (entrada 88).
+- FR-020: «los 200 más recientes» solo donde hay fechas (entrada 87).
+
+**De más**
+
+- Paso Ritmo en el recorrido existente, ya en la spec (P20).
+- `POST /journeys/:id/as-new` (entrada 60).
+- «Volver a leer» (entrada 71).
+- Un cambio propuesto siempre cita un vídeo, más de lo que pide FR-021 (entrada 78).
+- FR-012b admite un enfoque escrito para otras respuestas, con aviso (entrada 89).
+
+### 7. Decisiones
+
+**Del creador, riesgo alto, todas decididas:**
+
+- 72 a 74: preguntas de ritmo, euros de un canal existente y canal con pocos vídeos.
+- 84 a 87: @ con ñ, paso del nombre, imagen del canal y cifras de la lectura.
+- 88 a 90: URL antiguas, aprobar con aviso y mantener «Volver a la anterior».
+
+**Del agente, riesgo medio, a revisar:** 54, 55, 58, 59, 62, 63, 67, 68, 70, 71, 75 a 83, 91 y 92. Las que más se notan:
+
+- 76 y 91: qué ofrecen «Volver a leer» e «Ir a Ajustes».
+- 78: la IA no puede proponer un cambio sin citar vídeos.
+- 80: el ritmo se calcula sobre una semana como mínimo.
+- 82: los textos nuevos.
+
+**Excepción a destacar (entradas 56 y 86):** la política de seguridad se abre a `*.ggpht.com` y `*.googleusercontent.com`, y
+el navegador pide la imagen a Google. El creador lo aprobó.
+
+**Pendientes del creador:** siguen abiertos P1 a P9, P17 y P19, como pedía el encargo. Ninguno pausa esta fase, pero US4
+hereda P1, P3 (entrada 90), P6, P7 (aviso de ritmo) y P17.
+
+### 8. Impacto en la constitución
+
+Sin cambios de principios ni de versión.
+
+- **I (novato):** todo fallo ofrece reintentar, y los textos pasan el glosario.
+- **II (control):** cada propuesta se aprueba a propósito y lo que se ve es lo que se guarda.
+- **III (gasto):** el servidor no pide ni estima un enfoque sin perfil aprobado y respuestas. P17 sigue abierto.
+- **V (cifras):** las cifras salen de la lectura y el dominio, con el validador como red.
+- **VI (accesibilidad):** axe, teclado y movimiento reducido.
+- **VIII (alcance):** sin subidas, sin dependencias nuevas y sin tocar el design system.
+- **XI (autonomía):** este informe.
+
+### 9. Cómo revertir y qué queda
+
+**Revertir:** `git revert` del commit de esta fase. No hay migración nueva; `0002_channel.sql` cambia en su propio fichero
+porque aún no está publicado. Una base de desarrollo anterior conserva la restricción antigua de la @: con una @ con ñ, leer
+el canal daría un error hasta crearla de nuevo.
+
+**Queda**
+
+- T125b con aprobación del creador, con la lista ampliada de lo de US4.
+- US5, con Ajustes de YouTube (T120).
+- Las pruebas intermitentes del catálogo con carga podrían endurecerse aparte.
+
 ## Puerta A de las correcciones, segundo intento, T129 a T134e (2026-11-05): PASADA
 
 **Resultado: pasada, con 4 vueltas en vez de 3.** Tras la tercera quedó bloqueada por P18, y el creador aprobó esa decisión

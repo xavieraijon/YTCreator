@@ -12,6 +12,42 @@ const FIGURE =
 // Below this, a count of views, subscribers or videos is a plan ("2 vídeos a la semana"), not a market figure.
 const MIN_COUNT = 100
 const TOLERANCE = 0.05
+// «3,2 veces lo normal» is a figure of the reading however small: «2 veces por semana» is not. It can only come from
+// the ratio of a video: any other number that happens to match proves nothing.
+const WHAT_IS_NORMAL = String.raw`(?:(?:lo\s+)?(?:normal|habitual)|(?:la|tu|su)\s+media|(?:el|tu|su)\s+promedio)(?![\p{L}])`
+const NUMBER_WORDS: Record<string, number> = {
+  dos: 2,
+  tres: 3,
+  cuatro: 4,
+  cinco: 5,
+  seis: 6,
+  siete: 7,
+  ocho: 8,
+  nueve: 9,
+  diez: 10,
+  doble: 2,
+  triple: 3,
+  cuádruple: 4,
+}
+const TIMES_NORMAL = new RegExp(
+  String.raw`(?<![\p{L}\d.,])(\d{1,3}(?:\.\d{3})+|\d+(?:[.,]\d+)?|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez)\s*veces\s+` +
+    String.raw`(?:(?:más|menos|por\s+encima|por\s+debajo)\s+(?:de\s+|del\s+|que\s+)?)?` +
+    WHAT_IS_NORMAL,
+  'giu',
+)
+const TIMES_IN_WORDS = new RegExp(
+  String.raw`(?<![\p{L}])(doble|triple|cuádruple)\s+(?:de\s+|del\s+|que\s+)?` + WHAT_IS_NORMAL,
+  'giu',
+)
+const RATIO_MARGIN = 0.05
+// How long a video lasts is not a market figure: no amount or count can rest on it.
+const NOT_A_FIGURE = new Set(['durationSeconds', 'averageDurationSeconds'])
+
+interface Facts {
+  numbers: number[]
+  ratios: number[]
+  videoIds: Set<string>
+}
 
 function toNumber(raw: string): number {
   return Number(raw.replaceAll('.', '').replace(',', '.'))
@@ -31,14 +67,29 @@ export function parseFigures(text: string): number[] {
   return figures
 }
 
-function collect(value: unknown, numbers: number[], videoIds: Set<string>): void {
-  if (typeof value === 'number') numbers.push(value)
-  else if (typeof value === 'string') numbers.push(...parseFigures(value))
-  else if (Array.isArray(value)) for (const item of value) collect(item, numbers, videoIds)
+const timesValue = (raw: string): number => {
+  const word = NUMBER_WORDS[raw.toLowerCase()]
+  if (word !== undefined) return word
+  return /^\d{1,3}(?:\.\d{3})+$/.test(raw) ? toNumber(raw) : Number(raw.replace(',', '.'))
+}
+
+export function parseTimesNormal(text: string): number[] {
+  return [...text.matchAll(TIMES_NORMAL), ...text.matchAll(TIMES_IN_WORDS)].map(([, raw = '']) => timesValue(raw))
+}
+
+function collect(value: unknown, known: Facts): void {
+  if (typeof value === 'number') known.numbers.push(value)
+  else if (typeof value === 'string') known.numbers.push(...parseFigures(value))
+  else if (Array.isArray(value)) for (const item of value) collect(item, known)
   else if (value && typeof value === 'object') {
     for (const [key, item] of Object.entries(value)) {
-      if (key === 'videoId' && typeof item === 'string') videoIds.add(item)
-      collect(item, numbers, videoIds)
+      if (key === 'videoId' && typeof item === 'string') known.videoIds.add(item)
+      if (NOT_A_FIGURE.has(key)) continue
+      if (/ratio$/i.test(key)) {
+        if (typeof item === 'number') known.ratios.push(item)
+        continue
+      }
+      collect(item, known)
     }
   }
 }
@@ -49,20 +100,21 @@ function backed(figure: number, known: number[]): boolean {
   )
 }
 
+const isRatio = (figure: number, ratios: number[]) =>
+  ratios.some((ratio) => Math.abs(figure - ratio) <= Math.max(RATIO_MARGIN, ratio * TOLERANCE))
+
+const unbacked = (sentence: string, known: Facts) =>
+  parseFigures(sentence).some((f) => !backed(f, known.numbers)) ||
+  parseTimesNormal(sentence).some((f) => !isRatio(f, known.ratios))
+
 function sentences(text: string): string[] {
   return text.split(/(?<=[.!?])\s+/).filter((s) => s.length > 0)
 }
 
-interface Facts {
-  numbers: number[]
-  videoIds: Set<string>
-}
-
 function facts(input: Record<string, unknown>): Facts {
-  const numbers: number[] = []
-  const videoIds = new Set<string>()
-  collect(input, numbers, videoIds)
-  return { numbers, videoIds }
+  const known: Facts = { numbers: [], ratios: [], videoIds: new Set() }
+  collect(input, known)
+  return known
 }
 
 function citesUnknownVideo(value: unknown, known: Set<string>): value is { text: string; videoIds: string[] } {
@@ -74,7 +126,7 @@ function citesUnknownVideo(value: unknown, known: Set<string>): value is { text:
 function walk(value: unknown, path: string, known: Facts, out: ClaimViolation[]): void {
   if (typeof value === 'string') {
     for (const sentence of sentences(value)) {
-      if (parseFigures(sentence).some((f) => !backed(f, known.numbers))) {
+      if (unbacked(sentence, known)) {
         out.push({ path, text: sentence, reason: 'cifra_sin_respaldo' })
       }
     }
@@ -82,7 +134,8 @@ function walk(value: unknown, path: string, known: Facts, out: ClaimViolation[])
     value.forEach((item, i) => walk(item, path ? `${path}.${i}` : String(i), known, out))
   } else if (value && typeof value === 'object') {
     if (citesUnknownVideo(value, known.videoIds)) {
-      out.push({ path, text: String((value as { text?: unknown }).text ?? ''), reason: 'video_inexistente' })
+      const { text, what } = value as { text?: unknown; what?: unknown }
+      out.push({ path, text: String(text ?? what ?? ''), reason: 'video_inexistente' })
       return
     }
     for (const [key, item] of Object.entries(value)) {
@@ -120,7 +173,7 @@ const MUST_KEEP_ONE = new Set(['assumptions'])
 function trim(value: unknown, known: Facts): unknown {
   if (typeof value === 'string') {
     return sentences(value)
-      .filter((s) => parseFigures(s).every((f) => backed(f, known.numbers)))
+      .filter((s) => !unbacked(s, known))
       .join(' ')
   }
   if (Array.isArray(value)) {

@@ -185,7 +185,9 @@ fecha; perfil actual que cita vídeos, con las opiniones marcadas; al aprobar, u
 **Cómo se demuestra**: T101 a T104 con los proveedores falsos, axe a 375 y 1280 px en claro y oscuro (T123), y el
 recorrido de «Independent Test». Evidencia en la sección «US4» de `checklists/validation.md`.
 
-**Huecos abiertos**: Ninguno conocido a 2026-11-04.
+**Huecos abiertos**: heredados de `decisions.md`: P1, P3, P6, P7 y P17. Lo que queda para T125b: entradas 56, 57, 68, 81, 84
+y 88 (las URL `/c/` y `/user/` no se reconocen: el mensaje dice qué pegar). Ajustes aún no tiene nada de YouTube (T120, US5):
+«Ir a Ajustes» se ofrece junto a reintentar. El texto del perfil actual se guarda en español desde el servidor (entrada 83).
 
 ---
 
@@ -289,7 +291,7 @@ en la sección «US5» de `checklists/validation.md`.
 
 **Concepto**
 
-- **FR-012b**: Antes de proponer conceptos, el sistema DEBE preguntar cuántas horas por semana puede dedicar el creador
+- **FR-012b**: Antes de proponer conceptos o el posicionamiento de un canal que ya existe, el sistema DEBE preguntar cuántas horas por semana puede dedicar el creador
   y si quiere salir en cámara, poner solo la voz o ninguna de las dos; el ritmo y el formato propuestos DEBEN encajar
   con esas respuestas. Excepción aceptada por el creador (`decisions.md`, entrada 31): si elige un concepto escrito con
   otras respuestas, tras el aviso, el perfil puede guardar el ritmo y el formato de ese concepto.

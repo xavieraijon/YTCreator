@@ -32,6 +32,8 @@ export interface MonetizationInput {
   longPerWeek: number
   /** What a typical video of the niche gets; null when the niche has no measure. */
   medianViews: number | null
+  /** The figure is of the channel's own videos, already read: all of it counts, not a share as for someone starting out. */
+  ownChannel?: boolean
 }
 
 // What the channel would earn a month: views × earnings per 1.000 views (rpm.json), rounded to whole euros.
@@ -50,12 +52,15 @@ export function estimateMonetization(input: MonetizationInput, knowledge: Moneti
   const rpmEurRange = rates[input.region]
   const videos = input.longPerWeek * knowledge.weeksPerMonth
   const known = input.medianViews !== null && input.medianViews > 0 && videos > 0
-  const monthlyViewsAssumption = known
+  const share = input.ownChannel ? { min: 1, max: 1 } : knowledge.viewsShareOfMedian
+  const views = known
     ? {
-        min: toHundreds(videos * input.medianViews! * knowledge.viewsShareOfMedian.min),
-        max: toHundreds(videos * input.medianViews! * knowledge.viewsShareOfMedian.max),
+        min: toHundreds(videos * input.medianViews! * share.min),
+        max: toHundreds(videos * input.medianViews! * share.max),
       }
     : null
+  // Fewer visits than rounding keeps say nothing of a channel's earnings.
+  const monthlyViewsAssumption = views && (views.max > 0 || !input.ownChannel) ? views : null
   return {
     rpmEurRange,
     monthlyViewsAssumption,

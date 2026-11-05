@@ -33,7 +33,14 @@ describe('youtube schemas', () => {
     expect(readingBodySchema.safeParse({ revision: 1, input: '@canal' }).success).toBe(true)
     expect(readingBodySchema.safeParse({ revision: 1, input: '' }).success).toBe(false)
     expect(resolveBodySchema.safeParse({ input: '@canal' }).success).toBe(true)
-    const resolved = { channelId: 'UC1', title: 'Canal', handle: null, subscribers: null, thumbnailUrl: null }
+    const resolved = {
+      channelId: 'UC1',
+      title: 'Canal',
+      handle: null,
+      subscribers: null,
+      thumbnailUrl: null,
+      fetchedAt: '2026-11-01T10:00:00.000Z',
+    }
     expect(resolvedChannelSchema.parse(resolved)).toEqual(resolved)
   })
 

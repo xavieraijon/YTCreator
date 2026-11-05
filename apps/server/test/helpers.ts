@@ -18,6 +18,7 @@ import { createMeasuresRepo } from '../src/db/repos/measures.ts'
 import { createNamesRepo } from '../src/db/repos/names.ts'
 import { createOnboardingRepo } from '../src/db/repos/onboarding.ts'
 import { createProfilesRepo } from '../src/db/repos/profiles.ts'
+import { createReadingsRepo } from '../src/db/repos/readings.ts'
 import { createProposalsRepo } from '../src/db/repos/proposals.ts'
 import { createSettingsRepo } from '../src/db/repos/settings.ts'
 import { createUsageRepo } from '../src/db/repos/usage.ts'
@@ -29,6 +30,7 @@ import { createAiRunService } from '../src/services/ai-run.ts'
 import { createClaudeRepair, type InstallerRunner } from '../src/services/claude-repair.ts'
 import { createJobsService } from '../src/services/jobs.ts'
 import { createNameCheck } from '../src/services/name-check.ts'
+import { createChannelReading } from '../src/services/channel-reading.ts'
 import { createNicheResearch } from '../src/services/niche-research.ts'
 
 // Fixed prices, so no test depends on the knowledge package.
@@ -123,6 +125,7 @@ export function makeTestApp({ fakeAi, now = () => new Date(), installer }: TestA
     profiles: createProfilesRepo(db, now),
     measures: createMeasuresRepo(db, now),
     names: createNamesRepo(db, now),
+    readings: createReadingsRepo(db, now),
     jobs: jobsRepo,
     aiRun,
     promptFor,
@@ -166,6 +169,18 @@ export function makeTestApp({ fakeAi, now = () => new Date(), installer }: TestA
         logger,
         now,
       }),
+      reading: createChannelReading({
+        youtube: fakeYouTube,
+        channels,
+        journeys: channel.journeys,
+        proposals: channel.proposals,
+        readings: channel.readings,
+        jobs,
+        db,
+        thresholds: market.thresholds.data.ownChannel,
+        logger,
+        now,
+      }),
     },
   })
 
@@ -178,6 +193,7 @@ export function makeTestApp({ fakeAi, now = () => new Date(), installer }: TestA
 
   return {
     app,
+    ai,
     db,
     dir,
     version,

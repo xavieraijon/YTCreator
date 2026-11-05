@@ -20,6 +20,7 @@ import { createMeasuresRepo } from './db/repos/measures.ts'
 import { createNamesRepo } from './db/repos/names.ts'
 import { createOnboardingRepo } from './db/repos/onboarding.ts'
 import { createProfilesRepo } from './db/repos/profiles.ts'
+import { createReadingsRepo } from './db/repos/readings.ts'
 import { createProposalsRepo } from './db/repos/proposals.ts'
 import { createSettingsRepo } from './db/repos/settings.ts'
 import { createUsageRepo } from './db/repos/usage.ts'
@@ -35,6 +36,7 @@ import { createAiRunService } from './services/ai-run.ts'
 import { createClaudeRepair, officialInstaller } from './services/claude-repair.ts'
 import { createJobsService } from './services/jobs.ts'
 import { createNameCheck } from './services/name-check.ts'
+import { createChannelReading } from './services/channel-reading.ts'
 import { createNicheResearch } from './services/niche-research.ts'
 import { createYouTubeService, youtubeChoice } from './services/youtube.ts'
 import { createVersionCheck } from './updates/version-check.ts'
@@ -211,6 +213,7 @@ export async function startServer({
     profiles: createProfilesRepo(db, now),
     measures: createMeasuresRepo(db, now),
     names: createNamesRepo(db, now),
+    readings: createReadingsRepo(db, now),
     jobs: jobsRepo,
     promptFor: channelPrompt,
     warningKnowledge: warningKnowledge(market),
@@ -289,6 +292,18 @@ export async function startServer({
         names: channel.names,
         jobs,
         thresholds: market.thresholds.data.names,
+        logger,
+        now,
+      }),
+      reading: createChannelReading({
+        youtube,
+        channels: channel.channels,
+        journeys: channel.journeys,
+        proposals: channel.proposals,
+        readings: channel.readings,
+        jobs,
+        db,
+        thresholds: market.thresholds.data.ownChannel,
         logger,
         now,
       }),

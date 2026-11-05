@@ -53,7 +53,7 @@ Un canal del creador. FR-028: el modelo admite N; esta feature solo deja crear u
 | `id` | `TEXT` PK | UUID v7 |
 | `origin` | `'nuevo' \| 'existente'` | Recorrido con que se creó |
 | `display_name` | `TEXT \| NULL` | 1–100 caracteres; `NULL` hasta elegir nombre |
-| `handle` | `TEXT \| NULL` | Sin `@`, 3–30 caracteres `[A-Za-z0-9._-]` |
+| `handle` | `TEXT \| NULL` | Sin `@`, 3–30 caracteres. `[A-Za-z0-9._-]` en lo que propone la IA o escribe el creador; la de un canal que ya existe admite letras de cualquier idioma (`decisions.md`, entrada 84) |
 | `name_status` | `'provisional' \| 'elegido'` | FR-018b; `provisional` mientras no se elija |
 | `youtube_channel_id` | `TEXT \| NULL` | `UC…` (24 caracteres); solo en canales existentes |
 | `language` | `TEXT` | `'es'` en la v1 |
@@ -91,7 +91,7 @@ Un recorrido guiado. Un canal tiene como mucho un recorrido `activo` a la vez.
 | `audienceRegion` | `'espana' \| 'latam' \| 'mixto'` | `ritmo` | FR-014b |
 | `channelInput` | `string` | `enlace` | URL de canal, `@` o URL de vídeo (FR-019) |
 | `resolvedChannelId` | `string` | `confirmar` | |
-| `lowInfo` | `boolean` | `lectura` | `true` si hay menos de 5 vídeos (FR-022) |
+| `keptName` | `{displayName, handle \| null}` | `intereses` | Nombre y @ que conserva un canal con pocos vídeos (FR-022) |
 
 ### Transiciones
 
@@ -108,9 +108,10 @@ hecho ──(elegir el nombre aplazado, FR-018b)──→ nombres   [el recorrid
 Canal existente:
 
 ```text
-enlace → confirmar → lectura → posicionamiento → hecho
+enlace → confirmar → lectura → ritmo → posicionamiento → hecho
                         └──(menos de 5 vídeos, FR-022)──→ recorrido nuevo en «intereses»,
                                                           conservando display_name y handle
+                                                          (`state.keptName`; el viejo queda `abandonado`)
 ```
 
 Reglas:
@@ -192,7 +193,7 @@ La misma forma para canales nuevos y existentes (FR-021b).
 | Campo | Tipo | Regla |
 |---|---|---|
 | `rpmEurRange` | `{min, max}` | De `rpm.json` para la categoría y región |
-| `monthlyViewsAssumption` | `{min, max} \| null` | Supuesto visible, no medida: vídeos largos al mes × mediana del nicho × `monetization.viewsShareOfMedian`. `null` sin medida o sin vídeos largos |
+| `monthlyViewsAssumption` | `{min, max} \| null` | Supuesto visible, no medida: vídeos largos al mes × mediana del nicho × `monetization.viewsShareOfMedian`. `null` sin medida o sin vídeos largos. En un canal existente: vídeos largos al mes × mediana de sus vídeos largos, sin reparto (decisions.md, entrada 73) |
 | `monthlyEurRange` | `{min, max} \| null` | `views × rpm / 1000`, redondeado. `null` si no hay supuesto: sin datos no hay cifra |
 | `yppRequirements` | `{subscribers, watchHours, shortsViews}` | De `ypp.json` |
 | `confidence` | `alta \| media \| baja` | De `rpm.json`; un perfil guardado sin este campo se lee como `baja` |
@@ -295,7 +296,7 @@ Lo que se leyó de un canal existente (FR-020).
 | `subscribers` | `INTEGER \| NULL` | |
 | `video_count` | `INTEGER` | Total público |
 | `videos` | `TEXT` (JSON) | Hasta 200 `{id, title, views, durationSeconds, publishedAt, isShort, ratio \| null}`; `ratio` = veces lo normal |
-| `summary` | `TEXT` (JSON) | Cifras calculadas, separadas por formato: mediana de visitas, ritmo, reparto largo/Shorts, mejores y peores según `ratio` |
+| `summary` | `TEXT` (JSON) | Cifras calculadas: `videosRead`, `lowInfo`, `partial`, `unknownFormat` y, por formato (`long`, `short`), `count`, `medianViews`, `averageDurationSeconds`, `videosPerWeek`, `datedVideos`, `best[]` y `worst[]` según `ratio` |
 | `fetched_at` | `TEXT` | |
 
 ## `background_job`

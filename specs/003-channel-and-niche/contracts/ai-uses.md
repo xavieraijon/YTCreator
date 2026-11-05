@@ -35,7 +35,7 @@ modelo.
 | `conceptos` | Sonnet 5.5 | 120 s | nicho, medida, referencias, `hoursPerWeek`, `onCamera`, `audienceRegion`, fragmentos de conocimiento (`ypp`, `rpm`, `made-for-kids`, `inauthentic`, `shorts`) | 2–3 `Concept` (forma de `ChannelProfile.concept`) |
 | `nombres` | Haiku 5.5 | 60 s | concepto elegido, nombres ya descartados | 6–8 `{displayName, handle, why}` |
 | `lectura_canal` | Sonnet 5.5 | 120 s | lectura del canal (`summary` + vídeos con sus veces lo normal) | `{niche, pillars, audience, works[], doesNotWork[]}`; cada punto con `videoIds[]` |
-| `posicionamiento` | Sonnet 5.5 | 120 s | perfil actual, lectura, conocimiento | `Concept` + `changes[]` `{what, why, videoIds[]}` |
+| `posicionamiento` | Sonnet 5.5 | 120 s | perfil actual, lectura, respuestas de ritmo, conocimiento | `Concept` + `changes[]` `{what, why, videoIds[]}`, con al menos un vídeo en cada cambio. Al editar, los supuestos se pueden borrar; los euros al mes salen de sus propios vídeos (decisions.md, entrada 73) |
 
 Reglas de forma (además del esquema):
 

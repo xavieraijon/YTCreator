@@ -81,6 +81,7 @@ const ChannelsBody = z.object({
             description: z.string().default(''),
             customUrl: z.string().optional(),
             country: z.string().optional(),
+            thumbnails: z.object({ default: z.object({ url: z.string() }).optional() }).optional(),
           })
           .optional(),
         statistics: z
@@ -245,6 +246,7 @@ export function createDataApiYouTube(options: DataApiYouTubeOptions): YouTubeDat
         subscribers: stats && !stats.hiddenSubscriberCount ? stats.subscriberCount : null,
         videoCount: stats?.videoCount ?? null,
         country: item.snippet.country ?? null,
+        thumbnailUrl: item.snippet.thumbnails?.default?.url ?? null,
       }
       return sourced(info)
     },

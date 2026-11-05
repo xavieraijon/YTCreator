@@ -3,6 +3,7 @@ import {
   CHANNEL_OUTPUTS,
   conceptsEditedOutput,
   type ChannelUse,
+  positioningEditedOutput,
   type ChannelWarning,
   type JourneyState,
   namesEditedOutput,
@@ -15,6 +16,7 @@ import {
 } from '@ytcreator/core'
 import type { ConceptKnowledge } from '@ytcreator/knowledge'
 import {
+  asNewBodySchema,
   createChannelBodySchema,
   estimateBodySchema,
   journeyStepBodySchema,
@@ -30,9 +32,11 @@ import type { MeasuresRepo } from '../../db/repos/measures.ts'
 import type { NamesRepo } from '../../db/repos/names.ts'
 import type { ProfilesRepo } from '../../db/repos/profiles.ts'
 import type { Proposal, ProposalsRepo } from '../../db/repos/proposals.ts'
+import type { ReadingsRepo } from '../../db/repos/readings.ts'
 import { inTransaction } from '../../db/transaction.ts'
 import type { AiRunService, PromptRef } from '../../services/ai-run.ts'
 import { channelInput, previousOf } from '../../services/channel-input.ts'
+import { currentReading, readingInput } from '../../services/channel-reading.ts'
 import { createConcepts } from '../../services/concepts.ts'
 import { createProfile } from '../../services/profile.ts'
 import { ApiError } from '../errors.ts'
@@ -46,6 +50,7 @@ export interface ChannelRoutesDeps {
   profiles: ProfilesRepo
   measures: MeasuresRepo
   names: NamesRepo
+  readings: ReadingsRepo
   jobs: JobsRepo
   aiRun: AiRunService
   promptFor: (use: ChannelUse) => PromptRef
@@ -65,7 +70,7 @@ const CHOICE_LISTS: Partial<Record<ProposalKind, string>> = {
 }
 
 export function channelRoutes(deps: ChannelRoutesDeps) {
-  const { db, channels, journeys, proposals, profiles, measures, names, jobs, aiRun } = deps
+  const { db, channels, journeys, proposals, profiles, measures, names, readings, jobs, aiRun } = deps
   const routes = new Hono()
 
   const findJourney = (id: string): Journey => {
@@ -97,7 +102,7 @@ export function channelRoutes(deps: ChannelRoutesDeps) {
     channelInput: state.channelInput !== undefined,
     channelConfirmed: state.resolvedChannelId !== undefined,
     reading: isApproved(journey.id, 'perfil_actual'),
-    positioning: isApproved(journey.id, 'posicionamiento'),
+    positioning: isApproved(journey.id, 'posicionamiento') && isApproved(journey.id, 'perfil_actual'),
   })
 
   const sourceLabel = ({ sourceId }: ChannelWarning) => {
@@ -121,14 +126,35 @@ export function channelRoutes(deps: ChannelRoutesDeps) {
     names,
     profiles,
     sources: deps.conceptKnowledge.sources,
-    conceptNow: (journey, concept, regionByHand) =>
-      concepts.conceptNow(journey, nicheOf(journey), concept, regionByHand),
+    conceptNow: (journey, concept, regionByHand, ownMedianViews) =>
+      concepts.conceptNow(journey, nicheOf(journey), concept, regionByHand, ownMedianViews),
   })
+  // Nothing is asked of the AI about a channel it has nothing to read of: it would only cost money.
+  const existingInput = (use: 'lectura_canal' | 'posicionamiento', journey: Journey) => {
+    const input = readingInput(use, journey, readings, proposals, deps.conceptKnowledge.forPrompt)
+    if (!input) throw new ApiError({ code: 'validacion', fields: { use: 'no_valido' } })
+    return input
+  }
   const inputOf = (use: ChannelUse, journey: Journey) => {
+    if (use === 'lectura_canal' || use === 'posicionamiento') return existingInput(use, journey)
     const base = channelInput(use, journey, proposals, measures)
     return use === 'conceptos' ? concepts.input(journey, base) : base
   }
   const nicheOf = (journey: Journey) => channelInput('conceptos', journey, proposals, measures)['niche']
+
+  const ownMedianViews = (journey: Journey) => currentReading(journey, readings)?.summary.long.medianViews ?? null
+
+  // Changing the audience or the way to appear in the positioning changes the answer of this journey (entries 72 and 75).
+  const answersEdited = (journey: Journey, payload: unknown): Journey => {
+    const { audience, format } = positioningEditedOutput.parse(payload)
+    const { audienceRegion, onCamera } = journey.state as JourneyState
+    if (audienceRegion === audience.region && onCamera === format.presence) return journey
+    if (audienceRegion !== audience.region) channels.update(journey.channelId, { audienceRegion: audience.region })
+    const updated = journeys.update(journey.id, journey.revision, {
+      state: { ...journey.state, audienceRegion: audience.region, onCamera: format.presence },
+    })
+    return updated?.ok ? updated.journey : journey
+  }
 
   // A niche the creator wrote is checked the same as one the AI proposed.
   const warningsOf = (journeyId: string) => {
@@ -157,6 +183,19 @@ export function channelRoutes(deps: ChannelRoutesDeps) {
     }
   }
 
+  // What can no longer be read is shown as nothing, so another can be asked for (entry 39).
+  const isReadable = ({ kind, payload, editedPayload }: Proposal) =>
+    kind !== 'posicionamiento' || positioningEditedOutput.safeParse(editedPayload ?? payload).success
+
+  const withCurrentPositioning = (journey: Journey, proposal: Proposal): Proposal => {
+    const median = ownMedianViews(journey)
+    const { payload, editedPayload } = proposal
+    // Screens read what was edited if there is any: the original is only kept, and may be of an older shape.
+    return editedPayload
+      ? { ...proposal, editedPayload: concepts.positioningNow(journey, editedPayload, editedPayload, median) }
+      : { ...proposal, payload: concepts.positioningNow(journey, payload, payload, median) }
+  }
+
   routes.get('/channels/current', (c) => {
     const channel = channels.getCurrent()
     if (!channel) return c.json({ channel: null })
@@ -183,13 +222,20 @@ export function channelRoutes(deps: ChannelRoutesDeps) {
       ...journey,
       proposals: proposals
         .list(journey.id)
-        .filter((p) => p.status !== 'descartada')
-        .map((p) => (p.kind === 'conceptos' ? withCurrentFigures(journey, p) : p)),
+        .filter((p) => p.status !== 'descartada' && isReadable(p))
+        .map((p) =>
+          p.kind === 'conceptos'
+            ? withCurrentFigures(journey, p)
+            : p.kind === 'posicionamiento'
+              ? withCurrentPositioning(journey, p)
+              : p,
+        ),
       measures: measures.listByJourney(journey.id),
       nameChecks: names.listByJourney(journey.id),
       jobs: jobs.listByJourney(journey.id),
       warnings: warningsOf(journey.id),
       measureStaleDays: deps.measureStaleDays,
+      reading: currentReading(journey, readings),
     })
   })
 
@@ -220,6 +266,11 @@ export function channelRoutes(deps: ChannelRoutesDeps) {
       if (body.step === 'hecho' && journey.kind === 'nuevo') {
         profile.finish(journey, { nameLater: body.nameLater === true })
       }
+      if (body.step === 'hecho' && journey.kind === 'existente') {
+        const reading = currentReading(journey, readings)
+        if (!reading) throw new ApiError({ code: 'validacion', fields: { step: 'no_valido' } })
+        profile.finishExisting(journey, reading)
+      }
       return journeys.update(journey.id, body.revision, {
         step: body.step,
         state: next,
@@ -231,6 +282,28 @@ export function channelRoutes(deps: ChannelRoutesDeps) {
     if (!updated) throw new ApiError({ code: 'no_encontrado' })
     if (!updated.ok) throw conflict(updated.current)
     return c.json(updated.journey)
+  })
+
+  // FR-022: with too little to read, the journey of a new channel, keeping the name and the @ it has.
+  routes.post('/journeys/:id/as-new', async (c) => {
+    const journey = findJourney(c.req.param('id'))
+    const { revision } = await parseBody(c, asNewBodySchema)
+    checkRevision(journey, revision)
+    const channel = channels.get(journey.channelId)
+    const lowInfo = currentReading(journey, readings)?.summary.lowInfo === true
+    if (journey.kind !== 'existente' || journey.step !== 'lectura' || !lowInfo || !channel) {
+      throw new ApiError({ code: 'validacion', fields: { step: 'no_valido' } })
+    }
+    // With no name to keep, the new journey asks for one as it does for anyone.
+    const kept = channel.displayName ? { keptName: { displayName: channel.displayName, handle: channel.handle } } : {}
+    const created = inTransaction(db, () => {
+      const left = journeys.update(journey.id, revision, { status: 'abandonado' })
+      if (!left?.ok) throw conflict(left?.current ?? journey)
+      const next = journeys.create({ channelId: channel.id, kind: 'nuevo', step: initialStep('nuevo') })
+      const updated = journeys.update(next.id, next.revision, { state: kept })
+      return updated?.ok ? updated.journey : next
+    })
+    return c.json({ channel, journey: created }, 201)
   })
 
   routes.post('/journeys/:id/estimate', async (c) => {
@@ -262,11 +335,25 @@ export function channelRoutes(deps: ChannelRoutesDeps) {
     })
     if (!result.ok) return c.json({ failure: result.failure })
 
+    // The creator moved to another channel while the AI answered: this was about the previous one (spent, not kept).
+    const latest = journeys.get(journey.id)
+    if (
+      (latest?.state as JourneyState | undefined)?.resolvedChannelId !==
+      (journey.state as JourneyState).resolvedChannelId
+    ) {
+      throw conflict(latest ?? journey)
+    }
+
     const prompt = deps.promptFor(use)
     const fresh = {
       journeyId: journey.id,
       kind: body.kind,
-      payload: body.kind === 'conceptos' ? concepts.written(journey, niche, result.value) : result.value,
+      payload:
+        body.kind === 'conceptos'
+          ? concepts.written(journey, niche, result.value)
+          : body.kind === 'posicionamiento'
+            ? concepts.positioned(journey, result.value, base['currentProfile'], ownMedianViews(journey))
+            : result.value,
       promptId: prompt.id,
       promptVersion: prompt.version,
       instructions: body.instructions ?? null,
@@ -297,16 +384,22 @@ export function channelRoutes(deps: ChannelRoutesDeps) {
             ? namesEditedOutput
             : proposal.kind === 'conceptos'
               ? conceptsEditedOutput
-              : CHANNEL_OUTPUTS[useOf(proposal.kind)]
+              : proposal.kind === 'posicionamiento'
+                ? positioningEditedOutput
+                : CHANNEL_OUTPUTS[useOf(proposal.kind)]
       if (!schema.safeParse(body.editedPayload).success) {
         throw new ApiError({ code: 'validacion', fields: { editedPayload: 'no_valido' } })
       }
       const owner = journeys.get(proposal.journeyId)
+      const stored = proposal.editedPayload ?? proposal.payload
+      const answered = owner && proposal.kind === 'posicionamiento' ? answersEdited(owner, body.editedPayload) : owner
       proposals.edit(
         proposal.id,
         proposal.kind === 'conceptos' && owner
-          ? concepts.edited(owner, nicheOf(owner), body.editedPayload, proposal.editedPayload ?? proposal.payload)
-          : body.editedPayload,
+          ? concepts.edited(owner, nicheOf(owner), body.editedPayload, stored)
+          : proposal.kind === 'posicionamiento' && answered
+            ? concepts.positioningNow(answered, body.editedPayload, stored, ownMedianViews(answered))
+            : body.editedPayload,
       )
     }
     if (body.status === 'descartada') return c.json(proposals.discard(proposal.id))

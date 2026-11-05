@@ -13,6 +13,12 @@ export function errorText(error: unknown): string {
   return es.clientError.respuesta
 }
 
+// A failure of the YouTube reader that is settled in the settings, not by asking again.
+export function needsSettings(error: unknown): boolean {
+  if (!(error instanceof ApiClientError) || !error.body?.youtubeFailure) return false
+  return youtubeFailuresEs[error.body.youtubeFailure].action === 'ir_a_ajustes'
+}
+
 // The AI failure of a refused request (`422 ia`), if that is what it was.
 export function failureOf(error: unknown): AiFailure | null {
   return error instanceof ApiClientError ? (error.body?.failure ?? null) : null

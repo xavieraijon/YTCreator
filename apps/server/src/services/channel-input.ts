@@ -35,16 +35,17 @@ export const followingJourney = <T extends Pick<ConceptOutput, 'audience'>>(
 // What the AI reads of the proposal it is asked to redo. The money figures may be out of date and are not its business:
 // what it is given is taken as a valid source for what it writes (claims.ts).
 export function previousOf(payload: unknown): unknown {
-  const { concepts } = payload as { concepts?: Record<string, unknown>[] }
-  if (!concepts) return payload
-  return {
-    concepts: concepts.map((concept) => {
-      const written = { ...concept }
-      delete written['figures']
-      delete written['regionByHand']
-      return written
-    }),
+  const written = (concept: Record<string, unknown>) => {
+    const kept = { ...concept }
+    delete kept['figures']
+    delete kept['regionByHand']
+    delete kept['basedOn']
+    return kept
   }
+  const { concepts, promise } = payload as { concepts?: Record<string, unknown>[]; promise?: string }
+  if (concepts) return { concepts: concepts.map(written) }
+  // A positioning is one concept with its changes.
+  return promise === undefined ? payload : written(payload as Record<string, unknown>)
 }
 
 // What each use receives inside <datos> (contracts/ai-uses.md). Everything the creator wrote goes here, never in the
@@ -91,8 +92,9 @@ export function channelInput(
       delete concept['regionByHand']
       return { concept }
     }
+    // What was read of the channel comes from its own service (channel-reading.ts).
     case 'lectura_canal':
     case 'posicionamiento':
-      return { channelId: state.resolvedChannelId }
+      return {}
   }
 }

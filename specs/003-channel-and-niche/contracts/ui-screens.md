@@ -51,13 +51,13 @@ de la pantalla Intereses, no el test de glosario. «YouTube» es una marca permi
 | Intereses | `intereses` | «Seguir» | Campo libre con ejemplos |
 | Preguntas | `preguntas` | «Seguir» | 0–3 preguntas; «Saltar» secundaria |
 | Nichos | `nichos` | «Elegir este nicho» | Tarjeta por nicho con indicadores, veredicto y razón, y los Shorts como cifra aparte; cuántos canales ocultan la cifra o no se miraron, y si las fechas son parciales; canales de referencia con «veces lo normal en su canal»; «Escribir mi propio nicho» |
-| Ritmo | `ritmo` | «Seguir» | Horas por semana, cara/voz/ninguna, región del público |
+| Ritmo | `ritmo` | «Seguir» | Horas por semana, cara/voz/ninguna, región del público. Sale en los dos recorridos |
 | Conceptos | `conceptos` | «Elegir este concepto» | Promesa, pilares, público, formato, ritmo, monetización en rangos con su fiabilidad, avisos; aviso si se escribieron con otras respuestas |
 | Nombres | `nombres` | «Quedarme con este nombre» | Semáforo y razones por nombre; «Escribir el mío»; «Decidir más tarde» |
 | Enlace | `enlace` | «Buscar mi canal» | Acepta el enlace del canal, su @ o el enlace de un vídeo |
 | Confirmar | `confirmar` | «Sí, es mi canal» | Foto, nombre, @ y suscriptores |
-| Lectura | `lectura` | «Ver mi perfil actual» | Progreso de lectura; cifras por formato, y mejores y peores vídeos según «veces lo normal en su canal»; con menos de 5 vídeos, ofrece el recorrido de canal nuevo |
-| Posicionamiento | `posicionamiento` | «Aprobar» | Perfil actual (con vídeos citados) y propuesta de cambios |
+| Lectura | `lectura` | «Ver mi perfil actual», y después «Aprobar» | Progreso de lectura; cifras por formato, y mejores y peores vídeos según «veces lo normal en su canal»; el perfil actual propuesto, que se aprueba para seguir; con menos de 5 vídeos, ofrece el recorrido de canal nuevo |
+| Posicionamiento | `posicionamiento` | «Aprobar» | Perfil actual (con vídeos citados; se puede seguir cambiando, y otro hay que aprobarlo) y propuesta de cambios; «Aprobar» es del enfoque |
 | Perfil | `hecho` | «Descargar como documento» | Perfil vigente, versiones, restaurar, editar; siguiente paso: banco de ideas (próximamente) |
 | Ajustes → YouTube | — | «Guardar» | Fuente, clave opcional (solo `hint`), cupo, actualizar el lector |
 | Ajustes → Consumo | — | — | Lista de llamadas y totales |

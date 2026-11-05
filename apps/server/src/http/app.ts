@@ -59,7 +59,9 @@ function contentSecurityPolicy(indexHtml: string | null): string {
         .digest('base64')}'`,
   )
   const scripts = hashes.length > 0 ? `; script-src 'self' ${hashes.join(' ')}` : ''
-  return `default-src 'self'${scripts}; frame-ancestors 'none'`
+  // The image of the creator's channel comes from YouTube (US4 AS1, entry 56): `safeThumbnail` lets through only what
+  // these allow. Nothing else is loaded from outside.
+  return `default-src 'self'${scripts}; img-src 'self' https://*.ggpht.com https://*.googleusercontent.com; frame-ancestors 'none'`
 }
 
 function readStatic(webDir: string, path: string): { body: Buffer; type: string } | null {

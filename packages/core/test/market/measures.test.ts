@@ -34,6 +34,7 @@ const channel = (channelId: string, subscribers: number | null): ChannelInfo => 
   subscribers,
   videoCount: null,
   country: null,
+  thumbnailUrl: null,
 })
 const channels = (entries: Record<string, number | null>) =>
   new Map(Object.entries(entries).map(([id, subs]) => [id, channel(id, subs)]))

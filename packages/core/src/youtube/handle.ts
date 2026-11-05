@@ -4,6 +4,9 @@ export type ChannelInput =
   { kind: 'handle'; handle: string } | { kind: 'channel'; channelId: string } | { kind: 'video'; videoId: string }
 
 const HANDLE = /^[A-Za-z0-9._-]{3,30}$/
+// The @ of a channel that already exists: YouTube admits letters of any language. The ones the AI proposes or the
+// creator writes are the plain ones of HANDLE_PATTERN (decisions.md, entry 84).
+export const CHANNEL_HANDLE_PATTERN = /^[\p{L}\p{M}\p{N}._·-]{3,30}$/u
 const CHANNEL_ID = /^UC[A-Za-z0-9_-]{22}$/
 const VIDEO_ID = /^[A-Za-z0-9_-]{11}$/
 const YOUTUBE_HOSTS = new Set(['youtube.com', 'www.youtube.com', 'm.youtube.com', 'music.youtube.com'])
@@ -19,13 +22,21 @@ const toUrl = (text: string): URL | null => {
   }
 }
 
+const decoded = (text: string): string | null => {
+  try {
+    return decodeURIComponent(text)
+  } catch {
+    return null
+  }
+}
+
 export function parseChannelInput(raw: string): ChannelInput | null {
   const text = raw.trim()
   if (!text) return null
   if (isChannelId(text)) return { kind: 'channel', channelId: text }
   if (!text.includes('/') && !text.includes('.youtube') && !/\s/.test(text)) {
     const handle = text.startsWith('@') ? text.slice(1) : text
-    return isValidHandle(handle) ? { kind: 'handle', handle } : null
+    return CHANNEL_HANDLE_PATTERN.test(handle) ? { kind: 'handle', handle } : null
   }
 
   const url = toUrl(text)
@@ -39,8 +50,8 @@ export function parseChannelInput(raw: string): ChannelInput | null {
 
   const [first = '', second = ''] = url.pathname.split('/').filter(Boolean)
   if (first.startsWith('@')) {
-    const handle = decodeURIComponent(first.slice(1))
-    return isValidHandle(handle) ? { kind: 'handle', handle } : null
+    const handle = decoded(first.slice(1))
+    return handle !== null && CHANNEL_HANDLE_PATTERN.test(handle) ? { kind: 'handle', handle } : null
   }
   if (first === 'channel') return isChannelId(second) ? { kind: 'channel', channelId: second } : null
   if (first === 'watch') {

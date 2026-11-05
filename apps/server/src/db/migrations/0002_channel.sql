@@ -6,7 +6,7 @@ CREATE TABLE channel (
   origin TEXT NOT NULL CHECK (origin IN ('nuevo', 'existente')),
   display_name TEXT CHECK (display_name IS NULL OR length(display_name) BETWEEN 1 AND 100),
   handle TEXT CHECK (handle IS NULL OR (length(handle) BETWEEN 3 AND 30
-    AND handle NOT GLOB '*[^A-Za-z0-9._-]*')),
+    AND handle NOT GLOB '*[ /@?#]*')),
   name_status TEXT NOT NULL DEFAULT 'provisional' CHECK (name_status IN ('provisional', 'elegido')),
   youtube_channel_id TEXT CHECK (youtube_channel_id IS NULL OR (length(youtube_channel_id) = 24
     AND substr(youtube_channel_id, 1, 2) = 'UC' AND youtube_channel_id NOT GLOB '*[^A-Za-z0-9_-]*')),

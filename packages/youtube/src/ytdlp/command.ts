@@ -22,8 +22,19 @@ const listingArgs = (url: string, limit: number): string[] => [
 export const channelVideosArgs = (channelId: string, limit: number): string[] =>
   listingArgs(`https://www.youtube.com/channel/${channelId}/videos`, limit)
 
-export const handleVideosArgs = (handle: string): string[] =>
-  listingArgs(`https://www.youtube.com/@${encodeURIComponent(handle)}/videos`, 1)
+export const channelShortsArgs = (channelId: string, limit: number): string[] =>
+  listingArgs(`https://www.youtube.com/channel/${channelId}/shorts`, limit)
+
+export const channelPageArgs = (channelId: string): string[] =>
+  listingArgs(`https://www.youtube.com/channel/${channelId}`, 1)
+
+const handleUrl = (handle: string) => `https://www.youtube.com/@${encodeURIComponent(handle)}`
+
+export const handleVideosArgs = (handle: string): string[] => listingArgs(`${handleUrl(handle)}/videos`, 1)
+
+export const handleShortsArgs = (handle: string): string[] => listingArgs(`${handleUrl(handle)}/shorts`, 1)
+
+export const handlePageArgs = (handle: string): string[] => listingArgs(handleUrl(handle), 1)
 
 export const videoChannelArgs = (videoId: string): string[] => [
   ...BASE,

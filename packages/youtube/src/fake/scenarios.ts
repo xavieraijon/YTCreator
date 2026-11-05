@@ -51,6 +51,7 @@ function makeChannel(slug: string, title: string, videoCount: number, extra: Par
       subscribers: 1_000 + videoCount * 150,
       videoCount,
       country: 'ES',
+      thumbnailUrl: null,
       ...extra,
     },
     videos,

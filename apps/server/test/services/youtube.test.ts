@@ -354,6 +354,25 @@ describe('what falls back and for how long it is kept', () => {
     expect(calls).toHaveLength(2)
   })
 
+  it('asked for again on purpose, it does not answer from what was kept, and keeps the new answer', async () => {
+    const calls: string[] = []
+    const ytdlp: YouTubeData = {
+      ...stubAdapter('ytdlp', calls),
+      listChannelVideos: async (channelId) => {
+        calls.push(channelId)
+        return { ok: true, value: { data: [], source: 'ytdlp', fetchedAt: 'x', partial: true } }
+      },
+    }
+    const { service } = setup({ adapters: { ytdlp, dataApi: stubAdapter('data_api', calls) } })
+    await service.listChannelVideos('UC1', { limit: 200, withShorts: true })
+    await service.listChannelVideos('UC1', { limit: 200, withShorts: true })
+    expect(calls).toHaveLength(1)
+    await service.listChannelVideos('UC1', { limit: 200, withShorts: true, fresh: true })
+    expect(calls).toHaveLength(2)
+    await service.listChannelVideos('UC1', { limit: 200, withShorts: true })
+    expect(calls).toHaveLength(2)
+  })
+
   it('without dates is another question, asked and kept apart', async () => {
     const options: unknown[] = []
     const calls: string[] = []

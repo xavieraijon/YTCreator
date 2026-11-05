@@ -90,6 +90,7 @@ describe('channel schemas', () => {
       measureStaleDays: 90,
       nameChecks: [],
       jobs: [],
+      reading: null,
     }
     expect(journeyViewSchema.parse(view)).toEqual(view)
   })

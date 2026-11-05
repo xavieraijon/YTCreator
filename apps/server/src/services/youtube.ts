@@ -88,7 +88,8 @@ export function createYouTubeService(deps: YouTubeServiceDeps): YouTubeData & {
     {
       limitFor = processLimit,
       canFallBack = true,
-    }: { limitFor?: (adapter: YouTubeData) => Limiter; canFallBack?: boolean } = {},
+      fresh = false,
+    }: { limitFor?: (adapter: YouTubeData) => Limiter; canFallBack?: boolean; fresh?: boolean } = {},
   ): Promise<YouTubeResult<Sourced<T>>> {
     const cacheKeyOf = (source: YouTubeSource) => `${source}:${operation}:${key}`
     const kept = (result: YouTubeResult<Sourced<T>>) => {
@@ -100,7 +101,7 @@ export function createYouTubeService(deps: YouTubeServiceDeps): YouTubeData & {
     }
 
     const adapter = picked()
-    const cached = cache.get(cacheKeyOf(adapter.source)) as Sourced<T> | null
+    const cached = fresh ? null : (cache.get(cacheKeyOf(adapter.source)) as Sourced<T> | null)
     if (cached) return { ok: true, value: cached }
 
     const first = await timed(operation, adapter, run, limitFor(adapter))
@@ -111,7 +112,7 @@ export function createYouTubeService(deps: YouTubeServiceDeps): YouTubeData & {
     if (!fellBack || !('ytdlp' in adapters) || adapter === adapters.ytdlp) return kept(first)
 
     // What yt-dlp already answered is not asked again each time the Data API says no.
-    const saved = cache.get(cacheKeyOf('ytdlp')) as Sourced<T> | null
+    const saved = fresh ? null : (cache.get(cacheKeyOf('ytdlp')) as Sourced<T> | null)
     if (saved) return { ok: true, value: saved }
     return kept(await timed(operation, adapters.ytdlp, run, limitFor(adapters.ytdlp)))
   }
@@ -129,9 +130,18 @@ export function createYouTubeService(deps: YouTubeServiceDeps): YouTubeData & {
 
     getChannel: (ref, signal) => call('channel', ref.channelId, CACHE_TTL_MS, (a) => a.getChannel(ref, signal)),
 
-    listChannelVideos: (channelId, { limit, signal }) =>
-      call('videos', `${limit}:${channelId}`, CACHE_TTL_MS, (a) =>
-        a.listChannelVideos(channelId, { limit, ...(signal ? { signal } : {}) }),
+    listChannelVideos: (channelId, { limit, signal, withShorts, fresh }) =>
+      call(
+        'videos',
+        `${limit}:${withShorts ? 'con-shorts:' : ''}${channelId}`,
+        CACHE_TTL_MS,
+        (a) =>
+          a.listChannelVideos(channelId, {
+            limit,
+            ...(signal ? { signal } : {}),
+            ...(withShorts ? { withShorts } : {}),
+          }),
+        { fresh: fresh === true },
       ),
 
     // A handle check is a page read, not a process: it has a limit of its own. Both sources read that same page, so

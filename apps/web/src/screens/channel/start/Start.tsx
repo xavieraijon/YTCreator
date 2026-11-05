@@ -68,7 +68,7 @@ export function StartView({ current, busy = null, onCreate, onResume, onChooseNa
         <h2>{channel.displayName ?? text.readyTitle}</h2>
         <p>{text.nextStep}</p>
       </div>
-      {channel.nameStatus === 'provisional' && (
+      {channel.nameStatus === 'provisional' && journey?.kind !== 'existente' && (
         <div className={styles.option}>
           <h2>{text.nameMissing}</h2>
           <p>{text.nameMissingWhy}</p>

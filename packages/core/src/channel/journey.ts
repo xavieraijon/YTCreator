@@ -6,6 +6,7 @@ import {
   type JourneyStep,
   NEW_CHANNEL_STEPS,
 } from './model.ts'
+import { CHANNEL_HANDLE_PATTERN } from '../youtube/handle.ts'
 
 // The answers of the creator, step by step (data-model.md, `journey.state`). Every field is optional until its step.
 export const ON_CAMERA = ['cara', 'voz', 'ninguna'] as const
@@ -22,7 +23,10 @@ export const journeyStateSchema = z.object({
   audienceRegion: z.enum(AUDIENCE_REGIONS).optional(),
   channelInput: z.string().trim().min(1).max(500).optional(),
   resolvedChannelId: z.string().min(1).optional(),
-  lowInfo: z.boolean().optional(),
+  // FR-022: a new journey for a channel that already has its name and its @.
+  keptName: z
+    .object({ displayName: z.string().min(1).max(100), handle: z.string().regex(CHANNEL_HANDLE_PATTERN).nullable() })
+    .optional(),
   // FR-025: the niche changed after the concept was approved.
   conceptNeedsReview: z.boolean().optional(),
 })
@@ -80,7 +84,10 @@ export function planStep({ kind, from, to, approvals, confirm, nameLater }: Step
   const steps = stepsOf(kind)
   const fromIndex = steps.indexOf(from)
   const toIndex = steps.indexOf(to)
-  if (from === 'hecho' && to === 'nombres' && approvals.nameProvisional) return { ok: true, needsReview: false }
+  // A channel that exists has no step to choose a name: only a new one comes back to it (FR-018b).
+  if (kind === 'nuevo' && from === 'hecho' && to === 'nombres' && approvals.nameProvisional) {
+    return { ok: true, needsReview: false }
+  }
   if (fromIndex < 0 || toIndex < 0 || from === 'hecho') return { ok: false, reason: 'salto_no_permitido' }
 
   if (toIndex < fromIndex) {

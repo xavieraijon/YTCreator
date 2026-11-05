@@ -54,7 +54,8 @@ export function toHits(listing: Listing): VideoHit[] {
   })
 }
 
-export function toVideos(listing: Listing): VideoInfo[] {
+// `allShorts`: the list of a channel's Shorts, whose entries often come without a duration.
+export function toVideos(listing: Listing, { allShorts = false }: { allShorts?: boolean } = {}): VideoInfo[] {
   return listing.entries.flatMap((entry) => {
     const videoId = str(entry.id)
     if (!videoId || !VIDEO_ID.test(videoId)) return []
@@ -66,10 +67,20 @@ export function toVideos(listing: Listing): VideoInfo[] {
         views: num(entry.view_count),
         durationSeconds,
         publishedAt: date(entry),
-        isShort: durationSeconds !== null && durationSeconds <= SHORT_MAX_SECONDS,
+        isShort: allShorts || (durationSeconds !== null && durationSeconds <= SHORT_MAX_SECONDS),
       },
     ]
   })
+}
+
+// The channel's image among its thumbnails: yt-dlp marks it, next to the banner and the rest.
+function avatar(root: Json): string | null {
+  const thumbnails = Array.isArray(root.thumbnails) ? root.thumbnails : []
+  const found = thumbnails.find(
+    (thumbnail): thumbnail is Json =>
+      !!thumbnail && typeof thumbnail === 'object' && (thumbnail as Json).id === 'avatar_uncropped',
+  )
+  return found ? str(found.url) : null
 }
 
 export function toChannel(listing: Listing): ChannelInfo | null {
@@ -86,5 +97,6 @@ export function toChannel(listing: Listing): ChannelInfo | null {
     // Read with --playlist-end 1, the count would be of that one entry, not the channel's: better unknown.
     videoCount: null,
     country: null,
+    thumbnailUrl: avatar(root),
   }
 }

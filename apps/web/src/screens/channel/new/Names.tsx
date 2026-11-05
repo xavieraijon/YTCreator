@@ -145,7 +145,26 @@ export interface NamesProps {
   readonly onFinish: (nameLater: boolean) => void
 }
 
-export function Names({ view, busy, reload, onFinish }: NamesProps) {
+// FR-022: a channel that already has its name goes on with it.
+function KeptName({ view, busy, onFinish }: Pick<NamesProps, 'view' | 'busy' | 'onFinish'>) {
+  const { keptName } = view.state
+  if (!keptName) return null
+  return (
+    <div className={styles.option}>
+      <p>{format(text.kept, { nombre: keptName.displayName })}</p>
+      {keptName.handle && <p>{format(text.handle, { arroba: keptName.handle })}</p>}
+      <Button variant="primary" loading={busy} onClick={() => onFinish(false)}>
+        {text.finish}
+      </Button>
+    </div>
+  )
+}
+
+export function Names(props: NamesProps) {
+  return props.view.state.keptName ? <KeptName {...props} /> : <ChooseName {...props} />
+}
+
+function ChooseName({ view, busy, reload, onFinish }: NamesProps) {
   const proposal = latestOf(view, 'nombres')
   const { estimate, error: estimateError, refresh } = useEstimate(view.id, 'nombres')
   const generate = useGenerate(view, estimate, async () => {

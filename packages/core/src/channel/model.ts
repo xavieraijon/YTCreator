@@ -9,7 +9,7 @@ export const AUDIENCE_REGIONS = ['espana', 'latam', 'mixto'] as const
 export type AudienceRegion = (typeof AUDIENCE_REGIONS)[number]
 
 export const NEW_CHANNEL_STEPS = ['intereses', 'preguntas', 'nichos', 'ritmo', 'conceptos', 'nombres', 'hecho'] as const
-export const EXISTING_CHANNEL_STEPS = ['enlace', 'confirmar', 'lectura', 'posicionamiento', 'hecho'] as const
+export const EXISTING_CHANNEL_STEPS = ['enlace', 'confirmar', 'lectura', 'ritmo', 'posicionamiento', 'hecho'] as const
 export type JourneyStep = (typeof NEW_CHANNEL_STEPS)[number] | (typeof EXISTING_CHANNEL_STEPS)[number]
 
 export const JOURNEY_STATUSES = ['activo', 'terminado', 'abandonado'] as const

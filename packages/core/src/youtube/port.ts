@@ -36,6 +36,7 @@ export interface ChannelInfo {
   subscribers: number | null
   videoCount: number | null
   country: string | null
+  thumbnailUrl: string | null
 }
 
 export interface VideoInfo {
@@ -70,7 +71,9 @@ export interface YouTubeData {
   getChannel(ref: ChannelRef, signal?: AbortSignal): Promise<YouTubeResult<Sourced<ChannelInfo>>>
   listChannelVideos(
     channelId: string,
-    options: { limit: number; signal?: AbortSignal },
+    // `withShorts`: the Shorts too, when reading them takes extra work (with yt-dlp, a list of their own).
+    // `fresh`: asked for again on purpose, not answered from what was kept.
+    options: { limit: number; signal?: AbortSignal; withShorts?: true; fresh?: true },
   ): Promise<YouTubeResult<Sourced<VideoInfo[]>>>
   checkHandle(handle: string, signal?: AbortSignal): Promise<YouTubeResult<Sourced<HandleStatus>>>
   resolve(input: string, signal?: AbortSignal): Promise<YouTubeResult<Sourced<ChannelRef>>>

@@ -87,9 +87,12 @@ export const channelReadingOutput = z.object({
   doesNotWork: z.array(cited),
 })
 
-export const positioningOutput = generatedConcept.extend({
-  changes: z.array(z.object({ what: text, why: text, videoIds: z.array(text) })),
-})
+const changes = z.array(z.object({ what: text, why: text, videoIds: z.array(text).min(1) }))
+export const positioningOutput = generatedConcept.extend({ changes })
+export type PositioningOutput = z.infer<typeof positioningOutput>
+
+// What the creator can save, as with a concept: they may delete the assumptions.
+export const positioningEditedOutput = conceptSchema.extend({ changes })
 
 export const CHANNEL_OUTPUTS = {
   preguntas: questionsOutput,
