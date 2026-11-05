@@ -6,8 +6,17 @@ import { createAdaptorServer } from '@hono/node-server'
 import { claudeVersion, createRegistry, resolveClaudeBin } from '@ytcreator/ai'
 import { type ChannelUse, type Pricing } from '@ytcreator/core'
 import { join } from 'node:path'
-import { conceptKnowledge, loadMarket, promptFor, warningKnowledge } from '@ytcreator/knowledge'
-import { createYouTubeAdapters } from '@ytcreator/youtube'
+import {
+  conceptKnowledge,
+  knowledgeFiles,
+  loadMarket,
+  promptFor,
+  STALE_AFTER_DAYS,
+  warningKnowledge,
+} from '@ytcreator/knowledge'
+import { createKeyCheck, createYouTubeAdapters } from '@ytcreator/youtube'
+// Bundled with the server: the same pinned reader as the installer of this release (R2).
+import readerVersionsJson from '../../../installer/versions.json?raw'
 import { migrate, MIGRATIONS } from './db/migrate.ts'
 import { openDatabase } from './db/open.ts'
 import { createAccountsRepo } from './db/repos/accounts.ts'
@@ -38,7 +47,13 @@ import { createJobsService } from './services/jobs.ts'
 import { createNameCheck } from './services/name-check.ts'
 import { createChannelReading } from './services/channel-reading.ts'
 import { createNicheResearch } from './services/niche-research.ts'
-import { createYouTubeService, youtubeChoice } from './services/youtube.ts'
+import {
+  createReaderUpdate,
+  readerVersionsSchema,
+  readReaderVersion,
+  type ReaderUpdateResult,
+} from './services/reader-update.ts'
+import { createYouTubeService, markYouTubeKeyRejected, youtubeChoice } from './services/youtube.ts'
 import { createVersionCheck } from './updates/version-check.ts'
 
 export const HOST = '127.0.0.1'
@@ -186,13 +201,15 @@ export async function startServer({
       fetch: globalThis.fetch,
       getKey: async () => {
         const ref = settings.get('youtube.api_key_ref')
-        if (!ref) return null
+        // A key YouTube stopped taking is not tried again until another one is saved (P15 a).
+        if (!ref || settings.get('youtube.api_key_rejected') === true) return null
         const stored = await secrets.get(ref)
         return stored.ok ? stored.value : null
       },
       quota: ytQuota,
       limits: dataApiLimits,
       now,
+      onKeyRejected: (hint) => markYouTubeKeyRejected(settings, logger, hint),
     }),
     ...youtubeChoice(settings),
     quota: {
@@ -204,7 +221,40 @@ export async function startServer({
     logger,
     now,
   })
+  // Ajustes → YouTube. With the fake YouTube nothing is downloaded: the reader «updates» at once.
+  const binDir = join(paths.appHome, 'bin')
+  const readerVersions = readerVersionsSchema.parse(JSON.parse(readerVersionsJson))
+  const fakeYouTube = __YTC_ALLOW_FAKE_AI__ && env.YTCREATOR_FAKE_YOUTUBE === '1'
+  let fakeReader: string | null = null
+  const updateReader = fakeYouTube
+    ? async (): Promise<ReaderUpdateResult> => {
+        fakeReader = readerVersions.ytDlp.version
+        return { ok: true, version: fakeReader }
+      }
+    : createReaderUpdate({
+        fetch: globalThis.fetch,
+        binDir,
+        versions: readerVersions,
+        platform: process.platform,
+        arch: process.arch,
+      })
+  const youtubeSettings = {
+    settings,
+    secrets,
+    checkKey: createKeyCheck({ env, fetch: globalThis.fetch, limits: dataApiLimits }),
+    quota: {
+      used: () => ytQuota.used(),
+      limit: dataApiLimits.dailyUnits,
+      nearLimitRatio: dataApiLimits.nearLimitRatio,
+    },
+    effectiveSource: () => youtube.effectiveSource(),
+    readerVersion: () => (fakeYouTube ? fakeReader : readReaderVersion(binDir)),
+    updateReader,
+    jobs,
+    logger,
+  }
   const channelPrompt = (use: ChannelUse) => promptFor(use)
+  const usage = createUsageRepo(db, now)
   const channel = {
     db,
     channels: createChannelsRepo(db, now),
@@ -219,8 +269,9 @@ export async function startServer({
     warningKnowledge: warningKnowledge(market),
     conceptKnowledge: conceptKnowledge(market),
     measureStaleDays: market.thresholds.data.staleDays,
+    now,
     aiRun: createAiRunService({
-      usage: createUsageRepo(db, now),
+      usage,
       limits,
       pricing,
       logger,
@@ -275,6 +326,9 @@ export async function startServer({
     settings,
     channel,
     jobs,
+    youtubeSettings,
+    usage,
+    knowledge: { files: () => knowledgeFiles(market), staleAfterDays: STALE_AFTER_DAYS },
     youtube: {
       journeys: channel.journeys,
       measures: channel.measures,

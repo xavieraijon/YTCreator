@@ -342,10 +342,13 @@ las comprobaciones de @). Se purga al arrancar lo caducado.
 | `youtube.source` | `'auto' \| 'ytdlp' \| 'data_api'` | `auto` por defecto: Data API si hay clave válida |
 | `youtube.api_key_ref` | referencia del `SecretStore` | Nunca la clave |
 | `youtube.api_key_hint` | 4 caracteres | |
-| `youtube.ytdlp_version` | `string` | La instalada (R2) |
+| `youtube.api_key_rejected` | `boolean` | YouTube dejó de aceptar la clave: no se usa hasta guardar otra (P15 a), entrada 99) |
+
+La versión del lector no es un ajuste: se lee de `bin/yt-dlp.version` (entrada 98).
 
 ## Exportación
 
 `GET /api/channels/:id/export` produce el perfil vigente; no llama a la IA ni gasta nada. El JSON
-es `{schemaVersion: 1, exportedAt, channel, profile: ChannelProfile, measures, references, reading?}` y el Markdown
+es `{schemaVersion: 1, exportedAt, channel, version: {number, origin, createdAt}, profile: ChannelProfile, sections, measures,
+references, reading?}` (`version` y `sections` añadidos en US5, P31) y el Markdown
 tiene las mismas secciones con «Fuentes» al final (R17).

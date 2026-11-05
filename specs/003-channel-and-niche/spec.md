@@ -186,8 +186,8 @@ fecha; perfil actual que cita vídeos, con las opiniones marcadas; al aprobar, u
 recorrido de «Independent Test». Evidencia en la sección «US4» de `checklists/validation.md`.
 
 **Huecos abiertos**: heredados de `decisions.md`: P1, P3, P6, P7 y P17. Lo que queda para T125b: entradas 56, 57, 68, 81, 84
-y 88 (las URL `/c/` y `/user/` no se reconocen: el mensaje dice qué pegar). Ajustes aún no tiene nada de YouTube (T120, US5):
-«Ir a Ajustes» se ofrece junto a reintentar. El texto del perfil actual se guarda en español desde el servidor (entrada 83).
+y 88 (las URL `/c/` y `/user/` no se reconocen: el mensaje dice qué pegar). «Ir a Ajustes» se ofrece junto a reintentar y,
+desde US5, lleva a Ajustes → YouTube (entrada 113). El texto del perfil actual se guarda en español desde el servidor (entrada 83).
 
 ---
 

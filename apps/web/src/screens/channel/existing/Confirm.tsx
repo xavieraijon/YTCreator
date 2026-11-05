@@ -106,7 +106,7 @@ export function Confirm({ view, busy, reload, onReject }: ConfirmProps) {
       )}
       {needsSettings(error) && (
         <div className={styles.actions}>
-          <Button onClick={() => navigate({ page: 'settings' })}>{youtubeFailureActionsEs.ir_a_ajustes}</Button>
+          <Button onClick={() => navigate({ page: 'youtubeSettings' })}>{youtubeFailureActionsEs.ir_a_ajustes}</Button>
         </div>
       )}
       {channel ? (

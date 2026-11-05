@@ -19,6 +19,8 @@ export type Route =
   // limits: the connection is already there and only the spending limits are missing (no form to fill in again).
   | { readonly page: 'switchAi'; readonly kind: ConnectionKind; readonly limits?: true }
   | { readonly page: 'generalSettings' }
+  | { readonly page: 'youtubeSettings' }
+  | { readonly page: 'usageSettings' }
   | { readonly page: 'notFound' }
 
 export type Target = Exclude<Route, { page: 'notFound' }>
@@ -48,6 +50,8 @@ export function parseRoute(pathname: string): Route {
   if (first === 'ajustes') {
     if (!second) return { page: 'settings' }
     if (second === 'general' && !third) return { page: 'generalSettings' }
+    if (second === 'youtube' && !third) return { page: 'youtubeSettings' }
+    if (second === 'consumo' && !third) return { page: 'usageSettings' }
     if (second === 'ia' && !third) return { page: 'aiSettings' }
     if (second === 'ia' && third === 'cambiar' && fourth && isKind(fourth)) {
       if (!fifth) return { page: 'switchAi', kind: fourth }
@@ -81,6 +85,10 @@ export function href(route: Target): string {
       return `/ajustes/ia/cambiar/${route.kind}${route.limits ? '/limites' : ''}`
     case 'generalSettings':
       return '/ajustes/general'
+    case 'youtubeSettings':
+      return '/ajustes/youtube'
+    case 'usageSettings':
+      return '/ajustes/consumo'
   }
 }
 

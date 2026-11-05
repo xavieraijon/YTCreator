@@ -15,6 +15,7 @@ Las mismas de la 002:
 - Fechas ISO 8601 UTC; importes en céntimos enteros.
 - Un fallo de la IA o de YouTube es un `200` con el estado nuevo (la propuesta o la medida con su `failure`). Las
   excepciones son `resolve`, `reading` y `references`, que no tienen estado que devolver: `502 youtube` con su fallo.
+  También `PUT /api/settings/youtube/api-key` cuando YouTube no contesta a la comprobación (entrada 106).
 - Errores con `ApiError`: `400 validacion`, `403 prohibido`, `404 no_encontrado`, `409 conflicto`, `422 ia`.
 - `GUARDS` gana `ya_hay_canal` (la v1 solo deja crear un canal, FR-028).
 - Las rutas que cambian un recorrido piden `revision`; si no coincide, `409 conflicto` con `current` (evita dobles
@@ -64,12 +65,13 @@ servidor se reinicia, los trabajos `en_curso` pasan a `interrumpido` y la pantal
 
 | Método y ruta | Cuerpo | Respuesta |
 |---|---|---|
-| `GET /api/settings/youtube` | — | `{source, effectiveSource, ytdlpVersion, apiKey: {set, hint}, quota?}` |
-| `PUT /api/settings/youtube/source` | `{source}` | lo mismo |
-| `PUT /api/settings/youtube/api-key` | `{apiKey}` | Se comprueba con una llamada de 1 unidad; `400 validacion` si no vale; nunca se devuelve |
+| `GET /api/settings/youtube` | — | `{source, effectiveSource, ytdlpVersion, apiKey: {set, hint, rejected}, quota?}`; `quota` solo con clave |
+| `PUT /api/settings/youtube/source` | `{source}` | lo mismo; `400 validacion` (`source`) si es `data_api` sin una clave que YouTube acepte (entrada 105) |
+| `PUT /api/settings/youtube/api-key` | `{apiKey}` | Se comprueba con una llamada de 1 unidad; `400 validacion` (`apiKey`) si no vale; `502 youtube` si YouTube no contesta; nunca se devuelve |
 | `DELETE /api/settings/youtube/api-key` | — | `204` |
 | `POST /api/settings/youtube/update-reader` | — | `202 {jobId}` (descarga yt-dlp, [installer](./installer.md)) |
 | `GET /api/usage?from&to` | — | `{items: AiUsage[], todayCents, monthCents}` |
+| `GET /api/settings/knowledge` | — | `{files: [{id, label, reviewedAt, stale}], staleAfterDays}` (entrada 97) |
 
 ## Pruebas
 

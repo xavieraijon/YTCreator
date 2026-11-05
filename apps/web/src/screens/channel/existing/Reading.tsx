@@ -189,7 +189,7 @@ function ReadFailure({ code, onRetry }: { code: string | null; onRetry: () => vo
       <ErrorMessage live title={what} action={{ label: youtubeFailureActionsEs.volver_a_intentar, onClick: onRetry }} />
       {action === 'ir_a_ajustes' && (
         <div className={styles.actions}>
-          <Button onClick={() => navigate({ page: 'settings' })}>{youtubeFailureActionsEs.ir_a_ajustes}</Button>
+          <Button onClick={() => navigate({ page: 'youtubeSettings' })}>{youtubeFailureActionsEs.ir_a_ajustes}</Button>
         </div>
       )}
     </>

@@ -3,8 +3,8 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { createRegistry } from '@ytcreator/ai'
 import type { Pricing } from '@ytcreator/core'
-import { conceptKnowledge, loadMarket, warningKnowledge } from '@ytcreator/knowledge'
-import { createFakeYouTube } from '@ytcreator/youtube'
+import { conceptKnowledge, knowledgeFiles, loadMarket, STALE_AFTER_DAYS, warningKnowledge } from '@ytcreator/knowledge'
+import { createFakeKeyCheck, createFakeYouTube } from '@ytcreator/youtube'
 import { afterEach } from 'vitest'
 import { migrate, MIGRATIONS } from '../src/db/migrate.ts'
 import { openDatabase } from '../src/db/open.ts'
@@ -22,6 +22,8 @@ import { createReadingsRepo } from '../src/db/repos/readings.ts'
 import { createProposalsRepo } from '../src/db/repos/proposals.ts'
 import { createSettingsRepo } from '../src/db/repos/settings.ts'
 import { createUsageRepo } from '../src/db/repos/usage.ts'
+import { createYtQuotaRepo } from '../src/db/repos/yt-cache.ts'
+import type { ReaderUpdateResult } from '../src/services/reader-update.ts'
 import { createApp } from '../src/http/app.ts'
 import { createMemoryLogger } from '../src/logging.ts'
 import { createFileStore } from '../src/secrets/file-store.ts'
@@ -32,6 +34,7 @@ import { createJobsService } from '../src/services/jobs.ts'
 import { createNameCheck } from '../src/services/name-check.ts'
 import { createChannelReading } from '../src/services/channel-reading.ts'
 import { createNicheResearch } from '../src/services/niche-research.ts'
+import { markYouTubeKeyRejected } from '../src/services/youtube.ts'
 
 // Fixed prices, so no test depends on the knowledge package.
 const PRICING: Pricing = {
@@ -52,6 +55,8 @@ export interface TestAppOptions {
   fakeAi?: string // a YTCREATOR_FAKE_AI scenario
   now?: () => Date
   installer?: InstallerRunner // the Claude Code installer; by default it ends well at once
+  readerVersion?: string | null // the YouTube reader installed; none by default
+  readerUpdate?: () => Promise<ReaderUpdateResult> // «Actualizar el lector»; by default it ends well at once
 }
 
 const cleanups: (() => void)[] = []
@@ -63,7 +68,13 @@ afterEach(() => {
 const offline = (() => Promise.reject(new Error('Los tests no salen a la red'))) as typeof fetch
 
 // The whole server in memory: migrated SQLite, file store in a temporary folder, logger in memory.
-export function makeTestApp({ fakeAi, now = () => new Date(), installer }: TestAppOptions = {}) {
+export function makeTestApp({
+  fakeAi,
+  now = () => new Date(),
+  installer,
+  readerVersion = null,
+  readerUpdate,
+}: TestAppOptions = {}) {
   const dir = mkdtempSync(join(tmpdir(), 'ytc-server-'))
   const db = openDatabase(':memory:')
   migrate(db, MIGRATIONS)
@@ -144,6 +155,9 @@ export function makeTestApp({ fakeAi, now = () => new Date(), installer }: TestA
     now,
   })
   const version = '0.1.0'
+  const ytQuota = createYtQuotaRepo(db, now)
+  const keyCheck = createFakeKeyCheck()
+  let reader = readerVersion
   const app = createApp({
     port: TEST_PORT,
     version,
@@ -155,8 +169,26 @@ export function makeTestApp({ fakeAi, now = () => new Date(), installer }: TestA
     repair,
     limits,
     settings,
-    channel,
+    channel: { ...channel, now },
     jobs,
+    usage,
+    now,
+    knowledge: { files: () => knowledgeFiles(market), staleAfterDays: STALE_AFTER_DAYS, now },
+    youtubeSettings: {
+      settings,
+      secrets,
+      checkKey: keyCheck,
+      quota: { used: () => ytQuota.used(), limit: 10_000, nearLimitRatio: 0.8 },
+      effectiveSource: () => 'fake',
+      readerVersion: () => reader,
+      updateReader: async () => {
+        const result = await (readerUpdate ?? (async () => ({ ok: true as const, version: '2026.08.19' })))()
+        if (result.ok) reader = result.version
+        return result
+      },
+      jobs,
+      logger,
+    },
     youtube: {
       journeys: channel.journeys,
       measures: channel.measures,
@@ -217,5 +249,11 @@ export function makeTestApp({ fakeAi, now = () => new Date(), installer }: TestA
     research,
     request,
     now,
+    ytQuota,
+    // Only the hints of the keys checked: the fake check never keeps a key.
+    youtubeKeyChecks: keyCheck.checked,
+    // What the server does when YouTube stops taking the saved key (P15 a).
+    youtubeKeyRejected: (hint = settings.get('youtube.api_key_hint') ?? '') =>
+      markYouTubeKeyRejected(settings, logger, hint),
   }
 }

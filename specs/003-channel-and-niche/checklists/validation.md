@@ -1,5 +1,142 @@
 # Validación: 003 canal y nicho
 
+## US5: Puerta A de la fase 7, T111 a T121 y T124 (2026-11-05): BLOQUEADA
+
+**Resultado: bloqueada por decisiones de riesgo alto del creador (P27 a P31), no por fallos.** Los controles pasan en su
+última ejecución y los hallazgos graves de la primera vuelta están corregidos. Las correcciones aún no las ha visto
+ningún revisor: las respaldan las pruebas, y se revisarán en la segunda vuelta, cuando el creador responda. Nada se ha
+comprobado con YouTube real ni con IA real.
+
+### 1. Resumen
+
+«Mi canal» enseña el perfil con sus cifras y fechas, se edita (textos), guarda una versión por cambio, vuelve a una
+anterior y se descarga como documento (`.md`) o como datos (`.json`). Ajustes tiene ahora «YouTube» (fuente, lector,
+clave en «Modo experto» con solo su pista, cupo) y «Consumo» (gasto de hoy y del mes, y conocimiento viejo).
+Faltan tres piezas de la spec que esperan al creador: «Volver a medir» (P27), regenerar con IA (P28) y cambiar el nombre (P29).
+
+### 2. Requisitos
+
+| Requisito | Estado | Evidencia | Fecha |
+|---|---|---|---|
+| US5 AS1: página con nicho, concepto, nombre y @, datos con fecha | Cumplido | `profile.test.tsx`, `channel-niche.spec.ts` | 2026-11-05 |
+| US5 AS2: editar o regenerar una parte; versión nueva por cambio | **Parcial:** se editan los textos (P30); regenerar con IA no tiene tarea (P28) | `profile.test.ts`, `profile.test.tsx`, `a11y.spec.ts` | 2026-11-05 |
+| US5 AS3: descargar `.md` y `.json` con lo mismo y sus fuentes | Cumplido; el JSON añade `version` y `sections` (P31) y lleva los matices de la pantalla (entrada 109) | `export.test.ts`, `profile.test.ts`, `channel-niche.spec.ts` | 2026-11-05 |
+| US5 AS4: aviso de más de 90 días con «Volver a medir» | **Parcial:** el aviso está; el botón espera a P27 (entrada 102) | `profile.test.tsx` | 2026-11-05 |
+| Volver a una versión anterior, también como versión nueva | Cumplido; conserva el nombre actual (entrada 103) | `profile.test.ts` | 2026-11-05 |
+| FR-030: cupo de la clave con aviso al pasar del 80 % | Cumplido, aviso fuera de «Modo experto» (entrada 112) | `youtube-settings.test.ts`, `youtube.test.tsx` | 2026-11-05 |
+| FR-033: la clave solo por su pista; lo básico sin ella | Cumplido (entradas 99, 100, 105, 106) | `secrets-leak.spec.ts`, `youtube-settings.test.ts`, `data-api-key.test.ts` | 2026-11-05 |
+| P15 a): una clave rechazada se marca y deja de probarse | Cumplido, ligada a la pista de la clave (entrada 107) | `youtube-settings.test.ts`, `youtube.test.ts` | 2026-11-05 |
+| «Actualizar el lector»: versión fijada y SHA256 | Cumplido (entrada 98) | `reader-update.test.ts` | 2026-11-05 |
+| Consumo y conocimiento de más de 180 días en Ajustes | Cumplido (entradas 97 y 108) | `usage.test.ts`, `youtube.test.tsx` | 2026-11-05 |
+| Cambiar el nombre elegido desde el perfil | **No cumplido:** la ruta existe y no hay pantalla (P29, entrada 95) | `profile.test.ts` (ruta) | 2026-11-05 |
+
+Los cinco campos de la historia en `spec.md` están cubiertos; sus huecos abiertos son P27 a P31.
+
+### 3. Cómo se comprobó
+
+Con Node 24, cada comando por separado y leyendo su propio código de salida. Última ejecución:
+
+| Comando | Resultado |
+|---|---|
+| `pnpm lint` | Código 0 |
+| `pnpm typecheck` | Código 0 |
+| `pnpm test`, con `node_modules/.vitest-cache` borrada | Código 0: 1329 correctas, 2 omitidas, 119 ficheros |
+| `pnpm test:e2e` | Código 0: web 30 correctas; catálogo 97 correctas |
+| `pnpm test:installer` | Código 0: 29 correctas |
+
+**Antes de quedar en verde fallaron:**
+
+- **Glosario:** el marcador `{handle}` de `channelEs.profile.handle`; pasa a `{arroba}`.
+- **E2E, primera ejecución, 3 fallos reales:** el perfil ya no tenía un título con el nombre del canal (US4 y teclado);
+  ahora el nombre es el título de su apartado. `secrets-leak` buscaba «Modo experto» como botón y es un `summary`; además
+  el apartado se plegaba al guardar la clave, porque la vista se montaba de nuevo. Corregidos los tres.
+- **Unitarias tras las correcciones:** un caso de `forbidden` que ya no cuenta (entrada 107) y el escaneo de textos de la
+  exportación, que leía mal los comentarios. Corregidos.
+
+### 4. Controles obligatorios
+
+**Pasados**
+
+- `lint`, `typecheck`, `test`, `test:e2e` y `test:installer` (apartado 3).
+- Glosario: `apps/web/test/glossary.test.ts`, que ahora también revisa los textos del documento descargado.
+- Fuga de secretos: `secrets-leak.spec.ts` (T124) con la clave de YouTube (base de datos, logs, carpeta, Git, DOM y
+  respuestas) y `youtube-settings.test.ts`.
+- Axe en claro y oscuro a 1280 y 375 px y al 200 %, con `prefers-reduced-motion`: perfil, editor, historial,
+  Ajustes → YouTube y Consumo (`channel-niche.spec.ts`). T123.
+- Teclado: editar, guardar, abrir el historial, restaurar, llegar a «Descargar como documento» y guardar una clave en
+  «Modo experto» (`a11y.spec.ts`).
+- Fallos de IA: esta historia no llama a la IA; «costs nothing» lo comprueba en `profile.test.ts`.
+- «Cómo se demuestra»: T111 a T114, T124 y el recorrido descargar → editar → restaurar → Ajustes de `channel-niche.spec.ts`.
+
+**Fallidos en la última ejecución:** ninguno.
+
+**No ejecutados**
+
+- YouTube real e IA real: necesitan la aprobación del creador (T125b). La comprobación real de una clave cuesta 1 unidad.
+- La auditoría de novato: es la puerta final de la feature.
+
+### 5. Hallazgos de revisión
+
+Primera vuelta con los cuatro revisores sobre el diff. Corregidos (sin segunda revisión todavía):
+
+- **Lógica G1 / fidelidad 2 / regresión 1:** elegir el nombre después de volver atrás perdía el concepto o nicho nuevo
+  (entrada 104).
+- **Lógica G2 / fidelidad 3 / regresión 2:** restaurar dejaba dos nombres y «Elegir el nombre» sin salida (entrada 103).
+- **Lógica M1 / fidelidad 1:** el `409` no se veía y el segundo guardado pisaba la otra ventana (entrada 110).
+- **Lógica M2 / fidelidad 6:** «Siempre con mi clave» sin clave dejaba sin YouTube (entrada 105).
+- **Fidelidad 4 / regresión 3:** «Ir a Ajustes» llevaba a la pestaña IA (entrada 113).
+- **Fidelidad 5 / regresión 4:** la exportación perdía matices de las cifras y tenía textos distintos de la pantalla, fuera
+  del glosario (entrada 109).
+- **Seguridad 1 / lógica 2 / regresión 5:** con el cupo agotado no se podía cambiar de clave, y el error hablaba del
+  lector (entrada 106).
+- **Seguridad 3, 4 y 7 / lógica 1, 3 y 4:** `forbidden`, la respuesta tardía de otra clave y un cuerpo de error mal formado
+  (entrada 107).
+- **Menores:** leer el binario entero para saber la versión (`existsSync`), el fichero de versión escrito tras sustituir el
+  binario (ahora los dos se escriben aparte y se renombran), 600 s de descarga como el instalador, el campo de fecha mal
+  señalado en `/api/usage`, claves de React repetidas, la promesa propia marcada como de la IA (entrada 111), el aviso del
+  cupo dentro de «Modo experto» (entrada 112), los 180 días escritos en el texto, el aviso del editor con aspecto de nota,
+  y contratos y modelo de datos sin enmendar (`http-api.md`, `data-model.md`).
+
+**Descartados, con motivo:**
+
+- Seguridad 5 (el release no busca el YouTube falso): ya es P6, abierto desde la revisión retroactiva; las ramas falsas
+  dependen de `__YTC_ALLOW_FAKE_AI__`, `false` en producción.
+- Seguridad 6 (un `reveal()` en el falso): está en la carpeta ya permitida, no amplía la regla (entrada 100), y el falso
+  no entra en producción.
+- Fidelidad 9 (fecha de revisión inventada si falta la fuente): no es alcanzable, `knowledgeSources` siempre las incluye.
+- Fidelidad 14 («Lector de YouTube listo» sin descargar): con la versión fijada ya puesta, el lector está listo de verdad.
+
+**Abiertos (menores):** el `PATCH .../name` no mira el resultado de la comprobación (se decide con P29); el 160 de la
+promesa y los 90 días copiados en la web y en textos; el separador « · » del historial escrito en el JSX; las cifras de
+`thresholds.json` repetidas en el texto de la exportación; `settings.module.css` sin `@layer`, como ya estaba.
+
+### 6. Desviaciones respecto a la spec
+
+- De menos: «Volver a medir» (P27), regenerar con IA (P28), cambiar el nombre (P29) y editar «cualquier parte» (P30).
+- De más: `GET /api/settings/knowledge` (entrada 97), `version` y `sections` en el JSON (P31), la marca de clave
+  rechazada en ajustes (entrada 99) y el `400` de la fuente sin clave (entrada 105).
+
+### 7. Decisiones
+
+- Del agente: entradas 93 a 113 de `decisions.md`. La 93 se reclasifica a alto (P30).
+- Pendientes del creador (alto): P27 «Volver a medir», P28 regenerar con IA, P29 cambiar el nombre, P30 qué se edita,
+  P31 formato del JSON.
+
+### 8. Impacto en la constitución
+
+- I: sin jerga en pantalla (glosario, también del documento); la clave vive en «Modo experto» y lo básico va sin ella.
+- II: se distingue lo escrito por el creador («Escrita por ti») de la opinión de la IA; nada se publica fuera.
+- III: nada de esta historia gasta; comprobar una clave cuesta 1 unidad de YouTube, que se dice antes de guardar.
+- V: las cifras no se editan a mano y llevan su fecha también en el documento (P30 decide hasta dónde).
+- VII: la clave solo por su pista, en ningún log, base de datos, URL ni Git.
+- IX: axe y teclado en las pantallas nuevas.
+
+### 9. Cómo revertir y qué queda pendiente
+
+- Revertir: el commit de la fase 7 es independiente; no hay migraciones. El ajuste `youtube.api_key_rejected` sobra sin
+  efecto si se revierte.
+- Pendiente: respuestas a P27 a P31; con ellas, implementar lo que toque, segunda vuelta de revisión y cerrar T121b.
+
 ## US4: Puerta A de la fase 6, T101 a T110b (2026-11-05): PASADA
 
 **Resultado: pasada, en 3 vueltas.** Controles sin fallos en su última ejecución, sin hallazgos graves abiertos y sin

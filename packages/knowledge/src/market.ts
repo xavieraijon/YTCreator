@@ -196,6 +196,14 @@ export interface StaleEntry {
 
 export const STALE_AFTER_DAYS = 180
 
+/** Every file with its name and the day it was reviewed, for Ajustes (contracts/knowledge.md). */
+export function knowledgeFiles(market: MarketKnowledge): StaleEntry[] {
+  return MARKET_FILES.map((file) => {
+    const entry = market[KEY_BY_FILE[file]]
+    return { file, label: entry.source[0]!.label, reviewedAt: entry.reviewedAt }
+  })
+}
+
 /** Entries reviewed more than 180 days before `now` (FR-027). */
 export function staleEntries(market: MarketKnowledge, now: Date): StaleEntry[] {
   const limit = now.getTime() - STALE_AFTER_DAYS * 86_400_000

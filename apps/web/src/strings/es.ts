@@ -1,3 +1,4 @@
+import type { AiUse } from '@ytcreator/core'
 import type { ApiErrorCode, FieldCode, Guard } from '@ytcreator/core/api'
 
 // Web catalog, grouped by screen. Plain words, addressed as «tú» (principle I, glossary test).
@@ -172,7 +173,80 @@ export const es = {
 
   settings: {
     title: 'Ajustes',
-    tabs: { ia: 'IA', general: 'General' },
+    tabs: { ia: 'IA', youtube: 'YouTube', consumo: 'Consumo', general: 'General' },
+  },
+
+  youtubeSettings: {
+    why: 'YTCreator lee YouTube para medir nichos, comprobar nombres y leer tu canal. No te cuesta dinero.',
+    inUse: {
+      ytdlp: 'Ahora leemos YouTube con el lector de YouTube.',
+      data_api: 'Ahora leemos YouTube con tu clave de YouTube.',
+      fake: 'Ahora leemos YouTube con el lector de YouTube.',
+    },
+    source: '¿Cómo leemos YouTube?',
+    sourceOptions: {
+      auto: 'Automático',
+      ytdlp: 'Siempre con el lector de YouTube',
+      data_api: 'Siempre con mi clave de YouTube',
+    },
+    sourceHelp: {
+      auto: 'Con tu clave si tienes una y funciona; si no, con el lector. Es lo recomendado.',
+      ytdlp: 'No usa tu clave aunque la tengas.',
+      data_api: 'Si se acaba lo que tu clave permite al día, usamos el lector hasta mañana.',
+    },
+    sourceNeedsKey:
+      'Necesita una clave de YouTube que funcione, en «Modo experto». Mientras no la haya, usamos el lector.',
+    save: 'Guardar',
+    saved: 'Guardado',
+    reader: 'Lector de YouTube',
+    readerVersion: 'Versión del lector: {version}',
+    noReader: 'El lector de YouTube no está preparado. Pulsa «Actualizar el lector» para prepararlo.',
+    updateReader: 'Actualizar el lector',
+    updateWhy: 'YouTube cambia a menudo. Si algo deja de leerse bien, actualizar el lector suele arreglarlo.',
+    updating: 'Actualizando el lector…',
+    updated: 'Lector de YouTube listo.',
+    updateFailed:
+      'No hemos podido preparar el lector de YouTube. Puedes seguir usando la app y volver a intentarlo más tarde.',
+    expert: 'Modo experto',
+    keyWhy: 'Es opcional: todo funciona sin ella. Con una clave de YouTube las medidas tienen fechas más completas.',
+    keyLabel: 'Tu clave de YouTube',
+    saveKey: 'Comprobar y guardar',
+    keySaved: 'Clave guardada ••••{pista}',
+    keyInvalid: 'YouTube no acepta esta clave.',
+    keyUnchecked:
+      'No hemos podido preguntar a YouTube por esta clave y no la hemos guardado. Vuelve a probar en un rato.',
+    keyRejected: 'YouTube ha dejado de aceptar tu clave, así que ya no la usamos. Guarda otra o bórrala.',
+    removeKey: 'Borrar la clave',
+    removeKeyTitle: '¿Borrar la clave de YouTube?',
+    removeKeyBody: 'YTCreator la borrará de tu ordenador y seguirá leyendo YouTube con el lector.',
+    remove: 'Borrar',
+    cancel: 'Cancelar',
+    quota: 'Hoy tu clave lleva {usadas} de las {limite} consultas que permite al día.',
+    quotaNear: 'Te queda poco de lo que tu clave permite hoy. Si se acaba, usaremos el lector de YouTube hasta mañana.',
+  },
+
+  usage: {
+    why: 'Lo que has gastado en la IA este mes. Con tu suscripción de Claude no pagas nada aparte.',
+    today: 'Hoy: {importe} €',
+    month: 'Este mes: {importe} €',
+    list: 'Llamadas de este mes',
+    empty: 'Este mes aún no has usado la IA.',
+    item: '{uso} · {importe} €',
+    uses: {
+      comprobacion: 'Comprobar la conexión',
+      preguntas: 'Preguntas sobre tus intereses',
+      nichos: 'Proponer nichos',
+      recomendacion: 'Opinión sobre los nichos',
+      conceptos: 'Proponer ideas de canal',
+      nombres: 'Proponer nombres',
+      lectura_canal: 'Leer tu canal',
+      posicionamiento: 'Proponer el enfoque',
+    } satisfies Record<AiUse, string>,
+    failed: 'No salió bien',
+    knowledge: 'Información que conviene revisar',
+    knowledgeWhy:
+      'YTCreator usa estos datos sobre YouTube. Hace más de {dias} días que nadie los revisa y pueden haber cambiado.',
+    knowledgeItem: '{fuente}: revisado el {fecha}',
   },
 
   aiSettings: {

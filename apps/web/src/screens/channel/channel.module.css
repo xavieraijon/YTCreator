@@ -102,4 +102,9 @@
     color: var(--s-color-text-secondary);
     font-size: var(--s-font-size-sm);
   }
+
+  /* A form that cannot be saved as it is: it reads as an error, not as a side note. */
+  .alert {
+    color: var(--s-color-danger-fg);
+  }
 }

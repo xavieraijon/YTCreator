@@ -135,9 +135,14 @@ describe('youtube service: which source', () => {
     const forced = setup({ source: () => 'ytdlp', hasKey: () => true })
     await forced.service.search('a', { limit: 5 })
     expect(forced.calls).toEqual(['ytdlp:search:a'])
-    const api = setup({ source: () => 'data_api' })
+    const api = setup({ source: () => 'data_api', hasKey: () => true })
     await api.service.search('a', { limit: 5 })
     expect(api.calls).toEqual(['data_api:search:a'])
+    // «Siempre con mi clave» with the key removed or rejected later: the reader (P15 a).
+    const keyless = setup({ source: () => 'data_api', hasKey: () => false })
+    await keyless.service.search('a', { limit: 5 })
+    expect(keyless.calls).toEqual(['ytdlp:search:a'])
+    expect(keyless.service.effectiveSource()).toBe('ytdlp')
   })
 
   it('the fake replaces both', async () => {

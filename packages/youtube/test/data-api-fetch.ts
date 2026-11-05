@@ -68,6 +68,8 @@ function answer(url: URL): Response {
   const q = url.searchParams
   const endpoint = url.pathname.replace('/youtube/v3/', '')
 
+  // The probe of a key check (check-key.ts): any short list will do.
+  if (endpoint === 'i18nLanguages') return json({ items: [{ id: 'es', snippet: { hl: 'es', name: 'Español' } }] })
   if (endpoint === 'search') {
     const query = q.get('q') ?? ''
     if (query.includes('sin datos')) return json({ items: [] })

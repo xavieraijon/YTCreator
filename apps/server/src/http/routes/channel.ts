@@ -13,14 +13,22 @@ import {
   type ProposalKind,
   initialStep,
   planStep,
+  channelProfileSchema,
+  exportFileName,
+  profileJson,
+  profileMarkdown,
 } from '@ytcreator/core'
 import type { ConceptKnowledge } from '@ytcreator/knowledge'
 import {
   asNewBodySchema,
+  channelNameBodySchema,
   createChannelBodySchema,
   estimateBodySchema,
+  exportQuerySchema,
   journeyStepBodySchema,
   patchProposalBodySchema,
+  profileEditBodySchema,
+  profileRestoreBodySchema,
   proposalBodySchema,
 } from '@ytcreator/core/api'
 import { Hono } from 'hono'
@@ -38,7 +46,7 @@ import type { AiRunService, PromptRef } from '../../services/ai-run.ts'
 import { channelInput, previousOf } from '../../services/channel-input.ts'
 import { currentReading, readingInput } from '../../services/channel-reading.ts'
 import { createConcepts } from '../../services/concepts.ts'
-import { createProfile } from '../../services/profile.ts'
+import { createProfile, editedProfile, exportInput } from '../../services/profile.ts'
 import { ApiError } from '../errors.ts'
 import { parseBody } from '../validate.ts'
 
@@ -57,6 +65,7 @@ export interface ChannelRoutesDeps {
   warningKnowledge: WarningKnowledge
   conceptKnowledge: ConceptKnowledge
   measureStaleDays: number
+  now?: () => Date
 }
 
 // `perfil_actual` is what the use `lectura_canal` produces; the other kinds have the name of their use.
@@ -203,6 +212,100 @@ export function channelRoutes(deps: ChannelRoutesDeps) {
       channel,
       profile: profiles.getCurrent(channel.id),
       journey: journeys.getActive(channel.id) ?? journeys.getLast(channel.id),
+    })
+  })
+
+  // US5: the profile of a channel, its versions, its name and its export.
+  const findChannel = (id: string) => {
+    const channel = channels.get(id)
+    if (!channel) throw new ApiError({ code: 'no_encontrado' })
+    return channel
+  }
+  const currentProfile = (channelId: string) => {
+    const current = profiles.getCurrent(channelId)
+    if (!current) throw new ApiError({ code: 'no_encontrado' })
+    return current
+  }
+
+  routes.get('/channels/:id/profile/versions', (c) => {
+    const channel = findChannel(c.req.param('id'))
+    return c.json(
+      profiles.listVersions(channel.id).map(({ version, origin, createdAt }) => ({ version, origin, createdAt })),
+    )
+  })
+
+  routes.get('/channels/:id/profile/versions/:version', (c) => {
+    const channel = findChannel(c.req.param('id'))
+    const number = Number(c.req.param('version'))
+    const version = Number.isInteger(number) && number > 0 ? profiles.getVersion(channel.id, number) : null
+    if (!version) throw new ApiError({ code: 'no_encontrado' })
+    return c.json(version)
+  })
+
+  routes.put('/channels/:id/profile', async (c) => {
+    const channel = findChannel(c.req.param('id'))
+    const body = await parseBody(c, profileEditBodySchema)
+    const saved = inTransaction(db, () => {
+      const current = currentProfile(channel.id)
+      // Another tab saved first: nothing is overwritten without seeing it.
+      if (current.version !== body.baseVersion) throw new ApiError({ code: 'conflicto' })
+      const profile = editedProfile(channelProfileSchema.parse(current.profile), body.profile)
+      return profiles.addVersion(channel.id, { origin: 'manual', profile })
+    })
+    return c.json(saved)
+  })
+
+  routes.post('/channels/:id/profile/restore', async (c) => {
+    const channel = findChannel(c.req.param('id'))
+    const { version } = await parseBody(c, profileRestoreBodySchema)
+    // Going back to a version brings back its content, never an older name: the name is the channel's (entry 103).
+    const restored = inTransaction(db, () => {
+      const { name } = channelProfileSchema.parse(currentProfile(channel.id).profile)
+      return profiles.restore(channel.id, version, (old) => ({ ...channelProfileSchema.parse(old), name }))
+    })
+    if (!restored) throw new ApiError({ code: 'no_encontrado' })
+    return c.json(restored)
+  })
+
+  // A new name for a new channel; a channel that already exists keeps the one it has on YouTube (entry 81).
+  routes.patch('/channels/:id/name', async (c) => {
+    const channel = findChannel(c.req.param('id'))
+    const { displayName, handle, checkId } = await parseBody(c, channelNameBodySchema)
+    if (channel.origin !== 'nuevo') throw new ApiError({ code: 'validacion', fields: { displayName: 'no_valido' } })
+    if (checkId !== undefined) {
+      const check = names.get(checkId)
+      const owner = check ? journeys.get(check.journeyId) : null
+      if (!check || owner?.channelId !== channel.id || check.displayName !== displayName || check.handle !== handle) {
+        throw new ApiError({ code: 'validacion', fields: { checkId: 'no_valido' } })
+      }
+    }
+    const renamed = inTransaction(db, () => {
+      const current = currentProfile(channel.id)
+      const profile = channelProfileSchema.parse(current.profile)
+      profiles.addVersion(channel.id, {
+        origin: 'manual',
+        profile: { ...profile, name: { displayName, handle, status: 'elegido', checkId: checkId ?? null } },
+      })
+      return channels.update(channel.id, { displayName, handle, nameStatus: 'elegido' })
+    })
+    return c.json(renamed)
+  })
+
+  routes.get('/channels/:id/export', (c) => {
+    const channel = findChannel(c.req.param('id'))
+    const query = exportQuerySchema.safeParse({ format: c.req.query('format') })
+    if (!query.success) throw new ApiError({ code: 'validacion', fields: { format: 'no_valido' } })
+    const { format } = query.data
+    const input = exportInput(
+      { channels, profiles, measures, readings },
+      channel.id,
+      (deps.now ?? (() => new Date()))().toISOString(),
+    )
+    if (!input) throw new ApiError({ code: 'no_encontrado' })
+    const name = exportFileName(input.version.profile.name, format)
+    return c.body(format === 'md' ? profileMarkdown(input) : `${JSON.stringify(profileJson(input), null, 2)}\n`, 200, {
+      'Content-Type': format === 'md' ? 'text/markdown; charset=utf-8' : 'application/json; charset=utf-8',
+      'Content-Disposition': `attachment; filename="${name}"`,
     })
   })
 

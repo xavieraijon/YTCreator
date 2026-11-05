@@ -89,10 +89,15 @@ export function createProfilesRepo(db: DatabaseSync, now: () => Date = () => new
     addVersion(channelId: string, version: NewProfileVersion): ProfileVersion {
       return append(channelId, version.origin, version.profile, version.proposalId ?? null, null)
     },
-    restore(channelId: string, version: number): ProfileVersion | null {
+    // `shape` adjusts the old profile before it becomes the current one (the route keeps the chosen name).
+    restore(
+      channelId: string,
+      version: number,
+      shape: (profile: unknown) => unknown = (p) => p,
+    ): ProfileVersion | null {
       return inTransaction(db, () => {
         const old = getVersion(channelId, version)
-        return old ? append(channelId, 'restaurada', old.profile, null, version) : null
+        return old ? append(channelId, 'restaurada', shape(old.profile), null, version) : null
       })
     },
   }

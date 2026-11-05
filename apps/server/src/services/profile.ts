@@ -5,6 +5,7 @@ import {
   type ConceptOutput,
   type JourneyState,
   type PositioningOutput,
+  type ProfileExportInput,
 } from '@ytcreator/core'
 import type { ConceptFigures } from '@ytcreator/core/api'
 import type { ConceptKnowledge } from '@ytcreator/knowledge'
@@ -39,6 +40,9 @@ const WARNING_SOURCE: Record<string, string | undefined> = {
 }
 
 // The current profile as a text anyone can read, for the context of the profile and its export.
+// What the journey decides: the niche and the concept. The name and the sources are left out.
+const pick = (profile: ChannelProfile) => ({ niche: profile.niche, concept: profile.concept })
+
 export function currentProfileText(current: ChannelOutput<'lectura_canal'>): string {
   const list = (items: readonly { text: string }[]) => items.map((item) => item.text).join(' ')
   return [
@@ -123,12 +127,21 @@ export function createProfile({ channels, proposals, measures, names, profiles, 
       })
 
       const proposal = proposals.latest(journey.id, 'conceptos')
-      const version = profiles.addVersion(journey.channelId, {
-        // Choosing the name later is the creator's own change to a profile that already exists.
-        origin: profiles.getCurrent(journey.channelId) ? 'manual' : 'ia',
-        profile,
-        proposalId: proposal?.id ?? null,
-      })
+      // Choosing the name later is the creator's own change to a profile that already exists: only the name moves,
+      // so what was edited by hand in the profile stays (US5). If on the way the creator went back and chose another
+      // niche, concept or rhythm, the journey's profile is the new one, and the old ones stay in the history.
+      const existing = profiles.getCurrent(journey.channelId)
+      const built = profiles.listVersions(journey.channelId).findLast((v) => v.origin === 'ia')
+      const sameJourney =
+        built !== undefined &&
+        JSON.stringify(pick(channelProfileSchema.parse(built.profile))) === JSON.stringify(pick(profile))
+      const version =
+        existing && sameJourney
+          ? profiles.addVersion(journey.channelId, {
+              origin: 'manual',
+              profile: { ...channelProfileSchema.parse(existing.profile), name: profile.name },
+            })
+          : profiles.addVersion(journey.channelId, { origin: 'ia', profile, proposalId: proposal?.id ?? null })
       channels.update(journey.channelId, {
         displayName: name?.displayName ?? null,
         handle: name?.handle ?? null,
@@ -167,5 +180,57 @@ export function createProfile({ channels, proposals, measures, names, profiles, 
       })
       return profiles.addVersion(journey.channelId, { origin: 'ia', profile, proposalId: proposal.id })
     },
+  }
+}
+
+// What the creator can change by hand: the words. The figures, where they come from and the answers they rest on stay
+// as they were (principle V): the money depends on the cadence and the region, and the warnings on the audience.
+export function editedProfile(base: ChannelProfile, sent: ChannelProfile): ChannelProfile {
+  return channelProfileSchema.parse({
+    ...base,
+    niche: { ...base.niche, summary: sent.niche.summary },
+    concept: {
+      ...base.concept,
+      promise: sent.concept.promise,
+      pillars: sent.concept.pillars,
+      audience: { ...base.concept.audience, description: sent.concept.audience.description },
+      format: {
+        ...base.concept.format,
+        longForm: sent.concept.format.longForm,
+        shortsRole: sent.concept.format.shortsRole,
+      },
+    },
+  })
+}
+
+export type ProfileExportSources = Pick<ProfileDeps, 'channels' | 'profiles'> & {
+  measures: Pick<MeasuresRepo, 'get' | 'listReferences'>
+  readings: { get(id: string): ChannelReading | null }
+}
+
+// Everything the export needs, read from what is saved: nothing is asked of YouTube or the AI.
+export function exportInput(
+  { channels, profiles, measures, readings }: ProfileExportSources,
+  channelId: string,
+  exportedAt: string,
+): ProfileExportInput | null {
+  const channel = channels.get(channelId)
+  const current = profiles.getCurrent(channelId)
+  if (!channel || !current) return null
+  const profile = channelProfileSchema.parse(current.profile)
+  const measure = profile.niche.measureId ? measures.get(profile.niche.measureId) : null
+  return {
+    channel: {
+      id: channel.id,
+      origin: channel.origin,
+      displayName: channel.displayName,
+      handle: channel.handle,
+      youtubeChannelId: channel.youtubeChannelId,
+    },
+    version: { version: current.version, origin: current.origin, createdAt: current.createdAt, profile },
+    measure,
+    references: measure ? measures.listReferences(measure.id) : [],
+    reading: profile.context ? readings.get(profile.context.readingId) : null,
+    exportedAt,
   }
 }

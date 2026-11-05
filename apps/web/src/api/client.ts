@@ -10,12 +10,18 @@ import {
   jobEventSchema,
   journeySchema,
   journeyViewSchema,
+  knowledgeAgesSchema,
+  profileVersionListSchema,
+  profileVersionSchema,
   proposalOutcomeSchema,
   proposalSchema,
   referenceChannelsSchema,
   resolvedChannelSchema,
   usageListSchema,
+  youtubeSettingsSchema,
+  type YouTubeSourceSetting,
 } from '@ytcreator/core/api'
+import type { ChannelProfile } from '@ytcreator/core'
 
 // Any Zod schema from @ytcreator/core/api; structural so the web needs no direct zod import.
 export interface Parser<T> {
@@ -152,8 +158,31 @@ export const channelApi = {
     apiClient.patch(`/api/proposals/${id}`, body, proposalSchema),
 }
 
+// US5: the profile of the channel and its versions.
+export const profileApi = {
+  versions: (channelId: string) =>
+    apiClient.get(`/api/channels/${encodeURIComponent(channelId)}/profile/versions`, profileVersionListSchema),
+  version: (channelId: string, version: number) =>
+    apiClient.get(`/api/channels/${encodeURIComponent(channelId)}/profile/versions/${version}`, profileVersionSchema),
+  save: (channelId: string, body: { baseVersion: number; profile: ChannelProfile }) =>
+    apiClient.put(`/api/channels/${encodeURIComponent(channelId)}/profile`, body, profileVersionSchema),
+  restore: (channelId: string, version: number) =>
+    apiClient.post(`/api/channels/${encodeURIComponent(channelId)}/profile/restore`, { version }, profileVersionSchema),
+}
+
 export const usageApi = {
   list: (options?: RequestOptions) => apiClient.get('/api/usage', usageListSchema, options),
+  knowledge: (options?: RequestOptions) => apiClient.get('/api/settings/knowledge', knowledgeAgesSchema, options),
+}
+
+// Ajustes → YouTube. The key goes in once; only its hint ever comes back.
+export const youtubeSettingsApi = {
+  get: (options?: RequestOptions) => apiClient.get('/api/settings/youtube', youtubeSettingsSchema, options),
+  source: (source: YouTubeSourceSetting) =>
+    apiClient.put('/api/settings/youtube/source', { source }, youtubeSettingsSchema),
+  saveKey: (apiKey: string) => apiClient.put('/api/settings/youtube/api-key', { apiKey }, youtubeSettingsSchema),
+  removeKey: () => apiClient.delete('/api/settings/youtube/api-key'),
+  updateReader: () => apiClient.post('/api/settings/youtube/update-reader', {}, jobStartedSchema),
 }
 
 const JOB_EVENTS: readonly JobEvent['type'][] = ['progress', 'item', 'done', 'failed']

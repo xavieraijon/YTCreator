@@ -49,15 +49,16 @@ describe('youtube schemas', () => {
       source: 'auto',
       effectiveSource: 'ytdlp',
       ytdlpVersion: '2026.08.19',
-      apiKey: { set: true, hint: 'abcd' },
+      apiKey: { set: true, hint: 'abcd', rejected: false },
       quota: { used: 100, limit: 10000, nearLimit: false },
     }
     expect(youtubeSettingsSchema.parse(view)).toEqual(view)
-    expect(youtubeSettingsSchema.safeParse({ ...view, apiKey: { set: true, hint: 'abcde' } }).success).toBe(false)
-    expect(youtubeSettingsSchema.parse({ ...view, apiKey: { set: true, hint: 'abcd', value: 'x' } }).apiKey).toEqual({
-      set: true,
-      hint: 'abcd',
-    })
+    expect(
+      youtubeSettingsSchema.safeParse({ ...view, apiKey: { set: true, hint: 'abcde', rejected: false } }).success,
+    ).toBe(false)
+    expect(
+      youtubeSettingsSchema.parse({ ...view, apiKey: { set: true, hint: 'abcd', rejected: false, value: 'x' } }).apiKey,
+    ).toEqual({ set: true, hint: 'abcd', rejected: false })
   })
 
   it('settings bodies', () => {

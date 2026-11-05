@@ -31,8 +31,22 @@ export interface YouTubeServiceDeps {
 // What the settings say about the source. `get` answers null for a key never saved.
 export const youtubeChoice = (settings: Pick<SettingsRepo, 'get'>): Pick<YouTubeServiceDeps, 'source' | 'hasKey'> => ({
   source: () => settings.get('youtube.source') ?? 'auto',
-  hasKey: () => settings.get('youtube.api_key_ref') !== null,
+  // A key YouTube stopped taking is not tried again (P15 a).
+  hasKey: () => settings.get('youtube.api_key_ref') !== null && settings.get('youtube.api_key_rejected') !== true,
 })
+
+// YouTube stopped taking the saved key (P15 a): it is marked, and no longer tried until another one is saved.
+// The hint says which key Google answered about: a late answer about one already replaced marks nothing.
+export function markYouTubeKeyRejected(
+  settings: Pick<SettingsRepo, 'get' | 'set'>,
+  logger: Logger,
+  hint: string,
+): void {
+  if (settings.get('youtube.api_key_rejected') === true) return
+  if (settings.get('youtube.api_key_ref') === null || settings.get('youtube.api_key_hint') !== hint) return
+  settings.set('youtube.api_key_rejected', true)
+  logger.warn('youtube.key_rejected')
+}
 
 const normalize = (text: string) => text.trim().replace(/\s+/g, ' ').toLowerCase()
 
@@ -52,7 +66,8 @@ export function createYouTubeService(deps: YouTubeServiceDeps): YouTubeData & {
     if ('fake' in adapters) return adapters.fake
     const setting = deps.source()
     if (setting === 'ytdlp') return adapters.ytdlp
-    if (setting === 'data_api') return adapters.dataApi
+    // «Siempre con mi clave» with no key to use (removed, or rejected by YouTube): the reader, as with `auto` (P15 a).
+    if (setting === 'data_api') return deps.hasKey() ? adapters.dataApi : adapters.ytdlp
     return deps.hasKey() && quota.used() < quota.limit ? adapters.dataApi : adapters.ytdlp
   }
 

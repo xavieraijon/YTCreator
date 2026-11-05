@@ -17,7 +17,7 @@ import {
   PROPOSAL_STATUSES,
   SEMAPHORES,
 } from '../channel/model.ts'
-import { CHANNEL_OUTPUTS, type ChannelUse } from '../channel/outputs.ts'
+import { CHANNEL_OUTPUTS, type ChannelUse, HANDLE_PATTERN } from '../channel/outputs.ts'
 import { channelProfileSchema } from '../channel/profile.ts'
 import { readingSummarySchema } from '../channel/reading.ts'
 import { YOUTUBE_FAILURES } from '../youtube/failures.ts'
@@ -176,6 +176,31 @@ export const profileVersionSchema = z.object({
   createdAt: z.string(),
 })
 export type ProfileVersionView = z.infer<typeof profileVersionSchema>
+
+// GET /api/channels/:id/profile/versions
+export const profileVersionItemSchema = profileVersionSchema.pick({ version: true, origin: true, createdAt: true })
+export const profileVersionListSchema = z.array(profileVersionItemSchema)
+export type ProfileVersionItem = z.infer<typeof profileVersionItemSchema>
+
+// PUT /api/channels/:id/profile: what comes from YouTube, the knowledge and the name is kept from the base.
+export const profileEditBodySchema = z.object({
+  baseVersion: z.number().int().positive(),
+  profile: channelProfileSchema,
+})
+
+// POST /api/channels/:id/profile/restore
+export const profileRestoreBodySchema = z.object({ version: z.number().int().positive() })
+
+// PATCH /api/channels/:id/name
+export const channelNameBodySchema = z.object({
+  displayName: z.string().trim().min(1).max(100),
+  handle: z.string().regex(HANDLE_PATTERN),
+  checkId: id.optional(),
+})
+
+// GET /api/channels/:id/export?format=md|json
+export const EXPORT_FORMATS = ['md', 'json'] as const
+export const exportQuerySchema = z.object({ format: z.enum(EXPORT_FORMATS) })
 
 // GET /api/channels/current
 export const channelCurrentSchema = z.union([

@@ -65,6 +65,9 @@ export function createUsageRepo(db: DatabaseSync, now: () => Date = () => new Da
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   )
   const sumSince = db.prepare('SELECT COALESCE(SUM(cost_cents), 0) AS cents FROM ai_usage WHERE created_at >= ?')
+  const selectBetween = db.prepare(
+    'SELECT * FROM ai_usage WHERE created_at >= ? AND created_at < ? ORDER BY created_at DESC, rowid DESC',
+  )
 
   const get = (id: string): Usage | null => {
     const row = selectOne.get(id) as Row | undefined
@@ -95,6 +98,11 @@ export function createUsageRepo(db: DatabaseSync, now: () => Date = () => new Da
 
     list(limit = 100): Usage[] {
       return (selectAll.all(limit) as unknown as Row[]).map(fromRow)
+    },
+
+    // From the start of `from` to the start of `until`, newest first.
+    between(from: Date, until: Date): Usage[] {
+      return (selectBetween.all(from.toISOString(), until.toISOString()) as unknown as Row[]).map(fromRow)
     },
 
     totals(at: Date = now()): { dayCents: number; monthCents: number } {

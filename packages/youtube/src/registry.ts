@@ -1,5 +1,7 @@
 import type { Secret, YouTubeData } from '@ytcreator/core'
 import { createDataApiYouTube, type DataApiLimits } from './data-api/adapter.ts'
+import { checkDataApiKey, type KeyCheck } from './data-api/check-key.ts'
+import { createFakeKeyCheck } from './data-api/fake-key-check.ts'
 import { createFakeYouTube } from './fake/fake-youtube.ts'
 import { createYtDlpYouTube } from './ytdlp/adapter.ts'
 
@@ -14,6 +16,7 @@ export interface YouTubeRegistryOptions {
   now?: () => Date
   // Only narrows what the build allows, like the AI registry.
   allowFake?: boolean
+  onKeyRejected?: (hint: string) => void
 }
 
 export type YouTubeAdapters = { fake: YouTubeData } | { ytdlp: YouTubeData; dataApi: YouTubeData }
@@ -28,12 +31,33 @@ export function createYouTubeAdapters({
   limits,
   now,
   allowFake = true,
+  onKeyRejected,
 }: YouTubeRegistryOptions): YouTubeAdapters {
   if (__YTC_ALLOW_FAKE_AI__ && allowFake && env.YTCREATOR_FAKE_YOUTUBE === '1') {
     return { fake: createFakeYouTube(now ? { now } : {}) }
   }
   return {
     ytdlp: createYtDlpYouTube({ binPath, fetch, ...(now ? { now } : {}) }),
-    dataApi: createDataApiYouTube({ fetch, getKey, quota, limits, ...(now ? { now } : {}) }),
+    dataApi: createDataApiYouTube({
+      fetch,
+      getKey,
+      quota,
+      limits,
+      ...(now ? { now } : {}),
+      ...(onKeyRejected ? { onKeyRejected } : {}),
+    }),
   }
+}
+
+export type KeyChecker = (key: Secret) => Promise<KeyCheck>
+
+// The check of a key before it is kept: with the fake YouTube, the fake check (no network).
+export function createKeyCheck({
+  env,
+  fetch,
+  limits,
+  allowFake = true,
+}: Pick<YouTubeRegistryOptions, 'env' | 'fetch' | 'limits' | 'allowFake'>): KeyChecker {
+  if (__YTC_ALLOW_FAKE_AI__ && allowFake && env.YTCREATOR_FAKE_YOUTUBE === '1') return createFakeKeyCheck()
+  return (key) => checkDataApiKey(key, { fetch, limits })
 }

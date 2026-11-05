@@ -21,3 +21,34 @@ export function classifyResponse(status: number, body: unknown): YouTubeFailureC
   // A bad or unauthorized key, the API off in the project, 5xx: the source cannot answer.
   return 'no_disponible'
 }
+
+// What Google answers when the problem is the key itself: not valid, expired, restricted, or the API off in its
+// project. A key out of units or sent too fast is still a good key.
+const KEY_REASONS = new Set([
+  'keyInvalid',
+  'keyExpired',
+  'accessNotConfigured',
+  'ipRefererBlocked',
+  'API_KEY_INVALID',
+  'API_KEY_EXPIRED',
+  'API_KEY_SERVICE_BLOCKED',
+  'API_KEY_HTTP_REFERRER_BLOCKED',
+  'API_KEY_IP_ADDRESS_BLOCKED',
+  'SERVICE_DISABLED',
+])
+
+function reasonsOf(body: unknown): string[] {
+  const error = (body as { error?: { errors?: { reason?: unknown }[]; details?: { reason?: unknown }[] } } | null)
+    ?.error
+  const list = (value: unknown): { reason?: unknown }[] => (Array.isArray(value) ? value : [])
+  return [...list(error?.errors), ...list(error?.details)]
+    .map((item) => item?.reason)
+    .filter((reason): reason is string => typeof reason === 'string')
+}
+
+export function isKeyRejected(status: number, body: unknown): boolean {
+  if (status !== 400 && status !== 403) return false
+  const reasons = reasonsOf(body)
+  if (reasons.some((reason) => QUOTA.has(reason) || RATE.has(reason))) return false
+  return reasons.some((reason) => KEY_REASONS.has(reason))
+}

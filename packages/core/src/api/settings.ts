@@ -17,3 +17,10 @@ export const generalSettingsSchema = z.object({
 export type GeneralSettings = z.infer<typeof generalSettingsSchema>
 
 export const generalSettingsPatchSchema = generalSettingsSchema.partial()
+
+// GET /api/settings/knowledge: what YTCreator knows about YouTube and when it was reviewed (contracts/knowledge.md).
+export const knowledgeAgesSchema = z.object({
+  files: z.array(z.object({ id: z.string(), label: z.string(), reviewedAt: z.iso.date(), stale: z.boolean() })),
+  staleAfterDays: z.number().int().positive(),
+})
+export type KnowledgeAges = z.infer<typeof knowledgeAgesSchema>

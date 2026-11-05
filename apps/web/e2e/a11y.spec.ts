@@ -386,6 +386,28 @@ test('an existing channel from its link to the profile with the keyboard alone (
     await page.keyboard.press('Enter')
 
     await expect(page.getByRole('heading', { name: 'Cocina Corta' })).toBeVisible()
+
+    // The profile (US5): edited, and back to the version before, with the keyboard alone.
+    await press('Editar')
+    await tabTo(page, page.getByLabel('La promesa'))
+    await page.keyboard.press('ControlOrMeta+A')
+    await page.keyboard.type('Cenas de diario en veinte minutos.')
+    await press('Guardar cambios')
+    await expect(page.getByText('Cenas de diario en veinte minutos.')).toBeVisible()
+    await tabTo(page, page.locator('summary', { hasText: 'Versiones anteriores' }))
+    await page.keyboard.press('Enter')
+    await press('Volver a esta versión')
+    await expect(page.getByText(/Has vuelto a la versión \d+/)).toBeVisible()
+    await tabTo(page, page.getByRole('button', { name: 'Descargar como documento' }))
+
+    // Ajustes → YouTube: the key in «Modo experto», reached with the keyboard.
+    await page.goto(`${server.baseURL}/ajustes/youtube`)
+    await tabTo(page, page.locator('summary', { hasText: 'Modo experto' }))
+    await page.keyboard.press('Enter')
+    await tabTo(page, page.getByLabel('Tu clave de YouTube'))
+    await page.keyboard.type('AIzaFAKE-keyboard-0000')
+    await press('Comprobar y guardar')
+    await expect(page.getByText('Clave guardada ••••0000')).toBeVisible()
   } finally {
     await server.stop()
   }

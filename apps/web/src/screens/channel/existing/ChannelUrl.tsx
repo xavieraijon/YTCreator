@@ -111,7 +111,7 @@ export function ChannelUrl({ view, busy, onStep }: ChannelUrlProps) {
       busy={searching || busy}
       {...(fieldError ? { fieldError } : {})}
       {...(failure ? { failure } : {})}
-      {...(toSettings ? { onSettings: () => navigate({ page: 'settings' }) } : {})}
+      {...(toSettings ? { onSettings: () => navigate({ page: 'youtubeSettings' }) } : {})}
       onChange={setValue}
       onSubmit={() => void search()}
     />

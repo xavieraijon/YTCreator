@@ -57,7 +57,7 @@ function Row({ title, level, body, date }: { title: string; level?: string; body
   )
 }
 
-function Measured({ measure, date }: { measure: MeasureView; date: string }) {
+export function Measured({ measure, date }: { measure: MeasureView; date: string }) {
   const shorts = measure.shortsInSample ?? 0
   return (
     <ul className={styles.figures}>
@@ -155,7 +155,7 @@ export function NicheCard({
           title={failureText.what}
           action={
             failureText.action === 'ir_a_ajustes'
-              ? { label: youtubeFailureActionsEs.ir_a_ajustes, onClick: () => navigate({ page: 'settings' }) }
+              ? { label: youtubeFailureActionsEs.ir_a_ajustes, onClick: () => navigate({ page: 'youtubeSettings' }) }
               : { label: youtubeFailureActionsEs.volver_a_intentar, onClick: onRetry }
           }
         />

@@ -223,6 +223,36 @@ test('from the interests to the rhythm with the fakes (US1)', async ({ page: fir
   await expect(page).toHaveURL(/\/canal$/)
   await expect(page.getByRole('button', { name: 'Elegir el nombre' })).toHaveCount(0)
   await audit(page)
+
+  // The profile (US5): downloaded as a document and as data, edited, and back to the first version.
+  const document = page.waitForEvent('download')
+  await page.getByRole('button', { name: 'Descargar como documento' }).click()
+  expect((await document).suggestedFilename()).toMatch(/^perfil-.+\.md$/)
+  const data = page.waitForEvent('download')
+  await page.getByRole('button', { name: 'Descargar como datos' }).click()
+  expect((await data).suggestedFilename()).toMatch(/^perfil-.+\.json$/)
+
+  await page.getByRole('button', { name: 'Editar' }).click()
+  await audit(page)
+  await page.getByLabel('La promesa').fill('Una promesa cambiada a mano.')
+  await page.getByRole('button', { name: 'Guardar cambios' }).click()
+  await expect(page.getByText(/Cambios guardados\. Es la versión \d+\./)).toBeVisible()
+  await expect(page.getByText('Una promesa cambiada a mano.')).toBeVisible()
+  await page.getByText('Versiones anteriores').click()
+  await audit(page)
+  await page.getByRole('button', { name: 'Volver a esta versión' }).first().click()
+  await expect(page.getByText(/Has vuelto a la versión \d+/)).toBeVisible()
+  await expect(page.getByText('Una promesa cambiada a mano.')).toHaveCount(0)
+
+  // Ajustes → YouTube and Consumo (US5).
+  await page.goto(`${server.baseURL}/ajustes/youtube`)
+  await expect(page.getByRole('button', { name: 'Actualizar el lector' })).toBeVisible()
+  await audit(page)
+  await page.getByRole('tab', { name: 'Consumo' }).click()
+  await expect(page).toHaveURL(/\/ajustes\/consumo$/)
+  await expect(page.getByText(/^Este mes: /)).toBeVisible()
+  await audit(page)
+
   await page.goto(`${server.baseURL}/inicio`)
   await expect(page.getByText(/ya tiene tema, idea y nombre/)).toBeVisible()
 })

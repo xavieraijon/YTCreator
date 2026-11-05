@@ -26,6 +26,10 @@ const form = text.form
 const warningTexts = channelEs.niches.warnings
 
 export type Concept = ConceptOutput & { readonly figures: ConceptFigures }
+// What the screen reads of a concept: a saved profile has no kind of content to show (US5).
+export type ShownConcept = Omit<Concept, 'monetization' | 'warnings'> & {
+  readonly monetization: Pick<Concept['monetization'], 'assumptions'>
+}
 
 const number = (value: number) => new Intl.NumberFormat('es-ES').format(value)
 const euros = (value: number) => new Intl.NumberFormat('es-ES', { maximumFractionDigits: 2 }).format(value)
@@ -40,7 +44,7 @@ function Part({ title, why, children }: { title: string; why: string; children: 
   )
 }
 
-function Money({ concept, own }: { concept: Concept; own: OwnVideos | undefined }) {
+function Money({ concept, own }: { concept: ShownConcept; own: OwnVideos | undefined }) {
   const { monetization } = concept.figures
   const {
     monthlyEurRange: month,
@@ -111,7 +115,16 @@ export interface OwnVideos {
   readonly readAt: string
 }
 
-export function ConceptDetails({ concept, own }: { concept: Concept; own?: OwnVideos | undefined }) {
+export function ConceptDetails({
+  concept,
+  own,
+  promiseNote,
+}: {
+  concept: ShownConcept
+  own?: OwnVideos | undefined
+  /** The promise was written by the creator, not the AI (principle II): this note replaces «Opinión de la IA». */
+  promiseNote?: string | undefined
+}) {
   const { promise, pillars, audience, format: shape, cadence, figures } = concept
   return (
     <>
@@ -120,7 +133,7 @@ export function ConceptDetails({ concept, own }: { concept: Concept; own?: OwnVi
           <strong>{promise}</strong>
         </p>
       </Part>
-      <DataSource kind="ia" />
+      {promiseNote ? <p className={styles.why}>{promiseNote}</p> : <DataSource kind="ia" />}
       <Part title={text.pillars} why={text.pillarsWhy}>
         <ul>
           {pillars.map((pillar) => (

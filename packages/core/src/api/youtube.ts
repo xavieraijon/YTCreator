@@ -51,7 +51,8 @@ export const youtubeSettingsSchema = z.object({
   source: z.enum(YOUTUBE_SOURCE_SETTINGS),
   effectiveSource: z.enum(YOUTUBE_SOURCES),
   ytdlpVersion: z.string().nullable(),
-  apiKey: z.object({ set: z.boolean(), hint: z.string().length(4).nullable() }),
+  // `rejected`: YouTube stopped taking the key, so it is no longer used until another is saved (P15 a).
+  apiKey: z.object({ set: z.boolean(), hint: z.string().length(4).nullable(), rejected: z.boolean() }),
   quota: z
     .object({
       used: z.number().int().nonnegative(),

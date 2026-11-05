@@ -15,7 +15,7 @@ import {
 } from '@ytcreator/core'
 import { z } from 'zod'
 import { checkHandleAt, isTimeout } from '../handle.ts'
-import { classifyResponse } from './classify.ts'
+import { classifyResponse, isKeyRejected } from './classify.ts'
 
 export const DATA_API_TIMEOUT_MS = 15_000
 
@@ -38,6 +38,9 @@ export interface DataApiYouTubeOptions {
   limits: DataApiLimits
   now?: () => Date
   timeoutMs?: number
+  // Google said the key itself is not good (P15 a): the server marks it and stops using it.
+  // It gets the hint of the key that was sent, so an answer about a key already replaced marks nothing.
+  onKeyRejected?: (hint: string) => void
 }
 
 type Failed = { ok: false; failure: { code: YouTubeFailureCode } }
@@ -163,6 +166,7 @@ export function createDataApiYouTube(options: DataApiYouTubeOptions): YouTubeDat
       if (isTimeout(error)) return youtubeFailure('tiempo_agotado')
       body = null
     }
+    if (isKeyRejected(response.status, body)) options.onKeyRejected?.(key.hint())
     const failure = classifyResponse(response.status, body)
     if (failure) return youtubeFailure(failure)
     const parsed = schema.safeParse(body)

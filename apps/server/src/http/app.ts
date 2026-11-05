@@ -14,6 +14,10 @@ import { guard } from './guard.ts'
 import { aiRoutes } from './routes/ai.ts'
 import { channelRoutes, type ChannelRoutesDeps } from './routes/channel.ts'
 import { jobsRoutes } from './routes/jobs.ts'
+import { knowledgeRoutes, type KnowledgeRoutesDeps } from './routes/knowledge.ts'
+import { usageRoutes } from './routes/usage.ts'
+import { youtubeSettingsRoutes, type YouTubeSettingsDeps } from './routes/youtube-settings.ts'
+import type { UsageRepo } from '../db/repos/usage.ts'
 import { youtubeRoutes, type YouTubeRoutesDeps } from './routes/youtube.ts'
 import { onboardingRoutes } from './routes/onboarding.ts'
 import { settingsRoutes } from './routes/settings.ts'
@@ -37,6 +41,10 @@ export interface AppDeps {
   channel?: ChannelRoutesDeps
   jobs?: JobsService
   youtube?: YouTubeRoutesDeps
+  youtubeSettings?: YouTubeSettingsDeps
+  usage?: UsageRepo
+  knowledge?: KnowledgeRoutesDeps
+  now?: () => Date
 }
 
 const MIME: Record<string, string> = {
@@ -100,6 +108,9 @@ export function createApp(deps: AppDeps) {
 
   if (deps.onboarding) app.route('/api/onboarding', onboardingRoutes(deps.onboarding))
   if (deps.ai) app.route('/api/ai', aiRoutes(deps.ai, deps.repair))
+  if (deps.youtubeSettings) app.route('/api/settings/youtube', youtubeSettingsRoutes(deps.youtubeSettings))
+  if (deps.knowledge) app.route('/api/settings/knowledge', knowledgeRoutes(deps.knowledge))
+  if (deps.usage) app.route('/api/usage', usageRoutes({ usage: deps.usage, ...(deps.now ? { now: deps.now } : {}) }))
   if (deps.limits && deps.settings)
     app.route('/api/settings', settingsRoutes({ limits: deps.limits, settings: deps.settings }))
   if (deps.settings) app.route('/api/updates', updatesRoutes({ settings: deps.settings, version: deps.version }))

@@ -9,6 +9,7 @@ import { Screen } from '../../../shell/Screen.tsx'
 import { channelEs } from '../../../strings/channel.es.ts'
 import { es } from '../../../strings/es.ts'
 import styles from '../channel.module.css'
+import { Profile } from '../profile/Profile.tsx'
 
 const text = channelEs.start
 
@@ -129,7 +130,14 @@ export function Start() {
       {error !== null && (
         <ErrorMessage live title={errorText(error)} action={{ label: es.app.retry, onClick: () => void load() }} />
       )}
-      {current ? (
+      {current?.channel && current.profile && current.journey?.status !== 'activo' ? (
+        // US5: with the journey done, the channel's own page.
+        <Profile
+          channel={current.channel}
+          journeyId={current.journey?.id ?? null}
+          onChooseName={() => void chooseName()}
+        />
+      ) : current ? (
         <StartView
           current={current}
           busy={busy}

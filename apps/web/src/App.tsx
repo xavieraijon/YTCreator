@@ -64,6 +64,10 @@ function Page({ route, state }: { route: Route; state: OnboardingState | null })
       return <Settings tab="ia" />
     case 'generalSettings':
       return <Settings tab="general" />
+    case 'youtubeSettings':
+      return <Settings tab="youtube" />
+    case 'usageSettings':
+      return <Settings tab="consumo" />
     case 'switchAi':
       return <ChangeAi key={href(route)} kind={route.kind} limitsFirst={route.limits === true} />
     case 'notFound':

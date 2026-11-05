@@ -297,24 +297,24 @@ que solo se ve por su `hint`.
 
 ### Tests para User Story 5 ⚠️
 
-- [ ] T111 [P] [US5] Test de exportación en `packages/core/test/channel/export.test.ts`: Markdown y JSON con las mismas secciones, «Fuentes» al final con cada dato de YouTube (fecha) y cada fichero de conocimiento (revisión), opiniones marcadas como de la IA
-- [ ] T112 [P] [US5] Tests de rutas de perfil en `apps/server/test/http/profile.test.ts`: `GET .../profile/versions` y `/versions/:v`, `PUT .../profile` con `baseVersion` desfasada (`409`), `POST .../profile/restore`, `PATCH /api/channels/:id/name` con `checkId`, `GET .../export?format=md|json` con `Content-Disposition`
-- [ ] T113 [P] [US5] Tests de ajustes en `apps/server/test/http/youtube-settings.test.ts` y `usage.test.ts`: `GET/PUT /api/settings/youtube/source`, `PUT api-key` comprueba con una llamada de 1 unidad y nunca devuelve la clave, `400` si no vale, `DELETE` (`204`), `update-reader` (`202`), `GET /api/usage?from&to` con `todayCents` y `monthCents`; buscar la clave de prueba en todo lo escrito (base de datos, logs, respuestas) no da resultados
-- [ ] T114 [P] [US5] Tests de pantallas en `apps/web/test/channel/profile.test.tsx` y `apps/web/test/settings/youtube.test.tsx`: «Descargar como documento» y «Descargar como datos», historial, restaurar, aviso de datos con más de 90 días con «Volver a medir», clave solo con `hint`, consumo con totales
+- [X] T111 [P] [US5] Test de exportación en `packages/core/test/channel/export.test.ts`: Markdown y JSON con las mismas secciones, «Fuentes» al final con cada dato de YouTube (fecha) y cada fichero de conocimiento (revisión), opiniones marcadas como de la IA
+- [X] T112 [P] [US5] Tests de rutas de perfil en `apps/server/test/http/profile.test.ts`: `GET .../profile/versions` y `/versions/:v`, `PUT .../profile` con `baseVersion` desfasada (`409`), `POST .../profile/restore`, `PATCH /api/channels/:id/name` con `checkId`, `GET .../export?format=md|json` con `Content-Disposition`
+- [X] T113 [P] [US5] Tests de ajustes en `apps/server/test/http/youtube-settings.test.ts` y `usage.test.ts`: `GET/PUT /api/settings/youtube/source`, `PUT api-key` comprueba con una llamada de 1 unidad y nunca devuelve la clave, `400` si no vale, `DELETE` (`204`), `update-reader` (`202`), `GET /api/usage?from&to` con `todayCents` y `monthCents`; buscar la clave de prueba en todo lo escrito (base de datos, logs, respuestas) no da resultados
+- [X] T114 [P] [US5] Tests de pantallas en `apps/web/test/channel/profile.test.tsx` y `apps/web/test/settings/youtube.test.tsx`: «Descargar como documento» y «Descargar como datos», historial, restaurar, aviso de datos con más de 90 días con «Volver a medir», clave solo con `hint`, consumo con totales (sin el botón «Volver a medir», pausado en P27, entrada 102)
 
-- [ ] T124 [P] E2E de fuga de la clave de YouTube en `apps/web/e2e/secrets-leak.spec.ts` (base de datos, logs, carpeta de trabajo, Git, respuestas HTTP) (se escribe antes que T117, que guarda la clave; fallará hasta entonces)
+- [X] T124 [P] E2E de fuga de la clave de YouTube en `apps/web/e2e/secrets-leak.spec.ts` (base de datos, logs, carpeta de trabajo, Git, respuestas HTTP) (se escribe antes que T117, que guarda la clave; fallará hasta entonces)
 
 ### Implementation para User Story 5
 
-- [ ] T115 [P] [US5] Exportación en `packages/core/src/channel/export.ts`
-- [ ] T116 [US5] Rutas de perfil y exportación en `apps/server/src/http/routes/channel.ts` sobre `apps/server/src/services/profile.ts`
-- [ ] T117 [US5] Ajustes de YouTube: guardar la clave en el `SecretStore` (`apps/server/src/secrets/`), fuente, cupo y actualizar el lector (descarga verificada por SHA256 con `installer/versions.json`) en `apps/server/src/http/routes/youtube-settings.ts`; una clave que YouTube rechaza se marca y deja de probarse (P15 a))
-- [ ] T118 [P] [US5] Ruta `GET /api/usage` en `apps/server/src/http/routes/usage.ts`
-- [ ] T119 [US5] Pantallas `apps/web/src/screens/channel/profile/Profile.tsx`, `ProfileHistory.tsx` y `Export.tsx` (siguiente paso: banco de ideas «próximamente»)
-- [ ] T120 [P] [US5] Pantalla `apps/web/src/screens/settings/YouTubeSettings.tsx` (fuente, «clave de YouTube» en «Modo experto», `hint`, cupo con aviso al pasar del 80 % del día (FR-030), «Actualizar el lector», aviso de clave rechazada (P15 a)) enlazada en `apps/web/src/screens/settings/Settings.tsx`
-- [ ] T121 [P] [US5] Pantalla `apps/web/src/screens/settings/UsageLog.tsx` y lista de conocimiento con más de 180 días en Ajustes
+- [X] T115 [P] [US5] Exportación en `packages/core/src/channel/export.ts`
+- [X] T116 [US5] Rutas de perfil y exportación en `apps/server/src/http/routes/channel.ts` sobre `apps/server/src/services/profile.ts`
+- [X] T117 [US5] Ajustes de YouTube: guardar la clave en el `SecretStore` (`apps/server/src/secrets/`), fuente, cupo y actualizar el lector (descarga verificada por SHA256 con `installer/versions.json`) en `apps/server/src/http/routes/youtube-settings.ts`; una clave que YouTube rechaza se marca y deja de probarse (P15 a))
+- [X] T118 [P] [US5] Ruta `GET /api/usage` en `apps/server/src/http/routes/usage.ts`
+- [X] T119 [US5] Pantallas `apps/web/src/screens/channel/profile/Profile.tsx`, `ProfileHistory.tsx` y `Export.tsx` (siguiente paso: banco de ideas «próximamente») (sin «Volver a medir» ni «Cambiar el nombre»: P27 y P29)
+- [X] T120 [P] [US5] Pantalla `apps/web/src/screens/settings/YouTubeSettings.tsx` (fuente, «clave de YouTube» en «Modo experto», `hint`, cupo con aviso al pasar del 80 % del día (FR-030), «Actualizar el lector», aviso de clave rechazada (P15 a)) enlazada en `apps/web/src/screens/settings/Settings.tsx`
+- [X] T121 [P] [US5] Pantalla `apps/web/src/screens/settings/UsageLog.tsx` y lista de conocimiento con más de 180 días en Ajustes
 
-- [ ] T121b [A] [US5] Puerta A de US5: ejecutar `/puerta-a US5`. No se marca `[X]` hasta que la skill diga «pasada»; el informe queda en `specs/003-channel-and-niche/checklists/validation.md`
+- [ ] T121b [A] [US5] Puerta A de US5: ejecutar `/puerta-a US5` (primer intento 2026-11-05: bloqueada por P27 a P31). No se marca `[X]` hasta que la skill diga «pasada»; el informe queda en `specs/003-channel-and-niche/checklists/validation.md`
 
 **Checkpoint**: todas las historias funcionan por separado.
 
