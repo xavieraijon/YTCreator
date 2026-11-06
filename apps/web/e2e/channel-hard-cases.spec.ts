@@ -1,7 +1,7 @@
 import { expect, type Page, test } from '@playwright/test'
 import { blockExternal, connectAccount, FAKE_KEY, heading, startServer, toConnect, type TestServer } from './server.ts'
 
-// The hard cases of quickstart §4 the other specs leave out (T125): no reader, a limit of 1 cent, a figure the AI made
+// The hard cases of quickstart §4 the other specs leave out (T125): no reader, a limit of 2 cents, a figure the AI made
 // up, and the versions of the profile. A server of their own for each scenario of the fake AI.
 let normal: TestServer
 let versioned: TestServer
@@ -204,7 +204,7 @@ test('a figure the AI made up is taken out, and the screen says so', async ({ pa
   await expect(page.getByText('Este tema mueve 250.000 visitas al mes.')).toHaveCount(0)
 })
 
-test('a limit of 1 cent per operation: the AI button is off and links to the limits', async ({ page, context }) => {
+test('a limit of 2 cents per operation: the AI button is off and links to the limits', async ({ page, context }) => {
   test.setTimeout(120_000)
   await blockExternal(context)
   await page.goto(limited.baseURL)
@@ -213,11 +213,12 @@ test('a limit of 1 cent per operation: the AI button is off and links to the lim
   await page.getByRole('button', { name: 'Comprobar y guardar' }).click()
   await expect(page.getByText(`Clave guardada ••••${FAKE_KEY.slice(-4)} · Funciona`)).toBeVisible()
   await page.getByRole('button', { name: 'Continuar' }).click()
-  await page.getByLabel('Por operación (€)').fill('0,01')
+  // Two calls are reserved (principle IV, entry 152): the questions, about 1 cent each, need 2.
+  await page.getByLabel('Por operación (€)').fill('0,02')
   await page.getByRole('button', { name: 'Guardar límites' }).click()
   await expect(heading(page, 'Todo listo')).toBeVisible()
 
-  // The questions cost about 1 cent and go through; the niches cost more and do not.
+  // The questions go through; the niches cost more and do not.
   await toQuestions(page)
   await page.getByRole('button', { name: /Preparar las preguntas/ }).click()
   await page.getByRole('button', { name: 'Saltar' }).click()

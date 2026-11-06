@@ -54,8 +54,21 @@ export interface Estimate {
   cents: number
   included: boolean
   blockedBy: BudgetBlock | null
+  /** The most it can cost if the AI has to repeat itself, within the limit per operation (P17). */
+  maxCents: number
   pricingVersion: number
 }
+
+// One request can become up to four calls: an answer that does not validate is always asked for again by the adapter
+// (principle IV), and one with figures that have no source is asked for again here. So nothing starts unless two calls
+// fit the budget, and the figures are asked for again only if two more still fit; otherwise they are trimmed (P17,
+// entry 152). So what is spent stays within the limit per operation, as far as the estimate of each call holds (it
+// counts characters, not tokens, and its output is the most the use may write).
+export const MAX_CALLS_PER_RUN = 4
+export const CALLS_RESERVED = 2
+// The longest instructions the creator can write (proposalBodySchema): unknown when estimating, so the most it can
+// cost leaves room for them.
+const MAX_INSTRUCTIONS = 'x'.repeat(500)
 
 export type RunFailure = FailureKind | 'respuesta_invalida' | 'limite_de_gasto'
 
@@ -91,6 +104,21 @@ export function createAiRunService(deps: AiRunDeps) {
     return checkBudget({ cents, limits: saved, spentTodayCents: dayCents, spentThisMonthCents: monthCents })
   }
 
+  // The most a request can cost: four calls, and never past the limit per operation, which every repetition checks.
+  const maxCentsOf = (ai: ActiveAi, cents: number): number => {
+    if (ai.billing === 'suscripcion' || cents === 0) return 0
+    const perOperation = limits.get()?.perOperationCents ?? Number.POSITIVE_INFINITY
+    return Math.max(cents * CALLS_RESERVED, Math.min(cents * MAX_CALLS_PER_RUN, perOperation))
+  }
+
+  const callCents = (ai: ActiveAi, model: string, maxOutputTokens: number, use: ChannelUse, input: unknown) =>
+    estimateCall(pricing, {
+      billing: ai.billing,
+      model,
+      promptChars: deps.promptFor(use).text.length + JSON.stringify(input).length,
+      maxOutputTokens,
+    })
+
   const dropExpired = () => {
     for (const [id, saved] of estimates) if (isEstimateExpired(saved.createdAt, now())) estimates.delete(id)
   }
@@ -107,14 +135,13 @@ export function createAiRunService(deps: AiRunDeps) {
     }): Estimate {
       const ai = activeOrThrow()
       const profile = profileOf(ai, use)
-      const promptChars = deps.promptFor(use).text.length + JSON.stringify(input).length
-      const call = estimateCall(pricing, {
-        billing: ai.billing,
-        model: profile.model,
-        promptChars,
-        maxOutputTokens: profile.maxOutputTokens,
+      const call = callCents(ai, profile.model, profile.maxOutputTokens, use, input)
+      const withInstructions = callCents(ai, profile.model, profile.maxOutputTokens, use, {
+        ...input,
+        instructions: MAX_INSTRUCTIONS,
       })
-      const blockedBy = budgetBlock(ai, call.cents)
+      // The repetition of an invalid answer is reserved: the budget has to hold two calls (principle IV, P17).
+      const blockedBy = budgetBlock(ai, call.cents * CALLS_RESERVED)
       dropExpired()
       const estimateId = randomUUID()
       estimates.set(estimateId, { journeyId, use, cents: call.cents, createdAt: now() })
@@ -124,6 +151,7 @@ export function createAiRunService(deps: AiRunDeps) {
         cents: call.cents,
         included: call.included,
         blockedBy,
+        maxCents: maxCentsOf(ai, withInstructions.cents),
         pricingVersion: call.pricingVersion,
       }
     },
@@ -166,17 +194,32 @@ export function createAiRunService(deps: AiRunDeps) {
         pricingVersion: pricing.version,
       }
 
-      // Checked again: the totals may have moved since the estimate.
-      if (budgetBlock(ai, saved.cents)) {
+      const fullInput = instructions ? { ...input, instructions } : input
+      // What is really sent (the previous proposal, the creator's instructions) can be longer than what was estimated:
+      // the budget is checked with the larger of the two (P17).
+      const oneCallCents = Math.max(
+        saved.cents,
+        callCents(ai, profile.model, profile.maxOutputTokens, use, fullInput).cents,
+      )
+
+      // Checked again, with the repetition reserved: the totals may have moved since the estimate.
+      if (budgetBlock(ai, oneCallCents * CALLS_RESERVED)) {
         usage.record({ ...base, inputTokens: 0, outputTokens: 0, costCents: 0, outcome: 'limite_de_gasto' })
         return { ok: false, failure: 'limite_de_gasto' }
       }
 
       const prompt = deps.promptFor(use)
-      const fullInput = instructions ? { ...input, instructions } : input
       const schema = CHANNEL_OUTPUTS[use] as unknown as AiRequest<ChannelOutput<U>>['schema']
       let inputTokens = 0
       let outputTokens = 0
+      // Asking again for the figures goes only if what was spent, plus two more calls (that one and the repetition the
+      // adapter may need), still fits every limit (P17).
+      const mayAskAgain = (): boolean => {
+        const spent = costCents(pricing, profile.model, inputTokens, outputTokens)
+        const allowed = budgetBlock(ai, spent + oneCallCents * CALLS_RESERVED) === null
+        if (!allowed) logger.warn('ai.retry_skipped_budget', { use })
+        return allowed
+      }
       const call = async (text: string) => {
         const result = await ai.generate<ChannelOutput<U>>({
           use,
@@ -206,7 +249,8 @@ export function createAiRunService(deps: AiRunDeps) {
       let result = await call(prompt.text)
       if (result.ok) {
         const violations = checkClaims(result.value, sources)
-        if (violations.length > 0) {
+        // Without room for another call, the figures with no source are trimmed below instead (P17).
+        if (violations.length > 0 && mayAskAgain()) {
           result = await call(`${prompt.text}\n\n${claimsFeedback(violations)}`)
         }
       }

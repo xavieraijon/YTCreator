@@ -517,7 +517,11 @@ export function channelRoutes(deps: ChannelRoutesDeps) {
             : p.kind === 'posicionamiento'
               ? withCurrentPositioning(journey, p)
               : p,
-        ),
+        )
+        .map((p) => {
+          const newer = proposals.newer(p.id, isReadable)
+          return { ...p, newerId: newer?.id ?? null }
+        }),
       measures: measures.listByJourney(journey.id),
       nameChecks: names.listByJourney(journey.id),
       jobs: jobs.listByJourney(journey.id),
@@ -608,8 +612,15 @@ export function channelRoutes(deps: ChannelRoutesDeps) {
 
   routes.post('/journeys/:id/estimate', async (c) => {
     const journey = findJourney(c.req.param('id'))
-    const { use } = await parseBody(c, estimateBodySchema)
-    return c.json(aiRun.estimate({ journeyId: journey.id, use, input: inputOf(use, journey) }))
+    const { use, proposalId } = await parseBody(c, estimateBodySchema)
+    const base = inputOf(use, journey)
+    // «Proponer otra» sends the proposal being redone: the estimate counts it (P17, contracts/http-api.md).
+    const parent = proposalId ? proposals.get(proposalId) : null
+    if (proposalId && (parent?.journeyId !== journey.id || useOf(parent.kind) !== use)) {
+      throw new ApiError({ code: 'no_encontrado' })
+    }
+    const input = parent ? { ...base, previous: previousOf(parent.editedPayload ?? parent.payload) } : base
+    return c.json(aiRun.estimate({ journeyId: journey.id, use, input }))
   })
 
   routes.post('/journeys/:id/proposals', async (c) => {
@@ -621,6 +632,8 @@ export function channelRoutes(deps: ChannelRoutesDeps) {
     if (body.parentId && (parent?.journeyId !== journey.id || parent.kind !== body.kind)) {
       throw new ApiError({ code: 'no_encontrado' })
     }
+    // A batch no longer in use cannot be redone (P3); it is checked again when the AI answers.
+    if (parent?.status === 'descartada') throw new ApiError({ code: 'conflicto' })
 
     const use = useOf(body.kind)
     const base = inputOf(use, journey)
@@ -660,7 +673,11 @@ export function channelRoutes(deps: ChannelRoutesDeps) {
       claimsTrimmed: result.claimsTrimmed,
       usageId: result.usageId,
     }
-    return c.json(parent ? proposals.regenerate(parent.id, fresh) : proposals.create(fresh))
+    if (!parent) return c.json(proposals.create(fresh))
+    // Checked again now: the batch may have been left while the AI answered (spent, not kept, as above).
+    const made = proposals.regenerate(parent.id, fresh)
+    if (!made) throw new ApiError({ code: 'conflicto' })
+    return c.json(made)
   })
 
   routes.post('/proposals/:id/back', (c) => {
@@ -668,6 +685,15 @@ export function channelRoutes(deps: ChannelRoutesDeps) {
     if (!proposal) throw new ApiError({ code: 'no_encontrado' })
     if (proposal.status === 'descartada' || !proposal.parentId) throw new ApiError({ code: 'conflicto' })
     return c.json(proposals.goBack(proposal.id))
+  })
+
+  // P3: going back keeps the newer batch, and this brings it back.
+  routes.post('/proposals/:id/forward', (c) => {
+    const proposal = proposals.get(c.req.param('id'))
+    if (!proposal) throw new ApiError({ code: 'no_encontrado' })
+    const next = proposals.goForward(proposal.id, isReadable)
+    if (!next) throw new ApiError({ code: 'conflicto' })
+    return c.json(next)
   })
 
   routes.patch('/proposals/:id', async (c) => {

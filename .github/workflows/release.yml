@@ -49,6 +49,15 @@ jobs:
             exit 1
           fi
 
+      # Nor the fake YouTube: its switch, its adapters and its made-up channels (P6).
+      - name: No fake YouTube
+        run: |
+          if grep -n -E 'YTCREATOR_FAKE_YOUTUBE|createFakeYouTube|createFakeKeyCheck|makeChannel|cocinacorta30|Cocina Corta' \
+            apps/server/dist/server.mjs; then
+            echo "server.mjs still contains the fake YouTube" >&2
+            exit 1
+          fi
+
       # The tarball's root is what ends up in $APP_HOME/versions/<v>: bin/ytcreator runs ../server.mjs, and
       # server.mjs looks for VERSION and web/ next to itself (cli.ts).
       - name: Package

@@ -68,7 +68,6 @@ export const channelEs = {
     chosen: 'Nicho elegido',
     change: 'Elige otro si cambias de idea',
     next: 'Seguir',
-    previousBatch: 'Volver a la tanda anterior',
     stale: 'Estas cifras tienen más de {dias} días y pueden haber cambiado.',
     measureAgain: 'Volver a medir',
     pending: 'Todavía midiendo este nicho…',
@@ -208,6 +207,9 @@ export const channelEs = {
     moneyWhy: 'Es una estimación, no una promesa. Son rangos amplios porque cada canal es distinto.',
     moneyRange: 'De {min} a {max} € al mes con anuncios.',
     moneyViews: 'Supone de {min} a {max} visitas al mes: una parte de lo que consigue un vídeo típico de este nicho.',
+    // P1: the share of the niche's typical video a new channel gets has no source; it is said where it is used.
+    moneyViewsAssumption:
+      'Cuánto de eso consigue un canal que empieza es un supuesto nuestro, sin fuente que lo respalde. Tómalo como una idea del orden, no como una cifra.',
     moneyUnknown:
       'Sin dato: no tenemos cifras de este nicho o el ritmo no incluye vídeos largos, así que no te damos una cantidad.',
     moneyViewsOwn:
@@ -395,7 +397,6 @@ export const channelEs = {
       goOn: 'Seguir',
       approveFirst: 'Aprueba tu perfil actual para que podamos proponerte cómo enfocarlo.',
       stale: 'Tu perfil actual o tus respuestas han cambiado después de escribir este enfoque. Puedes pedir otro.',
-      previous: 'Volver a la anterior',
       proposal: 'Lo que te proponemos',
       changes: 'Qué cambiaría',
       generate: 'Proponer cómo enfocarlo',
@@ -523,6 +524,11 @@ export const channelEs = {
   back: 'Volver',
   proposal: {
     approve: 'Aprobar',
+    // Going back keeps the newer one, so both can be gone back to (P3).
+    previousBatch: 'Volver a la tanda anterior',
+    newerBatch: 'Volver a la tanda más nueva',
+    previousOne: 'Volver a la anterior',
+    newerOne: 'Volver a la más nueva',
     edit: 'Editar',
     regenerate: 'Proponer otra',
     whatToChange: '¿Qué cambiarías?',
@@ -531,6 +537,8 @@ export const channelEs = {
     pendingChange:
       'Has escrito qué cambiarías. Pulsa «Proponer otra» para usarlo, o bórralo si prefieres quedarte con esto.',
     estimateCost: 'unos {importe} €',
+    // If the AI has to repeat its answer it is paid again, never past the limit per operation (P17).
+    estimateCostUpTo: 'unos {importe} €, como mucho {maximo} € si la IA tiene que repetir',
     included: 'Incluido en tu suscripción',
     actionWithCost: '{accion} · {importe}',
     claimsTrimmed: 'Hemos quitado frases u opciones que daban cifras que no podíamos comprobar.',

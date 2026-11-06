@@ -116,6 +116,7 @@ describe('channel schemas', () => {
       cents: 4,
       included: false,
       blockedBy: null,
+      maxCents: 16,
       pricingVersion: 1,
     }
     expect(estimateSchema.parse(estimate)).toEqual(estimate)

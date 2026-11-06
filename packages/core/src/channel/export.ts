@@ -200,7 +200,9 @@ function readingLines(reading: ChannelReadingView): string[] {
   ]
 }
 
-function moneyLines(profile: ChannelProfile, sources: readonly Source[]): string[] {
+// `existing`: the visits come from the channel's own videos (it has a context); otherwise they are a share of the
+// niche, which has no source (P1). The origin does not say it: a channel started again «as new» keeps `existente`.
+function moneyLines(profile: ChannelProfile, sources: readonly Source[], existing: boolean): string[] {
   const money = profile.concept.monetization
   const rpm = sources.find((source) => source.id === 'rpm')
   const ypp = sources.find((source) => source.id === 'ypp')
@@ -213,6 +215,9 @@ function moneyLines(profile: ChannelProfile, sources: readonly Source[]): string
     ...(money.monthlyViewsAssumption
       ? [
           `- Supone de ${number(money.monthlyViewsAssumption.min)} a ${number(money.monthlyViewsAssumption.max)} visitas al mes. (${ESTIMATE})`,
+          ...(existing
+            ? []
+            : ['- Cuánto de eso consigue un canal que empieza es un supuesto nuestro, sin fuente que lo respalde.']),
         ]
       : []),
     `- Lo que ganas por cada 1.000 visitas: de ${number(money.rpmEurRange.min)} a ${number(money.rpmEurRange.max)} €.${by(rpm)}`,
@@ -288,7 +293,7 @@ export function profileMarkdown(input: ProfileExportInput): string {
       `- ${counted(concept.cadence.longPerWeek, 'vídeo largo', 'vídeos largos')} y ${counted(concept.cadence.shortsPerWeek, 'Short', 'Shorts')} por semana.`,
       ...rhythmLines(concept.cadence, input.rhythm),
     ],
-    dinero: moneyLines(profile, profile.sources),
+    dinero: moneyLines(profile, profile.sources, profile.context !== null),
     avisos: concept.warnings.map((warning) => {
       const source = profile.sources.find((s) => s.id === warning.sourceId)
       return `- ${WARNING[warning.code]}${source ? ` (${knowledge(source)})` : ''}`

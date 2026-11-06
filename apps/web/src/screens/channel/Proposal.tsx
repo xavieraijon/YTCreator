@@ -13,7 +13,9 @@ export function costLabel(action: string, estimate: EstimateView | null): string
   if (!estimate) return action
   const importe = estimate.included
     ? text.included
-    : format(text.estimateCost, { importe: formatEuros(estimate.cents) })
+    : estimate.maxCents > estimate.cents
+      ? format(text.estimateCostUpTo, { importe: formatEuros(estimate.cents), maximo: formatEuros(estimate.maxCents) })
+      : format(text.estimateCost, { importe: formatEuros(estimate.cents) })
   return format(text.actionWithCost, { accion: action, importe })
 }
 

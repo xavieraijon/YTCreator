@@ -399,7 +399,7 @@ test('an existing channel from its link to the profile with the keyboard alone (
     await tabTo(page, page.locator('summary', { hasText: 'Versiones anteriores' }))
     await page.keyboard.press('Enter')
     await press('Volver a esta versión')
-    await expect(page.getByText(/Has vuelto a la versión \d+/)).toBeVisible()
+    await expect(page.getByText(/Has vuelto a la versión \d+/).first()).toBeVisible()
     await tabTo(page, page.getByRole('button', { name: 'Descargar como documento' }))
 
     // Ajustes → YouTube: the key in «Modo experto», reached with the keyboard.

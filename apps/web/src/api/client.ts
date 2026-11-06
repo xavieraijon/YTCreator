@@ -136,14 +136,21 @@ export const channelApi = {
     id: string,
     body: { revision: number; step: JourneyStep; data?: object; confirm?: boolean; nameLater?: boolean },
   ) => apiClient.post(`/api/journeys/${id}/step`, body, journeySchema),
-  estimate: (id: string, use: ChannelUse, options?: RequestOptions) =>
-    apiClient.post(`/api/journeys/${id}/estimate`, { use }, estimateSchema, options),
+  // With the proposal being redone, the estimate counts it too: it is sent with the request (P17).
+  estimate: (id: string, use: ChannelUse, options?: RequestOptions, proposalId?: string) =>
+    apiClient.post(
+      `/api/journeys/${id}/estimate`,
+      { use, ...(proposalId ? { proposalId } : {}) },
+      estimateSchema,
+      options,
+    ),
   propose: (
     id: string,
     body: { revision: number; kind: ProposalKind; estimateId: string; instructions?: string; parentId?: string },
     options?: RequestOptions,
   ) => apiClient.post(`/api/journeys/${id}/proposals`, body, proposalOutcomeSchema, options),
   back: (id: string) => apiClient.post(`/api/proposals/${id}/back`, {}, proposalSchema),
+  forward: (id: string) => apiClient.post(`/api/proposals/${id}/forward`, {}, proposalSchema),
   measure: (id: string, body: { revision: number; niches: { label: string; queries: string[] }[]; force?: boolean }) =>
     apiClient.post(`/api/journeys/${id}/measures`, body, jobStartedSchema),
   checkNames: (

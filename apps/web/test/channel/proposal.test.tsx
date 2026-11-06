@@ -11,6 +11,7 @@ const estimate: EstimateView = {
   cents: 4,
   included: false,
   blockedBy: null,
+  maxCents: 4,
   pricingVersion: 1,
 }
 
@@ -30,6 +31,11 @@ describe('costLabel (FR-029)', () => {
   it('says the subscription includes it', () => {
     expect(costLabel('Proponer otra', { ...estimate, cents: 0, included: true })).toBe(
       'Proponer otra · Incluido en tu suscripción',
+    )
+  })
+  it('says the most it can cost when the AI may repeat (P17)', () => {
+    expect(costLabel('Proponer otra', { ...estimate, maxCents: 16 })).toBe(
+      'Proponer otra · unos 0,04 €, como mucho 0,16 € si la IA tiene que repetir',
     )
   })
   it('without an estimate, only the action', () => {

@@ -70,7 +70,7 @@ Esperado: cada botón de IA mostró el importe antes de pulsarlo; Ajustes → Co
 | Nombre aplazado | «Decidir más tarde» | Perfil guardado con nombre provisional |
 | Menos de 5 vídeos | Canal de 3 vídeos del `fake` | Ofrece el recorrido de canal nuevo conservando nombre y @ |
 | Cerrar a mitad | Cerrar la pestaña midiendo nichos | Al volver, «Seguir donde lo dejaste» y lo ya medido |
-| Límite de gasto | Límite por operación de 1 céntimo con API | Botón desactivado y enlace a Ajustes → Límites |
+| Límite de gasto | Límite por operación de 2 céntimos con API (se reservan dos llamadas, decisión 152) | Botón desactivado y enlace a Ajustes → Límites |
 | Cifra inventada | Respuesta grabada del `fake` | Frase quitada y aviso de que se recortó |
 | Versiones | Editar el perfil dos veces y restaurar la 1 | Versión 4 `restaurada`; la 2 y la 3 siguen ahí |
 

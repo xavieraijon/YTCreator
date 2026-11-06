@@ -19,6 +19,7 @@ import { useJob } from '../../../shell/useJob.ts'
 import { channelEs } from '../../../strings/channel.es.ts'
 import { es } from '../../../strings/es.ts'
 import styles from '../channel.module.css'
+import { BatchNav } from '../BatchNav.tsx'
 import { AiAction, Proposal } from '../Proposal.tsx'
 import { latestOf, payloadOf, useEstimate, useGenerate } from '../useJourney.ts'
 
@@ -201,7 +202,7 @@ export function Names(props: NamesProps) {
 
 function ChooseName({ view, busy, reload, onFinish, fromProfile }: NamesProps) {
   const proposal = latestOf(view, 'nombres')
-  const { estimate, error: estimateError, refresh } = useEstimate(view.id, 'nombres')
+  const { estimate, error: estimateError, refresh } = useEstimate(view.id, 'nombres', true, proposal?.id)
   const generate = useGenerate(view, estimate, async () => {
     await reload()
     await refresh()
@@ -233,6 +234,7 @@ function ChooseName({ view, busy, reload, onFinish, fromProfile }: NamesProps) {
             reload={reload}
             onFinish={onFinish}
             fromProfile={fromProfile}
+            generating={generate.busy}
           />
         </Proposal>
       ) : (
@@ -269,7 +271,15 @@ function ChooseName({ view, busy, reload, onFinish, fromProfile }: NamesProps) {
 const checkOf = (view: JourneyFullView, { displayName, handle }: Name) =>
   view.nameChecks.findLast((check) => check.displayName === displayName && check.handle === handle) ?? null
 
-function List({ view, proposal, busy, reload, onFinish, fromProfile }: NamesProps & { proposal: ProposalView }) {
+function List({
+  view,
+  proposal,
+  busy,
+  reload,
+  onFinish,
+  fromProfile,
+  generating,
+}: NamesProps & { proposal: ProposalView; generating: boolean }) {
   const names = payloadOf<{ names: Name[] }>(proposal).names
   const original = (proposal.payload as { names: Name[] }).names
   const running = view.jobs.findLast((job) => job.kind === 'comprobar_nombres' && job.status === 'en_curso') ?? null
@@ -452,6 +462,11 @@ function List({ view, proposal, busy, reload, onFinish, fromProfile }: NamesProp
           if (index !== null) choose(index)
         }}
       />
+      {/* From the profile, «Cancelar» already goes back to the names there were when the panel opened. Hidden with a
+          name of one's own half written: changing batch would lose it (P3). */}
+      {!fromProfile && !ownName && !ownHandle && (
+        <BatchNav proposal={proposal} reload={reload} busy={busy || deciding || isRunning || generating} />
+      )}
     </div>
   )
 }

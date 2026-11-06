@@ -71,6 +71,10 @@ test('from the interests to the rhythm with the fakes (US1)', async ({ page: fir
   await page.getByRole('button', { name: /Proponer otra/ }).click()
   await page.getByRole('button', { name: 'Volver a la tanda anterior' }).click()
   await expect(page.getByRole('button', { name: 'Volver a la tanda anterior' })).toHaveCount(0)
+  // The newer batch was not lost (P3): it can be brought back, and gone back from again.
+  await page.getByRole('button', { name: 'Volver a la tanda más nueva' }).click()
+  await expect(page.getByRole('button', { name: 'Volver a la tanda más nueva' })).toHaveCount(0)
+  await page.getByRole('button', { name: 'Volver a la tanda anterior' }).click()
   await expect(page.getByRole('button', { name: 'Elegir este nicho' }).first()).toBeEnabled()
 
   // A niche with no videos has no figures and no verdict.

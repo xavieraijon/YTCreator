@@ -1,6 +1,6 @@
 import type { ChannelUse } from '@ytcreator/core'
 import type { AiRunFailure, EstimateView, JourneyFullView, ProposalView } from '@ytcreator/core/api'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { channelApi } from '../../api/client.ts'
 
 export function useJourneyView() {
@@ -38,23 +38,31 @@ export const latestOf = (view: JourneyFullView, kind: ProposalView['kind']): Pro
 export const payloadOf = <T>(proposal: ProposalView): T => (proposal.editedPayload ?? proposal.payload) as T
 
 // What an AI action will cost, asked for before it is shown (FR-029).
-export function useEstimate(journeyId: string, use: ChannelUse, enabled = true) {
+// With a proposal, what «Proponer otra» costs: the new one is asked for with that one in it (P17).
+export function useEstimate(journeyId: string, use: ChannelUse, enabled = true, proposalId?: string) {
   const [estimate, setEstimate] = useState<EstimateView | null>(null)
   const [error, setError] = useState<unknown>(null)
 
+  // The proposal of now, and only the last answer counts: an estimate asked for a batch already left is dropped.
+  const currentProposal = useRef(proposalId)
+  currentProposal.current = proposalId
+  const asked = useRef(0)
+
   const refresh = useCallback(async () => {
+    const turn = ++asked.current
     setError(null)
     setEstimate(null)
     try {
-      setEstimate(await channelApi.estimate(journeyId, use))
+      const fresh = await channelApi.estimate(journeyId, use, undefined, currentProposal.current)
+      if (turn === asked.current) setEstimate(fresh)
     } catch (caught) {
-      setError(caught)
+      if (turn === asked.current) setError(caught)
     }
   }, [journeyId, use])
 
   useEffect(() => {
     if (enabled) void refresh()
-  }, [enabled, refresh])
+  }, [enabled, refresh, proposalId])
 
   return { estimate, error, refresh }
 }
