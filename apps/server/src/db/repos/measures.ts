@@ -37,6 +37,8 @@ export interface NewReference {
   bestVideoId: string | null
   bestVideoTitle: string | null
   reason: ReferenceReason
+  /** When its figures were read, if they were read before: copied from another measure, they keep their date. */
+  fetchedAt?: string
 }
 
 export interface ReferenceChannel extends NewReference {
@@ -252,7 +254,7 @@ export function createMeasuresRepo(db: DatabaseSync, now: () => Date = () => new
             r.bestVideoId,
             r.bestVideoTitle,
             r.reason,
-            at,
+            r.fetchedAt ?? at,
           )
         }
         return (selectReferences.all(measureId) as unknown as ReferenceRow[]).map(fromReferenceRow)

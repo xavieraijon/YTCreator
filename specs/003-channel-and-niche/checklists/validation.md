@@ -1,6 +1,222 @@
 # Validación: 003 canal y nicho
 
-## US5: Puerta A de la fase 7, T111 a T121 y T124 (2026-11-05): BLOQUEADA
+## US5: Puerta A de la fase 7 completa, T111 a T121f y T124 (2026-11-06): PASADA
+
+**Resultado: pasada tras tres vueltas de revisión.** El creador respondió P27 a P34 y todo está implementado. Los hallazgos
+graves y medios de las tres vueltas están corregidos o descartados con motivo. Los controles pasan en su última ejecución.
+Nada se ha comprobado con YouTube real ni con IA real (T125b). Sustituye a la Puerta A bloqueada del 2026-11-05, que se
+deja debajo como historia.
+
+### 1. Resumen
+
+«Mi canal» enseña el perfil con sus cifras y fechas, y se puede:
+
+- editar los textos, las respuestas y los supuestos del dinero;
+- reescribir una parte con la IA (la promesa, los temas o el público), con el precio antes, una propuesta que se guarda
+  en la base de datos y el sí del creador;
+- volver a medir el nicho o, en un canal que ya existía, volver a leerlo, sin IA;
+- cambiar el nombre en el paso de nombres;
+- volver a una versión anterior;
+- descargarlo en `.md` y `.json`.
+
+Ajustes tiene «YouTube» y «Consumo».
+
+### 2. Requisitos
+
+| Requisito | Estado | Evidencia | Fecha |
+|---|---|---|---|
+| US5 AS1: página con nicho, concepto, nombre y @, datos con fecha | Cumplido; la lectura del perfil se busca por su id (entrada 128) | `profile.test.tsx`, `positioning.test.ts`, `channel-niche.spec.ts` | 2026-11-06 |
+| US5 AS2: editar o regenerar una parte; versión nueva por cambio | Cumplido: textos, respuestas y supuestos (P30, entradas 117, 121, 123 y 124); «Reescribir con la IA» (P28, entradas 115, 119, 126, 129 y 130) | `profile.test.ts`, `profile.test.tsx`, `uses.test.ts`, `channel-niche.spec.ts` | 2026-11-06 |
+| US5 AS3: descargar `.md` y `.json` con lo mismo y sus fuentes | Cumplido; el JSON añade `version` y `sections` (P31) | `export.test.ts`, `profile.test.ts`, `channel-niche.spec.ts` | 2026-11-06 |
+| US5 AS4: aviso de más de 90 días con «Volver a medir» | Cumplido: «Volver a medir» (P27, entradas 114 y 120) y «Volver a leer tu canal» (P32, entradas 125 y 128); las referencias guardan su fecha (entrada 132) | `profile.test.ts`, `positioning.test.ts`, `channel-reading.test.ts`, `profile.test.tsx` | 2026-11-06 |
+| Volver a una versión anterior, también como versión nueva | Cumplido; conserva el nombre actual (entrada 103) y el dinero, con la categoría de su concepto (entrada 132) | `profile.test.ts` | 2026-11-06 |
+| Cambiar el nombre elegido desde el perfil | Cumplido en el paso de nombres (P29, entradas 116, 122 y 131) | `profile.test.ts`, `names.test.ts`, `channel-niche.spec.ts` | 2026-11-06 |
+| FR-029: el coste antes de cada llamada | Cumplido; la estimación va ligada al recorrido del canal | `ai-run.test.ts`, `profile.test.ts` | 2026-11-06 |
+| FR-030, FR-033, P15, lector, consumo | Cumplido (sin cambios desde la vuelta del 2026-11-05) | Los de la Puerta A anterior | 2026-11-06 |
+
+### 3. Cómo se comprobó
+
+Con Node 24, cada comando por separado y leyendo su propio código de salida. Última ejecución, tras las correcciones de la
+tercera vuelta:
+
+| Comando | Resultado |
+|---|---|
+| `pnpm lint` | Código 0 |
+| `pnpm typecheck` | Código 0 |
+| `pnpm test`, con `node_modules/.vitest-cache` borrada | Código 0: 1382 correctas, 2 omitidas, 119 ficheros |
+| `pnpm test:e2e` | Código 0: web 30 correctas; catálogo 97 correctas |
+| `pnpm test:installer` | Código 0: 29 correctas |
+
+**Antes de quedar en verde fallaron:**
+
+- **Unitarias de la segunda vuelta:**
+  - lista de usos sin `perfil_parte`;
+  - migraciones esperadas `[1,2,3]`;
+  - caché de vitest con la migración vieja («no such table»);
+  - pruebas de `409` que competían con el trabajo falso. Pasan a sembrar un trabajo en marcha.
+- **Unitarias de la tercera vuelta:** dos casos de límites de vídeos que ya no existen (entrada 124).
+
+### 4. Controles obligatorios
+
+**Pasados**
+
+- `lint`, `typecheck`, `test`, `test:e2e` y `test:installer` (apartado 3).
+- Glosario: `apps/web/test/glossary.test.ts` con los textos nuevos del panel y del editor.
+- Fuga de secretos: `secrets-leak.spec.ts`. Esta historia no añade ningún `Secret.reveal()` (revisor de seguridad).
+- Axe y teclado: perfil, editor, historial y el panel de reescribir (`channel-niche.spec.ts`, `a11y.spec.ts`).
+- Fallos de IA: las cinco causas y `respuesta_invalida` de `perfil_parte` en `profile.test.ts`. Una propuesta pagada no
+  se pierde con un `409` (entrada 126).
+- Gasto: el precio en el botón y el presupuesto comprobado antes. «Volver a medir» y «Volver a leer» no apuntan nada en
+  `ai_usage`.
+- Prompt: `perfil_parte@1` registrado en `lock.json`; la batería de contrato lo recorre por `CHANNEL_OUTPUTS`.
+- «Cómo se demuestra»: T111 a T114, T121c a T121f y T124. En `channel-niche.spec.ts`, el recorrido entero:
+  1. descargar;
+  2. editar con el aviso infantil;
+  3. reescribir los temas;
+  4. cambiar el nombre;
+  5. restaurar;
+  6. Ajustes.
+
+**Fallidos en la última ejecución:** ninguno.
+
+**No ejecutados**
+
+- YouTube real e IA real: necesitan la aprobación del creador (T125b).
+- La auditoría de novato: es la puerta final de la feature.
+
+### 5. Hallazgos de revisión
+
+**Primera vuelta (2026-11-05):** corregida antes de la Puerta A bloqueada; el detalle está en su apartado 5, más abajo.
+
+**Segunda vuelta (2026-11-06), con P27 a P31 implementados.** Corregidos:
+
+- **Grave:** al cambiar el nombre después de reescribir con la IA se perdía lo hecho tras el recorrido. `finish` comparaba
+  con la última versión `ia` y ahora compara con la del recorrido.
+- **Avisos:**
+  - los avisos que salen de las palabras y los de la IA se perdían al editar o al volver a medir (entrada 121);
+  - el dinero se multiplicaba con un ritmo sin límites (entrada 124).
+- **Volver a medir:**
+  - el trabajo decía «guardado» sin versión; ahora falla;
+  - dos medidas a la vez; ahora `409`;
+  - la acción del error no seguía su causa.
+- **Edición:**
+  - los supuestos del dinero no se podían corregir (entrada 123);
+  - la promesa de la IA se buscaba mal.
+- **Gasto:** la estimación servía para otro recorrido.
+- **Panel:**
+  - tenía un botón principal de más y faltaba «Editar antes de guardar» (entrada 130);
+  - se podía guardar mientras se medía.
+- **Nombre:** cambiarlo en un canal que vino de YouTube (entrada 122, ahora Medio).
+- **Documentos** sin enmendar.
+
+Tres huecos de riesgo alto que se llevaron al creador:
+
+- **P32:** volver a leer el canal (entrada 125).
+- **P33:** la propuesta guardada en la base de datos (entrada 126).
+- **P34:** el origen de la versión (entrada 127).
+
+**Tercera vuelta (2026-11-06), sobre todo lo anterior.** Seguridad sin graves ni medios. Corregidos (entradas 124, 128,
+129, 131 y 132):
+
+- **Fidelidad 1 (grave):** las referencias copiadas al volver a medir salían con la fecha de hoy. Ahora conservan la suya
+  (FR-008).
+- **Fidelidad 3 / lógica M1:** el dinero tomaba la categoría de otro concepto. Ahora sigue la versión hasta su concepto.
+- **Lógica M2 / seguridad 1:** una versión recuperada perdía su lectura y su aviso de antigüedad. Hay una ruta nueva,
+  `GET …/profile/reading`.
+- **Lógica M3:** volver a leer con «sin vídeos» guardaba una lectura vacía. Ahora es un fallo.
+- **Seguridad 1:** si fallaba la versión, la lectura nueva se guardaba igual. Ahora se deshace.
+- **Fidelidad 5:** el límite de vídeos (0 a 60, sin decimales) era inventado. Se quita, y solo se comprueba lo que cambia.
+- **Regresión 1 / fidelidad 4 / lógica m3:** «Decidir más tarde» borraba el nombre elegido. Además, terminar sin cambios
+  guardaba una versión repetida.
+- **Lógica m1 / regresión 2:** un nicho podía acabar con la medida de otro.
+- **Fidelidad 2 / lógica m5:** una promesa de la IA recuperada salía como «Escrita por ti».
+- **Lógica m2 / regresión 3:** al volver a la pantalla no se sabía que había una medida en marcha.
+- **Regresión 4:** cancelar el editor escondía la propuesta.
+- **Regresión 5:** el aviso «ya no está» se quedaba puesto.
+- **Regresión 6:** se podía pedir a la IA mientras se medía.
+- **Lógica m4:** sustituir la propuesta no era atómico.
+- **Fidelidad 6:** riesgo de la entrada 129, ahora Medio.
+- **Fidelidad 7 / regresión 7 y 8:** textos del editor y del conflicto, y documentos.
+
+**Descartados, con motivo:**
+
+- Que «Terminar» perdiera el nombre elegido al volver a nombres: no pasa, se queda con el elegido.
+- Seguridad, notas sobre código anterior (el reintento de cifras sin estimación, P17; la estimación de
+  `/journeys/:id/proposals` sin recorrido): no son de esta historia y ya constan.
+
+**Abiertos (menores):**
+
+- Al reabrir el recorrido para cambiar el nombre, «Mi canal» enseña «Seguir donde lo dejaste» en vez del perfil, y en
+  nombres se puede volver a pasos anteriores (entrada 131). Se sale con «Terminar» o «Decidir más tarde».
+- Lo guardado desde «Editar antes de guardar» queda como del creador, aunque no se toque (entrada 119).
+- El esquema de `perfil_parte` pide las tres partes, y las cifras se comprueban también en las dos que se copian. Una
+  copia mala acaba en `respuesta_invalida`, cobrada.
+- La estimación no cuenta las instrucciones (hasta 500 caracteres) ni la parte.
+- Si falla el descarte tras guardar desde el editor, la propuesta vuelve como «desactualizada».
+- Dos pestañas pidiendo a la vez pagan dos propuestas, y la primera se sustituye.
+- Si la versión de «Volver a medir» no se puede hacer, la medida nueva queda guardada sin uso. El perfil sigue con la suya.
+- Un aviso que vino de una palabra quitada sigue (entrada 121).
+
+### 6. Desviaciones respecto a la spec
+
+- De menos: ninguna de la historia. Editar «cualquier parte» se limita a textos, respuestas y supuestos (P30); las cifras
+  no se editan a mano (principio V).
+- De más:
+  - `GET /api/settings/knowledge` (entrada 97);
+  - `version` y `sections` en el JSON (P31);
+  - «Volver a leer tu canal» (P32);
+  - la tabla `profile_regeneration` (P33);
+  - `GET …/profile/reading` (entrada 128).
+
+### 7. Decisiones
+
+- **Del agente:** entradas 93 a 124 y 128 a 132 de `decisions.md`.
+  - Medio, a destacar:
+    - 116, 117, 120 y 121 a 124;
+    - 129, reclasificada;
+    - 130 a 132.
+  - La 93 pasó a alto (P30).
+- **Del creador (alto), resueltas:**
+  - P27 «Medir aquí»;
+  - P28 «Añadir la tarea»;
+  - P29 «Paso de nombres»;
+  - P30 «Textos y respuestas»;
+  - P31 «Mantenerlos»;
+  - P32 «Volver a leer»;
+  - P33 «En la base de datos»;
+  - P34 «Dejarlo así».
+- **Pendientes de antes,** sin relación con esta historia: P6, P9 y P17.
+
+### 8. Impacto en la constitución
+
+- **I:** sin jerga (glosario). Lo básico va sin «Modo experto».
+- **II:** la propuesta de la IA se marca como tal y solo se guarda con el sí del creador. «Escrita por ti» reconoce las
+  promesas de la IA en cualquier versión `ia`.
+- **III:**
+  - el precio va en el botón y el presupuesto se comprueba antes;
+  - cada estimación se usa una vez y va ligada al recorrido;
+  - «Volver a medir» y «Volver a leer» no cuestan dinero, solo cuota, y no se repiten a la vez.
+- **V:**
+  - las cifras no se editan a mano y llevan su fecha también en el documento;
+  - el dinero sale del conocimiento con la categoría del concepto;
+  - las referencias copiadas conservan la fecha en que se leyeron.
+- **VII:** sin `reveal()` nuevos; la clave sigue solo en la cabecera.
+- **IX:** axe y teclado en las pantallas nuevas.
+- **X:** contratos, modelo de datos, plan y decisiones al día.
+- **XI:** tres vueltas de revisión. Los huecos de riesgo alto se llevaron al creador.
+
+### 9. Cómo revertir y qué queda pendiente
+
+- **Revertir:** los dos commits de la fase 7 son independientes del resto.
+  - La migración `0004_profile_regeneration.sql` solo añade una tabla. Si se revierte el código, la tabla sobra sin
+    efecto.
+  - Para quitarla del todo hace falta una migración nueva con `DROP TABLE profile_regeneration`. Nunca se edita la 0004.
+- **Pendiente:**
+  - las pruebas reales (T125b, con la aprobación del creador);
+  - la auditoría de novato de la feature;
+  - los menores abiertos del apartado 5.
+
+## US5: Puerta A de la fase 7, T111 a T121 y T124 (2026-11-05): BLOQUEADA (sustituida por la de arriba)
 
 **Resultado: bloqueada por decisiones de riesgo alto del creador (P27 a P31), no por fallos.** Los controles pasan en su
 última ejecución y los hallazgos graves de la primera vuelta están corregidos. Las correcciones aún no las ha visto

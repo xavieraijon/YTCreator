@@ -176,12 +176,27 @@ describe('the end of the journey', () => {
     expect(t.channel.profiles.getCurrent(String(channel['id']))).toMatchObject({ version: 2, origin: 'manual' })
   })
 
-  it('a chosen name cannot go back from the end', async () => {
+  it('a chosen name can be changed from the end: back to the names, and only the name moves (entry 116)', async () => {
     const t = makeTestApp({ fakeAi: 'ok' })
     const id = await atNames(t)
-    await choose(t, (await propose(t, id, 'nombres')).id, 0)
+    const names = await propose(t, id, 'nombres')
+    const { names: list } = names.payload as { names: { displayName: string }[] }
+    await choose(t, names.id, 0)
     await step(t, id, 'hecho')
-    expect((await step(t, id, 'nombres')).status).not.toBe(200)
+    let channel = await channelOf(t)
+    const before = channelProfileSchema.parse(t.channel.profiles.getCurrent(String(channel['id']))!.profile)
+
+    expect((await step(t, id, 'nombres')).status).toBe(200)
+    expect((await current(t))['journey']).toMatchObject({ status: 'activo', step: 'nombres' })
+    await choose(t, names.id, 1)
+    expect((await step(t, id, 'hecho')).status).toBe(200)
+    channel = await channelOf(t)
+    expect(channel).toMatchObject({ displayName: list[1]!.displayName, nameStatus: 'elegido' })
+    const after = t.channel.profiles.getCurrent(String(channel['id']))!
+    expect(after).toMatchObject({ version: 2, origin: 'manual' })
+    const profile = channelProfileSchema.parse(after.profile)
+    expect(profile.name.displayName).toBe(list[1]!.displayName)
+    expect(profile.concept).toEqual(before.concept)
   })
 
   it('the creator can add a name of their own to the list', async () => {

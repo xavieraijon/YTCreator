@@ -2,12 +2,14 @@
 
 **Feature**: `003-channel-and-niche` | Decisiones en [research.md](../research.md) R7–R10
 
-Seis usos nuevos detrás del puerto `AiProvider` de la 002. El dominio pide un uso; nunca escribe prompts ni elige
+Ocho usos nuevos detrás del puerto `AiProvider` de la 002 (`recomendacion` llegó en la fase 3 y `perfil_parte` con US5, entrada 115). El dominio pide un uso; nunca escribe prompts ni elige
 modelo.
 
 ## Reglas generales
 
-- `AI_USES` añade: `preguntas`, `nichos`, `conceptos`, `nombres`, `lectura_canal`, `posicionamiento`.
+- `AI_USES` añade: `preguntas`, `nichos`, `recomendacion`, `conceptos`, `nombres`, `lectura_canal`, `posicionamiento` y
+  `perfil_parte`. `perfil_parte` se pide desde el perfil (`POST /api/channels/:id/profile/estimate`); la estimación de un
+  recorrido no lo admite.
 - `AiRequest` gana `input?: Record<string, unknown>`, que el proveedor envía como JSON dentro de un bloque `<datos>`
   separado de las instrucciones. Todo lo que el creador escribe va en `input`, nunca concatenado al prompt.
 - Prompts en `packages/knowledge/prompts/<uso>/v1.md` con cabecera `id`, `version`, `use`; una prueba comprueba que el hash
@@ -36,6 +38,7 @@ modelo.
 | `nombres` | Haiku 5.5 | 60 s | concepto elegido, nombres ya descartados | 6–8 `{displayName, handle, why}` |
 | `lectura_canal` | Sonnet 5.5 | 120 s | lectura del canal (`summary` + vídeos con sus veces lo normal) | `{niche, pillars, audience, works[], doesNotWork[]}`; cada punto con `videoIds[]` |
 | `posicionamiento` | Sonnet 5.5 | 120 s | perfil actual, lectura, respuestas de ritmo, conocimiento | `Concept` + `changes[]` `{what, why, videoIds[]}`, con al menos un vídeo en cada cambio. Al editar, los supuestos se pueden borrar; los euros al mes salen de sus propios vídeos (decisions.md, entrada 73) |
+| `perfil_parte` | Sonnet 5.5 | 120 s | `part`, el perfil guardado sin dinero ni cifras (nicho, promesa, temas, público, formato, ritmo), `currentProfile` si el canal ya existía, `instructions` | `{promise, pillars, audienceDescription}`; el dominio se queda solo con la parte pedida (entradas 115 y 119) |
 
 Reglas de forma (además del esquema):
 

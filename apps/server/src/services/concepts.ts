@@ -45,13 +45,12 @@ export function createConcepts({ measures, knowledge, warningKnowledge, sourceLa
   const measureOf = (journeyId: string, label: string | undefined) =>
     measures.listByJourney(journeyId).findLast((m) => m.nicheLabel === label && m.status === 'medida') ?? null
 
-  const figuresOf = (
-    journey: Journey,
-    niche: NicheChosen,
+  // The money and the warnings of a concept, from its answers and what a video gets (of the niche, or of the channel).
+  const figuresWith = (
     concept: ConceptOutput,
-    ownMedianViews?: number | null,
+    hoursPerWeek: number | undefined,
+    views: { medianViews: number | null; ownChannel?: true },
   ): ConceptFigures => {
-    const { hoursPerWeek } = journey.state as { hoursPerWeek?: number }
     const warnings = conceptWarnings(concept, hoursPerWeek === undefined ? {} : { hoursPerWeek }, warningKnowledge)
     for (const code of concept.warnings ?? []) {
       if (!warnings.some((warning) => warning.code === code)) warnings.push(warningOfCode(code, warningKnowledge))
@@ -62,9 +61,7 @@ export function createConcepts({ measures, knowledge, warningKnowledge, sourceLa
         region: concept.audience.region,
         madeForKids: warnings.some(({ code }) => code === 'infantil'),
         longPerWeek: concept.cadence.longPerWeek,
-        ...(ownMedianViews === undefined
-          ? { medianViews: measureOf(journey.id, niche?.label)?.demandMedianViews ?? null }
-          : { medianViews: ownMedianViews, ownChannel: true }),
+        ...views,
       },
       knowledge.monetization,
     )
@@ -76,6 +73,22 @@ export function createConcepts({ measures, knowledge, warningKnowledge, sourceLa
         reviewedAt: warning.reviewedAt,
       })),
     }
+  }
+
+  const figuresOf = (
+    journey: Journey,
+    niche: NicheChosen,
+    concept: ConceptOutput,
+    ownMedianViews?: number | null,
+  ): ConceptFigures => {
+    const { hoursPerWeek } = journey.state as { hoursPerWeek?: number }
+    return figuresWith(
+      concept,
+      hoursPerWeek,
+      ownMedianViews === undefined
+        ? { medianViews: measureOf(journey.id, niche?.label)?.demandMedianViews ?? null }
+        : { medianViews: ownMedianViews ?? null, ownChannel: true },
+    )
   }
 
   // The hours and the way to appear of a positioning are what the creator answered, not what the AI wrote (entry 72).
@@ -206,6 +219,10 @@ export function createConcepts({ measures, knowledge, warningKnowledge, sourceLa
         stale: !sameAnswers(basedOn, now),
       }
     },
+
+    // A profile edited by hand (entry 117): the hours are the ones in the profile now, not the journey's.
+    figuresFor: (concept: ConceptOutput, views: { medianViews: number | null; ownChannel?: true }) =>
+      figuresWith(concept, concept.cadence.hoursPerWeek, views),
 
     /** The concept chosen as it stands now, with its figures, for the profile. */
     conceptNow,

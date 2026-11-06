@@ -58,7 +58,7 @@ de la pantalla Intereses, no el test de glosario. «YouTube» es una marca permi
 | Confirmar | `confirmar` | «Sí, es mi canal» | Foto, nombre, @ y suscriptores |
 | Lectura | `lectura` | «Ver mi perfil actual», y después «Aprobar» | Progreso de lectura; cifras por formato, y mejores y peores vídeos según «veces lo normal en su canal»; el perfil actual propuesto, que se aprueba para seguir; con menos de 5 vídeos, ofrece el recorrido de canal nuevo |
 | Posicionamiento | `posicionamiento` | «Aprobar» | Perfil actual (con vídeos citados; se puede seguir cambiando, y otro hay que aprobarlo) y propuesta de cambios; «Aprobar» es del enfoque |
-| Perfil | `hecho` | «Descargar como documento» | Perfil vigente, versiones, restaurar, editar; siguiente paso: banco de ideas (próximamente) |
+| Perfil | `hecho` | «Descargar como documento» | Perfil vigente, versiones, restaurar, editar textos, respuestas y supuestos; «Reescribir con la IA» la promesa, los temas o el público (aprobar, editar antes de guardar o descartar); «Cambiar el nombre» en un canal nuevo; con datos de más de 90 días, «Volver a medir» o «Volver a leer tu canal»; siguiente paso: banco de ideas (próximamente) |
 | Ajustes → YouTube | — | «Guardar» | Fuente, clave opcional (solo `hint`), cupo, actualizar el lector |
 | Ajustes → Consumo | — | — | Lista de llamadas y totales |
 
@@ -71,4 +71,4 @@ de la pantalla Intereses, no el test de glosario. «YouTube» es una marca permi
 | Bloqueado / tiempo agotado | Explicación llana y «Volver a intentarlo» |
 | Sin lector (`no_disponible`) | Enlace a Ajustes → YouTube |
 | Fallo de IA | Mensaje de la 002 por código; `limite_de_gasto` enlaza a Ajustes → Límites |
-| Datos viejos (> 90 días) | Aviso y «Volver a medir» |
+| Datos viejos (> 90 días) | Aviso y «Volver a medir» (o «Volver a leer tu canal» en un canal que ya existía) |

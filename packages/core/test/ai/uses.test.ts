@@ -41,13 +41,23 @@ const valid = {
   },
   recomendacion: { recommendedLabel: 'Uno', why: 'Creo que encaja.', cautions: [] },
   posicionamiento: { ...concept, changes: [{ what: 'Más shorts', why: 'Funcionan mejor', videoIds: ['abc'] }] },
+  perfil_parte: { promise: concept.promise, pillars: concept.pillars, audienceDescription: 'Adultos que trabajan' },
 } as const
 
 describe('AI uses of the 003', () => {
   it('every channel use is an AI use with its output schema', () => {
     for (const use of Object.keys(CHANNEL_OUTPUTS)) expect(AI_USES).toContain(use)
     expect(Object.keys(CHANNEL_OUTPUTS).sort()).toEqual(
-      ['conceptos', 'lectura_canal', 'nichos', 'nombres', 'posicionamiento', 'preguntas', 'recomendacion'].sort(),
+      [
+        'conceptos',
+        'lectura_canal',
+        'nichos',
+        'nombres',
+        'perfil_parte',
+        'posicionamiento',
+        'preguntas',
+        'recomendacion',
+      ].sort(),
     )
   })
 
@@ -83,6 +93,13 @@ describe('AI uses of the 003', () => {
     expect(CHANNEL_OUTPUTS.nombres.safeParse(withHandle('ab')).success).toBe(false)
     expect(CHANNEL_OUTPUTS.nombres.safeParse(withHandle('a'.repeat(31))).success).toBe(false)
     expect(CHANNEL_OUTPUTS.nombres.safeParse(withHandle('cena.lista_es-1')).success).toBe(true)
+  })
+
+  it('a part of the profile keeps the limits of a concept (entry 115)', () => {
+    const part = valid.perfil_parte
+    expect(CHANNEL_OUTPUTS.perfil_parte.safeParse({ ...part, promise: 'x'.repeat(161) }).success).toBe(false)
+    expect(CHANNEL_OUTPUTS.perfil_parte.safeParse({ ...part, pillars: part.pillars.slice(0, 2) }).success).toBe(false)
+    expect(CHANNEL_OUTPUTS.perfil_parte.safeParse({ ...part, audienceDescription: ' ' }).success).toBe(false)
   })
 
   it('every point of a channel reading cites at least one video', () => {

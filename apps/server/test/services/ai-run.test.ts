@@ -115,6 +115,15 @@ describe('ai-run', () => {
     expect(row?.costCents).toBeGreaterThan(0)
   })
 
+  it('an estimate asked for another journey is not valid when the run says whose it is', async () => {
+    const { service, journeyId, calls } = setup([ok(VALID)])
+    const est = service.estimate({ journeyId, use: 'preguntas', input: {} })
+    await expect(
+      service.run({ estimateId: est.estimateId, journeyId: 'otro', use: 'preguntas', input: {} }),
+    ).rejects.toMatchObject({ body: { code: 'validacion', fields: { estimateId: 'no_valido' } } })
+    expect(calls).toHaveLength(0)
+  })
+
   it('blocks with limite_de_gasto without calling when the budget no longer allows it', async () => {
     const { service, journeyId, calls, usage } = setup([ok(VALID)])
     const est = service.estimate({ journeyId, use: 'preguntas', input: {} })

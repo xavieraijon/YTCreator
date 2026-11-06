@@ -101,15 +101,17 @@ export function createChannelReading(deps: ChannelReadingDeps) {
     job: { progress(done: number, total?: number): void },
     journey: Journey,
     { info, source }: Pick<ChannelFound, 'info' | 'source'>,
+    { fresh = false, onRead }: { fresh?: boolean; onRead?: (reading: ChannelReading) => boolean } = {},
   ) {
     // Reading again what came out cut short: what was kept for a while would only say the same.
-    const again = currentReading(journey, readings)?.summary.partial === true
+    const again = fresh || currentReading(journey, readings)?.summary.partial === true
     const listed = await youtube.listChannelVideos(info.channelId, {
       limit: CHANNEL_VIDEOS_LIMIT,
       withShorts: true,
       ...(again ? { fresh: true } : {}),
     })
-    if (!listed.ok && !NO_VIDEOS.includes(listed.failure.code)) return { failure: listed.failure.code }
+    // Reading again a channel that had videos, «none» is more likely a failure than the truth: the figures before stay.
+    if (!listed.ok && (fresh || !NO_VIDEOS.includes(listed.failure.code))) return { failure: listed.failure.code }
     job.progress(1, READING_STEPS)
 
     const videos: VideoInfo[] = listed.ok ? listed.value.data.slice(0, CHANNEL_VIDEOS_LIMIT) : []
@@ -119,23 +121,35 @@ export function createChannelReading(deps: ChannelReadingDeps) {
       now: now(),
       partial: listed.ok && listed.value.partial === true,
     })
-    inTransaction(db, () => {
-      readings.add({
-        channelId: journey.channelId,
-        youtubeChannelId: info.channelId,
-        source: listed.ok ? listed.value.source : source,
-        title: info.title,
-        handle: info.handle,
-        description: info.description,
-        subscribers: info.subscribers,
-        videoCount: info.videoCount,
-        videos: rated.map(({ videoId, ...video }) => ({ id: videoId, ...video })),
-        summary,
-        ...(listed.ok ? { fetchedAt: listed.value.fetchedAt } : {}),
+    // Without its profile version, the new reading is not kept either: the creator can try again (entry 128).
+    const notSaved = new Error('profile_not_saved')
+    const save = () =>
+      inTransaction(db, () => {
+        const added = readings.add({
+          channelId: journey.channelId,
+          youtubeChannelId: info.channelId,
+          source: listed.ok ? listed.value.source : source,
+          title: info.title,
+          handle: info.handle,
+          description: info.description,
+          subscribers: info.subscribers,
+          videoCount: info.videoCount,
+          videos: rated.map(({ videoId, ...video }) => ({ id: videoId, ...video })),
+          summary,
+          ...(listed.ok ? { fetchedAt: listed.value.fetchedAt } : {}),
+        })
+        // «Volver a leer» (entry 125): the profile version with the new figures, in the same transaction.
+        if (onRead && !onRead(added)) throw notSaved
       })
-    })
+    let saved = true
+    try {
+      save()
+    } catch (error) {
+      if (error !== notSaved) throw error
+      saved = false
+    }
     job.progress(READING_STEPS, READING_STEPS)
-    return undefined
+    return saved ? undefined : { failure: 'interno' }
   }
 
   return {
@@ -217,6 +231,32 @@ export function createChannelReading(deps: ChannelReadingDeps) {
       })
       // The work only starts once this turn ends, so it cannot have finished yet.
       running.set(journey.id, { job, youtubeChannelId: channel.channelId })
+      return job
+    },
+
+    // «Volver a leer tu canal» from the profile (entries 125 and P32): the same channel read again on YouTube, without
+    // the AI, for figures of today. What was read before stays with the versions made from it. `onRead` makes the new
+    // profile version; false if it could not, and then the job fails instead of saying it was saved.
+    reread(journey: Journey, previous: ChannelReading, onRead: (reading: ChannelReading) => boolean): Job | null {
+      if (running.has(journey.id)) return null
+      const job = jobs.start({ journeyId: journey.id, kind: 'leer_canal', total: READING_STEPS }, async (context) => {
+        try {
+          const channel = await youtube.getChannel({ channelId: previous.youtubeChannelId })
+          if (!channel.ok) return { failure: channel.failure.code }
+          return await readVideos(
+            context,
+            journey,
+            { info: channel.value.data, source: channel.value.source },
+            { fresh: true, onRead },
+          )
+        } catch (error) {
+          logger.error('channel_reading.failed', { error })
+          return { failure: 'no_disponible' }
+        } finally {
+          if (running.get(journey.id)?.job.id === context.id) running.delete(journey.id)
+        }
+      })
+      running.set(journey.id, { job, youtubeChannelId: previous.youtubeChannelId })
       return job
     },
   }

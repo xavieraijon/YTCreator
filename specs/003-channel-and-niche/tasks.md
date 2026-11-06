@@ -314,7 +314,11 @@ que solo se ve por su `hint`.
 - [X] T120 [P] [US5] Pantalla `apps/web/src/screens/settings/YouTubeSettings.tsx` (fuente, «clave de YouTube» en «Modo experto», `hint`, cupo con aviso al pasar del 80 % del día (FR-030), «Actualizar el lector», aviso de clave rechazada (P15 a)) enlazada en `apps/web/src/screens/settings/Settings.tsx`
 - [X] T121 [P] [US5] Pantalla `apps/web/src/screens/settings/UsageLog.tsx` y lista de conocimiento con más de 180 días en Ajustes
 
-- [ ] T121b [A] [US5] Puerta A de US5: ejecutar `/puerta-a US5` (primer intento 2026-11-05: bloqueada por P27 a P31). No se marca `[X]` hasta que la skill diga «pasada»; el informe queda en `specs/003-channel-and-niche/checklists/validation.md`
+- [X] T121c [US5] P29 (entrada 116): «Cambiar el nombre» en el perfil de un canal nuevo abre el paso de nombres (`hecho → nombres` también con el nombre elegido, en `packages/core/src/channel/journey.ts`), con test en `packages/core/test/channel/journey.test.ts` y `apps/web/test/channel/profile.test.tsx`
+- [X] T121d [US5] P30 (entrada 117): editar en el perfil el ritmo, la región, la forma de aparecer y el contenido para niños, y recalcular el dinero y los avisos con el conocimiento (`apps/server/src/services/profile.ts`, `ProfileEditor`); tests en `apps/server/test/http/profile.test.ts`
+- [X] T121e [US5] P27 (entrada 114): «Volver a medir» en el perfil mide de nuevo el nicho elegido en segundo plano y guarda una versión nueva con las cifras nuevas (`POST /api/channels/:id/profile/remeasure`, `202 {jobId}`); en un canal que ya existía, «Volver a leer tu canal» (P32, entrada 125); tests de ruta y de pantalla
+- [X] T121f [US5] P28 (entrada 115): regenerar con IA la promesa, los temas o el público con indicaciones, con estimación de coste antes y guardado como versión nueva (`ia`); la propuesta espera guardada en `profile_regeneration` (P33, entrada 126); tests de ruta, de coste y de los fallos de IA
+- [X] T121b [A] [US5] Puerta A de US5: ejecutar `/puerta-a US5` (primer intento 2026-11-05: bloqueada por P27 a P31; pasada el 2026-11-06 tras tres vueltas). No se marca `[X]` hasta que la skill diga «pasada»; el informe queda en `specs/003-channel-and-niche/checklists/validation.md`
 
 **Checkpoint**: todas las historias funcionan por separado.
 

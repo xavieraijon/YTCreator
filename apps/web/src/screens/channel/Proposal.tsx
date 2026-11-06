@@ -105,11 +105,21 @@ export interface AiActionProps {
   readonly failure?: AiRunFailure | null
   readonly busy?: boolean
   readonly primary?: boolean
+  /** Not to be pressed now, for a reason the screen says (as while a measure is being saved). */
+  readonly disabled?: boolean
   readonly onRun: () => void
 }
 
 // An AI action on its own: the amount on the button, and pressing it is the confirmation (FR-029).
-export function AiAction({ label, estimate, failure = null, busy = false, primary = true, onRun }: AiActionProps) {
+export function AiAction({
+  label,
+  estimate,
+  failure = null,
+  busy = false,
+  primary = true,
+  disabled = false,
+  onRun,
+}: AiActionProps) {
   const blockedBy = estimate?.blockedBy ?? null
   const toLimits = () => navigate({ page: 'aiSettings' })
   return (
@@ -132,7 +142,7 @@ export function AiAction({ label, estimate, failure = null, busy = false, primar
         <Button
           variant={primary ? 'primary' : 'secondary'}
           loading={busy}
-          disabled={busy || blockedBy !== null || !estimate}
+          disabled={busy || disabled || blockedBy !== null || !estimate}
           onClick={onRun}
         >
           {costLabel(label, estimate)}

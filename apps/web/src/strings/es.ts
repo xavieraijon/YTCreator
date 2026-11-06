@@ -241,6 +241,7 @@ export const es = {
       nombres: 'Proponer nombres',
       lectura_canal: 'Leer tu canal',
       posicionamiento: 'Proponer el enfoque',
+      perfil_parte: 'Reescribir una parte del perfil',
     } satisfies Record<AiUse, string>,
     failed: 'No salió bien',
     knowledge: 'Información que conviene revisar',

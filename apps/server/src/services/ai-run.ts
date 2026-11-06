@@ -130,19 +130,27 @@ export function createAiRunService(deps: AiRunDeps) {
 
     async run<U extends ChannelUse>({
       estimateId,
+      journeyId,
       use,
       input,
       instructions,
       signal,
     }: {
       estimateId: string
+      /** When given, the estimate has to be one asked for this journey. */
+      journeyId?: string
       use: U
       input: Record<string, unknown>
       instructions?: string
       signal?: AbortSignal
     }): Promise<RunResult<U>> {
       const saved = estimates.get(estimateId)
-      if (!saved || saved.use !== use || isEstimateExpired(saved.createdAt, now())) {
+      if (
+        !saved ||
+        saved.use !== use ||
+        (journeyId !== undefined && saved.journeyId !== journeyId) ||
+        isEstimateExpired(saved.createdAt, now())
+      ) {
         throw new ApiError({ code: 'validacion', fields: { estimateId: 'no_valido' } })
       }
       estimates.delete(estimateId)

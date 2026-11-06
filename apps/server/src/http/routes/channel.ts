@@ -1,5 +1,6 @@
 import {
   type ApprovalState,
+  type ChannelProfile,
   CHANNEL_OUTPUTS,
   conceptsEditedOutput,
   type ChannelUse,
@@ -17,6 +18,8 @@ import {
   exportFileName,
   profileJson,
   profileMarkdown,
+  type ProfilePart,
+  type ProfilePartOutput,
 } from '@ytcreator/core'
 import type { ConceptKnowledge } from '@ytcreator/knowledge'
 import {
@@ -28,6 +31,9 @@ import {
   journeyStepBodySchema,
   patchProposalBodySchema,
   profileEditBodySchema,
+  profilePartEstimateBodySchema,
+  profileRegenerateBodySchema,
+  profileRegeneratedBodySchema,
   profileRestoreBodySchema,
   proposalBodySchema,
 } from '@ytcreator/core/api'
@@ -41,12 +47,14 @@ import type { NamesRepo } from '../../db/repos/names.ts'
 import type { ProfilesRepo } from '../../db/repos/profiles.ts'
 import type { Proposal, ProposalsRepo } from '../../db/repos/proposals.ts'
 import type { ReadingsRepo } from '../../db/repos/readings.ts'
+import type { Regeneration, RegenerationsRepo } from '../../db/repos/regenerations.ts'
 import { inTransaction } from '../../db/transaction.ts'
 import type { AiRunService, PromptRef } from '../../services/ai-run.ts'
 import { channelInput, previousOf } from '../../services/channel-input.ts'
-import { currentReading, readingInput } from '../../services/channel-reading.ts'
+import { type ChannelReadingService, currentReading, readingInput } from '../../services/channel-reading.ts'
 import { createConcepts } from '../../services/concepts.ts'
-import { createProfile, editedProfile, exportInput } from '../../services/profile.ts'
+import type { NicheResearch } from '../../services/niche-research.ts'
+import { createProfile, exportInput } from '../../services/profile.ts'
 import { ApiError } from '../errors.ts'
 import { parseBody } from '../validate.ts'
 
@@ -59,6 +67,7 @@ export interface ChannelRoutesDeps {
   measures: MeasuresRepo
   names: NamesRepo
   readings: ReadingsRepo
+  regenerations: RegenerationsRepo
   jobs: JobsRepo
   aiRun: AiRunService
   promptFor: (use: ChannelUse) => PromptRef
@@ -66,10 +75,58 @@ export interface ChannelRoutesDeps {
   conceptKnowledge: ConceptKnowledge
   measureStaleDays: number
   now?: () => Date
+  // «Volver a medir» from the profile (entry 114).
+  research?: Pick<NicheResearch, 'remeasure'>
+  // «Volver a leer tu canal» from the profile (entry 125).
+  reading?: Pick<ChannelReadingService, 'reread'>
 }
 
 // `perfil_actual` is what the use `lectura_canal` produces; the other kinds have the name of their use.
 const useOf = (kind: ProposalKind): ChannelUse => (kind === 'perfil_actual' ? 'lectura_canal' : kind)
+
+// What the AI reads of a saved profile to rewrite one part (entry 115): the texts, the answers and what was read of the
+// channel; never the money or the figures of YouTube.
+const partInput = (part: ProfilePart, saved: ChannelProfile) => ({
+  part,
+  profile: {
+    niche: { label: saved.niche.label, summary: saved.niche.summary },
+    promise: saved.concept.promise,
+    pillars: saved.concept.pillars,
+    audience: saved.concept.audience,
+    format: saved.concept.format,
+    cadence: saved.concept.cadence,
+  },
+  ...(saved.context ? { currentProfile: saved.context.currentProfile } : {}),
+})
+
+// Only the part asked for is kept of what the AI gives.
+const partOf = (part: ProfilePart, output: ProfilePartOutput): Partial<ProfilePartOutput> =>
+  part === 'promesa'
+    ? { promise: output.promise }
+    : part === 'temas'
+      ? { pillars: output.pillars }
+      : { audienceDescription: output.audienceDescription }
+
+const withPart = (saved: ChannelProfile, proposed: Partial<ProfilePartOutput>): ChannelProfile => ({
+  ...saved,
+  concept: {
+    ...saved.concept,
+    ...(proposed.promise !== undefined ? { promise: proposed.promise } : {}),
+    ...(proposed.pillars !== undefined ? { pillars: proposed.pillars } : {}),
+    ...(proposed.audienceDescription !== undefined
+      ? { audience: { ...saved.concept.audience, description: proposed.audienceDescription } }
+      : {}),
+  },
+})
+
+// What the screen gets of a proposal waiting for the creator's yes (entry 119).
+const regenerationView = (pending: Regeneration) => ({
+  regenerationId: pending.id,
+  part: pending.part,
+  baseVersion: pending.baseVersion,
+  proposed: pending.proposed,
+  claimsTrimmed: pending.claimsTrimmed,
+})
 
 // The list a proposal chooses from, for the kinds where approving means choosing one (R14).
 const CHOICE_LISTS: Partial<Record<ProposalKind, string>> = {
@@ -81,6 +138,7 @@ const CHOICE_LISTS: Partial<Record<ProposalKind, string>> = {
 export function channelRoutes(deps: ChannelRoutesDeps) {
   const { db, channels, journeys, proposals, profiles, measures, names, readings, jobs, aiRun } = deps
   const routes = new Hono()
+  const { regenerations } = deps
 
   const findJourney = (id: string): Journey => {
     const journey = journeys.get(id)
@@ -107,7 +165,6 @@ export function channelRoutes(deps: ChannelRoutesDeps) {
     // FR-025: a concept of the previous niche has to be chosen again before going on.
     concept: isApproved(journey.id, 'conceptos') && !state.conceptNeedsReview,
     name: isApproved(journey.id, 'nombres') || channels.get(journey.channelId)?.nameStatus === 'elegido',
-    nameProvisional: channels.get(journey.channelId)?.nameStatus === 'provisional',
     channelInput: state.channelInput !== undefined,
     channelConfirmed: state.resolvedChannelId !== undefined,
     reading: isApproved(journey.id, 'perfil_actual'),
@@ -134,7 +191,9 @@ export function channelRoutes(deps: ChannelRoutesDeps) {
     measures,
     names,
     profiles,
+    readings,
     sources: deps.conceptKnowledge.sources,
+    figuresFor: concepts.figuresFor,
     conceptNow: (journey, concept, regionByHand, ownMedianViews) =>
       concepts.conceptNow(journey, nicheOf(journey), concept, regionByHand, ownMedianViews),
   })
@@ -249,8 +308,9 @@ export function channelRoutes(deps: ChannelRoutesDeps) {
       const current = currentProfile(channel.id)
       // Another tab saved first: nothing is overwritten without seeing it.
       if (current.version !== body.baseVersion) throw new ApiError({ code: 'conflicto' })
-      const profile = editedProfile(channelProfileSchema.parse(current.profile), body.profile)
-      return profiles.addVersion(channel.id, { origin: 'manual', profile })
+      const edited = profile.edit(channel.id, channelProfileSchema.parse(current.profile), body.profile)
+      if (!edited) throw new ApiError({ code: 'validacion', fields: { profile: 'no_valido' } })
+      return profiles.addVersion(channel.id, { origin: 'manual', profile: edited })
     })
     return c.json(saved)
   })
@@ -265,6 +325,127 @@ export function channelRoutes(deps: ChannelRoutesDeps) {
     })
     if (!restored) throw new ApiError({ code: 'no_encontrado' })
     return c.json(restored)
+  })
+
+  // «Volver a medir» (entry 114): the niche of the profile measured again in the background, with the same searches;
+  // when it is measured, a new version of the profile with its figures. A channel read from YouTube has no niche measure.
+  routes.post('/channels/:id/profile/remeasure', (c) => {
+    const channel = findChannel(c.req.param('id'))
+    const { niche, context } = channelProfileSchema.parse(currentProfile(channel.id).profile)
+    // A channel read from YouTube is read again instead (entry 125): the figures are those of its own videos.
+    if (context) {
+      const previous = readings.get(context.readingId)
+      const journey = journeys.getLast(channel.id)
+      if (!deps.reading || !previous || !journey || !profile.canRecalculate(channel.id)) {
+        throw new ApiError({ code: 'validacion', fields: { profile: 'no_valido' } })
+      }
+      const job = deps.reading.reread(
+        journey,
+        previous,
+        (fresh) => profile.reread(channel.id, fresh, previous.id) !== null,
+      )
+      if (!job) throw new ApiError({ code: 'conflicto' })
+      return c.json({ jobId: job.id }, 202)
+    }
+    const measure = niche.measureId ? measures.get(niche.measureId) : null
+    if (!deps.research || !measure || !profile.canRecalculate(channel.id)) {
+      throw new ApiError({ code: 'validacion', fields: { profile: 'no_valido' } })
+    }
+    // One measure at a time: a second press, or another tab, would spend the quota twice.
+    if (jobs.listRunning(measure.journeyId).some((job) => job.kind === 'medir_nichos')) {
+      throw new ApiError({ code: 'conflicto' })
+    }
+    const job = deps.research.remeasure(
+      measure,
+      (fresh) => inTransaction(db, () => profile.remeasured(channel.id, fresh, measure.id)) !== null,
+    )
+    return c.json({ jobId: job.id }, 202)
+  })
+
+  // «Regenerar con IA» (entry 115): what it costs first, then the proposal, then the creator's yes.
+  routes.post('/channels/:id/profile/estimate', async (c) => {
+    const channel = findChannel(c.req.param('id'))
+    const { part } = await parseBody(c, profilePartEstimateBodySchema)
+    const saved = channelProfileSchema.parse(currentProfile(channel.id).profile)
+    const journey = journeys.getLast(channel.id)
+    if (!journey) throw new ApiError({ code: 'no_encontrado' })
+    return c.json(aiRun.estimate({ journeyId: journey.id, use: 'perfil_parte', input: partInput(part, saved) }))
+  })
+
+  routes.post('/channels/:id/profile/regenerate', async (c) => {
+    const channel = findChannel(c.req.param('id'))
+    const body = await parseBody(c, profileRegenerateBodySchema)
+    const current = currentProfile(channel.id)
+    if (current.version !== body.baseVersion) throw new ApiError({ code: 'conflicto' })
+    const saved = channelProfileSchema.parse(current.profile)
+    const journey = journeys.getLast(channel.id)
+    if (!journey) throw new ApiError({ code: 'no_encontrado' })
+    const result = await aiRun.run({
+      estimateId: body.estimateId,
+      // The estimate is this channel's: the spending is written down where it was asked for.
+      journeyId: journey.id,
+      use: 'perfil_parte',
+      input: partInput(body.part, saved),
+      ...(body.instructions ? { instructions: body.instructions } : {}),
+    })
+    if (!result.ok) return c.json({ failure: result.failure })
+    // Paid for: it waits saved until the creator says yes or leaves it, even across a restart (entry 119).
+    const pending = regenerations.replace({
+      channelId: channel.id,
+      baseVersion: current.version,
+      part: body.part,
+      proposed: partOf(body.part, result.value),
+      claimsTrimmed: result.claimsTrimmed,
+      usageId: result.usageId,
+    })
+    return c.json(regenerationView(pending))
+  })
+
+  // The reading the profile was made from, not the last one: a version brought back keeps its own (FR-027).
+  routes.get('/channels/:id/profile/reading', (c) => {
+    const channel = findChannel(c.req.param('id'))
+    const current = profiles.getCurrent(channel.id)
+    const readingId = current ? channelProfileSchema.parse(current.profile).context?.readingId : null
+    const reading = readingId ? readings.get(readingId) : null
+    return c.json(reading?.channelId === channel.id ? reading : null)
+  })
+
+  // The proposal waiting for the creator, if there is one: the screen shows it again on coming back.
+  routes.get('/channels/:id/profile/regeneration', (c) => {
+    const channel = findChannel(c.req.param('id'))
+    const pending = regenerations.latest(channel.id)
+    return c.json(pending ? regenerationView(pending) : null)
+  })
+
+  // «Descartar»: the creator leaves it. The call stays in the usage log, as every call does.
+  routes.delete('/channels/:id/profile/regeneration/:regenerationId', (c) => {
+    const channel = findChannel(c.req.param('id'))
+    const pending = regenerations.get(c.req.param('regenerationId'))
+    if (!pending || pending.channelId !== channel.id) throw new ApiError({ code: 'no_encontrado' })
+    regenerations.remove(pending.id)
+    return c.body(null, 204)
+  })
+
+  routes.post('/channels/:id/profile/regenerated', async (c) => {
+    const channel = findChannel(c.req.param('id'))
+    const body = await parseBody(c, profileRegeneratedBodySchema)
+    const pending = regenerations.get(body.regenerationId)
+    if (!pending || pending.channelId !== channel.id) throw new ApiError({ code: 'no_encontrado' })
+    const saved = inTransaction(db, () => {
+      const current = currentProfile(channel.id)
+      // Saved meanwhile: the proposal was written for a profile that is no longer the current one.
+      if (current.version !== body.baseVersion || current.version !== pending.baseVersion) {
+        throw new ApiError({ code: 'conflicto' })
+      }
+      const base = channelProfileSchema.parse(current.profile)
+      // The words decide some warnings (children, content that is not authentic): looked at again, as when editing.
+      const next = profile.edit(channel.id, base, withPart(base, pending.proposed))
+      if (!next) throw new ApiError({ code: 'validacion', fields: { regenerationId: 'no_valido' } })
+      const version = profiles.addVersion(channel.id, { origin: 'ia', profile: next })
+      regenerations.remove(pending.id)
+      return version
+    })
+    return c.json(saved)
   })
 
   // A new name for a new channel; a channel that already exists keeps the one it has on YouTube (entry 81).
@@ -359,6 +540,14 @@ export function channelRoutes(deps: ChannelRoutesDeps) {
     if (!plan.ok) {
       const field = plan.reason === 'requiere_confirmar' ? 'confirm' : 'step'
       throw new ApiError({ code: 'validacion', fields: { [field]: 'no_valido' } })
+    }
+    // Entry 122: only a new channel changes a name it chose; one that came from YouTube keeps its own (entry 81), unless
+    // it still has none to keep (FR-018b).
+    if (journey.step === 'hecho' && body.step === 'nombres') {
+      const owner = channels.get(journey.channelId)
+      if (owner?.origin !== 'nuevo' && owner?.nameStatus === 'elegido') {
+        throw new ApiError({ code: 'validacion', fields: { step: 'no_valido' } })
+      }
     }
 
     const next = plan.needsReview ? { ...state, conceptNeedsReview: true } : state

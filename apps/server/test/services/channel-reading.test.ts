@@ -437,3 +437,51 @@ describe('what the AI reads', () => {
     expect(input(answered)).not.toBeNull()
   })
 })
+
+describe('«Volver a leer tu canal» (entry 125)', () => {
+  it('reads the same channel again, fresh, once at a time; the version is made inside it', async () => {
+    const ctx = setup({ videos: tenLong() })
+    const { reading: previous } = await readAll(ctx)
+    const journey = ctx.journeys.get(ctx.journey.id)!
+    const onRead = vi.fn(() => true)
+    const job = ctx.service.reread(journey, previous!, onRead)
+    expect(job).not.toBeNull()
+    // While it reads, another press does not read twice.
+    expect(ctx.service.reread(journey, previous!, onRead)).toBeNull()
+    await vi.waitFor(() => expect(ctx.jobsRepo.get(job!.id)?.status).toBe('hecho'))
+    expect(ctx.listChannelVideos.mock.lastCall?.[1]).toMatchObject({ fresh: true })
+    const fresh = ctx.readings.latest(ctx.row.id)!
+    expect(fresh.id).not.toBe(previous!.id)
+    expect(onRead).toHaveBeenCalledWith(expect.objectContaining({ id: fresh.id }))
+  })
+
+  it('a version that could not be made fails the job instead of saying it was saved', async () => {
+    const ctx = setup({ videos: tenLong() })
+    const { reading: previous } = await readAll(ctx)
+    const job = ctx.service.reread(ctx.journeys.get(ctx.journey.id)!, previous!, () => false)
+    await vi.waitFor(() => expect(ctx.jobsRepo.get(job!.id)?.status).toBe('fallido'))
+    // The new reading goes with it: the profile still points to the one before, which can be read again.
+    expect(ctx.readings.latest(ctx.row.id)?.id).toBe(previous!.id)
+  })
+
+  it('reading again, «no videos» is a failure: the figures before stay (entry 128)', async () => {
+    const ctx = setup({ videos: tenLong() })
+    const { reading: previous } = await readAll(ctx)
+    ctx.listChannelVideos.mockImplementation(async () => youtubeFailure('sin_datos'))
+    const onRead = vi.fn(() => true)
+    const job = ctx.service.reread(ctx.journeys.get(ctx.journey.id)!, previous!, onRead)
+    await vi.waitFor(() => expect(ctx.jobsRepo.get(job!.id)).toMatchObject({ status: 'fallido', failure: 'sin_datos' }))
+    expect(onRead).not.toHaveBeenCalled()
+    expect(ctx.readings.latest(ctx.row.id)?.id).toBe(previous!.id)
+  })
+
+  it('a failure of YouTube is the job failure, with its code', async () => {
+    const ctx = setup({ videos: tenLong() })
+    const { reading: previous } = await readAll(ctx)
+    ctx.listChannelVideos.mockImplementation(async () => youtubeFailure('cupo_agotado'))
+    const job = ctx.service.reread(ctx.journeys.get(ctx.journey.id)!, previous!, () => true)
+    await vi.waitFor(() =>
+      expect(ctx.jobsRepo.get(job!.id)).toMatchObject({ status: 'fallido', failure: 'cupo_agotado' }),
+    )
+  })
+})

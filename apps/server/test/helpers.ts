@@ -19,6 +19,7 @@ import { createNamesRepo } from '../src/db/repos/names.ts'
 import { createOnboardingRepo } from '../src/db/repos/onboarding.ts'
 import { createProfilesRepo } from '../src/db/repos/profiles.ts'
 import { createReadingsRepo } from '../src/db/repos/readings.ts'
+import { createRegenerationsRepo } from '../src/db/repos/regenerations.ts'
 import { createProposalsRepo } from '../src/db/repos/proposals.ts'
 import { createSettingsRepo } from '../src/db/repos/settings.ts'
 import { createUsageRepo } from '../src/db/repos/usage.ts'
@@ -137,6 +138,7 @@ export function makeTestApp({
     measures: createMeasuresRepo(db, now),
     names: createNamesRepo(db, now),
     readings: createReadingsRepo(db, now),
+    regenerations: createRegenerationsRepo(db, now),
     jobs: jobsRepo,
     aiRun,
     promptFor,
@@ -151,6 +153,18 @@ export function makeTestApp({
     jobs,
     thresholds: market.thresholds.data,
     thresholdsVersion: market.thresholds.version,
+    logger,
+    now,
+  })
+  const reading = createChannelReading({
+    youtube: fakeYouTube,
+    channels: channels,
+    journeys: channel.journeys,
+    proposals: channel.proposals,
+    readings: channel.readings,
+    jobs,
+    db,
+    thresholds: market.thresholds.data.ownChannel,
     logger,
     now,
   })
@@ -169,7 +183,7 @@ export function makeTestApp({
     repair,
     limits,
     settings,
-    channel: { ...channel, now },
+    channel: { ...channel, now, research, reading },
     jobs,
     usage,
     now,
@@ -201,18 +215,7 @@ export function makeTestApp({
         logger,
         now,
       }),
-      reading: createChannelReading({
-        youtube: fakeYouTube,
-        channels,
-        journeys: channel.journeys,
-        proposals: channel.proposals,
-        readings: channel.readings,
-        jobs,
-        db,
-        thresholds: market.thresholds.data.ownChannel,
-        logger,
-        now,
-      }),
+      reading,
     },
   })
 

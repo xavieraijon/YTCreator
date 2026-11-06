@@ -126,6 +126,16 @@ function normal(use: ChannelUse, input: Record<string, unknown>): Record<string,
         ...CONCEPT,
         changes: [{ what: 'Centrar el canal en cenas rápidas.', why: 'Es lo que mejor funciona.', videoIds: ids }],
       }
+    case 'perfil_parte':
+      return {
+        promise: 'Cenas sencillas de diario, explicadas paso a paso para quien llega tarde a casa.',
+        pillars: [
+          { title: 'Cenas de diario', description: 'Platos sencillos con lo que suele haber en casa.' },
+          { title: 'Para llevar', description: 'Comidas que aguantan bien en el tupper.' },
+          { title: 'Trucos', description: 'Gestos de cocina que ahorran tiempo cada día.' },
+        ],
+        audienceDescription: 'Gente que trabaja fuera y quiere cenar bien sin complicarse.',
+      }
   }
 }
 
@@ -162,6 +172,8 @@ function invent(use: ChannelUse, output: Record<string, unknown>): Record<string
     }
     case 'posicionamiento':
       return { ...output, promise: add(output.promise as string).slice(0, 160) }
+    case 'perfil_parte':
+      return { ...output, audienceDescription: add(output.audienceDescription as string) }
   }
 }
 

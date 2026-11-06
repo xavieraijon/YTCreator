@@ -98,8 +98,8 @@ describe('journey steps', () => {
     })
   })
 
-  it('only a new channel comes back to choose its name: an existing journey has no such step', () => {
-    const approvals = { ...allNew, nameProvisional: true }
+  it('only a new channel comes back to its names, chosen or not (entry 116): an existing journey has no such step', () => {
+    const approvals = allNew
     expect(planStep({ kind: 'nuevo', from: 'hecho', to: 'nombres', approvals }).ok).toBe(true)
     expect(planStep({ kind: 'existente', from: 'hecho', to: 'nombres', approvals })).toEqual({
       ok: false,
@@ -107,8 +107,8 @@ describe('journey steps', () => {
     })
   })
 
-  it('a finished journey does not move', () => {
-    expect(planStep({ kind: 'nuevo', from: 'hecho', to: 'nombres', approvals: allNew })).toEqual({
+  it('a finished journey does not move anywhere else', () => {
+    expect(planStep({ kind: 'nuevo', from: 'hecho', to: 'conceptos', approvals: allNew })).toEqual({
       ok: false,
       reason: 'salto_no_permitido',
     })

@@ -23,6 +23,7 @@ const CHANNEL_USES = {
   recomendacion: long(2048),
   lectura_canal: long(6144),
   posicionamiento: long(6144),
+  perfil_parte: long(2048),
 } satisfies Record<Exclude<AiUse, 'comprobacion'>, AiProfile>
 
 const withEffort = (effort: AiProfile['effort'], profile: AiProfile): AiProfile => ({ ...profile, effort })
@@ -38,6 +39,7 @@ export const PROFILES: Record<ProviderId, Record<AiUse, AiProfile>> = {
     recomendacion: withEffort('medium', CHANNEL_USES.recomendacion),
     lectura_canal: withEffort('medium', CHANNEL_USES.lectura_canal),
     posicionamiento: withEffort('medium', CHANNEL_USES.posicionamiento),
+    perfil_parte: withEffort('low', CHANNEL_USES.perfil_parte),
   },
   anthropic: { comprobacion: { model: HAIKU, timeoutMs: 30_000, maxOutputTokens: 16 }, ...CHANNEL_USES },
   // Longer than the 5 s after which the web offers «Cancelar», so `lento` can show it (e2e failures.spec.ts).

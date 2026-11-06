@@ -1,10 +1,16 @@
 import type { ChannelProfile } from '@ytcreator/core'
-import type { ChannelView, MeasureView, ProfileVersionView } from '@ytcreator/core/api'
+import type { ChannelReadingView, ChannelView, MeasureView, ProfileVersionView } from '@ytcreator/core/api'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import { exportUrl, ExportButtons } from '../../src/screens/channel/profile/Export.tsx'
-import { ProfileView, type ProfileData } from '../../src/screens/channel/profile/Profile.tsx'
+import {
+  ProfileEditor,
+  ProfileView,
+  withProposedPart,
+  type ProfileData,
+} from '../../src/screens/channel/profile/Profile.tsx'
 import { ProfileHistory } from '../../src/screens/channel/profile/ProfileHistory.tsx'
+import { RewritePart, type RewritePartProps } from '../../src/screens/channel/profile/RewritePart.tsx'
 import { channelEs } from '../../src/strings/channel.es.ts'
 
 const text = channelEs.profile
@@ -125,8 +131,10 @@ describe('Profile (US5 AS1)', () => {
   })
 
   it('a promise the creator wrote is marked as theirs, not as the AI (principle II)', () => {
-    expect(render(data({ aiPromise: 'Otra promesa de la IA.' }))).toContain(text.promiseByCreator)
-    expect(render(data({ aiPromise: 'Cenas de diario en 15 minutos.' }))).not.toContain(text.promiseByCreator)
+    expect(render(data({ aiPromises: ['Otra promesa de la IA.'] }))).toContain(text.promiseByCreator)
+    expect(render(data({ aiPromises: ['Otra promesa de la IA.', 'Cenas de diario en 15 minutos.'] }))).not.toContain(
+      text.promiseByCreator,
+    )
     expect(render(data())).not.toContain(text.promiseByCreator)
   })
 
@@ -136,6 +144,12 @@ describe('Profile (US5 AS1)', () => {
 
   it('«Editar» is there to change it by hand', () => {
     expect(button(render(data()), text.edit)).toBeTruthy()
+  })
+
+  it('a chosen name of a new channel can be changed in the step of names (entry 116)', () => {
+    const html = render(data())
+    expect(button(html, text.changeName)).toBeDefined()
+    expect(render(data({ channel: { ...channel, origin: 'existente' } }))).not.toContain(text.changeName)
   })
 
   it('a name left for later says so and offers to choose it', () => {
@@ -155,6 +169,37 @@ describe('figures older than 90 days (US5 AS4, FR-027)', () => {
     const old = data({ measure: measure(new Date(NOW.getTime() - 91 * DAY).toISOString()) })
     expect(render(old)).toContain(channelEs.niches.stale.replace('{dias}', '90'))
     expect(render(data())).not.toContain(channelEs.niches.stale.replace('{dias}', '90'))
+  })
+
+  it('a channel that already existed, read more than 90 days ago, offers to read it again (entry 125)', () => {
+    const fetchedAt = new Date(NOW.getTime() - 91 * DAY).toISOString()
+    const reading = {
+      id: 'r1',
+      fetchedAt,
+      summary: { videosRead: 30, long: { medianViews: 12_000 } },
+    } as unknown as ChannelReadingView
+    const existing = data({
+      measure: null,
+      reading,
+      current: version(2, 'manual', { context: { currentProfile: 'Tema: cocina.', readingId: 'r1' } }),
+    })
+    const html = renderToStaticMarkup(
+      <ProfileView data={existing} now={NOW} onEdit={noop} onChooseName={noop} onRemeasure={noop} />,
+    )
+    expect(button(html, text.reread)).toBeDefined()
+    expect(html).not.toContain(text.remeasure)
+  })
+
+  it('and offer «Volver a medir» for a niche that was measured (US5 AS4, entry 114)', () => {
+    const old = data({ measure: measure(new Date(NOW.getTime() - 91 * DAY).toISOString()) })
+    const html = renderToStaticMarkup(
+      <ProfileView data={old} now={NOW} onEdit={noop} onChooseName={noop} onRemeasure={noop} />,
+    )
+    expect(button(html, text.remeasure)).toBeDefined()
+    const fresh = renderToStaticMarkup(
+      <ProfileView data={data()} now={NOW} onEdit={noop} onChooseName={noop} onRemeasure={noop} />,
+    )
+    expect(fresh).not.toContain(text.remeasure)
   })
 })
 
@@ -191,5 +236,140 @@ describe('ProfileHistory (US5 AS2)', () => {
     const restores = html.match(new RegExp(text.restore, 'g')) ?? []
     expect(restores).toHaveLength(2)
     expect(html).toContain(text.currentVersion)
+  })
+})
+
+describe('ProfileEditor (entry 117)', () => {
+  it('the words and the answers the money rests on: hours, videos a week, region, presence and children', () => {
+    const html = renderToStaticMarkup(
+      <ProfileEditor profile={version(2, 'manual').profile} busy={false} onSave={noop} onCancel={noop} />,
+    )
+    for (const label of [
+      text.form.promise,
+      text.form.hours,
+      text.form.longPerWeek,
+      text.form.shortsPerWeek,
+      text.form.region,
+      text.form.presence,
+      text.form.madeForKids,
+      text.form.assumptions,
+    ]) {
+      expect(html).toContain(label)
+    }
+    expect(html).toContain(text.editWhy.slice(0, 30))
+    // What the AI assumed is there to correct, one per line (entry 123).
+    expect(html).toContain('Supongo que tu público está en España.')
+  })
+})
+
+describe('RewritePart (entry 115)', () => {
+  const estimate = {
+    estimateId: 'e1',
+    use: 'perfil_parte' as const,
+    cents: 2,
+    included: false,
+    blockedBy: null,
+    pricingVersion: 1,
+  }
+  const props = (extra: Partial<RewritePartProps> = {}): RewritePartProps => ({
+    part: 'temas',
+    estimate,
+    failure: null,
+    busy: false,
+    proposal: null,
+    saving: false,
+    onPart: noop,
+    onAsk: noop,
+    onApprove: noop,
+    onEdit: noop,
+    onDiscard: noop,
+    onClose: noop,
+    ...extra,
+  })
+
+  it('the profile offers it next to «Editar»; open, the button goes', () => {
+    const html = renderToStaticMarkup(
+      <ProfileView data={data()} now={NOW} onEdit={noop} onChooseName={noop} onRewrite={noop} />,
+    )
+    expect(button(html, text.rewrite.open)).toBeDefined()
+    const open = renderToStaticMarkup(
+      <ProfileView
+        data={data()}
+        now={NOW}
+        onEdit={noop}
+        onChooseName={noop}
+        onRewrite={noop}
+        rewrite={<RewritePart {...props()} />}
+      />,
+    )
+    expect(button(open, text.rewrite.open)).toBeUndefined()
+    expect(open).toContain(text.rewrite.title)
+  })
+
+  it('the three parts to choose, what to change and the cost on the button (FR-029)', () => {
+    const html = renderToStaticMarkup(<RewritePart {...props()} />)
+    for (const label of Object.values(text.rewrite.parts)) expect(html).toContain(label)
+    expect(html).toContain(channelEs.proposal.whatToChange)
+    expect(button(html, text.rewrite.ask)).toContain('0,02')
+    expect(button(html, text.rewrite.ask)).not.toContain('data-variant="primary"')
+    // Without the estimate there is nothing to press.
+    expect(button(renderToStaticMarkup(<RewritePart {...props({ estimate: null })} />), text.rewrite.ask)).toContain(
+      'disabled',
+    )
+  })
+
+  it('while a new measure is saved nothing is saved over it, and a proposal too old says so', () => {
+    const proposal = {
+      regenerationId: 'r1',
+      part: 'promesa' as const,
+      baseVersion: 1,
+      proposed: { promise: 'Otra promesa.' },
+      claimsTrimmed: false,
+    }
+    const locked = renderToStaticMarkup(<RewritePart {...props({ proposal, locked: true })} />)
+    expect(button(locked, text.rewrite.approve)).toContain('disabled')
+    expect(renderToStaticMarkup(<RewritePart {...props({ expired: true })} />)).toContain(text.rewrite.expired)
+    const view = renderToStaticMarkup(
+      <ProfileView data={data()} now={NOW} onEdit={noop} onChooseName={noop} onRewrite={noop} remeasuring />,
+    )
+    expect(button(view, text.edit)).toContain('disabled')
+    expect(button(view, text.rewrite.open)).toContain('disabled')
+  })
+
+  it('«Editar antes de guardar» opens the editor on the profile with the proposed part in it', () => {
+    const draft = withProposedPart(profile, {
+      regenerationId: 'r1',
+      part: 'publico',
+      baseVersion: 1,
+      proposed: { audienceDescription: 'Gente que cena tarde.' },
+      claimsTrimmed: false,
+    })
+    expect(draft.concept.audience).toEqual({ ...profile.concept.audience, description: 'Gente que cena tarde.' })
+    expect(draft.concept.promise).toBe(profile.concept.promise)
+  })
+
+  it('a failure of the AI says what happened, with the way to try again', () => {
+    const html = renderToStaticMarkup(<RewritePart {...props({ failure: 'tiempo_agotado' })} />)
+    expect(html).toContain(channelEs.aiFailure.tiempo_agotado)
+  })
+
+  it('the proposal is shown as the AI one, to save as a new version or to leave', () => {
+    const proposal = {
+      regenerationId: 'r1',
+      part: 'temas' as const,
+      baseVersion: 1,
+      proposed: { pillars: [pillar(7), pillar(8), pillar(9)] },
+      claimsTrimmed: true,
+    }
+    const html = renderToStaticMarkup(<RewritePart {...props({ proposal })} />)
+    expect(html).toContain(text.rewrite.proposed.temas)
+    expect(html).toContain('Tema 8')
+    expect(html).toContain(channelEs.proposal.claimsTrimmed)
+    // One main action per page: the download (contracts/ui-screens.md).
+    expect(html).not.toContain('data-variant="primary"')
+    expect(button(html, text.rewrite.approve)).toBeDefined()
+    expect(button(html, text.rewrite.edit)).toBeDefined()
+    expect(button(html, text.rewrite.discard)).toBeDefined()
+    expect(button(html, text.rewrite.ask)).toBeUndefined()
   })
 })

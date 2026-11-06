@@ -94,6 +94,17 @@ export type PositioningOutput = z.infer<typeof positioningOutput>
 // What the creator can save, as with a concept: they may delete the assumptions.
 export const positioningEditedOutput = conceptSchema.extend({ changes })
 
+// «Regenerar con IA» a part of a saved profile (entry 115): the AI gives the three texts it can rewrite and the domain
+// keeps only the one asked for. Never the money, the rhythm or the figures.
+export const PROFILE_PARTS = ['promesa', 'temas', 'publico'] as const
+export type ProfilePart = (typeof PROFILE_PARTS)[number]
+export const profilePartOutput = z.object({
+  promise: text.max(160),
+  pillars: conceptSchema.shape.pillars,
+  audienceDescription: text,
+})
+export type ProfilePartOutput = z.infer<typeof profilePartOutput>
+
 export const CHANNEL_OUTPUTS = {
   preguntas: questionsOutput,
   nichos: nichesOutput,
@@ -102,6 +113,7 @@ export const CHANNEL_OUTPUTS = {
   nombres: namesOutput,
   lectura_canal: channelReadingOutput,
   posicionamiento: positioningOutput,
+  perfil_parte: profilePartOutput,
 } as const
 export type ChannelUse = keyof typeof CHANNEL_OUTPUTS
 export type ChannelOutput<U extends ChannelUse> = z.infer<(typeof CHANNEL_OUTPUTS)[U]>

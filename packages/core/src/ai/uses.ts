@@ -8,5 +8,6 @@ export const AI_USES = [
   'nombres',
   'lectura_canal',
   'posicionamiento',
+  'perfil_parte',
 ] as const
 export type AiUse = (typeof AI_USES)[number]

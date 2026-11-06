@@ -43,6 +43,24 @@ export const sourceSchema = z.object({
 })
 export type Source = z.infer<typeof sourceSchema>
 
+// The rhythm that can be written in the profile, with the limits the journey and the concepts already have (entry
+// 124): whole hours from 1 to 60, as the journey asks for them, and videos from 0 up, as a concept can have them.
+export const PROFILE_CADENCE_LIMITS = {
+  hours: { min: 1, max: 60, whole: true },
+  videos: { min: 0, max: Number.POSITIVE_INFINITY, whole: false },
+} as const
+export const withinLimit = (
+  value: number,
+  { min, max, whole }: { readonly min: number; readonly max: number; readonly whole: boolean },
+) => Number.isFinite(value) && (!whole || Number.isInteger(value)) && value >= min && value <= max
+
+type Cadence = { hoursPerWeek: number; longPerWeek: number; shortsPerWeek: number }
+// Only what changes is checked, so a figure written before can stay while the rest is edited.
+export const cadenceWithinLimits = (before: Cadence, after: Cadence) =>
+  (after.hoursPerWeek === before.hoursPerWeek || withinLimit(after.hoursPerWeek, PROFILE_CADENCE_LIMITS.hours)) &&
+  (after.longPerWeek === before.longPerWeek || withinLimit(after.longPerWeek, PROFILE_CADENCE_LIMITS.videos)) &&
+  (after.shortsPerWeek === before.shortsPerWeek || withinLimit(after.shortsPerWeek, PROFILE_CADENCE_LIMITS.videos))
+
 export const channelProfileSchema = z.object({
   schemaVersion: z.literal(1),
   niche: z.object({ label: text, summary: text, measureId: z.string().nullable() }),

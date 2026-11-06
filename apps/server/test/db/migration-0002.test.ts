@@ -71,7 +71,7 @@ describe('migration 0002', () => {
       .prepare('SELECT version FROM schema_migrations ORDER BY version')
       .all()
       .map((r) => r.version)
-    expect(versions).toEqual([1, 2, 3])
+    expect(versions).toEqual([1, 2, 3, 4])
   })
 
   it('keeps 0001 intact', () => {
@@ -181,6 +181,29 @@ describe('migration 0003: channels not read', () => {
       hidden_subscribers: 7,
       unread_channels: null,
     })
+    old.close()
+  })
+})
+
+describe('migration 0004: the proposal that waits (entry 126)', () => {
+  it('only adds: what was saved before stays, and the new table checks what it keeps', () => {
+    const old = openDatabase(':memory:')
+    migrate(old, MIGRATIONS.slice(0, 3))
+    insertChannel(old, 'c')
+    insertJourney(old, 'j', 'c')
+    migrate(old, MIGRATIONS)
+    expect(
+      old
+        .prepare('SELECT id FROM journey')
+        .all()
+        .map((r) => r.id),
+    ).toEqual(['j'])
+    const insert = old.prepare(
+      `INSERT INTO profile_regeneration (id, channel_id, base_version, part, proposed, claims_trimmed, created_at)
+       VALUES (?, 'c', 1, ?, '{}', 0, ?)`,
+    )
+    expect(() => insert.run('r1', 'temas', NOW)).not.toThrow()
+    expect(() => insert.run('r2', 'dinero', NOW)).toThrow()
     old.close()
   })
 })

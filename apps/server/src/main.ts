@@ -30,6 +30,7 @@ import { createNamesRepo } from './db/repos/names.ts'
 import { createOnboardingRepo } from './db/repos/onboarding.ts'
 import { createProfilesRepo } from './db/repos/profiles.ts'
 import { createReadingsRepo } from './db/repos/readings.ts'
+import { createRegenerationsRepo } from './db/repos/regenerations.ts'
 import { createProposalsRepo } from './db/repos/proposals.ts'
 import { createSettingsRepo } from './db/repos/settings.ts'
 import { createUsageRepo } from './db/repos/usage.ts'
@@ -264,6 +265,7 @@ export async function startServer({
     measures: createMeasuresRepo(db, now),
     names: createNamesRepo(db, now),
     readings: createReadingsRepo(db, now),
+    regenerations: createRegenerationsRepo(db, now),
     jobs: jobsRepo,
     promptFor: channelPrompt,
     warningKnowledge: warningKnowledge(market),
@@ -312,6 +314,27 @@ export async function startServer({
     throw new NoFreePortError()
   }
 
+  const research = createNicheResearch({
+    youtube,
+    measures: channel.measures,
+    jobs,
+    thresholds: market.thresholds.data,
+    thresholdsVersion: market.thresholds.version,
+    logger,
+    now,
+  })
+  const reading = createChannelReading({
+    youtube: youtube,
+    channels: channel.channels,
+    journeys: channel.journeys,
+    proposals: channel.proposals,
+    readings: channel.readings,
+    jobs,
+    db,
+    thresholds: market.thresholds.data.ownChannel,
+    logger,
+    now,
+  })
   app = createApp({
     port,
     version,
@@ -324,7 +347,7 @@ export async function startServer({
     repair,
     limits,
     settings,
-    channel,
+    channel: { ...channel, research, reading },
     jobs,
     youtubeSettings,
     usage,
@@ -332,15 +355,7 @@ export async function startServer({
     youtube: {
       journeys: channel.journeys,
       measures: channel.measures,
-      research: createNicheResearch({
-        youtube,
-        measures: channel.measures,
-        jobs,
-        thresholds: market.thresholds.data,
-        thresholdsVersion: market.thresholds.version,
-        logger,
-        now,
-      }),
+      research,
       nameCheck: createNameCheck({
         youtube,
         names: channel.names,
@@ -349,18 +364,7 @@ export async function startServer({
         logger,
         now,
       }),
-      reading: createChannelReading({
-        youtube,
-        channels: channel.channels,
-        journeys: channel.journeys,
-        proposals: channel.proposals,
-        readings: channel.readings,
-        jobs,
-        db,
-        thresholds: market.thresholds.data.ownChannel,
-        logger,
-        now,
-      }),
+      reading,
     },
   })
   logger.info('server_started', { port, version })

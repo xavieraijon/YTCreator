@@ -244,6 +244,36 @@ test('from the interests to the rhythm with the fakes (US1)', async ({ page: fir
   await expect(page.getByText(/Has vuelto a la versión \d+/)).toBeVisible()
   await expect(page.getByText('Una promesa cambiada a mano.')).toHaveCount(0)
 
+  // Entry 117: the answers can be edited too; the money and the warnings are worked out again.
+  await page.getByRole('button', { name: 'Editar' }).click()
+  await page.getByLabel('Está hecho para niños').check()
+  await page.getByRole('button', { name: 'Guardar cambios' }).click()
+  await expect(page.getByText(/Parece contenido para niños/)).toBeVisible()
+
+  // Entry 115: one part rewritten by the AI, the cost on the button, saved only once approved.
+  await page.getByRole('button', { name: 'Reescribir con la IA' }).click()
+  await page.getByLabel('Los temas').check()
+  await expect(page.getByRole('button', { name: /^Pedir a la IA · / })).toBeEnabled()
+  await audit(page)
+  await page.getByRole('button', { name: /^Pedir a la IA/ }).click()
+  await expect(page.getByRole('heading', { name: 'Los temas que propone la IA' })).toBeVisible()
+  await audit(page)
+  await page.getByRole('button', { name: 'Guardar como versión nueva' }).click()
+  await expect(page.getByText(/Cambios guardados\. Es la versión \d+\./)).toBeVisible()
+  await expect(page.getByText(/Comidas que aguantan bien en el tupper/).first()).toBeVisible()
+
+  // Entry 116: the name changes in the step of names, with the @ checked again.
+  await page.getByRole('button', { name: 'Cambiar el nombre' }).click()
+  await expect(heading(page, 'El nombre de tu canal')).toBeVisible()
+  await names.nth(2).getByRole('button', { name: 'Quedarme con este nombre' }).click()
+  await expect(names.nth(2).getByText('Nombre elegido')).toBeVisible()
+  await page.getByRole('button', { name: 'Terminar' }).click()
+  await expect(page).toHaveURL(/\/canal$/)
+  await expect(page.getByRole('button', { name: 'Cambiar el nombre' })).toBeVisible()
+  // Entry 122: only the name moved; what was rewritten and edited since the journey stays.
+  await expect(page.getByText(/Comidas que aguantan bien en el tupper/).first()).toBeVisible()
+  await expect(page.getByText(/Parece contenido para niños/)).toBeVisible()
+
   // Ajustes → YouTube and Consumo (US5).
   await page.goto(`${server.baseURL}/ajustes/youtube`)
   await expect(page.getByRole('button', { name: 'Actualizar el lector' })).toBeVisible()

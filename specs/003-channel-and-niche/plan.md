@@ -23,7 +23,7 @@ concepto → nombre) y canal que ya existe (URL o @ → lectura → perfil actua
   conocimiento y siempre con fuente y fecha. Las cuatro medidas de cada nicho van en paralelo para caber en
   SC-003 (R5, R6).
 - **Usos de IA nuevos** con su prompt versionado, su esquema Zod y su perfil por proveedor:
-  - `preguntas`, `nichos`, `conceptos`, `nombres`, `lectura_canal` y `posicionamiento`;
+  - `preguntas`, `nichos`, `conceptos`, `nombres`, `lectura_canal`, `posicionamiento` y `perfil_parte` (US5, entrada 115);
   - `AiRequest` gana un campo `input` para separar el prompt fijo de los datos de cada llamada;
   - la IA nunca recibe permiso para dar cifras de mercado: las cifras se calculan y se le pasan, y un validador
     rechaza las que no vengan de los datos (R7–R10).
@@ -58,7 +58,7 @@ del instalador.
 paquetes npm nuevos. Un binario externo nuevo: **yt-dlp**, que instala el instalador con suma de verificación (R2). La
 YouTube Data API se llama con `fetch`, sin SDK de Google (R3).
 
-**Storage**: la misma SQLite (`~/YTCreator/ytcreator.db`) con las migraciones `0002_channel.sql` y `0003_measure_unread_channels.sql`. La clave opcional de la
+**Storage**: la misma SQLite (`~/YTCreator/ytcreator.db`) con las migraciones `0002_channel.sql`, `0003_measure_unread_channels.sql` y `0004_profile_regeneration.sql`. La clave opcional de la
 YouTube Data API va en el `SecretStore` de la 002 (llavero o fichero `0600`). La caché de consultas de YouTube va en
 una tabla con caducidad (R4, R15).
 
@@ -106,7 +106,7 @@ una tabla con caducidad (R4, R15).
 
 - 1 creador, N canales en el modelo de datos (gestión de varios fuera de alcance);
 - 2 recorridos, unas 12 pantallas o pasos y unas 20 rutas de API nuevas;
-- 7 usos de IA (`recomendacion` añadido en la fase 3, FR-010), 3 adaptadores de YouTube y 2 migraciones.
+- 8 usos de IA (`recomendacion` añadido en la fase 3, FR-010, y `perfil_parte` en US5, entrada 115), 3 adaptadores de YouTube y 3 migraciones.
 
 ## Constitution Check
 
@@ -121,7 +121,7 @@ justificar en «Complexity Tracking»).
 | II | Todo lo generado se puede aprobar, editar y regenerar, con versiones; nada externo sin una acción explícita; dato ≠ opinión | ✅ | Cada propuesta de la IA (preguntas, nichos, conceptos, nombres, lectura, posicionamiento) se guarda como `proposal` con versión y admite aprobar, editar o regenerar con indicaciones. El perfil guarda una `profile_version` en cada cambio. Las medidas se muestran con fuente y fecha en un bloque visualmente separado de la opinión de la IA, y el validador elimina las cifras que la IA no pueda respaldar con los datos (R8). Las consultas a YouTube solo se lanzan tras una acción del creador |
 | III | Coste estimado en euros antes de gastar, dentro de los límites de gasto, con un camino sin coste adicional | ✅ | Cada botón que lanza IA con la API muestra «~X €», que sale de `count_tokens`, del máximo de salida y de la tabla de precios fechada (R12). Antes de lanzar se aplican los límites por operación, por día y por mes de la 002, y la tabla `ai_usage` registra el consumo real, consultable en Ajustes (R13). Con la suscripción cuesta 0 € y no hay estimación. YouTube cuesta 0 € con los dos adaptadores |
 | IV | La IA solo a través del puerto `AiProvider`; prompts versionados que valen para cualquier modelo; salida validada con Zod; errores tipados; uso explícito | ✅ | Seis usos nuevos en `AI_USES`, cada uno con perfil por proveedor (modelo, esfuerzo, tiempo, máximo de salida) y prompt `v1` en `packages/knowledge`. Las salidas son estructuradas, se validan con Zod y tienen un solo reintento si no validan. `AiRequest.input` separa datos de prompt (R7, R9). Sin reintentos ciegos en cupo ni en tiempo agotado |
-| V | Conocimiento en paquetes versionados con fuente y fecha; datos de mercado reales y citados; reglas de escritura humana | ✅ | `packages/knowledge/market/*.json` contiene YPP, RPM, «hecho para niños», contenido no auténtico, Shorts, umbrales y precios, cada fichero con `source` y `reviewedAt`. Las reglas de escritura humana van en `writing/human.md`, que se incluye en los prompts de los seis usos (FR-032). Los datos de mercado salen solo de yt-dlp o de la YouTube Data API (R11). Un aviso salta si un fichero lleva más de 180 días sin revisar |
+| V | Conocimiento en paquetes versionados con fuente y fecha; datos de mercado reales y citados; reglas de escritura humana | ✅ | `packages/knowledge/market/*.json` contiene YPP, RPM, «hecho para niños», contenido no auténtico, Shorts, umbrales y precios, cada fichero con `source` y `reviewedAt`. Las reglas de escritura humana van en `writing/human.md`, que se incluye en los prompts de todos los usos (FR-032). Los datos de mercado salen solo de yt-dlp o de la YouTube Data API (R11). Un aviso salta si un fichero lleva más de 180 días sin revisar |
 | VI | Solo tokens (ningún valor suelto), `@layer` + CSS Modules, temas claro y oscuro, WCAG 2.2 AA, 375 px, componente documentado | ✅ | Las pantallas se componen con `@ytcreator/ui`. Hacen falta dos componentes nuevos, `Semaphore` (semáforo con texto, no solo color) y `DataSource` (sello de fuente y fecha), que se documentan en el catálogo antes de usarlos (R16) |
 | VII | Local y portable; exportable en Markdown y JSON; secretos protegidos; un creador con varios canales | ✅ | Todo vive en la SQLite local. «Exportar perfil» genera `.md` y `.json` (R17). La clave de YouTube va en el `SecretStore` y solo se muestra su `hint`. `channel` lleva su `id` y todo cuelga de él, así que el modelo admite N canales |
 | VIII | Dentro del alcance de la v1; lo que surja va al backlog | ✅ | Fuera de esta feature: gestión de varios canales, estilo visual, voz, música, marca gráfica, agentes y banco de ideas |
@@ -186,7 +186,7 @@ installer/
 packages/core/src/
 ├── ai/
 │   ├── port.ts              # AiRequest + input
-│   └── uses.ts              # + preguntas, nichos, conceptos, nombres, lectura_canal, posicionamiento
+│   └── uses.ts              # + preguntas, nichos, conceptos, nombres, lectura_canal, posicionamiento, perfil_parte
 ├── youtube/
 │   ├── port.ts              # YouTubeData: search, channel, videos, checkHandle, resolve
 │   ├── failures.ts          # YouTubeFailure tipado
@@ -197,7 +197,7 @@ packages/core/src/
 │   └── names.ts             # semáforo de nombres
 ├── channel/
 │   ├── journey.ts           # máquina de estados de los dos recorridos
-│   ├── outputs.ts           # esquemas Zod de salida de los seis usos
+│   ├── outputs.ts           # esquemas Zod de salida de los usos
 │   ├── monetization.ts      # ingresos en rangos con rpm.json
 │   ├── warnings.ts          # avisos de nicho y concepto (niños, no auténtico, solo Shorts, ritmo)
 │   ├── profile.ts           # perfil y versiones, edición, diferencias
@@ -225,10 +225,10 @@ packages/youtube/            # @ytcreator/youtube (adaptadores, nuevo)
     └── fixtures/            # salidas grabadas de yt-dlp, RSS y Data API; fake-yt-dlp ejecutable
 
 packages/ai/src/
-└── profiles.ts              # + perfiles de los seis usos en los tres proveedores
+└── profiles.ts              # + perfiles de los usos en los tres proveedores
 
 packages/knowledge/
-├── prompts/                 # + preguntas, nichos, conceptos, nombres, lectura_canal, posicionamiento (v1.md)
+├── prompts/                 # + preguntas, nichos, conceptos, nombres, lectura_canal, posicionamiento, perfil_parte (v1.md)
 ├── market/                  # ypp.json, rpm.json, made-for-kids.json, inauthentic.json, shorts.json,
 │                            # thresholds.json, pricing.json
 ├── writing/human.md         # reglas de escritura humana
@@ -236,7 +236,7 @@ packages/knowledge/
 
 apps/server/src/
 ├── db/
-│   ├── migrations/0002_channel.sql, 0003_measure_unread_channels.sql
+│   ├── migrations/0002_channel.sql, 0003_measure_unread_channels.sql, 0004_profile_regeneration.sql
 │   └── repos/               # channels, journeys, proposals, profiles, measures, names, readings, usage, yt-cache, jobs
 ├── services/
 │   ├── ai-run.ts            # estimación → presupuesto → generate → validar → registrar consumo

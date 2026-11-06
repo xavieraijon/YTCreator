@@ -2,7 +2,7 @@
 
 **Feature**: `003-channel-and-niche` | **Fecha**: 2026-10-31
 
-Todo vive en la misma base de datos `~/YTCreator/ytcreator.db` con las migraciones `0002_channel.sql` y `0003_measure_unread_channels.sql`. La base de datos
+Todo vive en la misma base de datos `~/YTCreator/ytcreator.db` con las migraciones `0002_channel.sql`, `0003_measure_unread_channels.sql` y `0004_profile_regeneration.sql`. La base de datos
 **nunca contiene secretos**: la clave opcional de la YouTube Data API va en el `SecretStore` de la 002 y aquí solo se
 guardan su referencia y su `hint`, en `app_settings`.
 
@@ -165,7 +165,7 @@ cambio aprobado (FR-024).
 | `version` | `INTEGER` | 1, 2, 3…; PK compuesta `(channel_id, version)` |
 | `origin` | `'ia' \| 'manual' \| 'restaurada'` | `restaurada` lleva `restored_from` |
 | `restored_from` | `INTEGER \| NULL` | |
-| `proposal_id` | `TEXT \| NULL` | La propuesta aprobada que la generó |
+| `proposal_id` | `TEXT \| NULL` | La propuesta aprobada del recorrido que la generó; `NULL` en una versión `ia` de «Reescribir con la IA», que se apunta en `profile_regeneration` mientras espera y en `ai_usage` (entradas 119 y 126) |
 | `profile` | `TEXT` (JSON) | `ChannelProfile`, ver abajo |
 | `created_at` | `TEXT` | |
 
@@ -209,6 +209,22 @@ La misma forma para canales nuevos y existentes (FR-021b).
 | `label` | `string` | «YouTube (yt-dlp)», «Programa de socios de YouTube» |
 | `url` | `string \| null` | |
 | `date` | ISO 8601 | Fecha de la medida o `reviewedAt` del conocimiento |
+
+## `profile_regeneration`
+
+La propuesta de «Reescribir con la IA» que espera el sí del creador (entradas 119 y 126). Migración `0004`, que solo
+añade. Una por canal: pedir otra sustituye a la anterior; aprobarla, descartarla o guardarla editada la borra.
+
+| Columna | Tipo | Notas |
+|---|---|---|
+| `id` | `TEXT` | PK |
+| `channel_id` | `TEXT` | FK → `channel` |
+| `base_version` | `INTEGER` | La versión del perfil para la que se escribió; si ya no es la vigente, no se guarda tal cual |
+| `part` | `TEXT` | `promesa \| temas \| publico` |
+| `proposed` | `TEXT` (JSON) | Solo la parte pedida: `{promise}`, `{pillars}` o `{audienceDescription}` |
+| `claims_trimmed` | `INTEGER` | 1 si el validador quitó cifras |
+| `usage_id` | `TEXT \| NULL` | FK → `ai_usage`: la llamada que la hizo |
+| `created_at` | `TEXT` | ISO |
 
 ## `market_measure`
 

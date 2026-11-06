@@ -9,8 +9,11 @@ import {
   jobStartedSchema,
   jobEventSchema,
   journeySchema,
+  channelReadingSchema,
   journeyViewSchema,
   knowledgeAgesSchema,
+  pendingRegenerationSchema,
+  profileRegenerationOutcomeSchema,
   profileVersionListSchema,
   profileVersionSchema,
   proposalOutcomeSchema,
@@ -21,7 +24,7 @@ import {
   youtubeSettingsSchema,
   type YouTubeSourceSetting,
 } from '@ytcreator/core/api'
-import type { ChannelProfile } from '@ytcreator/core'
+import type { ChannelProfile, ProfilePart } from '@ytcreator/core'
 
 // Any Zod schema from @ytcreator/core/api; structural so the web needs no direct zod import.
 export interface Parser<T> {
@@ -168,6 +171,31 @@ export const profileApi = {
     apiClient.put(`/api/channels/${encodeURIComponent(channelId)}/profile`, body, profileVersionSchema),
   restore: (channelId: string, version: number) =>
     apiClient.post(`/api/channels/${encodeURIComponent(channelId)}/profile/restore`, { version }, profileVersionSchema),
+  // «Volver a medir» (entry 114): a job; the new version is there once it is done.
+  remeasure: (channelId: string) =>
+    apiClient.post(`/api/channels/${encodeURIComponent(channelId)}/profile/remeasure`, {}, jobStartedSchema),
+  // «Regenerar con IA» (entry 115): the cost first, then the proposal, then the creator's yes.
+  estimate: (channelId: string, part: ProfilePart) =>
+    apiClient.post(`/api/channels/${encodeURIComponent(channelId)}/profile/estimate`, { part }, estimateSchema),
+  regenerate: (
+    channelId: string,
+    body: { part: ProfilePart; baseVersion: number; estimateId: string; instructions?: string },
+  ) =>
+    apiClient.post(
+      `/api/channels/${encodeURIComponent(channelId)}/profile/regenerate`,
+      body,
+      profileRegenerationOutcomeSchema,
+    ),
+  reading: (channelId: string) =>
+    apiClient.get(`/api/channels/${encodeURIComponent(channelId)}/profile/reading`, channelReadingSchema.nullable()),
+  pendingRegeneration: (channelId: string) =>
+    apiClient.get(`/api/channels/${encodeURIComponent(channelId)}/profile/regeneration`, pendingRegenerationSchema),
+  discardRegeneration: (channelId: string, regenerationId: string) =>
+    apiClient.delete(
+      `/api/channels/${encodeURIComponent(channelId)}/profile/regeneration/${encodeURIComponent(regenerationId)}`,
+    ),
+  approveRegeneration: (channelId: string, body: { regenerationId: string; baseVersion: number }) =>
+    apiClient.post(`/api/channels/${encodeURIComponent(channelId)}/profile/regenerated`, body, profileVersionSchema),
 }
 
 export const usageApi = {

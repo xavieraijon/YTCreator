@@ -1,5 +1,11 @@
 import { channelProfileSchema, positioningOutput } from '@ytcreator/core'
-import { conceptFiguresSchema, journeyViewSchema, profileVersionSchema, proposalSchema } from '@ytcreator/core/api'
+import {
+  conceptFiguresSchema,
+  jobStartedSchema,
+  journeyViewSchema,
+  profileVersionSchema,
+  proposalSchema,
+} from '@ytcreator/core/api'
 import { describe, expect, it, vi } from 'vitest'
 import { makeTestApp } from '../helpers.ts'
 
@@ -482,5 +488,40 @@ describe('the audience of a channel that exists (FR-014b)', () => {
     expect(channel.audienceRegion).toBe('latam')
     const next = await propose(t, id, 'posicionamiento', 'posicionamiento')
     expect((next.payload as { audience: { region: string } }).audience.region).toBe('latam')
+  })
+})
+
+describe('«Volver a leer tu canal» from the profile (entry 125)', () => {
+  it('reads the channel again without the AI: a new reading, and a new version with its figures', async () => {
+    const t = makeTestApp({ fakeAi: 'ok' })
+    const { id } = await atPositioning(t)
+    const positioning = await propose(t, id, 'posicionamiento', 'posicionamiento')
+    await call(t, 'PATCH', `/api/proposals/${positioning.id}`, { status: 'aprobada' })
+    expect((await step(t, id, 'hecho')).status).toBe(200)
+    const before = profileVersionSchema.parse((await call(t, 'GET', '/api/channels/current')).body['profile'])
+    const channelId = String(((await call(t, 'GET', '/api/channels/current')).body['channel'] as Body)['id'])
+    const spent = t.usage.list().length
+
+    const started = await call(t, 'POST', `/api/channels/${channelId}/profile/remeasure`)
+    expect(started.status).toBe(202)
+    const { jobId } = jobStartedSchema.parse(started.body)
+    await vi.waitFor(() => expect(t.jobs.get(jobId)?.status).toBe('hecho'))
+
+    const after = profileVersionSchema.parse((await call(t, 'GET', '/api/channels/current')).body['profile'])
+    expect(after).toMatchObject({ version: before.version + 1, origin: 'manual' })
+    expect(after.profile.context?.readingId).not.toBe(before.profile.context?.readingId)
+    expect(after.profile.context?.currentProfile).toBe(before.profile.context?.currentProfile)
+    expect(after.profile.sources.map((s) => s.id)).toContain(after.profile.context?.readingId)
+    expect(after.profile.sources.map((s) => s.id)).not.toContain(before.profile.context?.readingId)
+    expect(after.profile.concept.promise).toBe(before.profile.concept.promise)
+    expect(t.usage.list()).toHaveLength(spent)
+
+    // The page reads the reading of the profile, not the last one: a version brought back keeps its own (FR-027).
+    const own = await call(t, 'GET', `/api/channels/${channelId}/profile/reading`)
+    expect((own.body as Body)['id']).toBe(after.profile.context?.readingId)
+    const restored = await call(t, 'POST', `/api/channels/${channelId}/profile/restore`, { version: before.version })
+    expect(restored.status).toBe(200)
+    const back = await call(t, 'GET', `/api/channels/${channelId}/profile/reading`)
+    expect((back.body as Body)['id']).toBe(before.profile.context?.readingId)
   })
 })

@@ -56,8 +56,15 @@ servidor se reinicia, los trabajos `en_curso` pasan a `interrumpido` y la pantal
 |---|---|---|
 | `GET /api/channels/:id/profile/versions` | — | `{version, origin, createdAt}[]` |
 | `GET /api/channels/:id/profile/versions/:v` | — | `ProfileVersion` |
-| `PUT /api/channels/:id/profile` | `{baseVersion, profile}` | Nueva versión `manual`; `409` si `baseVersion` no es la vigente |
-| `POST /api/channels/:id/profile/restore` | `{version}` | Nueva versión `restaurada` |
+| `PUT /api/channels/:id/profile` | `{baseVersion, profile}` | Nueva versión `manual`; `409` si `baseVersion` no es la vigente. Se guardan los textos, los supuestos del dinero y las respuestas (ritmo, región, forma de aparecer, para niños); el dinero, los avisos y sus fuentes de conocimiento se vuelven a calcular, y las cifras de YouTube y el nombre salen de la versión base. `400 validacion` (`profile`) si el ritmo cambia fuera de sus límites o si ya no se encuentra el tipo de contenido del que sale el dinero y las respuestas cambian (entradas 117, 121, 123, 124 y 132) |
+| `POST /api/channels/:id/profile/restore` | `{version}` | Nueva versión `restaurada`, con el nombre de ahora (entrada 103) |
+| `POST /api/channels/:id/profile/remeasure` | — | `202 {jobId}`. Con nicho medido, «Volver a medir» (entradas 114 y 120); con un canal leído, «Volver a leer tu canal» (entradas 125 y 128). Al terminar, nueva versión con las cifras nuevas; si no se puede hacer, el trabajo acaba fallido. `409` si ya hay una en marcha; `400 validacion` (`profile`) si no hay medida ni lectura |
+| `POST /api/channels/:id/profile/estimate` | `{part: promesa\|temas\|publico}` | `Estimate` del uso `perfil_parte` (entrada 115) |
+| `POST /api/channels/:id/profile/regenerate` | `{part, baseVersion, estimateId, instructions?}` | `{regenerationId, part, baseVersion, proposed, claimsTrimmed}` o `{failure}`. La propuesta queda guardada hasta aprobarla o descartarla y sustituye a la anterior; el perfil no cambia. `409` si `baseVersion` no es la vigente; `400` si la estimación es de otro canal (entradas 119 y 126) |
+| `GET /api/channels/:id/profile/reading` | — | La lectura de la que sale el perfil (`context.readingId`), no la última; `null` si no viene de un canal leído |
+| `GET /api/channels/:id/profile/regeneration` | — | La propuesta que espera, o `null` |
+| `DELETE /api/channels/:id/profile/regeneration/:regenerationId` | — | `204`; `404` si ya no está |
+| `POST /api/channels/:id/profile/regenerated` | `{regenerationId, baseVersion}` | Nueva versión `ia` con la parte propuesta, el dinero y los avisos mirados de nuevo; `404` si la propuesta ya no está; `409` si el perfil cambió (entrada 119) |
 | `PATCH /api/channels/:id/name` | `{displayName, handle, checkId?}` | `Channel` |
 | `GET /api/channels/:id/export?format=md\|json` | — | Descarga con `Content-Disposition` |
 

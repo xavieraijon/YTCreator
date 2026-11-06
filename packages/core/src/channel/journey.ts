@@ -39,8 +39,6 @@ export interface ApprovalState {
   niche?: boolean
   rhythm?: boolean
   concept?: boolean
-  /** The name was left for later: the finished journey can come back to choose it (FR-018b). */
-  nameProvisional?: boolean
   name?: boolean
   channelInput?: boolean
   channelConfirmed?: boolean
@@ -84,8 +82,9 @@ export function planStep({ kind, from, to, approvals, confirm, nameLater }: Step
   const steps = stepsOf(kind)
   const fromIndex = steps.indexOf(from)
   const toIndex = steps.indexOf(to)
-  // A channel that exists has no step to choose a name: only a new one comes back to it (FR-018b).
-  if (kind === 'nuevo' && from === 'hecho' && to === 'nombres' && approvals.nameProvisional) {
+  // A channel that exists has no step to choose a name: only a new one comes back to it, to choose the name left for
+  // later (FR-018b) or to change the one chosen (entry 116).
+  if (kind === 'nuevo' && from === 'hecho' && to === 'nombres') {
     return { ok: true, needsReview: false }
   }
   if (fromIndex < 0 || toIndex < 0 || from === 'hecho') return { ok: false, reason: 'salto_no_permitido' }

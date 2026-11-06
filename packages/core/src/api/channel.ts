@@ -17,7 +17,13 @@ import {
   PROPOSAL_STATUSES,
   SEMAPHORES,
 } from '../channel/model.ts'
-import { CHANNEL_OUTPUTS, type ChannelUse, HANDLE_PATTERN } from '../channel/outputs.ts'
+import {
+  CHANNEL_OUTPUTS,
+  type ChannelUse,
+  HANDLE_PATTERN,
+  PROFILE_PARTS,
+  profilePartOutput,
+} from '../channel/outputs.ts'
 import { channelProfileSchema } from '../channel/profile.ts'
 import { readingSummarySchema } from '../channel/reading.ts'
 import { YOUTUBE_FAILURES } from '../youtube/failures.ts'
@@ -89,6 +95,9 @@ export const proposalOutcomeSchema = z.union([
   z.object({ failure: z.enum(AI_RUN_FAILURES as unknown as [AiRunFailure, ...AiRunFailure[]]) }),
 ])
 export type ProposalOutcome = z.infer<typeof proposalOutcomeSchema>
+const aiRunFailureSchema = z.object({
+  failure: z.enum(AI_RUN_FAILURES as unknown as [AiRunFailure, ...AiRunFailure[]]),
+})
 
 export const measureSchema = z.object({
   id,
@@ -190,6 +199,31 @@ export const profileEditBodySchema = z.object({
 
 // POST /api/channels/:id/profile/restore
 export const profileRestoreBodySchema = z.object({ version: z.number().int().positive() })
+
+// «Regenerar con IA» a part of the profile (entry 115): the estimate first, then the proposal, then the creator's yes.
+// POST /api/channels/:id/profile/estimate
+export const profilePartEstimateBodySchema = z.object({ part: z.enum(PROFILE_PARTS) })
+// POST /api/channels/:id/profile/regenerate
+export const profileRegenerateBodySchema = z.object({
+  part: z.enum(PROFILE_PARTS),
+  baseVersion: z.number().int().positive(),
+  estimateId: id,
+  instructions: z.string().trim().max(500).optional(),
+})
+export const profileRegenerationSchema = z.object({
+  regenerationId: id,
+  part: z.enum(PROFILE_PARTS),
+  baseVersion: z.number().int().positive(),
+  // Only the part asked for.
+  proposed: profilePartOutput.partial(),
+  claimsTrimmed: z.boolean(),
+})
+export type ProfileRegeneration = z.infer<typeof profileRegenerationSchema>
+// GET /api/channels/:id/profile/regeneration: the one waiting, or null.
+export const pendingRegenerationSchema = profileRegenerationSchema.nullable()
+export const profileRegenerationOutcomeSchema = z.union([profileRegenerationSchema, aiRunFailureSchema])
+// POST /api/channels/:id/profile/regenerated: the creator approves the proposal; it becomes a version `ia`.
+export const profileRegeneratedBodySchema = z.object({ regenerationId: id, baseVersion: z.number().int().positive() })
 
 // PATCH /api/channels/:id/name
 export const channelNameBodySchema = z.object({
@@ -301,9 +335,11 @@ export const journeyStepBodySchema = z.object({
 })
 
 const CHANNEL_USES = Object.keys(CHANNEL_OUTPUTS) as [ChannelUse, ...ChannelUse[]]
+// `perfil_parte` is asked for from the profile, not from a journey.
+const JOURNEY_USES = CHANNEL_USES.filter((use) => use !== 'perfil_parte') as [ChannelUse, ...ChannelUse[]]
 
 // POST /api/journeys/:id/estimate
-export const estimateBodySchema = z.object({ use: z.enum(CHANNEL_USES), proposalId: id.optional() })
+export const estimateBodySchema = z.object({ use: z.enum(JOURNEY_USES), proposalId: id.optional() })
 export const estimateSchema = z.object({
   estimateId: id,
   use: z.enum(CHANNEL_USES),

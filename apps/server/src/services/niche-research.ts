@@ -142,11 +142,11 @@ export function createNicheResearch(deps: NicheResearchDeps) {
     const kept: Partial<ReferenceChannel> = { ...reference }
     delete kept.id
     delete kept.measureId
-    delete kept.fetchedAt
+    // Each channel keeps the date its figures were read: copied or kept, they are not read again (FR-008).
     return kept as NewReference
   }
 
-  return {
+  const research = {
     start(journeyId: string, niches: readonly NicheToMeasure[], { force = false }: { force?: boolean } = {}) {
       const pending = prepare(journeyId, niches, force)
       return jobs.start({ journeyId, kind: 'medir_nichos', total: pending.length }, async (job) => {
@@ -166,6 +166,34 @@ export function createNicheResearch(deps: NicheResearchDeps) {
             job.item(finished)
           }),
         )
+      })
+    },
+
+    // «Volver a medir» from the profile (entry 114): always a new measure, so the versions before it keep the figures
+    // they were made with. Its reference channels are the ones the creator had, added or removed by hand included: not
+    // read again, so no quota is spent on them (entry 120). `onMeasured` makes the new profile version; false if it
+    // could not, and then the job fails instead of saying it was saved.
+    remeasure(previous: Measure, onMeasured: (measure: Measure) => boolean) {
+      const fresh = measures.start({
+        journeyId: previous.journeyId,
+        nicheLabel: previous.nicheLabel,
+        queries: previous.queries,
+        source: youtube.effectiveSource(),
+        thresholdsVersion,
+      })
+      return jobs.start({ journeyId: previous.journeyId, kind: 'medir_nichos', total: 1 }, async (job) => {
+        let finished: Measure | null
+        try {
+          finished = await measureOne(fresh)
+        } catch (error) {
+          logger.error('niche_research.measure_failed', { error })
+          finished = measures.fail(fresh.id, 'no_disponible')
+        }
+        job.progress(1, 1)
+        job.item(finished)
+        if (finished?.status !== 'medida') return { failure: finished?.failure ?? 'no_disponible' }
+        measures.setReferences(finished.id, measures.listReferences(previous.id).map(toNew))
+        return onMeasured(finished) ? undefined : { failure: 'interno' }
       })
     },
 
@@ -212,6 +240,7 @@ export function createNicheResearch(deps: NicheResearchDeps) {
       return { ok: true, references: measures.setReferences(measure.id, fresh) }
     },
   }
+  return research
 }
 
 export type NicheResearch = ReturnType<typeof createNicheResearch>

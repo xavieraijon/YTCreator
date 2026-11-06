@@ -96,5 +96,8 @@ export function channelInput(
     case 'lectura_canal':
     case 'posicionamiento':
       return {}
+    // Asked for from the profile, with its own data (routes/channel.ts).
+    case 'perfil_parte':
+      return {}
   }
 }

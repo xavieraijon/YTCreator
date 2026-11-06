@@ -225,7 +225,8 @@ más de 90 días.
 **Qué debe respetar**: Principios II, III, V, VII y IX. `Secret` y `SecretStore`: la clave de YouTube solo por su
 `hint`, y nunca en base de datos, logs, URL ni Git. Regresión: los ajustes de 002 y `secrets-leak.spec.ts`.
 
-**Cómo se demuestra**: T111 a T114, fuga de la clave (T124), axe (T123) y el recorrido de «Independent Test». Evidencia
+**Cómo se demuestra**: T111 a T114 y T121c a T121f, fuga de la clave (T124), axe (T123) y el recorrido de
+«Independent Test». Evidencia
 en la sección «US5» de `checklists/validation.md`.
 
 **Huecos abiertos**: Si la edición de un concepto necesita historial propio (ver P2 en `decisions.md`).
