@@ -26,13 +26,13 @@ Las mismas de la 002:
 
 | Método y ruta | Cuerpo | Respuesta |
 |---|---|---|
-| `GET /api/channels/current` | — | `{channel, profile, journey}` o `{channel: null}` |
+| `GET /api/channels/current` | — | `{channel, profile, journey, category}` o `{channel: null}`; `category` es el tipo de contenido con el que se calcula el dinero (entrada 154) |
 | `POST /api/channels` | `{origin}` | `201 {channel, journey}`; `409` guard `ya_hay_canal` |
 | `GET /api/journeys/:id` | — | `Journey` con `state`, propuestas vigentes, medidas, comprobaciones, trabajos y `reading` (la lectura del canal elegido o `null`). La propuesta de conceptos trae las cifras de ahora, `basedOn` (nicho, horas y forma de salir en vídeo para los que se escribió) y `stale`; las horas de su ritmo son siempre las del creador (decisión 136). `rhythm: {hoursPerLongVideo, hoursPerShort}`, la estimación de horas por vídeo con la que se calcula lo que pide un ritmo (decisión 142). Cada propuesta lleva `newerId`: la tanda siguiente, en el orden en que se pidieron, que se dejó al volver atrás y se puede recuperar, o `null` (decisión 150) |
-| `POST /api/journeys/:id/step` | `{revision, step, data?}` | `Journey`; `400` si falta la aprobación del paso |
+| `POST /api/journeys/:id/step` | `{revision, step, data?}` | `Journey`; `400` si falta la aprobación del paso. Volver a un paso anterior no pide confirmación (P4); `data` no admite `conceptNeedsReview` ni `conceptNiche`, que lleva el servidor |
 | `POST /api/journeys/:id/estimate` | `{use, proposalId?}` | `Estimate`; con `proposalId` (la propuesta que se rehace con «Proponer otra») la estimación la cuenta, porque se envía con la petición (decisión 152); `404` si es de otro recorrido o de otro uso; `400` en `posicionamiento` sin perfil actual aprobado o sin respuestas de ritmo |
 | `POST /api/journeys/:id/proposals` | `{revision, kind, estimateId, instructions?, parentId?}` | `Proposal` (con `failure` si falló); `400` como en `estimate`; `409 conflicto` si el recorrido pasó a otro canal mientras la IA respondía, o si `parentId` es una tanda que ya no está en uso (decisión 152) |
-| `PATCH /api/proposals/:id` | `{editedPayload?, selectedIndex?, status?}` | `Proposal` |
+| `PATCH /api/proposals/:id` | `{editedPayload?, selectedIndex?, status?}` | `Proposal`. Aprobar un concepto, o elegir o editar un nicho con un concepto aprobado, puede cambiar el `state` del recorrido y su `revision` (P4): hay que volver a leerlo |
 | `POST /api/journeys/:id/as-new` | `{revision}` | `201 {channel, journey}`: canal con pocos vídeos (FR-022). El recorrido viejo queda `abandonado`, el nuevo guarda `keptName`; `400` con 5 vídeos o más; `409 conflicto` con una revisión vieja |
 | `POST /api/proposals/:id/back` | `{}` | `Proposal`: deja esta y recupera la que sustituyó (US1 AS5). La que se deja no se pierde: se recupera con `forward` (decisión 150); `409 conflicto` si no hay anterior |
 | `POST /api/proposals/:id/forward` | `{}` | `Proposal`: la de `newerId`, que vuelve a estar en uso; esta se deja. La elección se quita, como al volver; `409 conflicto` si esta ya no está en uso o no hay una más nueva (decisión 150) |

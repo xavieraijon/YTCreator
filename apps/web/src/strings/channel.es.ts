@@ -1,3 +1,4 @@
+import type { RpmCategory } from '@ytcreator/core'
 import type { AiRunFailure } from '@ytcreator/core/api'
 
 // Texts of the channel journeys. Plain words, addressed as «tú» (principle I, glossary test).
@@ -208,6 +209,21 @@ export const channelEs = {
     moneyRange: 'De {min} a {max} € al mes con anuncios.',
     moneyViews: 'Supone de {min} a {max} visitas al mes: una parte de lo que consigue un vídeo típico de este nicho.',
     // P1: the share of the niche's typical video a new channel gets has no source; it is said where it is used.
+    // P8: the kind of content changes the earnings per 1.000 views about six times, so it is said and can be changed.
+    moneyCategory:
+      'La IA lo ha clasificado como contenido de tipo «{tipo}», y con eso calculamos el dinero: es lo que más cambia cuánto se gana por cada 1.000 visitas. Puedes cambiarlo en «{boton}».',
+    moneyCategoryKids:
+      'Lo calculamos como contenido infantil, porque está hecho para niños: se gana bastante menos por cada 1.000 visitas.',
+    categories: {
+      educacion: 'Educación',
+      ciencia_tecnologia: 'Ciencia y tecnología',
+      finanzas_negocios: 'Finanzas y negocios',
+      entretenimiento: 'Entretenimiento',
+      videojuegos: 'Videojuegos',
+      estilo_de_vida: 'Estilo de vida',
+      infantil: 'Infantil',
+      general: 'General',
+    } satisfies Record<RpmCategory, string>,
     moneyViewsAssumption:
       'Cuánto de eso consigue un canal que empieza es un supuesto nuestro, sin fuente que lo respalde. Tómalo como una idea del orden, no como una cifra.',
     moneyUnknown:
@@ -234,6 +250,8 @@ export const channelEs = {
       audience: 'Tu público',
       madeForKids: 'Está hecho para niños',
       region: '¿Dónde está tu público?',
+      category: 'Tipo de contenido',
+      categoryHelp: 'Con él calculamos cuánto se gana por cada 1.000 visitas.',
       presence: 'Cómo apareces',
       longForm: 'Cómo son los vídeos largos',
       shortsRole: 'Para qué usas los Shorts',
@@ -248,7 +266,7 @@ export const channelEs = {
   },
   nicheChange: {
     title: 'Tu idea se basaba en el nicho anterior. ¿Cambiar igualmente?',
-    body: 'Si vuelves a los nichos, tendrás que elegir de nuevo la idea antes de seguir. Si cancelas, todo queda como está.',
+    body: 'Si eliges otro nicho, tendrás que elegir de nuevo la idea antes de seguir. Si cancelas, todo queda como está.',
     confirm: 'Cambiar igualmente',
     cancel: 'Cancelar',
   },

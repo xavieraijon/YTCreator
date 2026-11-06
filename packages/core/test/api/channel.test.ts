@@ -99,7 +99,13 @@ describe('channel schemas', () => {
   it('POST /api/journeys/:id/step', () => {
     expect(journeyStepBodySchema.safeParse({ revision: 3, step: 'preguntas' }).success).toBe(true)
     expect(journeyStepBodySchema.safeParse({ revision: 3, step: 'hecho', nameLater: true }).success).toBe(true)
-    expect(journeyStepBodySchema.safeParse({ revision: 3, step: 'nichos', confirm: true }).success).toBe(true)
+    // What the server keeps for itself never comes from the screen (P4).
+    const forged = journeyStepBodySchema.parse({
+      revision: 3,
+      step: 'nichos',
+      data: { conceptNeedsReview: false, conceptNiche: 'x' },
+    })
+    expect(forged.data).toEqual({})
     expect(journeyStepBodySchema.safeParse({ revision: 3, step: 'ritmo', data: { hoursPerWeek: 61 } }).success).toBe(
       false,
     )

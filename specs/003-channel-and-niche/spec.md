@@ -104,8 +104,11 @@ edita la promesa de uno, lo aprueba y el perfil del canal queda con nicho y conc
    3-4 pilares, público, formato, ritmo y monetización.
 2. **Given** un concepto, **When** el creador mira la monetización, **Then** ve rangos (nunca una cifra única), los
    supuestos que hay detrás, la fuente de los datos y los requisitos vigentes del programa de socios de YouTube.
+   Entre los supuestos está el tipo de contenido con el que se calcula (lo clasifica la IA y el creador puede
+   cambiarlo al editar el concepto), o que se calcula como infantil si está hecho para niños (entrada 154, P8).
 3. **Given** un concepto, **When** el creador edita a mano cualquier parte y lo aprueba, **Then** se guarda su versión
-   editada y queda registrada como versión nueva.
+   editada y queda registrada como versión nueva. Se guardan el original de la IA y la última edición: una edición
+   nueva sustituye a la anterior, sin historial de cada una (entrada 156, P2).
 4. **Given** un concepto con un público infantil o un formato centrado solo en Shorts, **When** se muestra, **Then**
    lleva un aviso que explica la consecuencia para los ingresos, con la fuente.
 5. **Given** un concepto aprobado, **When** el creador vuelve atrás y cambia de nicho, **Then** la app le avisa de que
@@ -230,7 +233,7 @@ más de 90 días.
 «Independent Test». Evidencia
 en la sección «US5» de `checklists/validation.md`.
 
-**Huecos abiertos**: Si la edición de un concepto necesita historial propio (ver P2 en `decisions.md`).
+**Huecos abiertos**: Ninguno. La edición de un concepto guarda el original y la última edición (entrada 156, P2).
 
 ---
 
@@ -341,7 +344,8 @@ en la sección «US5» de `checklists/validation.md`.
 - **FR-024**: Cada cambio aprobado del perfil, de la IA o a mano, DEBE guardarse como versión, y el creador DEBE
   poder volver a cualquier versión anterior.
 - **FR-025**: Cambiar el nicho con un concepto ya aprobado DEBE avisar de que el concepto se basaba en el nicho
-  anterior y pedir confirmación.
+  anterior y pedir confirmación. El aviso sale al elegir otro nicho, no al volver a mirarlos; volver a elegir el mismo
+  conserva el concepto (entrada 155, P4).
 - **FR-026**: El perfil del canal DEBE poder verse en una sola página y exportarse como documento legible y como
   fichero de datos abierto, ambos con las fuentes y fechas de las cifras.
 - **FR-027**: Si los datos de mercado del perfil tienen más de 90 días, el sistema DEBE avisarlo y ofrecer volver a

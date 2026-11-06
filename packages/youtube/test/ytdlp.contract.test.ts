@@ -99,6 +99,18 @@ describe('yt-dlp adapter', () => {
     expect(result.value.partial).toBeUndefined()
   })
 
+  it('output that cannot be read is no_disponible, not «no results» (P9, US3 AS4)', async () => {
+    const yt = createYtDlpYouTube({ binPath: createFakeYtDlp().bin, fetch: feedFetch() })
+    const unreadable = await yt.search('nombre ilegible', { limit: 10, withoutDates: true })
+    expect(unreadable.ok ? 'ok' : unreadable.failure.code).toBe('no_disponible')
+    for (const query of ['nombre sin lista', 'nombre formato raro']) {
+      const odd = await yt.search(query, { limit: 10, withoutDates: true })
+      expect(odd.ok ? 'ok' : odd.failure.code).toBe('no_disponible')
+    }
+    const empty = await yt.search('nicho sin datos', { limit: 10, withoutDates: true })
+    expect(empty.ok ? 'ok' : empty.failure.code).toBe('sin_datos')
+  })
+
   it('a channel with no long videos, or with nothing at all, is still found (US4 AS5)', async () => {
     const yt = createYtDlpYouTube({ binPath: createFakeYtDlp().bin, fetch: feedFetch() })
     for (const [handle, channelId] of [

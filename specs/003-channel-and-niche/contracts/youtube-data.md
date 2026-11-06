@@ -47,12 +47,12 @@ el resto.
 
 | Código | Cuándo |
 |---|---|
-| `sin_datos` | La búsqueda o el canal no devuelven nada útil |
+| `sin_datos` | La búsqueda o el canal no devuelven nada útil: una lista que se leyó bien y está vacía |
 | `no_encontrado` | El canal o la @ no existen (en `resolve` y `getChannel`) |
 | `bloqueado` | YouTube corta las peticiones (429, «Sign in to confirm», bot check) |
 | `cupo_agotado` | Data API sin unidades hoy; el registro cae a yt-dlp |
 | `tiempo_agotado` | Se pasó el tiempo máximo; con `auto`, la Data API cae a yt-dlp |
-| `no_disponible` | No hay yt-dlp instalado ni clave válida; con `auto`, la Data API que no responde cae a yt-dlp |
+| `no_disponible` | No hay yt-dlp instalado ni clave válida; con `auto`, la Data API que no responde cae a yt-dlp. También una salida de yt-dlp que no se puede leer: nunca cuenta como vacía, así que un nombre no sale verde (entrada 153, P9) |
 
 ## Adaptadores
 

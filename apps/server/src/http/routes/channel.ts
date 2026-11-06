@@ -156,6 +156,41 @@ export function channelRoutes(deps: ChannelRoutesDeps) {
     return !CHOICE_LISTS[kind] || proposal.selectedIndex !== null
   }
 
+  // The niche chosen now: the one picked in the last batch of niches, if it was picked.
+  const chosenNiche = (journeyId: string): string | null => {
+    const proposal = proposals.latest(journeyId, 'nichos')
+    if (proposal?.status !== 'aprobada' || proposal.selectedIndex === null) return null
+    const list = (proposal.editedPayload ?? proposal.payload) as { niches?: { label?: unknown }[] }
+    const label = list.niches?.[proposal.selectedIndex]?.label
+    return typeof label === 'string' ? label : null
+  }
+
+  // P4 (FR-025): the concept is chosen again only when another niche is chosen, not when the niches are just looked at.
+  // `before` is the niche chosen before the change, for a concept approved before the niche was kept with it.
+  const reviewIfNicheChanged = (journeyId: string, before: string | null) => {
+    const journey = journeys.get(journeyId)
+    if (!journey || !isApproved(journeyId, 'conceptos')) return
+    const state = journey.state as JourneyState
+    const base = state.conceptNiche ?? before
+    if (base === null) return
+    const now = chosenNiche(journeyId)
+    // Choosing again the niche the concept was chosen on keeps the concept (FR-025).
+    if (state.conceptNeedsReview) {
+      if (now !== null && now === state.conceptNiche) {
+        const kept: JourneyState = { ...state }
+        delete kept.conceptNeedsReview
+        journeys.update(journey.id, journey.revision, { state: kept })
+      }
+      return
+    }
+    const changed = now !== null && now !== base
+    // Going to another batch leaves no niche chosen: the one of the concept is kept, so the next choice is compared.
+    if (!changed && state.conceptNiche !== undefined) return
+    journeys.update(journey.id, journey.revision, {
+      state: { ...state, conceptNiche: base, ...(changed ? { conceptNeedsReview: true } : {}) },
+    })
+  }
+
   // What the journey already has: its answers, plus the proposals approved.
   const approvalsOf = (journey: Journey, state: JourneyState): ApprovalState => ({
     interests: state.interests !== undefined,
@@ -271,6 +306,7 @@ export function channelRoutes(deps: ChannelRoutesDeps) {
       channel,
       profile: profiles.getCurrent(channel.id),
       journey: journeys.getActive(channel.id) ?? journeys.getLast(channel.id),
+      category: profile.category(channel.id),
     })
   })
 
@@ -546,13 +582,9 @@ export function channelRoutes(deps: ChannelRoutesDeps) {
       from: journey.step,
       to: body.step,
       approvals: approvalsOf(journey, state),
-      ...(body.confirm !== undefined ? { confirm: body.confirm } : {}),
       ...(body.nameLater !== undefined ? { nameLater: body.nameLater } : {}),
     })
-    if (!plan.ok) {
-      const field = plan.reason === 'requiere_confirmar' ? 'confirm' : 'step'
-      throw new ApiError({ code: 'validacion', fields: { [field]: 'no_valido' } })
-    }
+    if (!plan.ok) throw new ApiError({ code: 'validacion', fields: { step: 'no_valido' } })
     // Entry 122: only a new channel changes a name it chose; one that came from YouTube keeps its own (entry 81), unless
     // it still has none to keep (FR-018b).
     if (journey.step === 'hecho' && body.step === 'nombres') {
@@ -562,7 +594,6 @@ export function channelRoutes(deps: ChannelRoutesDeps) {
       }
     }
 
-    const next = plan.needsReview ? { ...state, conceptNeedsReview: true } : state
     const updated = inTransaction(db, () => {
       if (body.data?.audienceRegion) {
         channels.update(journey.channelId, { audienceRegion: body.data.audienceRegion })
@@ -577,7 +608,7 @@ export function channelRoutes(deps: ChannelRoutesDeps) {
       }
       return journeys.update(journey.id, body.revision, {
         step: body.step,
-        state: next,
+        state,
         ...(body.step === 'hecho' ? { status: 'terminado' as const } : {}),
         // FR-018b: coming back to choose the name left for later.
         ...(journey.step === 'hecho' ? { status: 'activo' as const } : {}),
@@ -673,27 +704,39 @@ export function channelRoutes(deps: ChannelRoutesDeps) {
       claimsTrimmed: result.claimsTrimmed,
       usageId: result.usageId,
     }
-    if (!parent) return c.json(proposals.create(fresh))
-    // Checked again now: the batch may have been left while the AI answered (spent, not kept, as above).
-    const made = proposals.regenerate(parent.id, fresh)
-    if (!made) throw new ApiError({ code: 'conflicto' })
-    return c.json(made)
+    const before = chosenNiche(journey.id)
+    return inTransaction(db, () => {
+      // Checked again now: the batch may have been left while the AI answered (spent, not kept, as above).
+      const made = parent ? proposals.regenerate(parent.id, fresh) : proposals.create(fresh)
+      if (!made) throw new ApiError({ code: 'conflicto' })
+      if (body.kind === 'nichos') reviewIfNicheChanged(journey.id, before)
+      return c.json(made)
+    })
   })
 
   routes.post('/proposals/:id/back', (c) => {
     const proposal = proposals.get(c.req.param('id'))
     if (!proposal) throw new ApiError({ code: 'no_encontrado' })
     if (proposal.status === 'descartada' || !proposal.parentId) throw new ApiError({ code: 'conflicto' })
-    return c.json(proposals.goBack(proposal.id))
+    const before = chosenNiche(proposal.journeyId)
+    return inTransaction(db, () => {
+      const back = proposals.goBack(proposal.id)
+      if (proposal.kind === 'nichos') reviewIfNicheChanged(proposal.journeyId, before)
+      return c.json(back)
+    })
   })
 
   // P3: going back keeps the newer batch, and this brings it back.
   routes.post('/proposals/:id/forward', (c) => {
     const proposal = proposals.get(c.req.param('id'))
     if (!proposal) throw new ApiError({ code: 'no_encontrado' })
-    const next = proposals.goForward(proposal.id, isReadable)
-    if (!next) throw new ApiError({ code: 'conflicto' })
-    return c.json(next)
+    const before = chosenNiche(proposal.journeyId)
+    return inTransaction(db, () => {
+      const next = proposals.goForward(proposal.id, isReadable)
+      if (!next) throw new ApiError({ code: 'conflicto' })
+      if (proposal.kind === 'nichos') reviewIfNicheChanged(proposal.journeyId, before)
+      return c.json(next)
+    })
   })
 
   routes.patch('/proposals/:id', async (c) => {
@@ -701,6 +744,8 @@ export function channelRoutes(deps: ChannelRoutesDeps) {
     if (!proposal) throw new ApiError({ code: 'no_encontrado' })
     const body = await parseBody(c, patchProposalBodySchema)
     if (proposal.status === 'descartada') throw new ApiError({ code: 'conflicto' })
+    // P4: the niche chosen before anything changes, also an edit by hand of the batch in use.
+    const before = chosenNiche(proposal.journeyId)
 
     if (body.editedPayload !== undefined) {
       const schema =
@@ -727,6 +772,8 @@ export function channelRoutes(deps: ChannelRoutesDeps) {
             ? concepts.positioningNow(answered, body.editedPayload, stored, ownMedianViews(answered))
             : body.editedPayload,
       )
+      // An edit by hand of the batch in use can change the niche chosen as well (P4).
+      if (proposal.kind === 'nichos') reviewIfNicheChanged(proposal.journeyId, before)
     }
     if (body.status === 'descartada') return c.json(proposals.discard(proposal.id))
 
@@ -741,16 +788,25 @@ export function channelRoutes(deps: ChannelRoutesDeps) {
       const index = body.selectedIndex ?? null
       const validChoice = size === null ? index === null : index !== null && index < size
       if (!validChoice) throw new ApiError({ code: 'validacion', fields: { selectedIndex: 'no_valido' } })
-      const approved = proposals.approve(proposal.id, index)
+      return inTransaction(db, () => {
+        const approved = proposals.approve(proposal.id, index)
+        if (proposal.kind === 'nichos') reviewIfNicheChanged(proposal.journeyId, before)
 
-      // FR-025: the concept chosen again is no longer pending review.
-      const journey = journeys.get(proposal.journeyId)
-      if (proposal.kind === 'conceptos' && journey && (journey.state as JourneyState).conceptNeedsReview) {
-        const state: JourneyState = { ...(journey.state as JourneyState) }
-        delete state.conceptNeedsReview
-        journeys.update(journey.id, journey.revision, { state })
-      }
-      return c.json(approved)
+        // FR-025: the concept chosen again is no longer pending review, and it keeps the niche it was chosen on (P4).
+        const journey = journeys.get(proposal.journeyId)
+        if (proposal.kind === 'conceptos' && journey) {
+          const was = journey.state as JourneyState
+          const state: JourneyState = { ...was }
+          delete state.conceptNeedsReview
+          const niche = chosenNiche(journey.id)
+          if (niche !== null) state.conceptNiche = niche
+          else delete state.conceptNiche
+          if (was.conceptNeedsReview || was.conceptNiche !== state.conceptNiche) {
+            journeys.update(journey.id, journey.revision, { state })
+          }
+        }
+        return c.json(approved)
+      })
     }
     return c.json(proposals.get(proposal.id))
   })

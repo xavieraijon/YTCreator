@@ -112,7 +112,9 @@ test('without the reader: the niche says so and takes to Ajustes, where it is pr
   await page.getByLabel('Tu nicho').fill('nicho sin lector')
   await page.getByRole('button', { name: 'Medir mi nicho' }).click()
   const card = page.getByRole('article', { name: 'nicho sin lector' })
-  await expect(card.getByText('El lector de YouTube no está listo. Puedes prepararlo desde Ajustes.')).toBeVisible()
+  await expect(
+    card.getByText('No hemos podido usar el lector de YouTube. Desde Ajustes puedes prepararlo o actualizarlo.'),
+  ).toBeVisible()
   await expect(card.getByText('Conviene', { exact: true })).toHaveCount(0)
 
   await card.getByRole('button', { name: 'Ir a Ajustes' }).click()

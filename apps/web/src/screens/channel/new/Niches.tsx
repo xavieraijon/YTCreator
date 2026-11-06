@@ -11,6 +11,7 @@ import { BatchNav } from '../BatchNav.tsx'
 import { AiAction, Proposal } from '../Proposal.tsx'
 import { latestOf, payloadOf, useEstimate, useGenerate } from '../useJourney.ts'
 import { isStale, type Niche, NicheCard } from './NicheCard.tsx'
+import { NicheChange, needsNicheConfirm } from './NicheChange.tsx'
 import { References } from './References.tsx'
 
 const text = channelEs.niches
@@ -128,6 +129,8 @@ function Batch({ view, proposal, busy, reload, onStep, proposalActions, generati
   const [own, setOwn] = useState('')
   const [ownError, setOwnError] = useState<string | undefined>()
   const [deciding, setDeciding] = useState(false)
+  // FR-025 and P4: the niche waiting for the creator's yes, when it is not the one the concept was chosen on.
+  const [asking, setAsking] = useState<number | null>(null)
 
   const isRunning = watch?.status === 'en_curso' && watching !== null
 
@@ -230,7 +233,10 @@ function Batch({ view, proposal, busy, reload, onStep, proposalActions, generati
             stale={nicheMeasure ? isStale(nicheMeasure, view.measureStaleDays, now) : false}
             staleDays={view.measureStaleDays}
             busy={deciding}
-            onChoose={() => void decide({ selectedIndex: index, status: 'aprobada' })}
+            onChoose={() => {
+              if (needsNicheConfirm(view, niche.label)) setAsking(index)
+              else void decide({ selectedIndex: index, status: 'aprobada' })
+            }}
             onRetry={() => void measure([niche], nicheMeasure?.status === 'medida')}
             onNext={() => onStep({})}
             nextBusy={busy}
@@ -268,6 +274,17 @@ function Batch({ view, proposal, busy, reload, onStep, proposalActions, generati
 
       {proposalActions}
       <BatchNav proposal={proposal} reload={reload} busy={generating || busy || deciding} />
+
+      <NicheChange
+        open={asking !== null}
+        busy={deciding}
+        onCancel={() => setAsking(null)}
+        onConfirm={() => {
+          const index = asking
+          setAsking(null)
+          if (index !== null) void decide({ selectedIndex: index, status: 'aprobada' })
+        }}
+      />
 
       {chosen && chosenMeasure?.status === 'medida' && (
         <References key={chosenMeasure.id} view={view} measureId={chosenMeasure.id} />

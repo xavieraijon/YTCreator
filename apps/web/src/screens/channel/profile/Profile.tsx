@@ -6,6 +6,7 @@ import {
   hoursNeeded,
   type ProfilePart,
   type Rhythm,
+  type RpmCategory,
   type YouTubeFailureCode,
 } from '@ytcreator/core'
 import type {
@@ -66,12 +67,15 @@ export interface ProfileData {
   /** The promise of the last version the AI proposed, to tell what the creator wrote since (principle II). */
   /** The promises the AI wrote, to mark the one the creator wrote instead (entry 111). */
   readonly aiPromises?: readonly string[]
+  /** The kind of content the money of the current version is worked out with (P8). */
+  readonly category?: RpmCategory | null
 }
 
 // The profile shown with the same parts as a concept (FR-021b): the money and the warnings with their sources.
 export function profileConcept(
   { profile, createdAt }: Pick<ProfileVersionView, 'profile' | 'createdAt'>,
   rhythm?: Rhythm,
+  category?: RpmCategory | null,
 ): ShownConcept {
   const source = (id: string) => profile.sources.find((s) => s.id === id)
   const rpm = source('rpm')
@@ -83,7 +87,7 @@ export function profileConcept(
     audience: profile.concept.audience,
     format: profile.concept.format,
     cadence: profile.concept.cadence,
-    monetization: { assumptions: monetization.assumptions },
+    monetization: { assumptions: monetization.assumptions, category: category ?? null },
     figures: {
       monetization: {
         rpmEurRange: monetization.rpmEurRange,
@@ -154,7 +158,7 @@ export function ProfileView({
   onRewrite,
   rewrite,
 }: ProfileViewProps) {
-  const { channel, current, measure, reading, staleDays, rhythm, aiPromises } = data
+  const { channel, current, measure, reading, staleDays, rhythm, aiPromises, category } = data
   const { profile } = current
   const measured = measure?.status === 'medida' && measure.measuredAt ? measure : null
   const ownReading = profile.context && reading?.id === profile.context.readingId ? reading : null
@@ -250,7 +254,7 @@ export function ProfileView({
       )}
 
       <ConceptDetails
-        concept={profileConcept(current, rhythm)}
+        concept={profileConcept(current, rhythm, category)}
         rhythm={rhythm}
         existing={profile.context !== null}
         promiseNote={
@@ -548,6 +552,7 @@ export function Profile({ channel, journeyId }: ProfileProps) {
         staleDays: journey?.measureStaleDays ?? 90,
         rhythm: journey?.rhythm,
         aiPromises,
+        category: current.category ?? null,
       }
       setData(next)
       // A measure or reading still running after leaving and coming back: the screen follows it again (entry 130).

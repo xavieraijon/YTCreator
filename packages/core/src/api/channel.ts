@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { FAILURE_KINDS } from '../ai/failures.ts'
 import { journeyStateSchema } from '../channel/journey.ts'
+import { RPM_CATEGORIES } from '../channel/monetization.ts'
 import { REFERENCE_REASONS } from '../market/measures.ts'
 import {
   AUDIENCE_REGIONS,
@@ -240,7 +241,13 @@ export const exportQuerySchema = z.object({ format: z.enum(EXPORT_FORMATS) })
 
 // GET /api/channels/current
 export const channelCurrentSchema = z.union([
-  z.object({ channel: channelSchema, profile: profileVersionSchema.nullable(), journey: journeySchema.nullable() }),
+  z.object({
+    channel: channelSchema,
+    profile: profileVersionSchema.nullable(),
+    journey: journeySchema.nullable(),
+    // The kind of content the money of the current profile is worked out with (P8); null if it cannot be found.
+    category: z.enum(RPM_CATEGORIES).nullable().optional(),
+  }),
   z.object({ channel: z.null() }),
 ])
 export type ChannelCurrent = z.infer<typeof channelCurrentSchema>
@@ -331,9 +338,8 @@ export type JourneyFullView = z.infer<typeof journeyViewSchema>
 export const journeyStepBodySchema = z.object({
   revision,
   step: journeyStepSchema,
-  data: journeyStateSchema.optional(),
-  // FR-025: going back to the niches with a concept approved.
-  confirm: z.boolean().optional(),
+  // What the server keeps for itself (FR-025, P4) never comes from the screen.
+  data: journeyStateSchema.omit({ conceptNeedsReview: true, conceptNiche: true }).optional(),
   // FR-018b: «Decidir más tarde».
   nameLater: z.boolean().optional(),
 })

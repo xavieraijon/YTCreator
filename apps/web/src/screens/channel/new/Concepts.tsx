@@ -1,4 +1,12 @@
-import { AUDIENCE_REGIONS, type ConceptOutput, hoursNeeded, ON_CAMERA, type Rhythm } from '@ytcreator/core'
+import {
+  AUDIENCE_REGIONS,
+  type ConceptOutput,
+  hoursNeeded,
+  ON_CAMERA,
+  RPM_CATEGORIES,
+  type Rhythm,
+  type RpmCategory,
+} from '@ytcreator/core'
 import { type ConceptFigures, conceptsViewSchema, type JourneyFullView, type ProposalView } from '@ytcreator/core/api'
 import {
   Button,
@@ -9,6 +17,7 @@ import {
   ErrorMessage,
   format,
   RadioGroup,
+  Select,
   Semaphore,
   TextArea,
   TextField,
@@ -28,9 +37,10 @@ const form = text.form
 const warningTexts = channelEs.niches.warnings
 
 export type Concept = ConceptOutput & { readonly figures: ConceptFigures }
-// What the screen reads of a concept: a saved profile has no kind of content to show (US5).
+// What the screen reads of a concept. A saved profile does not keep its kind of content: the server finds it for the
+// current version, and an older one shows none (P8).
 export type ShownConcept = Omit<Concept, 'monetization' | 'warnings'> & {
-  readonly monetization: Pick<Concept['monetization'], 'assumptions'>
+  readonly monetization: Pick<Concept['monetization'], 'assumptions'> & { readonly category?: RpmCategory | null }
 }
 
 const number = (value: number) => new Intl.NumberFormat('es-ES').format(value)
@@ -76,8 +86,15 @@ function Money({ concept, own, existing }: { concept: ShownConcept; own: OwnVide
     rpmEurRange: rate,
     yppRequirements: ypp,
   } = monetization
+  const kids = concept.figures.warnings.some(({ code }) => code === 'infantil')
+  const category = concept.monetization.category
   return (
     <Part title={text.money} why={text.moneyWhy}>
+      {kids ? (
+        <p>{text.moneyCategoryKids}</p>
+      ) : (
+        category && <p>{format(text.moneyCategory, { tipo: text.categories[category], boton: text.edit })}</p>
+      )}
       {month && views ? (
         <>
           <p>
@@ -381,6 +398,16 @@ export function ConceptEditor({ concept, busy = false, onSave, onCancel, extra }
           update({ audience: { ...draft.audience, region: value as Concept['audience']['region'] } })
         }
       />
+      {/* With «made for children» the money is always worked out as children's content: the kind would change nothing. */}
+      {!draft.audience.madeForKids && (
+        <Select
+          label={form.category}
+          description={form.categoryHelp}
+          value={draft.monetization.category}
+          options={RPM_CATEGORIES.map((value) => ({ value, label: text.categories[value] }))}
+          onValueChange={(value) => update({ monetization: { ...draft.monetization, category: value as RpmCategory } })}
+        />
+      )}
       <RadioGroup
         label={form.presence}
         value={draft.format.presence}

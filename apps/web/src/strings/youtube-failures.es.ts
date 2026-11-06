@@ -30,7 +30,7 @@ export const youtubeFailuresEs: Record<YouTubeFailureCode, YouTubeFailureText> =
     action: 'volver_a_intentar',
   },
   no_disponible: {
-    what: 'El lector de YouTube no está listo. Puedes prepararlo desde Ajustes.',
+    what: 'No hemos podido usar el lector de YouTube. Desde Ajustes puedes prepararlo o actualizarlo.',
     action: 'ir_a_ajustes',
   },
 }

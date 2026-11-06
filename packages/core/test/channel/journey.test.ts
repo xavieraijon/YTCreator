@@ -34,7 +34,7 @@ describe('journey steps', () => {
     ['conceptos', 'nombres'],
     ['nombres', 'hecho'],
   ] as const)('new channel: %s → %s with its approval', (from, to) => {
-    expect(planStep({ kind: 'nuevo', from, to, approvals: allNew })).toEqual({ ok: true, needsReview: false })
+    expect(planStep({ kind: 'nuevo', from, to, approvals: allNew })).toEqual({ ok: true })
   })
 
   it.each([
@@ -44,7 +44,7 @@ describe('journey steps', () => {
     ['ritmo', 'posicionamiento'],
     ['posicionamiento', 'hecho'],
   ] as const)('existing channel: %s → %s with its approval', (from, to) => {
-    expect(planStep({ kind: 'existente', from, to, approvals: allExisting })).toEqual({ ok: true, needsReview: false })
+    expect(planStep({ kind: 'existente', from, to, approvals: allExisting })).toEqual({ ok: true })
   })
 
   it('moving forward without the approval of the current step fails', () => {
@@ -71,7 +71,7 @@ describe('journey steps', () => {
   it('«Decidir más tarde» leaves the names step without a chosen name (FR-018b)', () => {
     expect(
       planStep({ kind: 'nuevo', from: 'nombres', to: 'hecho', approvals: { ...allNew, name: false }, nameLater: true }),
-    ).toEqual({ ok: true, needsReview: false })
+    ).toEqual({ ok: true })
     expect(planStep({ kind: 'nuevo', from: 'nombres', to: 'hecho', approvals: { ...allNew, name: false } })).toEqual({
       ok: false,
       reason: 'sin_aprobar',
@@ -81,20 +81,16 @@ describe('journey steps', () => {
   it('going back is allowed without approvals and keeps what was approved later (FR-002)', () => {
     expect(planStep({ kind: 'nuevo', from: 'ritmo', to: 'preguntas', approvals: none })).toEqual({
       ok: true,
-      needsReview: false,
     })
   })
 
-  it('going back to nichos with an approved concept asks to confirm and marks it for review (FR-025)', () => {
-    const back = { kind: 'nuevo', from: 'nombres', to: 'nichos', approvals: allNew } as const
-    expect(planStep(back)).toEqual({ ok: false, reason: 'requiere_confirmar' })
-    expect(planStep({ ...back, confirm: true })).toEqual({ ok: true, needsReview: true })
+  it('going back to nichos with an approved concept only looks at them: nothing to confirm (P4)', () => {
+    expect(planStep({ kind: 'nuevo', from: 'nombres', to: 'nichos', approvals: allNew })).toEqual({ ok: true })
   })
 
   it('going back to nichos with no approved concept needs no confirmation', () => {
     expect(planStep({ kind: 'nuevo', from: 'ritmo', to: 'nichos', approvals: { ...allNew, concept: false } })).toEqual({
       ok: true,
-      needsReview: false,
     })
   })
 
