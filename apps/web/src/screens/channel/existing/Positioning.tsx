@@ -8,6 +8,7 @@ import { channelEs } from '../../../strings/channel.es.ts'
 import { es } from '../../../strings/es.ts'
 import styles from '../channel.module.css'
 import { type Concept, ConceptDetails, ConceptEditor, overHours, RhythmAsk } from '../new/Concepts.tsx'
+import { BatchNav } from '../BatchNav.tsx'
 import { AiAction, Proposal } from '../Proposal.tsx'
 import { latestOf, payloadOf, useEstimate, useGenerate } from '../useJourney.ts'
 import { videoLine } from './format.ts'
@@ -190,33 +191,20 @@ export interface PositioningProps {
   readonly onStep: (data: object) => void
 }
 
-// Going back to the proposal before this one. This one goes away for good, as in the niches (entry 13, P3).
-function Previous({ proposal, busy, onBack }: { proposal: ProposalView; busy: boolean; onBack: () => void }) {
-  if (!proposal.parentId) return null
-  return (
-    <div className={styles.actions}>
-      <Button disabled={busy} onClick={onBack}>
-        {text.previous}
-      </Button>
-    </div>
-  )
-}
-
 export interface CurrentSectionProps extends Pick<PositioningProps, 'view' | 'reload'> {
   readonly proposal: ProposalView
   readonly onApproved?: () => void
 }
 
 export function CurrentSection({ view, reload, proposal, onApproved }: CurrentSectionProps) {
-  const { estimate, error: estimateError, refresh } = useEstimate(view.id, 'lectura_canal')
+  const { estimate, error: estimateError, refresh } = useEstimate(view.id, 'lectura_canal', true, proposal.id)
   const generate = useGenerate(view, estimate, async () => {
     await reload()
     await refresh()
   })
   const { deciding, error, clear, decide } = useDecide(reload)
   const [editing, setEditing] = useState(false)
-  const [backError, setBackError] = useState<unknown>(null)
-  const failed = estimateError ?? generate.error ?? error ?? backError
+  const failed = estimateError ?? generate.error ?? error
   const profile = payloadOf<CurrentProfile>(proposal)
   const approved = proposal.status === 'aprobada'
   const approve = () =>
@@ -235,7 +223,6 @@ export function CurrentSection({ view, reload, proposal, onApproved }: CurrentSe
             label: es.app.retry,
             onClick: () => {
               clear()
-              setBackError(null)
               void refresh()
             },
           }}
@@ -273,16 +260,7 @@ export function CurrentSection({ view, reload, proposal, onApproved }: CurrentSe
           {approved && !onApproved && <p role="status">{text.approved}</p>}
         </Proposal>
       )}
-      {!editing && (
-        <Previous
-          proposal={proposal}
-          busy={generate.busy || deciding}
-          onBack={() => {
-            setBackError(null)
-            channelApi.back(proposal.id).then(reload).catch(setBackError)
-          }}
-        />
-      )}
+      {!editing && <BatchNav single proposal={proposal} reload={reload} busy={generate.busy || deciding} />}
     </section>
   )
 }
@@ -342,7 +320,7 @@ function ChangesFields({
 
 function ProposalSection({ view, busy, reload, onStep, current }: PositioningProps & { current: ProposalView }) {
   const proposal = latestOf(view, 'posicionamiento')
-  const { estimate, error: estimateError, refresh } = useEstimate(view.id, 'posicionamiento')
+  const { estimate, error: estimateError, refresh } = useEstimate(view.id, 'posicionamiento', true, proposal?.id)
   const generate = useGenerate(view, estimate, async () => {
     await reload()
     await refresh()
@@ -350,10 +328,9 @@ function ProposalSection({ view, busy, reload, onStep, current }: PositioningPro
   const { deciding, error, clear, decide } = useDecide(reload)
   const [editing, setEditing] = useState(false)
   const [changes, setChanges] = useState<Positioned['changes']>([])
-  const [backError, setBackError] = useState<unknown>(null)
   // A rhythm that does not fit asks before it is approved (novice audit 003, round 2, M1).
   const [askingRhythm, setAskingRhythm] = useState(false)
-  const failed = estimateError ?? generate.error ?? error ?? backError
+  const failed = estimateError ?? generate.error ?? error
   const positioned = proposal ? payloadOf<Positioned>(proposal) : null
   const approvePositioning = () => {
     if (!proposal) return
@@ -378,7 +355,6 @@ function ProposalSection({ view, busy, reload, onStep, current }: PositioningPro
             label: es.app.retry,
             onClick: () => {
               clear()
-              setBackError(null)
               void refresh()
             },
           }}
@@ -428,6 +404,7 @@ function ProposalSection({ view, busy, reload, onStep, current }: PositioningPro
             <ConceptDetails
               concept={positioned as Concept}
               rhythm={view.rhythm}
+              existing
               own={
                 view.reading
                   ? { medianViews: view.reading.summary.long.medianViews, readAt: view.reading.fetchedAt }
@@ -445,16 +422,7 @@ function ProposalSection({ view, busy, reload, onStep, current }: PositioningPro
           approvePositioning()
         }}
       />
-      {proposal && !editing && (
-        <Previous
-          proposal={proposal}
-          busy={generate.busy || deciding}
-          onBack={() => {
-            setBackError(null)
-            channelApi.back(proposal.id).then(reload).catch(setBackError)
-          }}
-        />
-      )}
+      {proposal && !editing && <BatchNav single proposal={proposal} reload={reload} busy={generate.busy || deciding} />}
     </section>
   )
 }

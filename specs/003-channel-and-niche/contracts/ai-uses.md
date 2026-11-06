@@ -18,7 +18,8 @@ modelo.
 - Cada salida se valida con su esquema Zod. Si no pasa: un reintento con el error de validación; si vuelve a fallar,
   fallo `respuesta_invalida` y la pantalla ofrece «Volver a intentarlo».
 - **Validador de cifras** (R8): toda cifra de la salida debe aparecer en `input` (con tolerancia de redondeo) y toda
-  afirmación sobre la lectura de un canal debe citar un `videoId` de `input`. Si no: un reintento; después se quitan
+  afirmación sobre la lectura de un canal debe citar un `videoId` de `input`. Si no: un reintento, solo si el presupuesto
+  da para dos llamadas más ([cost](./cost.md), decisión 152); después, o si no da, se quitan
   las frases que no pasan y la propuesta queda con `claimsTrimmed = true`, que la pantalla explica siempre: también en
   las preguntas y en la opinión. Un elemento de una lista que se queda sin un texto se quita entero. Un concepto que se
   queda sin ningún supuesto se quita igual, y la IA no puede escribir uno sin supuestos: esa salida no pasa el esquema

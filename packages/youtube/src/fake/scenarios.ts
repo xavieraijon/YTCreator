@@ -60,19 +60,23 @@ function makeChannel(slug: string, title: string, videoCount: number, extra: Par
   }
 }
 
-export const CHANNEL_30 = makeChannel('cocinacorta30', 'Cocina Corta', 30)
-export const CHANNEL_3 = makeChannel('cocinatres', 'Cocina en Tres', 3, { subscribers: null, country: null })
+// `@__PURE__`: unused (the published build has no fake YouTube), the bundler leaves these channels out (P6).
+export const CHANNEL_30 = /* @__PURE__ */ makeChannel('cocinacorta30', 'Cocina Corta', 30)
+export const CHANNEL_3 = /* @__PURE__ */ makeChannel('cocinatres', 'Cocina en Tres', 3, {
+  subscribers: null,
+  country: null,
+})
 
 // The channels a normal search finds videos from.
 export const SEARCH_CHANNELS: FakeChannel[] = [
   CHANNEL_30,
-  makeChannel('platodiario', 'Plato Diario', 12),
-  makeChannel('fogonrapido', 'Fogón Rápido', 12),
-  makeChannel('tupperfacil', 'Tupper Fácil', 12, { country: null }),
-  makeChannel('recetaya', 'Receta Ya', 12),
-  makeChannel('sartenlibre', 'Sartén Libre', 12, { subscribers: null }),
-  makeChannel('menusemana', 'Menú de la Semana', 12),
-  makeChannel('cenaexpres', 'Cena Exprés', 12),
+  /* @__PURE__ */ makeChannel('platodiario', 'Plato Diario', 12),
+  /* @__PURE__ */ makeChannel('fogonrapido', 'Fogón Rápido', 12),
+  /* @__PURE__ */ makeChannel('tupperfacil', 'Tupper Fácil', 12, { country: null }),
+  /* @__PURE__ */ makeChannel('recetaya', 'Receta Ya', 12),
+  /* @__PURE__ */ makeChannel('sartenlibre', 'Sartén Libre', 12, { subscribers: null }),
+  /* @__PURE__ */ makeChannel('menusemana', 'Menú de la Semana', 12),
+  /* @__PURE__ */ makeChannel('cenaexpres', 'Cena Exprés', 12),
 ]
 
-export const FAKE_CHANNELS: FakeChannel[] = [...SEARCH_CHANNELS, CHANNEL_3]
+export const FAKE_CHANNELS: FakeChannel[] = /* @__PURE__ */ SEARCH_CHANNELS.concat(CHANNEL_3)

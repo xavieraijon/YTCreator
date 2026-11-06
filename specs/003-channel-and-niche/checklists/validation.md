@@ -1,5 +1,115 @@
 # Validación: 003 canal y nicho
 
+## Pendientes P1, P3, P6 y P17: Puerta A (2026-11-06): PASADA
+
+**Resultado: pasada tras dos vueltas de revisión.** Los cuatro revisores hicieron la primera vuelta, y los de lógica y
+coste, la segunda. Ningún hallazgo grave. El choque con el principio IV lo decidió el creador (entrada 152). Los
+controles pasan en su última ejecución. No se llamó a ninguna IA ni a YouTube reales.
+
+### 1. Resumen
+
+- **P17:** el gasto de una petición no pasa del límite por operación. El reintento de una salida inválida se reserva:
+  nada empieza si no caben dos llamadas. El botón dice lo más que puede costar.
+- **P3:** volver a una tanda anterior ya no pierde la nueva; «Volver a la tanda más nueva» la recupera. **P6:** el
+  YouTube falso sale de la build publicada, y `release.yml` lo vigila.
+- **P1:** no hay fuente para el 5–50 %. El supuesto se dice «sin fuente» en pantalla y en el `.md`.
+
+### 2. Requisitos
+
+| Requisito | Estado | Evidencia | Fecha |
+|---|---|---|---|
+| P17: mirar el presupuesto antes de cada reintento y decir el máximo | Cumplido | `ai-run.ts` (`CALLS_RESERVED`, `mayAskAgain`, `maxCents`); `ai-run.test.ts`, bloque P17; `channel-base.test.ts` (estimación con `proposalId`) | 2026-11-06 |
+| Principio IV: una salida inválida se reintenta una vez | Cumplido | Los adaptadores no cambian; batería de contrato C11 sin tocar | 2026-11-06 |
+| P3: conservar las tandas al volver | Cumplido | `proposals.ts` (`newer`, `goForward`, `regenerate` con guarda); `/forward`; `BatchNav`; tests de repo, HTTP, `batch-nav.test.tsx` y e2e de nichos | 2026-11-06 |
+| P6: fuera de producción y vigilado | Cumplido | Build de producción: 0 coincidencias del YouTube falso (10 antes) y 0 de la IA falsa; paso «No fake YouTube» | 2026-11-06 |
+| P1: fuente (a) | No cumplido | Sin fuente: vidIQ da visitas absolutas, no una parte de la mediana (entrada 151) | 2026-11-06 |
+| P1: marcarlo como supuesto (b) | Cumplido | `Concepts.tsx` (`moneyViewsAssumption`), `export.ts`; `existing.test.tsx`, `export.test.ts` | 2026-11-06 |
+
+### 3. Cómo se comprobó
+
+- `pnpm lint`: salida 0. `pnpm typecheck`: salida 0.
+- `pnpm test`: salida 0; 123 ficheros, 1458 pruebas pasadas y 2 omitidas.
+- `pnpm test:e2e`: salida 0; catálogo 97 pasadas, web 35 pasadas.
+- `vite build --mode production` del servidor y `grep` de los dos pasos de `release.yml` sobre `server.mjs`: 0 y 0. La
+  misma comprobación sobre la build de `main` daba 10 en el paso nuevo.
+
+### 4. Controles obligatorios
+
+- **Pasados:** lint, typecheck, test, test:e2e; glosario y `secrets-leak` (dentro de test y e2e); axe en claro y oscuro
+  a 375 y 1280 px con `prefers-reduced-motion` (`audit` del e2e de nichos, que pasa por los botones de tanda); tipos de
+  fallo de IA (tests de la 002 y de `ai-run`, sin cambios en su trato).
+- **No ejecutados:** `test:installer`, porque el instalador no cambia. Teclado: no hay prueba nueva; `BatchNav` usa
+  `Button` del design system.
+- **Un fallo intermedio:** tras la vuelta 1, el e2e «límite de 1 céntimo» falló porque las preguntas, de 1 céntimo,
+  necesitan ahora 2 (reserva). El test pasa a 2 céntimos, como el quickstart §4 (entrada 152).
+
+### 5. Hallazgos de revisión
+
+**Vuelta 1 (cuatro revisores), confirmados y corregidos:**
+
+- El reintento sin presupuesto chocaba con el principio IV y con C11. El creador eligió reservarlo (entrada 152).
+- `maxCents` se podía superar. Ahora es `max(2 × c, min(4 × c, límite por operación))`.
+- La estimación de «Proponer otra» no contaba la propuesta que se rehace. Ahora la ruta lee `proposalId` y la web lo
+  envía.
+- Contratos sin actualizar: `http-api.md`, `cost.md` y `ai-uses.md`.
+- Una tanda dejada al pedir otra desde una más antigua quedaba inalcanzable. `newer` sigue ahora el orden en que se
+  pidieron.
+- `/forward` no comprobaba si era legible. Corregido.
+- En nichos y conceptos se podía cambiar de tanda mientras la IA proponía o se elegía, y en conceptos se perdía una
+  edición. Corregido.
+- El error de `BatchNav` no se borraba al reintentar. Corregido.
+- El aviso de P1 salía en canales que ya existían. El `.md` no lo decía.
+- Comentario huérfano en `Positioning.tsx`, paréntesis roto en la spec y `CLAUDE.md` desactualizado.
+
+**Vuelta 2 (lógica y coste), confirmados y corregidos:**
+
+- Un canal empezado «como nuevo» perdía el aviso de P1. Ahora se decide con `profile.context`, no con el origen.
+- La guarda del padre descartado se hacía antes de la IA. Ahora también se hace dentro de la transacción de
+  `regenerate`, con `409` si se dejó entre medias.
+- «Como mucho» sin sitio para las indicaciones. Ahora se calcula con 500 caracteres de margen.
+- «Otra opinión» se estimaba sin la opinión anterior. Corregido.
+- En nombres, los botones de tanda no se apagaban al elegir ni se ocultaban con un nombre propio a medio escribir.
+  Corregido.
+- Una estimación vieja podía quedarse en pantalla. Ahora solo cuenta la última respuesta.
+
+**Descartados:**
+
+- «"Más nueva" no siempre es la que se acaba de dejar» (lógica, vuelta 2): es la siguiente en el orden en que se
+  pidieron, y así se llega a todas. Está escrito en la entrada 150 y en `http-api.md`.
+
+**Abiertos:**
+
+- Que lo gastado no pase del límite depende de que la estimación de cada llamada sea una cota (caracteres / 3,5). Sin
+  IA real no se puede medir; está dicho en `cost.md`.
+
+### 6. Desviaciones respecto a la spec
+
+- **De más:** «Volver a la tanda más nueva» y `newerId`, que P3 pedía y la spec no nombraba. El aviso de máximo en el
+  botón.
+- **De menos:** ninguna.
+
+### 7. Decisiones
+
+- **Del creador (alto):** 148, 149, 150 y 151 (aceptó las recomendaciones de P17, P6, P3 y P1) y 152 (reservar el
+  reintento).
+- **Del agente:** ninguna fuera de esas entradas.
+- **Pendientes del creador que afecten:** ninguno. Siguen abiertos P2, P4, P5, P8, P9 y P19, de antes y sin relación.
+
+### 8. Impacto en la constitución
+
+- **III (gasto):** el importe confirmado dice el máximo, y lo gastado se para en el límite por operación.
+- **IV (salidas validadas):** el reintento se mantiene siempre; se reserva en el presupuesto.
+- **II y V (dato y supuesto):** el supuesto de visitas se dice «sin fuente»; ninguna tanda pagada se pierde.
+- **I (novato):** textos en el catálogo, sin jerga (glosario); un botón principal por pantalla, porque los de tanda no
+  son principales.
+
+### 9. Cómo revertir y qué queda
+
+- **Revertir:** `git revert` del commit de la rama `003-pendientes`. No hay migraciones; `newerId` es opcional y
+  `maxCents` solo lo lee la web.
+- **Queda:** buscar fuente para el 5–50 % (P1a), si aparece algún estudio. Comprobar con la IA real que el gasto de una
+  petición con repeticiones no pasa del límite.
+
 ## Polish: Puerta A, T122 a T127 (2026-11-06): PASADA
 
 **Resultado: pasada tras dos vueltas de revisión.** Los cuatro revisores hicieron la primera vuelta y los de lógica y

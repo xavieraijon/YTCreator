@@ -252,6 +252,7 @@ export function ProfileView({
       <ConceptDetails
         concept={profileConcept(current, rhythm)}
         rhythm={rhythm}
+        existing={profile.context !== null}
         promiseNote={
           aiPromises && aiPromises.length > 0 && !aiPromises.includes(current.profile.concept.promise)
             ? text.promiseByCreator
@@ -878,7 +879,11 @@ export function Profile({ channel, journeyId }: ProfileProps) {
               <p>
                 <strong>{shown.profile.niche.label}</strong>
               </p>
-              <ConceptDetails concept={profileConcept(shown, data.rhythm)} rhythm={data.rhythm} />
+              <ConceptDetails
+                concept={profileConcept(shown, data.rhythm)}
+                rhythm={data.rhythm}
+                existing={shown.profile.context !== null}
+              />
             </div>
           )}
         </Disclosure>

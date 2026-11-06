@@ -76,6 +76,8 @@ export const proposalSchema = z.object({
   selectedIndex: count.nullable(),
   status: z.enum(PROPOSAL_STATUSES),
   parentId: z.string().nullable(),
+  // A newer batch left by going back to this one, that can be brought back (P3). Only in the journey view.
+  newerId: z.string().nullable().optional(),
   instructions: z.string().nullable(),
   promptId: z.string(),
   promptVersion: z.number().int().positive(),
@@ -348,6 +350,8 @@ export const estimateSchema = z.object({
   cents,
   included: z.boolean(),
   blockedBy: z.enum(['por_operacion', 'diario', 'mensual']).nullable(),
+  // The most it can cost if the AI has to repeat itself (P17); 0 when included.
+  maxCents: cents,
   pricingVersion: z.number().int().positive(),
 })
 export type EstimateView = z.infer<typeof estimateSchema>

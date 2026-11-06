@@ -306,6 +306,7 @@ describe('RewritePart (entry 115)', () => {
     cents: 2,
     included: false,
     blockedBy: null,
+    maxCents: 2,
     pricingVersion: 1,
   }
   const props = (extra: Partial<RewritePartProps> = {}): RewritePartProps => ({

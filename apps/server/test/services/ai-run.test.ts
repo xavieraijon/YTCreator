@@ -276,6 +276,75 @@ describe('ai-run', () => {
     expect(result).toMatchObject({ ok: true, claimsTrimmed: true, value: { cautions: [] } })
   })
 
+  describe('the repetition of an invalid answer is reserved, and asking again for figures checks the budget (P17)', () => {
+    const paid = (value: unknown): AiResult<unknown> => ({
+      ok: true,
+      value,
+      usage: { inputTokens: 2_000, outputTokens: 2_000 },
+    })
+    const invented = {
+      questions: [{ id: 'q1', question: '¿Te va bien?', why: 'Para afinar. Hay 5.000 visitas al mes.' }],
+    }
+    const wide = { dailyCents: 10_000, monthlyCents: 10_000 }
+
+    it('the estimate says the most it can cost: four calls, never past the limit per operation', () => {
+      const { service, journeyId, limits } = setup([])
+      limits.save({ perOperationCents: 10_000, ...wide })
+      const one = service.estimate({ journeyId, use: 'preguntas', input: {} })
+      expect(one.cents).toBeGreaterThan(0)
+      expect(one.maxCents).toBe(one.cents * 4)
+      limits.save({ perOperationCents: one.cents * 3 - 1, ...wide })
+      expect(service.estimate({ journeyId, use: 'preguntas', input: {} }).maxCents).toBe(one.cents * 3 - 1)
+    })
+
+    it('nothing starts unless two calls fit: the repetition of principle IV is reserved', async () => {
+      const { service, journeyId, limits, calls, usage } = setup([ok(VALID)])
+      limits.save({ perOperationCents: 10_000, ...wide })
+      const est = service.estimate({ journeyId, use: 'preguntas', input: {} })
+      limits.save({ perOperationCents: est.cents * 2 - 1, ...wide })
+      expect(service.estimate({ journeyId, use: 'preguntas', input: {} }).blockedBy).toBe('por_operacion')
+      const result = await service.run({ estimateId: est.estimateId, use: 'preguntas', input: {} })
+      expect(result).toEqual({ ok: false, failure: 'limite_de_gasto' })
+      expect(calls).toHaveLength(0)
+      expect(usage.list()[0]).toMatchObject({ outcome: 'limite_de_gasto', costCents: 0 })
+    })
+
+    it('with a subscription there is no maximum to tell', () => {
+      const { service, journeyId } = setup([], { billing: 'suscripcion', limits: false })
+      expect(service.estimate({ journeyId, use: 'preguntas', input: {} }).maxCents).toBe(0)
+    })
+
+    it('without room for two more calls, an invented figure is trimmed instead of asked for again', async () => {
+      const { service, journeyId, limits, calls, usage, logger } = setup([paid(invented), paid(VALID)])
+      const est = service.estimate({ journeyId, use: 'preguntas', input: {} })
+      limits.save({ perOperationCents: est.cents * 2, ...wide })
+      const result = await service.run({ estimateId: est.estimateId, use: 'preguntas', input: {} })
+      expect(calls).toHaveLength(1)
+      expect(result).toMatchObject({ ok: true, claimsTrimmed: true })
+      expect(usage.list()[0]).toMatchObject({ outcome: 'ok', inputTokens: 2_000 })
+      expect(logger.lines.join('\n')).toContain('ai.retry_skipped_budget')
+    })
+
+    it('with room, the figures are asked for again', async () => {
+      const { service, journeyId, limits, calls } = setup([ok(invented), ok(VALID)])
+      limits.save({ perOperationCents: 10_000, ...wide })
+      const est = service.estimate({ journeyId, use: 'preguntas', input: {} })
+      const result = await service.run({ estimateId: est.estimateId, use: 'preguntas', input: {} })
+      expect(calls).toHaveLength(2)
+      expect(result).toMatchObject({ ok: true, claimsTrimmed: false })
+    })
+
+    it('what is really sent (the proposal being redone) is what the budget is checked with', async () => {
+      const { service, journeyId, limits, calls } = setup([ok(VALID)])
+      const est = service.estimate({ journeyId, use: 'preguntas', input: {} })
+      limits.save({ perOperationCents: est.cents * 2, ...wide })
+      const previous = { text: 'x'.repeat(2_000_000) }
+      const result = await service.run({ estimateId: est.estimateId, use: 'preguntas', input: { previous } })
+      expect(result).toEqual({ ok: false, failure: 'limite_de_gasto' })
+      expect(calls).toHaveLength(0)
+    })
+  })
+
   it('trims what is still unbacked after the retry', async () => {
     const invented = {
       questions: [{ id: 'q1', question: '¿Te va bien?', why: 'Para afinar. Hay 5.000 visitas al mes.' }],

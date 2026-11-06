@@ -351,6 +351,9 @@ describe('Positioning', () => {
     expect(html.indexOf('data-kind="youtube"')).toBeGreaterThan(median)
     const ofANiche = renderToStaticMarkup(<ConceptDetails concept={withMoney as never} />)
     expect(ofANiche).not.toContain('data-kind="youtube"')
+    // P1: the share of the niche a new channel gets is said to have no source; its own videos are data.
+    expect(ofANiche).toContain('consigue un canal que empieza')
+    expect(html).not.toContain('consigue un canal que empieza')
   })
 
   it('each claim of the current profile cites its videos, apart from the opinion (US4 AS3)', () => {

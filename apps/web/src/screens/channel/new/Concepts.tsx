@@ -19,6 +19,7 @@ import { errorText } from '../../../shell/errorText.ts'
 import { channelEs } from '../../../strings/channel.es.ts'
 import { es } from '../../../strings/es.ts'
 import styles from '../channel.module.css'
+import { BatchNav } from '../BatchNav.tsx'
 import { AiAction, Proposal } from '../Proposal.tsx'
 import { latestOf, payloadOf, useEstimate, useGenerate } from '../useJourney.ts'
 
@@ -67,7 +68,7 @@ function Part({ title, why, children }: { title: string; why: string; children: 
   )
 }
 
-function Money({ concept, own }: { concept: ShownConcept; own: OwnVideos | undefined }) {
+function Money({ concept, own, existing }: { concept: ShownConcept; own: OwnVideos | undefined; existing: boolean }) {
   const { monetization } = concept.figures
   const {
     monthlyEurRange: month,
@@ -87,6 +88,7 @@ function Money({ concept, own }: { concept: ShownConcept; own: OwnVideos | undef
               ? format(text.moneyViewsOwn, { visitas: number(views.min) })
               : format(text.moneyViews, { min: number(views.min), max: number(views.max) })}
           </p>
+          {!own && !existing && <p className={styles.why}>{text.moneyViewsAssumption}</p>}
         </>
       ) : (
         <p>{own ? text.moneyUnknownOwn : text.moneyUnknown}</p>
@@ -145,11 +147,14 @@ export interface OwnVideos {
 export function ConceptDetails({
   concept,
   own,
+  existing = false,
   promiseNote,
   rhythm,
 }: {
   concept: ShownConcept
   own?: OwnVideos | undefined
+  /** A channel that already existed: its visits come from its own videos, not from a share of the niche (P1). */
+  existing?: boolean
   /** What a video takes, to say the hours the rhythm needs. */
   rhythm?: Rhythm | undefined
   /** The promise was written by the creator, not the AI (principle II): this note replaces «Opinión de la IA». */
@@ -195,7 +200,7 @@ export function ConceptDetails({
           )}
         </div>
       ))}
-      <Money concept={concept} own={own} />
+      <Money concept={concept} own={own} existing={existing} />
     </>
   )
 }
@@ -441,7 +446,7 @@ export interface ConceptsProps {
 
 export function Concepts({ view, busy, reload, onStep }: ConceptsProps) {
   const proposal = latestOf(view, 'conceptos')
-  const { estimate, error: estimateError, refresh } = useEstimate(view.id, 'conceptos')
+  const { estimate, error: estimateError, refresh } = useEstimate(view.id, 'conceptos', true, proposal?.id)
   const generate = useGenerate(view, estimate, async () => {
     await reload()
     await refresh()
@@ -470,7 +475,14 @@ export function Concepts({ view, busy, reload, onStep }: ConceptsProps) {
             void generate.run('conceptos', { parentId: proposal.id, ...(instructions ? { instructions } : {}) })
           }
         >
-          <List view={view} proposal={proposal} busy={busy} reload={reload} onStep={onStep} />
+          <List
+            view={view}
+            proposal={proposal}
+            busy={busy}
+            reload={reload}
+            onStep={onStep}
+            generating={generate.busy}
+          />
         </Proposal>
       ) : (
         <AiAction
@@ -485,7 +497,14 @@ export function Concepts({ view, busy, reload, onStep }: ConceptsProps) {
   )
 }
 
-function List({ view, proposal, busy, reload, onStep }: ConceptsProps & { proposal: ProposalView }) {
+function List({
+  view,
+  proposal,
+  busy,
+  reload,
+  onStep,
+  generating,
+}: ConceptsProps & { proposal: ProposalView; generating: boolean }) {
   const concepts = payloadOf<{ concepts: Concept[] }>(proposal).concepts
   const [editing, setEditing] = useState<number | null>(null)
   const [deciding, setDeciding] = useState(false)
@@ -549,6 +568,8 @@ function List({ view, proposal, busy, reload, onStep }: ConceptsProps & { propos
           if (index !== null) void decide({ selectedIndex: index, status: 'aprobada' })
         }}
       />
+      {/* Hidden while a concept is being edited: changing batch would lose what was written (P3). */}
+      {editing === null && <BatchNav proposal={proposal} reload={reload} busy={busy || deciding || generating} />}
     </div>
   )
 }

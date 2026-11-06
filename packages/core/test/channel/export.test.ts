@@ -95,6 +95,15 @@ const input = { channel, version, measure, references: [reference], reading: nul
 const headings = (markdown: string) => [...markdown.matchAll(/^## (.+)$/gm)].map(([, title]) => title)
 
 describe('profileMarkdown and profileJson', () => {
+  it('says the share of a new channel has no source, and not for one that existed (P1)', () => {
+    expect(profileMarkdown(input)).toContain('sin fuente que lo respalde')
+    const own = { ...version, profile: { ...profile, context: { currentProfile: 'Hoy.', readingId: 'r1' } } }
+    expect(profileMarkdown({ ...input, version: own })).not.toContain('consigue un canal que empieza')
+    // Started again «as new», it keeps its origin but has no context: the share has no source either.
+    const asNew = { ...input, channel: { ...channel, origin: 'existente' as const } }
+    expect(profileMarkdown(asNew)).toContain('consigue un canal que empieza')
+  })
+
   it('both have the same sections, «Fuentes» last', () => {
     const markdown = profileMarkdown(input)
     const json = profileJson(input)

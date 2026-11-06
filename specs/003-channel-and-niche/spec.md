@@ -185,8 +185,8 @@ fecha; perfil actual que cita vídeos, con las opiniones marcadas; al aprobar, u
 **Cómo se demuestra**: T101 a T104 con los proveedores falsos, axe a 375 y 1280 px en claro y oscuro (T123), y el
 recorrido de «Independent Test». Evidencia en la sección «US4» de `checklists/validation.md`.
 
-**Huecos abiertos**: heredados de `decisions.md`: P1, P3, P6 y P17 (P7 se resolvió marcando las horas como estimación,
-entrada 142). T125b, hecha con YouTube real solo a través de yt-dlp (entrada 141), comprobó las entradas 56, 57, 84 y 88;
+**Huecos abiertos**: ninguno de los heredados. P1, P3, P6 y P17 se resolvieron el 2026-11-06 (entradas 148 a 152); P7, marcando las horas como estimación
+(entrada 142). T125b, hecha con YouTube real solo a través de yt-dlp (entrada 141), comprobó las entradas 56, 57, 84 y 88;
 las 68 y 81 quedan sin comprobar con YouTube real. Las URL `/c/` y `/user/` se aceptan desde la entrada 144. «Ir a Ajustes» se ofrece junto a reintentar y,
 desde US5, lleva a Ajustes → YouTube (entrada 113). El texto del perfil actual se guarda en español desde el servidor (entrada 83).
 

@@ -7,6 +7,7 @@ import { useJob } from '../../../shell/useJob.ts'
 import { channelEs } from '../../../strings/channel.es.ts'
 import { es } from '../../../strings/es.ts'
 import styles from '../channel.module.css'
+import { BatchNav } from '../BatchNav.tsx'
 import { AiAction, Proposal } from '../Proposal.tsx'
 import { latestOf, payloadOf, useEstimate, useGenerate } from '../useJourney.ts'
 import { isStale, type Niche, NicheCard } from './NicheCard.tsx'
@@ -60,7 +61,7 @@ export interface NichesProps {
 
 export function Niches({ view, busy, reload, onStep }: NichesProps) {
   const proposal = latestOf(view, 'nichos')
-  const { estimate, error: estimateError, refresh } = useEstimate(view.id, 'nichos')
+  const { estimate, error: estimateError, refresh } = useEstimate(view.id, 'nichos', true, proposal?.id)
   const generate = useGenerate(view, estimate, async () => {
     await reload()
     await refresh()
@@ -78,6 +79,7 @@ export function Niches({ view, busy, reload, onStep }: NichesProps) {
           view={view}
           proposal={proposal}
           busy={busy}
+          generating={generate.busy}
           reload={reload}
           onStep={onStep}
           proposalActions={
@@ -111,9 +113,11 @@ export function Niches({ view, busy, reload, onStep }: NichesProps) {
 interface BatchProps extends NichesProps {
   readonly proposal: ProposalView
   readonly proposalActions: React.ReactNode
+  /** The AI is proposing another batch: changing batch now would leave two in use (P3). */
+  readonly generating: boolean
 }
 
-function Batch({ view, proposal, busy, reload, onStep, proposalActions }: BatchProps) {
+function Batch({ view, proposal, busy, reload, onStep, proposalActions, generating }: BatchProps) {
   const niches = payloadOf<{ niches: Niche[] }>(proposal).niches
   const running = view.jobs.findLast((job) => job.kind === 'medir_nichos' && job.status === 'en_curso') ?? null
   const interrupted = view.jobs.findLast((job) => job.kind === 'medir_nichos')?.status === 'interrumpido'
@@ -263,18 +267,7 @@ function Batch({ view, proposal, busy, reload, onStep, proposalActions }: BatchP
       )}
 
       {proposalActions}
-      {proposal.parentId && (
-        <div className={styles.actions}>
-          <Button
-            onClick={() => {
-              setError(null)
-              channelApi.back(proposal.id).then(reload).catch(setError)
-            }}
-          >
-            {text.previousBatch}
-          </Button>
-        </div>
-      )}
+      <BatchNav proposal={proposal} reload={reload} busy={generating || busy || deciding} />
 
       {chosen && chosenMeasure?.status === 'medida' && (
         <References key={chosenMeasure.id} view={view} measureId={chosenMeasure.id} />
@@ -285,7 +278,7 @@ function Batch({ view, proposal, busy, reload, onStep, proposalActions }: BatchP
 
 export function Opinion({ view, reload }: { view: JourneyFullView; reload: () => Promise<unknown> }) {
   const latest = latestOf(view, 'recomendacion')
-  const { estimate, refresh } = useEstimate(view.id, 'recomendacion')
+  const { estimate, refresh } = useEstimate(view.id, 'recomendacion', true, latest?.id)
   const generate = useGenerate(view, estimate, async () => {
     await reload()
     await refresh()

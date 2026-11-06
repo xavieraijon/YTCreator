@@ -288,6 +288,86 @@ describe('POST /api/journeys/:id/proposals', () => {
     // The first of all has nothing to go back to.
     expect((await call(t, 'POST', `/api/proposals/${first.id}/back`, {})).status).toBe(409)
   })
+
+  it('the estimate of «Proponer otra» counts the proposal being redone (P17)', async () => {
+    const t = makeTestApp({ fakeAi: 'ok' })
+    await connect(t)
+    const { id, revision } = await atQuestions(t)
+    const first = proposalSchema.parse((await generate(t, id, revision)).body)
+    const alone = await call(t, 'POST', `/api/journeys/${id}/estimate`, { use: 'preguntas' })
+    const redoing = await call(t, 'POST', `/api/journeys/${id}/estimate`, { use: 'preguntas', proposalId: first.id })
+    expect(redoing.status).toBe(200)
+    expect(Number(redoing.body.cents)).toBeGreaterThanOrEqual(Number(alone.body.cents))
+    // A proposal of another use is not the one being redone.
+    const wrong = await call(t, 'POST', `/api/journeys/${id}/estimate`, { use: 'nichos', proposalId: first.id })
+    expect(wrong.status).toBe(404)
+  })
+
+  it('going back keeps the newer batch, and it can be brought back (P3)', async () => {
+    const t = makeTestApp({ fakeAi: 'ok' })
+    await connect(t)
+    const { id, revision } = await atQuestions(t)
+    const first = proposalSchema.parse((await generate(t, id, revision)).body)
+    const estimate = await call(t, 'POST', `/api/journeys/${id}/estimate`, { use: 'preguntas' })
+    const second = await call(t, 'POST', `/api/journeys/${id}/proposals`, {
+      revision,
+      kind: 'preguntas',
+      estimateId: estimate.body.estimateId,
+      parentId: first.id,
+    })
+    const secondId = String(second.body.id)
+    // Before going back there is nothing newer.
+    let view = journeyViewSchema.parse((await call(t, 'GET', `/api/journeys/${id}`)).body)
+    expect(view.proposals[0]).toMatchObject({ id: secondId, newerId: null })
+    expect((await call(t, 'POST', `/api/proposals/${secondId}/forward`, {})).status).toBe(409)
+
+    await call(t, 'POST', `/api/proposals/${secondId}/back`, {})
+    view = journeyViewSchema.parse((await call(t, 'GET', `/api/journeys/${id}`)).body)
+    expect(view.proposals).toHaveLength(1)
+    expect(view.proposals[0]).toMatchObject({ id: first.id, newerId: secondId })
+
+    const forward = await call(t, 'POST', `/api/proposals/${first.id}/forward`, {})
+    expect(forward.status).toBe(200)
+    expect(forward.body).toMatchObject({ id: secondId, status: 'propuesta', selectedIndex: null })
+    view = journeyViewSchema.parse((await call(t, 'GET', `/api/journeys/${id}`)).body)
+    expect(view.proposals.map((p) => p.id)).toEqual([secondId])
+    // A batch no longer in use cannot be the one that moves, nor the one another is asked for from.
+    expect((await call(t, 'POST', `/api/proposals/${first.id}/forward`, {})).status).toBe(409)
+    const late = await call(t, 'POST', `/api/journeys/${id}/estimate`, { use: 'preguntas' })
+    const fromLeft = await call(t, 'POST', `/api/journeys/${id}/proposals`, {
+      revision,
+      kind: 'preguntas',
+      estimateId: late.body.estimateId,
+      parentId: first.id,
+    })
+    expect(fromLeft.status).toBe(409)
+  })
+
+  it('a batch left when another was asked for from an older one can still be reached (P3)', async () => {
+    const t = makeTestApp({ fakeAi: 'ok' })
+    await connect(t)
+    const { id, revision } = await atQuestions(t)
+    const a = proposalSchema.parse((await generate(t, id, revision)).body)
+    const redo = async (parentId: string) => {
+      const estimate = await call(t, 'POST', `/api/journeys/${id}/estimate`, { use: 'preguntas' })
+      const made = await call(t, 'POST', `/api/journeys/${id}/proposals`, {
+        revision,
+        kind: 'preguntas',
+        estimateId: estimate.body.estimateId,
+        parentId,
+      })
+      return String(made.body.id)
+    }
+    const b = await redo(a.id)
+    await call(t, 'POST', `/api/proposals/${b}/back`, {})
+    const c = await redo(a.id)
+    await call(t, 'POST', `/api/proposals/${c}/back`, {})
+    // From A, in the order they were asked for: B, then C.
+    expect((await call(t, 'POST', `/api/proposals/${a.id}/forward`, {})).body).toMatchObject({ id: b })
+    expect((await call(t, 'POST', `/api/proposals/${b}/forward`, {})).body).toMatchObject({ id: c })
+    const view = journeyViewSchema.parse((await call(t, 'GET', `/api/journeys/${id}`)).body)
+    expect(view.proposals.map((p) => p.id)).toEqual([c])
+  })
 })
 
 describe('PATCH /api/proposals/:id', () => {

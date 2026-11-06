@@ -37,11 +37,30 @@ describe('proposals repo', () => {
 
   it('regenerating discards the old proposal and links the new one to it', () => {
     const first = proposals.create(base)
-    const second = proposals.regenerate(first.id, { ...base, instructions: 'más cortos' })
+    const second = proposals.regenerate(first.id, { ...base, instructions: 'más cortos' })!
     expect(second).toMatchObject({ parentId: first.id, instructions: 'más cortos', status: 'propuesta' })
     expect(proposals.get(first.id)?.status).toBe('descartada')
     expect(proposals.latest(base.journeyId, 'nichos')?.id).toBe(second.id)
     expect(proposals.list(base.journeyId, 'nichos')).toHaveLength(2)
+  })
+
+  it('does not redo a batch no longer in use, so two are never in use (P3)', () => {
+    const first = proposals.create(base)
+    const second = proposals.regenerate(first.id, base)!
+    proposals.goBack(second.id)
+    // The AI answered for «second» after the creator went back to «first».
+    expect(proposals.regenerate(second.id, base)).toBeNull()
+    expect(proposals.list(base.journeyId, 'nichos').filter((p) => p.status !== 'descartada')).toHaveLength(1)
+  })
+
+  it('goes forward to the next batch left by going back, in the order they were asked for (P3)', () => {
+    const a = proposals.create(base)
+    const b = proposals.regenerate(a.id, base)!
+    proposals.goBack(b.id)
+    expect(proposals.newer(a.id)?.id).toBe(b.id)
+    expect(proposals.goForward(a.id)).toMatchObject({ id: b.id, status: 'propuesta' })
+    expect(proposals.get(a.id)?.status).toBe('descartada')
+    expect(proposals.goForward(a.id)).toBeNull()
   })
 
   it('rejects instructions longer than 500 characters', () => {

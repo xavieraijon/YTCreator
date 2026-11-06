@@ -87,6 +87,18 @@ export function createProposalsRepo(db: DatabaseSync, now: () => Date = () => ne
   const list = (journeyId: string, kind?: ProposalKind): Proposal[] =>
     ((kind ? selectByKind.all(journeyId, kind) : selectAll.all(journeyId)) as unknown as Row[]).map(fromRow)
 
+  // The next batch, in the order they were asked for, that was left by going back: every one paid for can be reached
+  // again, also one that was left when another was asked for from an older batch (P3, entry 150).
+  const newer = (id: string, readable: (p: Proposal) => boolean = () => true): Proposal | null => {
+    const all = (() => {
+      const current = get(id)
+      return current ? list(current.journeyId, current.kind) : []
+    })()
+    const at = all.findIndex((p) => p.id === id)
+    if (at < 0) return null
+    return all.slice(at + 1).find((p) => p.status === 'descartada' && p.parentId !== null && readable(p)) ?? null
+  }
+
   const insertOne = (proposal: NewProposal, parentId: string | null): Proposal => {
     const id = randomUUID()
     insert.run(
@@ -121,8 +133,11 @@ export function createProposalsRepo(db: DatabaseSync, now: () => Date = () => ne
     },
 
     // «Proponer otra»: the old one is discarded and the new one points to it.
-    regenerate(parentId: string, proposal: NewProposal): Proposal {
+    // Null if the batch it comes from is no longer in use: the creator moved to another while the AI answered, and
+    // keeping this one too would leave two in use (P3, entry 150).
+    regenerate(parentId: string, proposal: NewProposal): Proposal | null {
       return inTransaction(db, () => {
+        if (get(parentId)?.status === 'descartada') return null
         setDecision.run('descartada', null, now().toISOString(), parentId)
         return insertOne(proposal, parentId)
       })
@@ -136,6 +151,21 @@ export function createProposalsRepo(db: DatabaseSync, now: () => Date = () => ne
         setDecision.run('descartada', null, now().toISOString(), id)
         setDecision.run('propuesta', null, now().toISOString(), current.parentId)
         return get(current.parentId!)
+      })
+    },
+
+    newer,
+
+    // «Volver a la tanda más nueva»: the opposite of goBack. Both batches stay; only which one is in use changes (P3).
+    goForward(id: string, readable?: (p: Proposal) => boolean): Proposal | null {
+      const current = get(id)
+      if (!current || current.status === 'descartada') return null
+      const next = newer(id, readable)
+      if (!next) return null
+      return inTransaction(db, () => {
+        setDecision.run('descartada', null, now().toISOString(), id)
+        setDecision.run('propuesta', null, now().toISOString(), next.id)
+        return get(next.id)
       })
     },
 
