@@ -1,0 +1,35 @@
+@layer components {
+  .semaphore {
+    display: inline-flex;
+    min-block-size: var(--c-badge-height);
+    align-items: center;
+    gap: var(--s-space-1);
+    padding-inline: var(--c-badge-padding-inline);
+    border: var(--s-border-width-default) solid var(--c-badge-border);
+    border-radius: var(--c-badge-radius);
+    background: var(--c-badge-bg);
+    color: var(--c-badge-text);
+    font-size: var(--s-font-size-xs);
+    font-weight: var(--s-font-weight-medium);
+    line-height: var(--s-line-height-tight);
+    vertical-align: middle;
+  }
+
+  .semaphore[data-state='verde'] {
+    --c-badge-bg: var(--s-color-success-bg);
+    --c-badge-border: var(--s-color-success-border);
+    --c-badge-text: var(--s-color-success-fg);
+  }
+
+  .semaphore[data-state='ambar'] {
+    --c-badge-bg: var(--s-color-warning-bg);
+    --c-badge-border: var(--s-color-warning-border);
+    --c-badge-text: var(--s-color-warning-fg);
+  }
+
+  .semaphore[data-state='rojo'] {
+    --c-badge-bg: var(--s-color-danger-bg);
+    --c-badge-border: var(--s-color-danger-border);
+    --c-badge-text: var(--s-color-danger-fg);
+  }
+}

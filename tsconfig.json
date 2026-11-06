@@ -6,6 +6,7 @@
     { "path": "packages/core" },
     { "path": "packages/ai" },
     { "path": "packages/knowledge" },
+    { "path": "packages/youtube" },
     { "path": "apps/catalog" },
     { "path": "apps/server" },
     { "path": "apps/web" }

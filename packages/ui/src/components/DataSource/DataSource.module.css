@@ -1,0 +1,15 @@
+@layer components {
+  .dataSource {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-space-1);
+    color: var(--s-color-text-secondary);
+    font-size: var(--s-font-size-xs);
+    line-height: var(--s-line-height-tight);
+  }
+
+  .dataSource[data-kind='ia'] {
+    color: var(--s-color-text-accent);
+    font-style: italic;
+  }
+}

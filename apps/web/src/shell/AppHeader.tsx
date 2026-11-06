@@ -1,7 +1,7 @@
 import { shutdownResponseSchema } from '@ytcreator/core/api'
 import { Badge, Button, Dialog, ErrorMessage, Icon, Logo, type BadgeTone } from '@ytcreator/ui'
 import { Power, Settings } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { kindLabel } from '../ai/kindLabel.ts'
 import { useAiOverview } from '../ai/useAiOverview.ts'
 import { apiClient } from '../api/client.ts'
@@ -20,17 +20,38 @@ export interface AppHeaderProps {
   readonly onClosed: () => void
 }
 
+// Its real height, as --app-header-height on the page: the toasts go below it, also when it takes two rows on a phone
+// (novice audit 003, round 2, M2).
+function useHeaderHeight() {
+  const ref = useRef<HTMLElement>(null)
+  useEffect(() => {
+    const header = ref.current
+    if (!header || typeof ResizeObserver === 'undefined') return
+    const root = document.documentElement
+    const set = () => root.style.setProperty('--app-header-height', `${header.getBoundingClientRect().height}px`)
+    set()
+    const observer = new ResizeObserver(set)
+    observer.observe(header)
+    return () => {
+      observer.disconnect()
+      root.style.removeProperty('--app-header-height')
+    }
+  }, [])
+  return ref
+}
+
 export function AppHeader({ inWizard = false, closed = false, onClosed }: AppHeaderProps) {
+  const ref = useHeaderHeight()
   if (closed) {
     return (
-      <header className={styles.header}>
+      <header ref={ref} className={styles.header}>
         <Logo />
       </header>
     )
   }
 
   return (
-    <header className={styles.header}>
+    <header ref={ref} className={styles.header}>
       {inWizard ? (
         <Logo />
       ) : (

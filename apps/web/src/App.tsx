@@ -5,6 +5,8 @@ import styles from './App.module.css'
 import { reloadAi } from './ai/useAiOverview.ts'
 import { reloadOnboarding, useOnboarding, useOnboardingSync } from './onboarding/useOnboarding.ts'
 import { href, navigate, onboardingRedirect, type Route, usePathname, useRoute } from './router.ts'
+import { ChannelStep } from './screens/channel/ChannelStep.tsx'
+import { Start } from './screens/channel/start/Start.tsx'
 import { ConnectAi } from './screens/connect-later/ConnectAi.tsx'
 import { Home } from './screens/home/Home.tsx'
 import { ChooseAi } from './screens/onboarding/ChooseAi.tsx'
@@ -53,11 +55,19 @@ function Page({ route, state }: { route: Route; state: OnboardingState | null })
       return <ConnectAi />
     case 'home':
       return <Home />
+    case 'channelStart':
+      return <Start />
+    case 'channelStep':
+      return <ChannelStep key={href(route)} kind={route.kind} step={route.step} />
     case 'settings':
     case 'aiSettings':
       return <Settings tab="ia" />
     case 'generalSettings':
       return <Settings tab="general" />
+    case 'youtubeSettings':
+      return <Settings tab="youtube" />
+    case 'usageSettings':
+      return <Settings tab="consumo" />
     case 'switchAi':
       return <ChangeAi key={href(route)} kind={route.kind} limitsFirst={route.limits === true} />
     case 'notFound':

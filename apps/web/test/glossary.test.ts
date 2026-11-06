@@ -1,8 +1,10 @@
-import { readFileSync } from 'node:fs'
+import { readdirSync, readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { findForbiddenTerms, forbiddenTerms } from '../../../packages/ui/test/forbidden-terms.ts'
+import { channelEs } from '../src/strings/channel.es.ts'
 import { es } from '../src/strings/es.ts'
 import { failuresEs } from '../src/strings/failures.es.ts'
+import { youtubeFailureActionsEs, youtubeFailuresEs } from '../src/strings/youtube-failures.es.ts'
 
 // The creator has to know which service each option uses (contracts/ui-screens.md), so the web may name the
 // three brands of this feature. Model names stay forbidden (principle I).
@@ -27,7 +29,52 @@ function installerStrings(): Record<string, string> {
 
 describe('glossary of the web (FR-032, principle I)', () => {
   it('no text of apps/web/src/strings uses a forbidden term', () => {
-    expect(findForbiddenTerms({ es, failuresEs }, webTerms)).toEqual([])
+    expect(
+      findForbiddenTerms({ es, failuresEs, channelEs, youtubeFailuresEs, youtubeFailureActionsEs }, webTerms),
+    ).toEqual([])
+  })
+
+  it('nor the texts of the downloaded profile, written by the server (packages/core/src/channel/export.ts)', () => {
+    const source = readFileSync(new URL('../../../packages/core/src/channel/export.ts', import.meta.url), 'utf8')
+      // Comments go first: an apostrophe in one would pair with the next quote.
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/(^|[^:])\/\/.*$/gm, '$1')
+    const texts: Record<string, string> = {}
+    // The literals, read left to right; those with a space are texts the creator reads, the rest keys and code.
+    const literals = [...source.matchAll(/'(?:[^'\\\n]|\\.)*'|`(?:[^`\\]|\\.)*`/g)].map(([literal]) =>
+      literal.slice(1, -1),
+    )
+    literals
+      .filter((literal) => /\s/.test(literal))
+      .forEach((literal, index) => {
+        texts[`export.${index}`] = literal.replace(/\$\{[^}]*\}/g, '')
+      })
+    expect(Object.keys(texts).length).toBeGreaterThan(20)
+    expect(findForbiddenTerms(texts, webTerms)).toEqual([])
+  })
+
+  it('no source of the knowledge files uses one either: they are shown under the figures', () => {
+    const dir = new URL('../../../packages/knowledge/market/', import.meta.url)
+    const labels: Record<string, string> = {}
+    for (const file of readdirSync(dir).filter((name) => name.endsWith('.json'))) {
+      const { source } = JSON.parse(readFileSync(new URL(file, dir), 'utf8')) as { source: { label: string }[] }
+      source.forEach(({ label }, index) => {
+        labels[`${file}.${index}`] = label
+      })
+    }
+    expect(Object.keys(labels).length).toBeGreaterThan(0)
+    expect(findForbiddenTerms(labels, webTerms)).toEqual([])
+  })
+
+  it('forbids the YouTube jargon of 003 too', () => {
+    const texts = { a: 'Tu RPM', b: 'el YPP', c: 'sube tu CTR', d: 'elige tu handle', e: 'instala yt-dlp' }
+    expect(findForbiddenTerms(texts, webTerms)).toEqual([
+      { key: 'a', term: 'RPM' },
+      { key: 'b', term: 'YPP' },
+      { key: 'c', term: 'CTR' },
+      { key: 'd', term: 'handle' },
+      { key: 'e', term: 'yt-dlp' },
+    ])
   })
 
   it('still forbids jargon and model names', () => {
@@ -44,7 +91,7 @@ describe('glossary of the installer (FR-032, principle I)', () => {
 
   it('finds the visible texts of installer/install.sh', () => {
     expect(strings.MSG_STEP1).toBe('Comprobando tu ordenador')
-    expect(Object.values(strings)).toContain('Paso  de 8 ·')
+    expect(Object.values(strings)).toContain('Paso  de 9 ·')
     expect(Object.keys(strings).filter((key) => key.startsWith('MSG_')).length).toBeGreaterThanOrEqual(30)
   })
 

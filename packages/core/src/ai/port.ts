@@ -9,6 +9,7 @@ export type CheckResult = { ok: true } | { ok: false; failure: AiFailure }
 export interface AiRequest<T> {
   use: AiUse
   prompt: { id: string; version: number; text: string } // from packages/knowledge
+  input?: Record<string, unknown> // data from YouTube and the creator, sent apart from the instructions
   schema?: ZodType<T> // structured output; without it, T = string
   signal?: AbortSignal
 }
@@ -18,7 +19,10 @@ export interface AiUsage {
   outputTokens?: number
 }
 
-export type AiResult<T> = { ok: true; value: T; usage: AiUsage } | { ok: false; failure: AiFailure }
+// `invalidOutput`: the structured output failed its schema twice; the domain shows it as `respuesta_invalida`.
+// `usage` on a failure: what was consumed anyway, like an answer that was paid for and did not validate.
+export type AiResult<T> =
+  { ok: true; value: T; usage: AiUsage } | { ok: false; failure: AiFailure; invalidOutput?: true; usage?: AiUsage }
 
 // check() and generate() never throw: every internal error is classified as an AiFailure.
 export interface AiProvider {

@@ -1,15 +1,11 @@
 <!--
 Sync Impact Report
-- Versión: 1.0.0 → 2.0.0 (MAJOR: se redefine el principio III y cambia el alcance de la v1)
-- Principios modificados:
-  - III. Nunca se gasta sin avisar: el camino sin coste pasa a ser «sin coste adicional», con la suscripción que el
-    creador ya paga. Se da por hecho que todo creador tiene una suscripción de IA o una cuenta de pago por uso.
-  - IV. La IA, detrás de un puerto: se quita de la v1 la opción gratuita (Gemini gratis u Ollama). Las suscripciones
-    de otros proveedores (la primera, Gemini con Google AI Pro) quedan para una feature posterior.
-- Secciones añadidas: ninguna
-- Plantillas: sin cambios necesarios
-- Afecta a: specs/002-onboarding (spec, plan, research, data-model, contracts, quickstart, tasks) y al código de
-  la rama 002 que preveía la opción gratuita
+- Versión: 2.0.0 → 2.1.0 (MINOR: se añade un principio)
+- Principios añadidos: XI. Autonomía demostrada
+- Secciones modificadas: Flujo de desarrollo (condiciones de cierre de una feature)
+- Plantillas: `.specify/templates/overrides/spec-template.md` (cinco campos por historia) y
+  `overrides/tasks-template.md` (tarea de Puerta A)
+- Afecta a: 003, solo en lo que queda (US4, US5 y pulido). 001, 002 y lo ya entregado de 003 no se reescriben.
 - TODOs: ninguno
 -->
 
@@ -149,6 +145,19 @@ Esta constitución define lo que **no se negocia**. Las specs, los planes y el c
 - Los documentos de contexto para agentes (`CLAUDE.md` y similares) DEBEN ser **cortos** y remitir a las specs.
   La verdad vive en las specs y en esta constitución, no en planes que se reescriben.
 
+### XI. Autonomía demostrada
+
+Una tarea o historia no está terminada porque pasen los tests, sino cuando el agente puede enseñar qué requisito cumple,
+cómo lo comprobó, con qué evidencia y qué queda pendiente. La revisión independiente ocurre dentro de la implementación,
+no solo al final. La atención del creador se concentra según riesgo y decisiones pendientes.
+
+- Cada historia de una spec DEBE decir qué podrá hacer el creador, su resultado observable, qué debe respetar, cómo se
+  demuestra y qué huecos deja abiertos.
+- Cada fase o historia DEBE cerrar con una **Puerta A**, con revisores independientes de contexto limpio.
+- Un control que no se ejecutó DEBE constar como no ejecutado. NUNCA se presenta como pasado.
+- Lo que la spec no decide NO DEBE rellenarse por suposición: se registra en `decisions.md` de la feature y se decide
+  según la matriz de riesgo (`.specify/memory/riesgo.md`).
+
 ## Restricciones técnicas
 
 - **Lenguaje:** TypeScript en modo `strict` en todo el monorepo.
@@ -183,6 +192,8 @@ Esta constitución define lo que **no se negocia**. Las specs, los planes y el c
    - los checks están en verde;
    - la auditoría de novato está superada (si tiene interfaz);
    - la documentación de usuario está al día.
+   - la Puerta A de cada fase está pasada, `decisions.md` no tiene pendientes sin resolver y
+     `checklists/validation.md` tiene la evidencia, sin hallazgos graves abiertos.
 
 ## Gobierno
 
@@ -195,4 +206,4 @@ Esta constitución define lo que **no se negocia**. Las specs, los planes y el c
   - **PATCH**: aclaraciones de redacción.
 - Cada revisión de código DEBE comprobar el cumplimiento de la constitución.
 
-**Versión**: 2.0.0 | **Ratificada**: 2026-10-26 | **Última enmienda**: 2026-10-29
+**Versión**: 2.1.0 | **Ratificada**: 2026-10-26 | **Última enmienda**: 2026-11-04

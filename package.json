@@ -13,6 +13,7 @@
     "test": "vitest run --project '!installer'",
     "test:e2e": "pnpm --filter @ytcreator/catalog test:e2e && pnpm --filter @ytcreator/web test:e2e",
     "test:installer": "vitest run --project installer",
+    "test:real-youtube": "pnpm --filter @ytcreator/youtube test:real-youtube",
     "format": "prettier --write ."
   },
   "devDependencies": {

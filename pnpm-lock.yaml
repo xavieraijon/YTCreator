@@ -99,6 +99,9 @@ importers:
       '@ytcreator/knowledge':
         specifier: workspace:*
         version: link:../../packages/knowledge
+      '@ytcreator/youtube':
+        specifier: workspace:*
+        version: link:../../packages/youtube
       hono:
         specifier: ^4.13.14
         version: 4.13.14
@@ -172,6 +175,10 @@ importers:
         version: 4.6.7
 
   packages/knowledge:
+    dependencies:
+      zod:
+        specifier: ^4.6.7
+        version: 4.6.7
     devDependencies:
       vite:
         specifier: ^8.3.5
@@ -212,6 +219,15 @@ importers:
       vite:
         specifier: ^8.3.5
         version: 8.3.5(@types/node@24.19.2)
+
+  packages/youtube:
+    dependencies:
+      '@ytcreator/core':
+        specifier: workspace:*
+        version: link:../core
+      zod:
+        specifier: ^4.6.7
+        version: 4.6.7
 
 packages:
 

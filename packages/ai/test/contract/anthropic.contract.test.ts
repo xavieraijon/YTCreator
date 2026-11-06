@@ -2,7 +2,15 @@ import { Secret, type Logger, type ProviderDeps } from '@ytcreator/core'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createAnthropicProvider } from '../../src/anthropic/adapter.ts'
 import { resolveProfile } from '../../src/profiles.ts'
-import { INVALID_OUTPUT, runProviderContract, VALID_OUTPUT, type ContractCase } from './battery.ts'
+import {
+  CONTRACT_SCHEMA,
+  INVALID_OUTPUT,
+  runProviderContract,
+  useOutputs,
+  VALID_OUTPUT,
+  type BaseCase,
+  type ContractCase,
+} from './battery.ts'
 
 const KEY = 'sk-ant-api03-FAKE-contract-0123456789'
 const NOW = new Date('2026-10-29T10:00:00.000Z')
@@ -50,7 +58,7 @@ const replies =
   (call) =>
     list[Math.min(call, list.length - 1)]!
 
-const RESPONDERS: Record<ContractCase, Responder> = {
+const RESPONDERS: Record<BaseCase, Responder> = {
   valid_credential: replies(json(200, MODELS)),
   invalid_credential: replies(apiError(401, 'authentication_error', 'invalid x-api-key')),
   no_permission: replies(apiError(403, 'permission_error')),
@@ -63,6 +71,12 @@ const RESPONDERS: Record<ContractCase, Responder> = {
   output_valid: replies(message(JSON.stringify(VALID_OUTPUT))),
   output_invalid_then_valid: replies(message(JSON.stringify(INVALID_OUTPUT)), message(JSON.stringify(VALID_OUTPUT))),
   output_invalid_twice: replies(message(JSON.stringify(INVALID_OUTPUT))),
+}
+
+function responderFor(stub: ContractCase): Responder {
+  const outputs = useOutputs(stub)
+  if (outputs) return replies(...outputs.map((output) => message(JSON.stringify(output))))
+  return RESPONDERS[stub as BaseCase]
 }
 
 // A `fetch` that never leaves the process: it answers from the responder and keeps every request.
@@ -102,7 +116,7 @@ runProviderContract(
   'anthropic',
   (stub, deps) => {
     const aiTimeoutSeconds = stub === 'timeout' ? 1 : undefined
-    const { fetch, requests } = stubFetch(RESPONDERS[stub])
+    const { fetch, requests } = stubFetch(responderFor(stub))
     const provider = createAnthropicProvider(Secret.from(KEY), { ...deps, fetch, aiTimeoutSeconds })
     const timeoutMs = resolveProfile('anthropic', 'comprobacion', { aiTimeoutSeconds }).timeoutMs
     return { provider, calls: () => requests.length, credential: KEY, timeoutMs }
@@ -178,10 +192,36 @@ describe('anthropic: casos propios', () => {
     expect(result).toEqual({ ok: false, failure: { kind: 'cupo_agotado', reason: 'sin_saldo' } })
   })
 
+  const GENERATE_REQUEST = {
+    use: 'comprobacion',
+    prompt: { id: 'prueba', version: 1, text: 'hola' },
+    schema: CONTRACT_SCHEMA,
+  } as const
+
+  it('AN3b two invalid outputs were both paid for, so their usage comes back with the failure (G6)', async () => {
+    const { provider } = providerFor(replies(message(JSON.stringify(INVALID_OUTPUT))))
+    const result = await provider.generate(GENERATE_REQUEST)
+    expect(result).toMatchObject({ ok: false, invalidOutput: true, usage: { inputTokens: 24, outputTokens: 8 } })
+  })
+
+  it('AN3c an invalid output and then a valid one count both calls (G6)', async () => {
+    const { provider } = providerFor(
+      replies(message(JSON.stringify(INVALID_OUTPUT)), message(JSON.stringify(VALID_OUTPUT))),
+    )
+    const result = await provider.generate(GENERATE_REQUEST)
+    expect(result).toMatchObject({ ok: true, usage: { inputTokens: 24, outputTokens: 8 } })
+  })
+
+  it('AN3d a refusal keeps its usage (G6)', async () => {
+    const { provider } = providerFor(replies(message('', 'refusal')))
+    const result = await provider.generate(GENERATE_REQUEST)
+    expect(result).toMatchObject({ ok: false, usage: { inputTokens: 12, outputTokens: 4 } })
+  })
+
   it('AN3 stop_reason refusal → contenido_filtrado', async () => {
     const { provider } = providerFor(RESPONDERS.filtered)
     const result = await provider.generate({ use: 'comprobacion', prompt: { id: 'prueba', version: 1, text: 'hola' } })
-    expect(result).toEqual({ ok: false, failure: { kind: 'contenido_filtrado', reason: 'rechazo_del_modelo' } })
+    expect(result).toMatchObject({ ok: false, failure: { kind: 'contenido_filtrado', reason: 'rechazo_del_modelo' } })
   })
 
   it('generate usa el perfil y pide la salida estructurada solo con esquema', async () => {

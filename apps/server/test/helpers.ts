@@ -2,19 +2,52 @@ import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { createRegistry } from '@ytcreator/ai'
+import type { Pricing } from '@ytcreator/core'
+import { conceptKnowledge, knowledgeFiles, loadMarket, STALE_AFTER_DAYS, warningKnowledge } from '@ytcreator/knowledge'
+import { createFakeKeyCheck, createFakeYouTube } from '@ytcreator/youtube'
 import { afterEach } from 'vitest'
 import { migrate, MIGRATIONS } from '../src/db/migrate.ts'
 import { openDatabase } from '../src/db/open.ts'
 import { createAccountsRepo } from '../src/db/repos/accounts.ts'
 import { createConnectionsRepo } from '../src/db/repos/connections.ts'
+import { createChannelsRepo } from '../src/db/repos/channels.ts'
+import { createJobsRepo } from '../src/db/repos/jobs.ts'
+import { createJourneysRepo } from '../src/db/repos/journeys.ts'
 import { createLimitsRepo } from '../src/db/repos/limits.ts'
+import { createMeasuresRepo } from '../src/db/repos/measures.ts'
+import { createNamesRepo } from '../src/db/repos/names.ts'
 import { createOnboardingRepo } from '../src/db/repos/onboarding.ts'
+import { createProfilesRepo } from '../src/db/repos/profiles.ts'
+import { createReadingsRepo } from '../src/db/repos/readings.ts'
+import { createRegenerationsRepo } from '../src/db/repos/regenerations.ts'
+import { createProposalsRepo } from '../src/db/repos/proposals.ts'
 import { createSettingsRepo } from '../src/db/repos/settings.ts'
+import { createUsageRepo } from '../src/db/repos/usage.ts'
+import { createYtQuotaRepo } from '../src/db/repos/yt-cache.ts'
+import type { ReaderUpdateResult } from '../src/services/reader-update.ts'
 import { createApp } from '../src/http/app.ts'
 import { createMemoryLogger } from '../src/logging.ts'
 import { createFileStore } from '../src/secrets/file-store.ts'
 import { createAiConnectionsService } from '../src/services/ai-connections.ts'
+import { createAiRunService } from '../src/services/ai-run.ts'
 import { createClaudeRepair, type InstallerRunner } from '../src/services/claude-repair.ts'
+import { createJobsService } from '../src/services/jobs.ts'
+import { createNameCheck } from '../src/services/name-check.ts'
+import { createChannelReading } from '../src/services/channel-reading.ts'
+import { createNicheResearch } from '../src/services/niche-research.ts'
+import { markYouTubeKeyRejected } from '../src/services/youtube.ts'
+
+// Fixed prices, so no test depends on the knowledge package.
+const PRICING: Pricing = {
+  version: 1,
+  models: {
+    'claude-haiku-5-5': { input: 1, output: 5 },
+    'claude-sonnet-5-5': { input: 3, output: 15 },
+    fake: { input: 1, output: 5 },
+  },
+  usdToEur: 0.9,
+  charsPerToken: 3.5,
+}
 
 export const TEST_PORT = 4310
 export const LOCAL_HEADERS = { host: `127.0.0.1:${TEST_PORT}`, origin: `http://127.0.0.1:${TEST_PORT}` }
@@ -23,6 +56,8 @@ export interface TestAppOptions {
   fakeAi?: string // a YTCREATOR_FAKE_AI scenario
   now?: () => Date
   installer?: InstallerRunner // the Claude Code installer; by default it ends well at once
+  readerVersion?: string | null // the YouTube reader installed; none by default
+  readerUpdate?: () => Promise<ReaderUpdateResult> // «Actualizar el lector»; by default it ends well at once
 }
 
 const cleanups: (() => void)[] = []
@@ -34,7 +69,13 @@ afterEach(() => {
 const offline = (() => Promise.reject(new Error('Los tests no salen a la red'))) as typeof fetch
 
 // The whole server in memory: migrated SQLite, file store in a temporary folder, logger in memory.
-export function makeTestApp({ fakeAi, now = () => new Date(), installer }: TestAppOptions = {}) {
+export function makeTestApp({
+  fakeAi,
+  now = () => new Date(),
+  installer,
+  readerVersion = null,
+  readerUpdate,
+}: TestAppOptions = {}) {
   const dir = mkdtempSync(join(tmpdir(), 'ytc-server-'))
   const db = openDatabase(':memory:')
   migrate(db, MIGRATIONS)
@@ -72,7 +113,65 @@ export function makeTestApp({ fakeAi, now = () => new Date(), installer }: TestA
     claudeCode: async () => ({ installed: true, version: '2.1.312' }),
     repairState: repair.state,
   })
+  const usage = createUsageRepo(db, now)
+  const channels = createChannelsRepo(db, now)
+  const jobsRepo = createJobsRepo(db, now)
+  const jobs = createJobsService({ jobs: jobsRepo, logger })
+  const market = loadMarket()
+  // The prompts of the channel uses arrive with each story; the fake provider does not read them.
+  const promptFor = (use: string) => ({ id: use, version: 1, text: `Prompt de prueba de ${use}.` })
+  const aiRun = createAiRunService({
+    usage,
+    limits,
+    pricing: PRICING,
+    logger,
+    now,
+    active: () => ai.activeAi(),
+    promptFor,
+  })
+  const channel = {
+    db,
+    channels,
+    journeys: createJourneysRepo(db, now),
+    proposals: createProposalsRepo(db, now),
+    profiles: createProfilesRepo(db, now),
+    measures: createMeasuresRepo(db, now),
+    names: createNamesRepo(db, now),
+    readings: createReadingsRepo(db, now),
+    regenerations: createRegenerationsRepo(db, now),
+    jobs: jobsRepo,
+    aiRun,
+    promptFor,
+    warningKnowledge: warningKnowledge(market),
+    conceptKnowledge: conceptKnowledge(market),
+    measureStaleDays: market.thresholds.data.staleDays,
+  }
+  const fakeYouTube = createFakeYouTube({ now })
+  const research = createNicheResearch({
+    youtube: { ...fakeYouTube, effectiveSource: () => 'fake' as const },
+    measures: channel.measures,
+    jobs,
+    thresholds: market.thresholds.data,
+    thresholdsVersion: market.thresholds.version,
+    logger,
+    now,
+  })
+  const reading = createChannelReading({
+    youtube: fakeYouTube,
+    channels: channels,
+    journeys: channel.journeys,
+    proposals: channel.proposals,
+    readings: channel.readings,
+    jobs,
+    db,
+    thresholds: market.thresholds.data.ownChannel,
+    logger,
+    now,
+  })
   const version = '0.1.0'
+  const ytQuota = createYtQuotaRepo(db, now)
+  const keyCheck = createFakeKeyCheck()
+  let reader = readerVersion
   const app = createApp({
     port: TEST_PORT,
     version,
@@ -84,6 +183,40 @@ export function makeTestApp({ fakeAi, now = () => new Date(), installer }: TestA
     repair,
     limits,
     settings,
+    channel: { ...channel, now, research, reading },
+    jobs,
+    usage,
+    now,
+    knowledge: { files: () => knowledgeFiles(market), staleAfterDays: STALE_AFTER_DAYS, now },
+    youtubeSettings: {
+      settings,
+      secrets,
+      checkKey: keyCheck,
+      quota: { used: () => ytQuota.used(), limit: 10_000, nearLimitRatio: 0.8 },
+      effectiveSource: () => 'fake',
+      readerVersion: () => reader,
+      updateReader: async () => {
+        const result = await (readerUpdate ?? (async () => ({ ok: true as const, version: '2026.08.19' })))()
+        if (result.ok) reader = result.version
+        return result
+      },
+      jobs,
+      logger,
+    },
+    youtube: {
+      journeys: channel.journeys,
+      measures: channel.measures,
+      research,
+      nameCheck: createNameCheck({
+        youtube: fakeYouTube,
+        names: channel.names,
+        jobs,
+        thresholds: market.thresholds.data.names,
+        logger,
+        now,
+      }),
+      reading,
+    },
   })
 
   // A request as the local SPA sends it: local Host and Origin, JSON body.
@@ -95,6 +228,7 @@ export function makeTestApp({ fakeAi, now = () => new Date(), installer }: TestA
 
   return {
     app,
+    ai,
     db,
     dir,
     version,
@@ -108,7 +242,21 @@ export function makeTestApp({ fakeAi, now = () => new Date(), installer }: TestA
     limits,
     claudeAccountsDir,
     repair,
+    usage,
+    channels,
+    jobs,
+    jobsRepo,
+    channel,
+    measures: channel.measures,
+    channelProposals: channel.proposals,
+    research,
     request,
     now,
+    ytQuota,
+    // Only the hints of the keys checked: the fake check never keeps a key.
+    youtubeKeyChecks: keyCheck.checked,
+    // What the server does when YouTube stops taking the saved key (P15 a).
+    youtubeKeyRejected: (hint = settings.get('youtube.api_key_hint') ?? '') =>
+      markYouTubeKeyRejected(settings, logger, hint),
   }
 }

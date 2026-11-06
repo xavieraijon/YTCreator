@@ -26,6 +26,12 @@ export const forbiddenTerms: readonly string[] = [
   'Ollama',
   'Llama',
   'Mistral',
+  // Named in plain words on screen (003, contracts/ui-screens.md).
+  'RPM',
+  'YPP',
+  'CTR',
+  'handle',
+  'yt-dlp',
 ]
 
 export interface StringEntry {

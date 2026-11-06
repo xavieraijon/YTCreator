@@ -1,0 +1,110 @@
+@layer components {
+  .indicator {
+    display: grid;
+    justify-items: start;
+    gap: var(--s-space-3);
+  }
+
+  .why {
+    color: var(--s-color-text-secondary);
+  }
+
+  .options {
+    display: grid;
+    gap: var(--s-space-4);
+  }
+
+  .option {
+    display: grid;
+    justify-items: start;
+    gap: var(--s-space-2);
+  }
+
+  .option p {
+    color: var(--s-color-text-secondary);
+  }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-space-2);
+  }
+
+  .proposal {
+    display: grid;
+    gap: var(--s-space-4);
+  }
+
+  .niche {
+    display: grid;
+    gap: var(--s-space-3);
+    padding: var(--s-space-4);
+  }
+
+  .indicator-row {
+    display: grid;
+    justify-items: start;
+    gap: var(--s-space-1);
+  }
+
+  .figures {
+    display: grid;
+    gap: var(--s-space-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .form {
+    display: grid;
+    justify-items: start;
+    gap: var(--s-space-4);
+    max-width: 40rem;
+  }
+
+  .form > * {
+    width: 100%;
+  }
+
+  .form > .actions {
+    width: auto;
+  }
+
+  .found {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--s-space-4);
+    padding: var(--s-space-4);
+  }
+
+  .avatar {
+    width: var(--s-space-12);
+    height: var(--s-space-12);
+    border-radius: var(--s-radius-full);
+  }
+
+  .claims {
+    display: grid;
+    gap: var(--s-space-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .cited {
+    color: var(--s-color-text-secondary);
+    font-size: var(--s-font-size-sm);
+    overflow-wrap: anywhere;
+  }
+
+  .notice {
+    color: var(--s-color-text-secondary);
+    font-size: var(--s-font-size-sm);
+  }
+
+  /* A form that cannot be saved as it is: it reads as an error, not as a side note. */
+  .alert {
+    color: var(--s-color-danger-fg);
+  }
+}

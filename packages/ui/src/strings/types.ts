@@ -1,5 +1,18 @@
 /** Internal texts of the components, grouped by component. Content texts always arrive by props (research R10). */
 export interface UiStrings {
+  readonly semaphore: {
+    readonly verde: string
+    readonly ambar: string
+    readonly rojo: string
+    readonly sin_comprobar: string
+  }
+  readonly dataSource: {
+    /** Placeholder: `{fecha}`. */
+    readonly youtube: string
+    /** Placeholders: `{fuente}`, `{fecha}`. */
+    readonly conocimiento: string
+    readonly ia: string
+  }
   readonly button: {
     /** Accessible name added while a button is busy. */
     readonly loading: string

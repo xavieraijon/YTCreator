@@ -3,6 +3,7 @@ import { badgeDoc } from './badge.doc.tsx'
 import { buttonDoc } from './button.doc.tsx'
 import { cardDoc } from './card.doc.tsx'
 import { checkboxDoc } from './checkbox.doc.tsx'
+import { dataSourceDoc } from './data-source.doc.tsx'
 import { dialogDoc } from './dialog.doc.tsx'
 import { disclosureDoc } from './disclosure.doc.tsx'
 import { emptyStateDoc } from './empty-state.doc.tsx'
@@ -12,6 +13,7 @@ import { iconButtonDoc } from './icon-button.doc.tsx'
 import { progressBarDoc } from './progress-bar.doc.tsx'
 import { radioGroupDoc } from './radio-group.doc.tsx'
 import { selectDoc } from './select.doc.tsx'
+import { semaphoreDoc } from './semaphore.doc.tsx'
 import { skeletonDoc } from './skeleton.doc.tsx'
 import { spinnerDoc } from './spinner.doc.tsx'
 import { stepperDoc } from './stepper.doc.tsx'
@@ -41,6 +43,8 @@ export const registry: readonly ComponentDoc[] = [
   toastDoc,
   tooltipDoc,
   badgeDoc,
+  semaphoreDoc,
+  dataSourceDoc,
   emptyStateDoc,
   errorMessageDoc,
   stepperDoc,

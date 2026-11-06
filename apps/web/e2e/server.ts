@@ -35,6 +35,7 @@ export async function startServer({ port, scenario = 'ok' }: { port: number; sce
       env: {
         ...process.env,
         YTCREATOR_FAKE_AI: fakeAi,
+        YTCREATOR_FAKE_YOUTUBE: '1',
         YTCREATOR_PORT: String(port),
         HOME: home,
         XDG_DATA_HOME: join(home, '.local', 'share'),

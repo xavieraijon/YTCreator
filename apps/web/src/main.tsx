@@ -11,7 +11,8 @@ if (!root) throw new Error('Missing #root element')
 createRoot(root).render(
   <StrictMode>
     <UiStringsProvider>
-      <ToastProvider>
+      {/* Below the header, so a toast never covers «Ajustes» (novice audit 003, round 2, M2). */}
+      <ToastProvider offsetTop="var(--app-header-height, 0px)">
         <App />
       </ToastProvider>
     </UiStringsProvider>

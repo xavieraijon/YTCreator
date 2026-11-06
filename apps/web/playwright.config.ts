@@ -26,6 +26,7 @@ export default defineConfig({
     timeout: 180_000,
     env: {
       YTCREATOR_FAKE_AI: 'ok',
+      YTCREATOR_FAKE_YOUTUBE: '1',
       YTCREATOR_PORT: String(port),
       HOME: home,
       XDG_DATA_HOME: join(home, '.local', 'share'),

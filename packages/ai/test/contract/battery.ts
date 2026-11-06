@@ -1,10 +1,18 @@
-import type { AiProvider, Logger, ProviderDeps } from '@ytcreator/core'
+import {
+  CHANNEL_OUTPUTS,
+  checkClaims,
+  type AiProvider,
+  type ChannelUse,
+  type Logger,
+  type ProviderDeps,
+} from '@ytcreator/core'
 import { COMPROBACION } from '@ytcreator/knowledge'
 import { describe, expect, it } from 'vitest'
 import { z } from 'zod'
+import { fakeChannelOutput } from '../../src/fake/outputs.ts'
 
 // The stub each adapter sets up so its transport produces the case (contracts/ai-provider.md, C1–C13).
-export type ContractCase =
+export type BaseCase =
   | 'valid_credential'
   | 'invalid_credential'
   | 'no_permission'
@@ -17,6 +25,23 @@ export type ContractCase =
   | 'output_valid'
   | 'output_invalid_then_valid'
   | 'output_invalid_twice'
+
+// The channel uses of the 003: valid output, invalid twice and an invented figure (contracts/ai-uses.md, «Pruebas»).
+export const CHANNEL_USES = Object.keys(CHANNEL_OUTPUTS) as ChannelUse[]
+export type UseCase = `use_valid:${ChannelUse}` | `use_invalid_twice:${ChannelUse}` | `use_invented:${ChannelUse}`
+export type ContractCase = BaseCase | UseCase
+
+// What the channel readings get: the figures and videos the output may cite.
+export const USE_INPUT = { videos: [{ videoId: 'vid-abc', title: 'Cena en diez minutos', views: 1200 }] }
+
+// The raw outputs the transport gives for a use case, in order; undefined for the base cases.
+export function useOutputs(stub: ContractCase): unknown[] | undefined {
+  const [kind, use] = stub.split(':') as [string, ChannelUse | undefined]
+  if (!use) return undefined
+  if (kind === 'use_valid') return [fakeChannelOutput(use, USE_INPUT, 'normal')]
+  if (kind === 'use_invented') return [fakeChannelOutput(use, USE_INPUT, 'cifra_inventada')]
+  return [fakeChannelOutput(use, USE_INPUT, 'salida_rota'), fakeChannelOutput(use, USE_INPUT, 'salida_rota')]
+}
 
 export interface ContractSubject {
   provider: AiProvider
@@ -126,19 +151,74 @@ export function runProviderContract(name: string, factory: ContractFactory, opti
       expect(subject.calls()).toBe(2)
     })
 
-    caseIt('output_invalid_twice', 'C11 dos salidas inválidas → servicio_caido tras un único reintento', async () => {
-      const { deps, lines } = capturingDeps()
-      const subject = await factory('output_invalid_twice', deps)
-      const result = await subject.provider.generate({
-        use: 'comprobacion',
-        prompt: COMPROBACION,
-        schema: CONTRACT_SCHEMA,
+    caseIt(
+      'output_invalid_twice',
+      'C11 dos salidas inválidas → servicio_caido con invalidOutput tras un único reintento',
+      async () => {
+        const { deps, lines } = capturingDeps()
+        const subject = await factory('output_invalid_twice', deps)
+        const result = await subject.provider.generate({
+          use: 'comprobacion',
+          prompt: COMPROBACION,
+          schema: CONTRACT_SCHEMA,
+        })
+        expect(result).toEqual({
+          ok: false,
+          failure: { kind: 'no_disponible', reason: 'servicio_caido' },
+          invalidOutput: true,
+          usage: expect.any(Object),
+        })
+        // The two attempts were consumed even if nothing came out of them.
+        expect((result as { usage?: { inputTokens?: number } }).usage?.inputTokens).toBeGreaterThan(0)
+        expect(subject.calls()).toBe(2)
+        // The validation failure is logged without the content.
+        expect(lines.join('\n')).not.toContain('42')
+      },
+    )
+
+    for (const use of CHANNEL_USES) {
+      const request = {
+        use,
+        prompt: { id: use, version: 1, text: 'Prueba de contrato.' },
+        input: USE_INPUT,
+        schema: CHANNEL_OUTPUTS[use] as z.ZodType<unknown>,
+      }
+
+      caseIt(`use_valid:${use}`, `U1 ${use}: salida válida → valor del esquema del uso`, async () => {
+        const { deps } = capturingDeps()
+        const subject = await factory(`use_valid:${use}`, deps)
+        const result = await subject.provider.generate(request)
+        expect(result).toMatchObject({ ok: true, value: useOutputs(`use_valid:${use}`)![0] })
+        expect(subject.calls()).toBe(1)
       })
-      expect(result).toEqual({ ok: false, failure: { kind: 'no_disponible', reason: 'servicio_caido' } })
-      expect(subject.calls()).toBe(2)
-      // The validation failure is logged without the content.
-      expect(lines.join('\n')).not.toContain('42')
-    })
+
+      caseIt(
+        `use_invalid_twice:${use}`,
+        `U2 ${use}: dos salidas inválidas → invalidOutput tras un único reintento`,
+        async () => {
+          const { deps } = capturingDeps()
+          const subject = await factory(`use_invalid_twice:${use}`, deps)
+          const result = await subject.provider.generate(request)
+          expect(result).toMatchObject({ ok: false, invalidOutput: true })
+          expect(subject.calls()).toBe(2)
+        },
+      )
+
+      // The adapter gives it back as is: the figure validator lives in the server (ai-run), not in the port.
+      caseIt(
+        `use_invented:${use}`,
+        `U3 ${use}: cifra inventada → llega tal cual y el validador la detecta`,
+        async () => {
+          const { deps } = capturingDeps()
+          const subject = await factory(`use_invented:${use}`, deps)
+          const result = await subject.provider.generate(request)
+          expect(result.ok).toBe(true)
+          if (!result.ok) return
+          expect(checkClaims(result.value, USE_INPUT).length).toBeGreaterThan(0)
+          expect(subject.calls()).toBe(1)
+        },
+      )
+    }
 
     caseIt('valid_credential', 'C13 la credencial no aparece al serializar el proveedor', async () => {
       const { deps, lines } = capturingDeps()

@@ -1,11 +1,21 @@
 import { z } from 'zod'
+import { YOUTUBE_FAILURES } from '../youtube/failures.ts'
 import { aiFailureSchema } from './ai.ts'
+import { journeySchema } from './channel.ts'
 import { onboardingStateSchema } from './onboarding.ts'
 
-export const API_ERROR_CODES = ['validacion', 'conflicto', 'no_encontrado', 'ia', 'prohibido', 'interno'] as const
+export const API_ERROR_CODES = [
+  'validacion',
+  'conflicto',
+  'no_encontrado',
+  'ia',
+  'youtube',
+  'prohibido',
+  'interno',
+] as const
 export type ApiErrorCode = (typeof API_ERROR_CODES)[number]
 
-export const GUARDS = ['sin_conexion', 'sin_limites', 'maximo_de_cuentas'] as const
+export const GUARDS = ['sin_conexion', 'sin_limites', 'maximo_de_cuentas', 'ya_hay_canal'] as const
 export type Guard = (typeof GUARDS)[number]
 
 // Codes of `fields` (field → code); the web translates each one.
@@ -25,7 +35,9 @@ export const apiErrorSchema = z.object({
     fields: z.record(z.string(), z.enum(FIELD_CODES)).optional(),
     guard: z.enum(GUARDS).optional(),
     failure: aiFailureSchema.optional(),
-    current: onboardingStateSchema.optional(),
+    youtubeFailure: z.enum(YOUTUBE_FAILURES).optional(),
+    // A stale `revision`: what the server has now (the wizard's state or the journey).
+    current: z.union([onboardingStateSchema, journeySchema]).optional(),
   }),
 })
 export type ApiErrorBody = z.infer<typeof apiErrorSchema>
@@ -36,5 +48,6 @@ export const HTTP_STATUS_BY_CODE: Record<ApiErrorCode, number> = {
   no_encontrado: 404,
   conflicto: 409,
   ia: 422,
+  youtube: 502,
   interno: 500,
 }

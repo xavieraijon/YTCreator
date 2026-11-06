@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "reviewedAt": "2026-11-01",
+  "source": [
+    { "label": "Ayuda de YouTube: Programa de socios", "url": "https://support.google.com/youtube/answer/72851" },
+    {
+      "label": "Blog de YouTube: cambios del Programa de socios en 2027",
+      "url": "https://blog.youtube/news-and-events/youtube-partner-program-updates-2027-new-opportunities-earn/"
+    }
+  ],
+  "data": {
+    "tiers": [
+      {
+        "id": "fan_funding",
+        "label": "Ingresos de fans (miembros, Super Chat, Thanks)",
+        "subscribers": 500,
+        "uploads": { "count": 3, "windowDays": 90 },
+        "watchHours": { "hours": 3000, "windowMonths": 12 },
+        "shortsViews": { "views": 3000000, "windowDays": 90 }
+      },
+      {
+        "id": "ads",
+        "label": "Anuncios en vídeos largos y Shorts",
+        "subscribers": 1000,
+        "watchHours": { "hours": 4000, "windowMonths": 12 },
+        "shortsViews": { "views": 10000000, "windowDays": 90 }
+      }
+    ],
+    "upcoming": {
+      "from": "2027-02-01",
+      "appliesTo": "solicitudes nuevas",
+      "ads": {
+        "subscribers": 1000,
+        "watchHours": { "hours": 8000, "windowMonths": 12 },
+        "shortsViews": { "views": 20000000, "windowDays": 90 }
+      },
+      "shortsRevenue": { "views": 10000000, "windowDays": 90, "appliesTo": "todos los canales" }
+    },
+    "orRule": "Se cumple con suscriptores y además horas de vídeos largos o visitas de Shorts, no hacen falta las dos."
+  }
+}

@@ -57,8 +57,9 @@ export function useToast() {
   return context
 }
 
-/** Hosts the toast region. F8 moves the focus to it. Put it once, near the root. */
-export function ToastProvider({ children }: { readonly children: ReactNode }) {
+/** Hosts the toast region. F8 moves the focus to it. Put it once, near the root. `offsetTop` keeps the region below
+ * a fixed bar of the app (a header) so the toasts never cover its links; it is still at the top. */
+export function ToastProvider({ children, offsetTop }: { readonly children: ReactNode; readonly offsetTop?: string }) {
   const strings = useUiStrings().toast
   const [entries, setEntries] = useState<readonly ToastEntry[]>([])
 
@@ -119,7 +120,11 @@ export function ToastProvider({ children }: { readonly children: ReactNode }) {
             </RadixToast.Root>
           )
         })}
-        <RadixToast.Viewport label={strings.region} className={styles.viewport} />
+        <RadixToast.Viewport
+          label={strings.region}
+          className={styles.viewport}
+          {...(offsetTop ? { style: { '--c-toast-offset-top': offsetTop } as CSSProperties } : {})}
+        />
       </RadixToast.Provider>
     </ToastContext.Provider>
   )

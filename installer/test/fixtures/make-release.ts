@@ -7,6 +7,14 @@ import { join } from 'node:path'
 // Fixed in fixtures: install.sh stamps whatever version SHA256SUMS says, it doesn't need to be a real release.
 export const NODE_VERSION = '24.9.0'
 const NODE_PLATFORMS = ['darwin-arm64', 'darwin-x64', 'linux-x64', 'linux-arm64'] as const
+export const YTDLP_VERSION = '2026.01.01'
+/** Same names as the real assets; the fake curl serves by basename and nothing reaches the network. */
+export const YTDLP_FILES = {
+  'darwin-arm64': 'yt-dlp_macos',
+  'darwin-x64': 'yt-dlp_macos',
+  'linux-x64': 'yt-dlp_linux',
+  'linux-arm64': 'yt-dlp_linux_aarch64',
+} as const
 
 function tarGz(srcDir: string, destFile: string) {
   const result = spawnSync('tar', ['-czf', destFile, '-C', srcDir, '.'], { encoding: 'utf8' })
@@ -70,6 +78,16 @@ export function makeRelease(serveDir: string, version = '1.0.0', opts: { migrate
     sums[`node-v${NODE_VERSION}-${platform}.tar.gz`] = sha256(file)
   }
 
+  // The YouTube reader: a fake binary per asset, and the versions.json that pins them.
+  const assets: Record<string, { url: string; sha256: string }> = {}
+  for (const platform of NODE_PLATFORMS) {
+    const name = YTDLP_FILES[platform]
+    const file = join(serveDir, name)
+    writeFileSync(file, `#!/usr/bin/env bash\necho "fake reader ${name}"\n`)
+    assets[platform] = { url: `https://example.invalid/${YTDLP_VERSION}/${name}`, sha256: sha256(file) }
+  }
+  writeFileSync(join(serveDir, 'versions.json'), JSON.stringify({ ytDlp: { version: YTDLP_VERSION, assets } }))
+
   writeFileSync(
     join(serveDir, 'SHA256SUMS'),
     Object.entries(sums)
@@ -114,7 +132,15 @@ export function writeClaudeInstaller(serveDir: string, succeed = true) {
 export function stampInstallScript(templatePath: string, outputPath: string, release: Release, stampScript: string) {
   const result = spawnSync(
     'bash',
-    [stampScript, templatePath, outputPath, release.version, release.nodeVersion, join(release.serveDir, 'SHA256SUMS')],
+    [
+      stampScript,
+      templatePath,
+      outputPath,
+      release.version,
+      release.nodeVersion,
+      join(release.serveDir, 'SHA256SUMS'),
+      join(release.serveDir, 'versions.json'),
+    ],
     { encoding: 'utf8' },
   )
   if (result.status !== 0) {

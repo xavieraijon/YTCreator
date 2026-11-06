@@ -1,0 +1,93 @@
+import { z } from 'zod'
+import { ON_CAMERA } from './journey.ts'
+import { monthlyEurRange } from './monetization.ts'
+import { AUDIENCE_REGIONS, NAME_STATUSES } from './model.ts'
+import { CHANNEL_HANDLE_PATTERN } from '../youtube/handle.ts'
+import { WARNING_CODES } from './outputs.ts'
+
+// The channel profile, the same for new and existing channels (data-model.md, FR-021b).
+const text = z.string().trim().min(1)
+const range = z.object({ min: z.number().nonnegative(), max: z.number().nonnegative() })
+
+export const monetizationSchema = z
+  .object({
+    rpmEurRange: range,
+    // How sure the earnings per 1.000 views are (rpm.json): the spec asks to say it wherever they show.
+    confidence: z.enum(['alta', 'media', 'baja']).default('baja'),
+    // Null when there is no measure behind it: no figure rather than a made-up one.
+    monthlyViewsAssumption: range.nullable(),
+    monthlyEurRange: range.nullable(),
+    yppRequirements: z.object({
+      subscribers: z.number().int().positive(),
+      watchHours: z.number().int().positive(),
+      shortsViews: z.number().int().positive(),
+    }),
+    assumptions: z.array(text),
+    sourceIds: z.array(text),
+  })
+  .refine(
+    (m) => {
+      if (!m.monthlyViewsAssumption || !m.monthlyEurRange) return m.monthlyEurRange === m.monthlyViewsAssumption
+      const expected = monthlyEurRange(m.monthlyViewsAssumption, m.rpmEurRange)
+      return m.monthlyEurRange.min === expected.min && m.monthlyEurRange.max === expected.max
+    },
+    { message: 'monthlyEurRange debe ser visitas × ganancias por 1.000 / 1.000' },
+  )
+
+export const sourceSchema = z.object({
+  id: text,
+  kind: z.enum(['youtube', 'conocimiento']),
+  label: text,
+  url: z.string().nullable(),
+  date: text,
+})
+export type Source = z.infer<typeof sourceSchema>
+
+// The rhythm that can be written in the profile, with the limits the journey and the concepts already have (entry
+// 124): whole hours from 1 to 60, as the journey asks for them, and videos from 0 up, as a concept can have them.
+export const PROFILE_CADENCE_LIMITS = {
+  hours: { min: 1, max: 60, whole: true },
+  videos: { min: 0, max: Number.POSITIVE_INFINITY, whole: false },
+} as const
+export const withinLimit = (
+  value: number,
+  { min, max, whole }: { readonly min: number; readonly max: number; readonly whole: boolean },
+) => Number.isFinite(value) && (!whole || Number.isInteger(value)) && value >= min && value <= max
+
+type Cadence = { hoursPerWeek: number; longPerWeek: number; shortsPerWeek: number }
+// Only what changes is checked, so a figure written before can stay while the rest is edited.
+export const cadenceWithinLimits = (before: Cadence, after: Cadence) =>
+  (after.hoursPerWeek === before.hoursPerWeek || withinLimit(after.hoursPerWeek, PROFILE_CADENCE_LIMITS.hours)) &&
+  (after.longPerWeek === before.longPerWeek || withinLimit(after.longPerWeek, PROFILE_CADENCE_LIMITS.videos)) &&
+  (after.shortsPerWeek === before.shortsPerWeek || withinLimit(after.shortsPerWeek, PROFILE_CADENCE_LIMITS.videos))
+
+export const channelProfileSchema = z.object({
+  schemaVersion: z.literal(1),
+  niche: z.object({ label: text, summary: text, measureId: z.string().nullable() }),
+  concept: z.object({
+    promise: text.max(160),
+    pillars: z
+      .array(z.object({ title: text, description: text }))
+      .min(3)
+      .max(4),
+    audience: z.object({ description: text, region: z.enum(AUDIENCE_REGIONS), madeForKids: z.boolean() }),
+    format: z.object({ presence: z.enum(ON_CAMERA), longForm: text, shortsRole: text }),
+    cadence: z.object({
+      longPerWeek: z.number().min(0),
+      shortsPerWeek: z.number().min(0),
+      hoursPerWeek: z.number().min(0),
+    }),
+    monetization: monetizationSchema,
+    warnings: z.array(z.object({ code: z.enum(WARNING_CODES), sourceId: text })),
+  }),
+  name: z.object({
+    // Null while the name is left for later (FR-018b).
+    displayName: text.max(100).nullable(),
+    handle: z.string().regex(CHANNEL_HANDLE_PATTERN).nullable(),
+    status: z.enum(NAME_STATUSES),
+    checkId: z.string().nullable(),
+  }),
+  context: z.object({ currentProfile: text, readingId: text }).nullable(),
+  sources: z.array(sourceSchema),
+})
+export type ChannelProfile = z.infer<typeof channelProfileSchema>

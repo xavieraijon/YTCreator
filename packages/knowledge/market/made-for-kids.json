@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "reviewedAt": "2026-11-01",
+  "source": [
+    {
+      "label": "Ayuda de YouTube: contenido creado para niños",
+      "url": "https://support.google.com/youtube/answer/9528076"
+    },
+    {
+      "label": "Ayuda de YouTube: cómo saber si tu contenido es para niños",
+      "url": "https://support.google.com/youtube/answer/9632097"
+    }
+  ],
+  "data": {
+    "signals": [
+      "Los niños son el público principal del canal",
+      "Personajes animados, muñecos o juguetes pensados para atraer a niños",
+      "Canciones, cuentos o juegos infantiles",
+      "Actores o protagonistas que son niños",
+      "Lenguaje y temas pensados para edades de preescolar o primaria"
+    ],
+    "implications": [
+      "Sin anuncios personalizados: los ingresos por anuncios bajan mucho",
+      "Sin comentarios ni miembros del canal",
+      "Sin notificaciones ni botón de unirse",
+      "La responsabilidad de marcarlo bien (ley COPPA) es del creador"
+    ],
+    "audienceKeywords": ["niños", "niñas", "infantil", "peques", "preescolar", "primaria", "bebés"]
+  }
+}

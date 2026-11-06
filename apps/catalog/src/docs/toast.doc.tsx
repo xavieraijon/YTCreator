@@ -78,6 +78,9 @@ export const toastDoc: ComponentDoc = {
       text: 'Persistente (por defecto en `warning`, `danger` y con acción): pide leer algo entero, decidir o deshacer.',
     },
     { text: "Usa `duration: 'persistent'` si el mensaje no se puede recuperar en otro sitio, aunque sea `info`." },
+    {
+      text: 'Si la app tiene una cabecera fija, pasa su altura a `ToastProvider` con `offsetTop` (por ejemplo `var(--app-header-height)`): los avisos siguen arriba, pero no tapan sus enlaces.',
+    },
   ],
   donts: [
     { text: 'No lo uses para errores que bloquean una tarea: ahí va un ErrorMessage junto a la tarea.' },
@@ -88,7 +91,7 @@ export const toastDoc: ComponentDoc = {
     'Se anuncia en una región viva; los errores interrumpen y el resto espera su turno.',
     'F8 lleva el foco a la región de avisos.',
     'El temporal dura más cuanto más largo es el texto y se pausa mientras el puntero o el foco están encima o la ventana no tiene el foco (FR-012a).',
-    'Con «reducir movimiento» la barra de tiempo no se muestra; el aviso se va igual.',
+    'Con «reducir movimiento» la barra de tiempo no se muestra y el aviso aparece y se va sin animación.',
   ],
   tokens: ['toast-bg', 'toast-border', 'color-text-primary', 'toast-shadow', 'toast-radius', 'z-toast'],
 }

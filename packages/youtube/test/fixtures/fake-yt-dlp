@@ -1,0 +1,202 @@
+#!/usr/bin/env node
+// Stand-in for yt-dlp in tests: answers with the shapes recorded in spike S1 (flat JSON without dates, stderr
+// patterns of 404, 429 and no network) and never reaches the network. The mode comes from `state.json` in
+// FAKE_YTDLP_DIR, which the per-test wrapper (see ytdlp-bin.ts) sets. Every call is written to `calls.log`.
+import { appendFileSync, readFileSync } from 'node:fs'
+import { join } from 'node:path'
+
+// The same channels and video ids as the fake adapter's world (src/fake/scenarios.ts), so one battery fits both.
+const CHANNELS = [
+  {
+    handle: 'cocinacorta30',
+    id: 'UCcocinacorta30000000000',
+    title: 'Cocina Corta',
+    prefix: 'co30',
+    count: 30,
+    followers: 5_500,
+  },
+  {
+    handle: 'cocinatres',
+    id: 'UCcocinatres000000000000',
+    title: 'Cocina en Tres',
+    prefix: 'coes',
+    count: 3,
+    followers: null,
+  },
+]
+// A channel with only Shorts, and one with nothing: no list of videos, as yt-dlp says it.
+const ONLY_SHORTS = { handle: 'solocortos', id: 'UCsolocortos000000000000', title: 'Solo Cortos', prefix: 'solo', count: 20 }
+const EMPTY = { handle: 'canalvacio', id: 'UCcanalvacio000000000000', title: 'Canal Vacío' }
+// Its list of videos answers 404, and it does have Shorts.
+const NO_VIDEOS_LIST = { handle: 'listarota', id: 'UClistarota0000000000000', title: 'Lista Rota', prefix: 'rota', count: 20 }
+
+const dir = process.env.FAKE_YTDLP_DIR
+const state = JSON.parse(readFileSync(join(dir, 'state.json'), 'utf8'))
+const args = process.argv.slice(2)
+appendFileSync(join(dir, 'calls.log'), `${JSON.stringify({ argv: args })}\n`)
+
+const fail = (message) => {
+  process.stderr.write(`ERROR: ${message}\n`)
+  process.exit(1)
+}
+
+if (args.includes('--version')) {
+  process.stdout.write('2026.08.19\n')
+  process.exit(0)
+}
+// Never answers; the adapter must kill it when its time runs out.
+if (state.mode === 'hang') setInterval(() => undefined, 1_000)
+else run()
+
+function run() {
+  if (state.mode === 'offline') {
+    fail(
+      '[youtube] Unable to download API page: <urlopen error [Errno 8] nodename nor servname provided> ' +
+        '(caused by Failed to establish a new connection)',
+    )
+  }
+
+  const target = args.at(-1) ?? ''
+  const end = Number(args[args.indexOf('--playlist-end') + 1]) || Infinity
+
+  const search = /^ytsearch(\d+):(.*)$/s.exec(target)
+  if (search) return answerSearch(Number(search[1]), search[2])
+
+  const about = (c) => ({
+    _type: 'playlist',
+    id: c.id,
+    channel_id: c.id,
+    channel: c.title,
+    uploader_id: `@${c.handle}`,
+    channel_follower_count: 10,
+    entries: [],
+  })
+  const urlsOf = (c) => [`https://www.youtube.com/@${c.handle}`, `https://www.youtube.com/channel/${c.id}`]
+  for (const c of [ONLY_SHORTS, EMPTY]) {
+    if (urlsOf(c).some((url) => target === `${url}/videos`)) {
+      fail(`[youtube:tab] ${c.id}: This channel does not have a videos tab`)
+    }
+  }
+  if (urlsOf(ONLY_SHORTS).some((url) => target === `${url}/shorts`)) {
+    return print({ ...about(ONLY_SHORTS), entries: [] })
+  }
+  if (urlsOf(EMPTY).some((url) => target === `${url}/shorts`)) {
+    fail(`[youtube:tab] ${EMPTY.id}: This channel does not have a shorts tab`)
+  }
+  if (urlsOf(EMPTY).includes(target)) return print(about(EMPTY))
+
+  if (target === `https://www.youtube.com/channel/${NO_VIDEOS_LIST.id}/videos`) {
+    fail(`[youtube:tab] ${NO_VIDEOS_LIST.id}: HTTP Error 404: Not Found`)
+  }
+  if (target === `https://www.youtube.com/channel/${NO_VIDEOS_LIST.id}/shorts`) return answerShorts(NO_VIDEOS_LIST, end)
+
+  const channel = CHANNELS.find(
+    (c) =>
+      target === `https://www.youtube.com/@${c.handle}/videos` ||
+      target === `https://www.youtube.com/c/${c.handle}/videos` ||
+      target === `https://www.youtube.com/user/${c.handle}/videos` ||
+      target === `https://www.youtube.com/channel/${c.id}/videos`,
+  )
+  if (channel) return answerChannel(channel, end)
+  const shorts = CHANNELS.find((c) => target === `https://www.youtube.com/channel/${c.id}/shorts`)
+  if (shorts) return answerShorts(shorts, end)
+  if (/\/videos$/.test(target)) fail('[youtube:tab] noexiste: HTTP Error 404: Not Found')
+
+  const video = /[?&]v=([A-Za-z0-9_-]{11})/.exec(target)
+  if (video) {
+    const owner = CHANNELS.find((c) => videos(c).some((v) => v.id === video[1]))
+    if (!owner) fail(`[youtube] ${video[1]}: Video unavailable. Requested entity was not found`)
+    process.stdout.write(`${owner.id}\n`)
+    process.exit(0)
+  }
+  fail(`Unsupported URL: ${target}`)
+}
+
+function answerSearch(limit, query) {
+  if (query.includes('sin datos')) return print({ _type: 'playlist', id: query, entries: [] })
+  if (query.includes('bloqueado')) {
+    fail('[youtube:search] Unable to download API page: HTTP Error 429: Too Many Requests')
+  }
+  const channel = CHANNELS[0]
+  const entries = Array.from({ length: Math.min(limit, 40) }, (_, i) => ({
+    _type: 'url',
+    ie_key: 'Youtube',
+    id: `srch${String(i).padStart(3, '0')}xxxx`,
+    url: `https://www.youtube.com/watch?v=srch${String(i).padStart(3, '0')}xxxx`,
+    title: `Receta rápida ${i + 1}`,
+    view_count: i % 9 === 8 ? null : 1_000 + i * 731,
+    duration: i % 10 === 9 ? null : 300 + i * 17,
+    channel: channel.title,
+    channel_id: channel.id,
+    uploader_id: `@${channel.handle}`,
+    timestamp: null,
+    upload_date: null,
+    release_timestamp: null,
+  }))
+  print({ _type: 'playlist', id: query, title: query, entries })
+}
+
+function answerChannel(channel, end) {
+  const entries = videos(channel)
+    .slice(0, end)
+    .map((v) => ({
+      _type: 'url',
+      ie_key: 'Youtube',
+      id: v.id,
+      url: `https://www.youtube.com/watch?v=${v.id}`,
+      title: v.title,
+      view_count: v.views,
+      duration: v.duration,
+      timestamp: null,
+      upload_date: null,
+    }))
+  print({
+    _type: 'playlist',
+    id: channel.id,
+    title: `${channel.title} - Videos`,
+    channel: channel.title,
+    channel_id: channel.id,
+    uploader_id: `@${channel.handle}`,
+    channel_follower_count: channel.followers,
+    description: `Canal de prueba «${channel.title}».`,
+    thumbnails: [
+      { id: 'banner_uncropped', url: `https://yt3.googleusercontent.com/${channel.prefix}-banner` },
+      { id: 'avatar_uncropped', url: `https://yt3.googleusercontent.com/${channel.prefix}-avatar` },
+    ],
+    entries,
+  })
+}
+
+// Only the big channel has Shorts, with no duration, as yt-dlp lists them. The other one has no list of them.
+function answerShorts(channel, end) {
+  if (channel.count < 10) fail(`[youtube:tab] ${channel.id}: This channel does not have a shorts tab`)
+  const entries = ['s000', 's001'].slice(0, end).map((suffix, i) => ({
+    _type: 'url',
+    ie_key: 'YoutubeShorts',
+    id: `${channel.prefix}${suffix}`.padEnd(11, 'x').slice(0, 11),
+    url: `https://www.youtube.com/shorts/${channel.prefix}${suffix}`,
+    title: `Short ${i + 1}`,
+    view_count: 300 + i,
+    duration: null,
+  }))
+  print({ _type: 'playlist', id: channel.id, channel_id: channel.id, entries })
+}
+
+function print(value) {
+  process.stdout.write(JSON.stringify(value))
+  process.exit(0)
+}
+
+function videos(channel) {
+  return Array.from({ length: channel.count }, (_, i) => {
+    const short = i % 4 === 1
+    return {
+      id: `${channel.prefix}v${String(i).padStart(3, '0')}`.padEnd(11, 'x').slice(0, 11),
+      title: short
+        ? `${channel.title}: un truco en un minuto (${i + 1})`
+        : `${channel.title}: receta completa ${i + 1}`,
+      views: i % 7 === 6 ? null : 900 + ((i * 7919) % 48_000),
+      duration: i % 11 === 10 ? null : short ? 45 : 420 + i * 13,
+    }
+  })
+}

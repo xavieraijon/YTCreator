@@ -11,13 +11,23 @@ const SETTINGS = {
   dismissed_version: semver,
   ai_timeout_seconds: z.coerce.number().int().min(10).max(300),
   secret_store: z.enum(['keychain', 'secret-service', 'file']),
+  'youtube.source': z.enum(['auto', 'ytdlp', 'data_api']),
+  'youtube.api_key_ref': z.string().min(1),
+  'youtube.api_key_hint': z.string().length(4),
+  'youtube.ytdlp_version': z.string().min(1),
+  // YouTube stopped taking the saved key (P15 a): it is no longer used until another one is saved.
+  'youtube.api_key_rejected': z.enum(['1', '0']).transform((v) => v === '1'),
 }
 
 type Settings = typeof SETTINGS
 export type SettingKey = keyof Settings
 export type SettingValue<K extends SettingKey> = z.output<Settings[K]>
 
-const DEFAULTS: { [K in SettingKey]?: SettingValue<K> } = { update_check_enabled: true }
+const DEFAULTS: { [K in SettingKey]?: SettingValue<K> } = {
+  update_check_enabled: true,
+  'youtube.source': 'auto',
+  'youtube.api_key_rejected': false,
+}
 
 function encode(value: unknown): string {
   if (typeof value === 'boolean') return value ? '1' : '0'
