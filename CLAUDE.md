@@ -24,11 +24,10 @@ Spec-Driven Development with GitHub Spec Kit (`/speckit-*`).
   5 withdrawn). Validation in `specs/002-onboarding/checklists/validation.md`; T158 real-provider tests and T159
   novice audit (`specs/002-onboarding/novice-audit.md`, round 2 passed) done 2026-10-31. Open minor findings of the
   audit are left for the UI pass with Design mode.
-- 003 `channel-and-niche` (branch `003-channel-and-niche`): **all tasks done, not merged yet**. US1–US5 and Polish closed
-  with Puerta A passed (Polish on 2026-11-06 after two review rounds). Real YouTube tested only through yt-dlp
-  (T125b, entry 141); real AI not tested. Novice audit passed in round 3 (`specs/003-channel-and-niche/novice-audit.md`);
-  its open minors go to the UI pass with Design mode. Still open from earlier phases: P1, P3, P6, P17. Reports in
-  `specs/003-channel-and-niche/checklists/validation.md`. Next: PR to `main` when the creator asks.
+- 003 `channel-and-niche`: **complete and merged into `main`** (PR #3, 2026-11-06). US1–US5 and Polish closed with
+  Puerta A passed. Real YouTube tested only through yt-dlp (T125b, entry 141); real AI not tested. Novice audit passed
+  in round 3 (`specs/003-channel-and-niche/novice-audit.md`); its open minors go to the UI pass with Design mode. Still
+  open with the creator: P1, P3, P6, P17. Reports in `specs/003-channel-and-niche/checklists/validation.md`.
 - Provider subscriptions beyond Claude are a later feature, not part of 002. First one planned: Gemini
   (Google AI Pro, with its CLI).
 - Commands (Node 24, `fnm exec --using=24 --`): `pnpm dev` (server + web), `pnpm lint`, `pnpm typecheck`,
