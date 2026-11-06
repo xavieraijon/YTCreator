@@ -26,7 +26,7 @@ llama a la Data API.
 | `getChannel(ref)` | `ChannelRef` | `ChannelInfo` |
 | `listChannelVideos(channelId, {limit, withShorts?, fresh?})` | `limit` ≤ 200; `withShorts` también lee los Shorts con yt-dlp, cuya lista de vídeos no los trae, y un 404 en esa lista no los oculta; `fresh` no responde con la copia guardada del servicio (el lector de fechas mantiene su pausa) | `VideoInfo[]`, de más nuevo a más viejo dentro de cada formato; los que no tienen fecha, en turnos de cada lista si no caben todos; `partial` si no se pudo leer todo |
 | `checkHandle(handle)` | sin `@` | `'libre' \| 'ocupado'` |
-| `resolve(input)` | URL de canal, `@`, URL de vídeo | `ChannelRef` |
+| `resolve(input)` | URL de canal, `@`, URL de vídeo, URL antigua `/c/…` o `/user/…` (decisión 144) | `ChannelRef`. La Data API resuelve `/user/` con `forUsername` y no tiene forma para `/c/`: devuelve `no_disponible` y, con `auto`, contesta yt-dlp |
 | `health()` | — | `{source, available, version?, quota?: {used, limit, nearLimit}}`; `nearLimit` al pasar el umbral de `thresholds.json` (FR-030) |
 
 Tipos:
@@ -61,10 +61,12 @@ el resto.
 | `ytdlp` | Por defecto | Binario en `<datos>/bin/yt-dlp`; argumentos como lista, nunca por shell; `--flat-playlist -J` para listados, `ytsearch40:` para búsquedas |
 | `data-api` | `youtube.source` = `data_api`, o `auto` con clave válida | `search.list` 100 unidades; `channels`, `videos`, `playlistItems` 1 unidad; suma en `yt_quota` |
 | `rss` | Solo como complemento de fechas | `feeds/videos.xml?channel_id=` |
-| `fake` | `YTCREATOR_FAKE_YOUTUBE=1` (tests, e2e, auditoría de novato) | Datos de `packages/youtube/fixtures/`; nichos «sin_datos» y «bloqueado» preparados |
+| `fake` | `YTCREATOR_FAKE_YOUTUBE=1` (tests, e2e, auditoría de novato) | Datos de `packages/youtube/fixtures/`; nichos «sin_datos», «bloqueado» y «sin lector» (`no_disponible`) preparados |
 
-`checkHandle` con yt-dlp/HTTP: petición `HEAD`/`GET` a `https://www.youtube.com/@<handle>`; 404 → `libre`, 200 →
-`ocupado`, cualquier otra cosa → fallo (el semáforo queda en `sin_comprobar`). Spike S2.
+`checkHandle` con yt-dlp/HTTP: petición `HEAD`/`GET` a `https://www.youtube.com/@<handle>`, sin seguir redirecciones y
+con la cookie `SOCS=CAI` (la respuesta «rechazar todo» al aviso de cookies de YouTube, sin datos personales; sin ella,
+desde la UE todo redirige al aviso: entrada 133). 404 → `libre`, 200 → `ocupado`, cualquier otra cosa → fallo (el
+semáforo queda en `sin_comprobar`). Spike S2.
 
 ## Pruebas de contrato
 

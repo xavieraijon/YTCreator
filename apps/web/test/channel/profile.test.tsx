@@ -203,6 +203,43 @@ describe('figures older than 90 days (US5 AS4, FR-027)', () => {
   })
 })
 
+describe('the name and the one channel, in «Tu canal» (novice audit 003, M3 and M6)', () => {
+  it('the panel to change the name takes the place of its button', () => {
+    const html = renderToStaticMarkup(
+      <ProfileView data={data()} now={NOW} onEdit={noop} onChooseName={noop} naming={<p>Panel del nombre</p>} />,
+    )
+    expect(html).toContain('Panel del nombre')
+    expect(button(html, text.changeName)).toBeUndefined()
+    expect(button(render(data()), text.changeName)).toBeTruthy()
+  })
+
+  it('says there is one channel in this version', () => {
+    expect(render(data())).toContain(channelEs.start.oneChannelHere)
+  })
+})
+
+describe('the rhythm of the profile (novice audit 003, round 2, M1)', () => {
+  const rhythm = { hoursPerLongVideo: 4, hoursPerShort: 1 }
+  it('warns when it needs more hours than the creator has, worked out as it is now', () => {
+    // 1 long video and 3 Shorts take about 7 hours; the profile has 6.
+    const html = renderToStaticMarkup(
+      <ProfileView data={data({ rhythm })} now={NOW} onEdit={noop} onChooseName={noop} />,
+    )
+    expect(html).toContain(channelEs.niches.warnings.ritmo_insostenible)
+    expect(html).toContain('Este ritmo pide unas 7 horas a la semana. Tú tienes 6 horas.')
+  })
+
+  it('says nothing when it fits', () => {
+    const fits = version(2, 'manual', {
+      concept: { ...profile.concept, cadence: { longPerWeek: 1, shortsPerWeek: 3, hoursPerWeek: 8 } },
+    })
+    const html = renderToStaticMarkup(
+      <ProfileView data={data({ rhythm, current: fits })} now={NOW} onEdit={noop} onChooseName={noop} />,
+    )
+    expect(html).not.toContain(channelEs.niches.warnings.ritmo_insostenible)
+  })
+})
+
 describe('Export (US5 AS3)', () => {
   it('«Descargar como documento» first, «Descargar como datos» second', () => {
     const html = renderToStaticMarkup(<ExportButtons channelId="c1" />)

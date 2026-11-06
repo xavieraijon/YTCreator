@@ -1,6 +1,6 @@
 import { type ChannelOrigin, CONNECTION_KINDS, type ConnectionKind, type JourneyStep, stepsOf } from '@ytcreator/core'
 import type { OnboardingState } from '@ytcreator/core/api'
-import { useSyncExternalStore } from 'react'
+import { useEffect, useSyncExternalStore } from 'react'
 
 export const WIZARD_STEPS = ['elegir', 'conectar', 'limites', 'listo'] as const
 export type WizardStep = (typeof WIZARD_STEPS)[number]
@@ -115,20 +115,61 @@ export function onboardingRedirect(route: Route, state: OnboardingState): Target
 const listeners = new Set<() => void>()
 const notify = () => listeners.forEach((listener) => listener())
 
+// Something not saved on screen (novice audit 003, M4): leaving asks first, inside the app, with the browser's back
+// arrow and when closing the tab.
+let leaveMessage: string | null = null
+let guardedPath: string | null = null
+
+export function useLeaveGuard(message: string | null): void {
+  useEffect(() => {
+    if (message === null) return
+    leaveMessage = message
+    guardedPath = window.location.pathname
+    const onBeforeUnload = (event: BeforeUnloadEvent) => event.preventDefault()
+    window.addEventListener('beforeunload', onBeforeUnload)
+    return () => {
+      if (leaveMessage === message) {
+        leaveMessage = null
+        guardedPath = null
+      }
+      window.removeEventListener('beforeunload', onBeforeUnload)
+    }
+  }, [message])
+}
+
 export function navigate(route: Target, { replace = false }: { replace?: boolean } = {}): void {
   const url = href(route)
   if (url === window.location.pathname) return
+  if (leaveMessage !== null) {
+    if (!window.confirm(leaveMessage)) return
+    leaveMessage = null
+    guardedPath = null
+  }
   if (replace) window.history.replaceState(null, '', url)
   else window.history.pushState(null, '', url)
   notify()
 }
 
+// The back and forward arrows: with something not saved, the browser has already moved, so declining puts the page
+// back where it was. One listener for all the subscribers, so the question is asked once.
+const onPopState = () => {
+  if (leaveMessage !== null && guardedPath !== null && window.location.pathname !== guardedPath) {
+    if (!window.confirm(leaveMessage)) {
+      window.history.pushState(null, '', guardedPath)
+      return
+    }
+    leaveMessage = null
+    guardedPath = null
+  }
+  notify()
+}
+
 const subscribe = (onChange: () => void) => {
+  if (listeners.size === 0) window.addEventListener('popstate', onPopState)
   listeners.add(onChange)
-  window.addEventListener('popstate', onChange)
   return () => {
     listeners.delete(onChange)
-    window.removeEventListener('popstate', onChange)
+    if (listeners.size === 0) window.removeEventListener('popstate', onPopState)
   }
 }
 

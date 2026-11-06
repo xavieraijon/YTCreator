@@ -1,5 +1,207 @@
 # Validación: 003 canal y nicho
 
+## Polish: Puerta A, T122 a T127 (2026-11-06): PASADA
+
+**Resultado: pasada tras dos vueltas de revisión.** Los cuatro revisores hicieron la primera vuelta y los de lógica y
+fidelidad la segunda: ningún hallazgo grave en ninguna. Los medios están corregidos o los decidió el creador. Los controles
+pasan en su última ejecución. YouTube real se probó solo con yt-dlp; la IA real no se probó (entrada 141).
+
+### 1. Resumen
+
+Polish revisa los textos (glosario y «por qué importa» en cada paso), añade los casos difíciles que faltaban en e2e, pasa
+el quickstart §1–§5, prueba YouTube real con yt-dlp y hace la auditoría de novato, que pasa en la ronda 3. De esas
+pruebas salen cambios visibles: el panel del nombre en «Tu canal», las horas siempre del creador con lo que pide el
+ritmo marcado como estimación, `/c/` y `/user/` aceptados, una sola frase sobre «un canal por ahora» y los avisos bajo la
+cabecera.
+
+### 2. Requisitos
+
+| Requisito | Estado | Evidencia | Fecha |
+|---|---|---|---|
+| T122: glosario y escritura humana | Cumplido | `apps/web/test/glossary.test.ts` con todos los textos nuevos | 2026-11-06 |
+| T122b / FR-004: cada paso dice por qué importa | Cumplido | `apps/web/test/channel/why.test.tsx` | 2026-11-06 |
+| T125: casos difíciles de §4 | Cumplido, y además salir sin guardar | `channel-hard-cases.spec.ts` | 2026-11-06 |
+| T125b: YouTube real | Cumplido con yt-dlp; 68 y 81 sin comprobar (entradas 134 y 141) | Sección «T125b» de arriba | 2026-11-06 |
+| T126: quickstart §1–§5 | Cumplido | Sección «Polish: quickstart» de arriba | 2026-11-06 |
+| T127: auditoría de novato | Pasa en la ronda 3 (0 graves, 3 medios, corregidos después) | `../novice-audit.md` | 2026-11-06 |
+| FR-019: enlace, @, vídeo, `/c/` y `/user/` | Cumplido desde la entrada 144 (antes desviación, entrada 88) | `handle.test.ts`, batería Y9b, `existing.test.ts`, `youtube.test.ts`, real con yt-dlp | 2026-11-06 |
+| FR-026: `.md` y `.json` con lo mismo y sus fuentes | Cumplido; el ritmo y su estimación van en el `.md`, el `.json` no cambia (entradas 142 y 145) | `export.test.ts` | 2026-11-06 |
+| FR-028: un solo canal | Cumplido, y ahora se dice en pantalla (entrada 137) | `novice-003.test.tsx`, `profile.test.tsx` | 2026-11-06 |
+| Principio V: sin cifras sin marcar | Cumplido: horas por vídeo como «estimación nuestra» (P7, entrada 142) | `novice-003.test.tsx`, `export.test.ts` | 2026-11-06 |
+
+### 3. Cómo se comprobó
+
+Con Node 24, cada comando por separado y leyendo su propio código de salida. Última ejecución, tras la vuelta 2:
+
+| Comando | Resultado |
+|---|---|
+| `pnpm format` | Hecho; `fake-yt-dlp` solo con el cambio de esta fase (`/c/` y `/user/`) |
+| `pnpm lint` | Código 0 |
+| `pnpm typecheck` | Código 0 |
+| `pnpm test`, con `node_modules/.vitest-cache` borrada | Código 0: 1441 correctas, 2 omitidas (las reales), 122 ficheros |
+| `pnpm test:e2e` | Código 0: web 35 correctas (incluye salir sin guardar); catálogo 97 correctas y 2 omitidas |
+| `pnpm test:installer` | Código 0: 29 correctas |
+| `pnpm test:real-youtube` | 8 de 8 (sección «T125b»); tras la entrada 144 se volvió a ejecutar solo la de `/c/` y `/user/`, que pasa con el `resolve` de la app |
+
+**Antes de quedar en verde fallaron:** el e2e de axe por la animación de cierre del aviso con «reducir movimiento» (fallo
+de la 001, corregido, entrada 143); varios e2e por el texto repetido de la región viva de los avisos (`.first()`); el test
+de glosario por «llama» en un texto nuevo; y un test de servidor cuyo doble de `resolve` no podía fallar.
+
+### 4. Controles obligatorios
+
+**Pasados**
+
+- `lint`, `typecheck`, `test`, `test:e2e` y `test:installer` (apartado 3).
+- Glosario y «por qué importa» (T122 y T122b).
+- Fuga de secretos: `secrets-leak.spec.ts`. Esta fase no añade ningún `Secret.reveal()`; la clave sigue solo en la
+  cabecera (`data-api.contract.test.ts`).
+- Axe en claro y oscuro a 375 y 1280 px, teclado y `prefers-reduced-motion`: `a11y.spec.ts` y `channel-niche.spec.ts`,
+  con el panel del nombre y los avisos; `toast-provider.test.tsx` para la salida sin animación.
+- Fallos de IA: sin cambios en esta fase; los cinco tipos siguen cubiertos por las pruebas de la 002 y de US1 a US5.
+- «Cómo se demuestra»: el quickstart §1–§5 (sección de arriba) y la auditoría de novato.
+
+**Fallidos en la última ejecución:** ninguno.
+
+**No ejecutados**
+
+- IA real: el creador aprobó solo YouTube real (entrada 141).
+- Data API real (`forUsername` para `/user/`): T125b no usó clave; solo con la Data API falsa.
+- Entradas 68 y 81 con YouTube real: no hay un canal real estable con esas condiciones.
+- Los pasos de «¿Dónde veo mi @?» no se han contrastado con YouTube real con fecha.
+- La pregunta de salir sin guardar no la vio la auditoría de novato: su navegador no enseña los diálogos del sistema. La
+  cubre el e2e nuevo.
+
+### 5. Hallazgos de revisión
+
+**Vuelta 1 (fidelidad, lógica, seguridad y coste, regresión).** Corregidos:
+
+- «Aprobar» seguía apagado tras «Proponer otra»: el campo se vacía con cada propuesta (`key`).
+- La flecha atrás no preguntaba con cambios sin guardar: un solo `popstate` que vuelve a la página si se rechaza; e2e.
+- El `.md` no decía lo que pide el ritmo ni avisaba si no cabía (FR-026).
+- El panel del nombre no se recuperaba de un fallo; Esc lo cerraba mientras guardaba.
+- Los avisos suponían una cabecera de una fila: ahora se mide.
+- Varios botones principales con el panel abierto (como la entrada 130).
+- Contratos sin actualizar (`ui-screens.md`, `http-api.md`, `youtube-data.md`) y comentario viejo en `services/profile.ts`.
+- Riesgo de la entrada 140, texto de `spec.md` sobre T125b y la fila de P35.
+
+Llevados al creador (riesgo alto): el cambio del aviso en el design system (entrada 143), P7 (entrada 142), `/c/` y
+`/user/` (entrada 144) y el formato del documento (entrada 145).
+
+**Vuelta 2 (lógica y fidelidad).** Corregidos:
+
+- `/c/` con la fuente «con mi clave» daba «El lector no está listo»: ahora pasa al lector.
+- El `.json` cambiaba de formato sin decisión: vuelve a ser el perfil guardado, y el ritmo va solo en el `.md`.
+- «Cancelar» del panel no deshacía «Proponer otros»; Esc actuaba desde otro panel o mientras la IA proponía; «Reintentar»
+  podía cambiar el nombre dos veces.
+- La ayuda de «¿Qué cambiarías?» en «Reescribir con la IA» nombraba un botón que no está; el texto pendiente decía
+  «aprobar» junto a «Seguir»; el aviso de descarga afirmaba la carpeta.
+- El contrato prometía la pregunta de salir en todos los editores: se acota a «Editar» de «Tu canal».
+- Riesgo de las entradas 138 a 140 y 139 frente a 143: el creador las confirma (entrada 147).
+
+**Descartados, con motivo:**
+
+- `chooseName` en `Start.tsx`: es el camino de FR-018b para un recorrido terminado sin perfil, anterior a esta fase; no
+  es el del perfil (entrada 136).
+
+**Abiertos (menores, para la pasada de interfaz con modo Design):**
+
+- La protección de «¿Qué cambiarías?» no llega a elegir desde una tarjeta (nicho, idea o nombre).
+- Los otros editores («Cambiar algo», el enfoque, «Editar antes de guardar») no preguntan al salir.
+- Editar la idea ya elegida hasta que el ritmo no cabe solo muestra el aviso, sin pregunta.
+- Los menores abiertos de la auditoría de novato (`../novice-audit.md`).
+
+### 6. Desviaciones respecto a la spec
+
+- De menos: ninguna. FR-019 deja de ser desviación (entrada 144).
+- De más, todas decididas por el creador: el panel del nombre en «Tu canal» (136), lo que pide el ritmo como estimación
+  (142), la pregunta antes de un ritmo que no cabe, la de salir sin guardar y «Aprobar» apagado con texto (147), la
+  frase de un solo canal (137) y `offsetTop` en los avisos (143).
+
+### 7. Decisiones
+
+- Del agente (medio): 135, 146.
+- Del creador (alto), en esta fase: 133, 136, 137, 141, 142, 143, 144, 145 y 147. Pendientes del creador que afecten a
+  esta fase: ninguno. Siguen abiertos P1, P3, P6 y P17, de fases anteriores.
+
+### 8. Impacto en la constitución
+
+- **I (sencillez para el novato):** auditoría pasada; un botón principal por pantalla también con el panel abierto.
+- **II y V (dato, estimación y opinión separados; sin cifras sin fuente):** horas por vídeo marcadas como estimación; el
+  `.json` no mezcla estimaciones con el perfil guardado.
+- **III (gasto con aviso):** sin llamadas nuevas a la IA; «Cancelar» del panel descarta la tanda pedida, que ya se avisó
+  antes de pedirla.
+- **VI (accesibilidad):** el aviso ya no se anima al cerrarse con «reducir movimiento».
+- **IX y XI:** auditoría de novato y Puerta A con informe.
+
+### 9. Cómo revertir y qué queda pendiente
+
+- Revertir: el commit de Polish es uno; `git revert` lo deshace entero. El cambio de la 001 (`offsetTop`) es opcional en
+  `ToastProvider`: sin él, los avisos vuelven a la esquina de arriba.
+- Pendiente: la pasada de interfaz con modo Design (menores abiertos) y P1, P3, P6 y P17.
+
+## Polish: quickstart §1–§5 y YouTube real (T126 y T125b, 2026-11-06)
+
+**Resultado: el quickstart pasa de §1 a §5 con los proveedores falsos, y YouTube real pasa con yt-dlp.** La IA real no se
+ha probado: el creador aprobó solo YouTube real, con yt-dlp, sin clave, sin cupo y sin dinero (respuesta a T125b).
+
+### §1. Comprobaciones automáticas
+
+| Control | Resultado |
+| --- | --- |
+| `pnpm lint` | 0 errores |
+| `pnpm typecheck` | 0 errores |
+| `pnpm test` | 122 ficheros, 1441 tests, 2 saltados (los reales, fuera de CI) |
+| `pnpm test:installer` | 29 tests |
+| `pnpm test:e2e` | catálogo 97 y 2 saltados; web 35 (incluye `channel-hard-cases.spec.ts`, nuevo) |
+
+El test de glosario pasa, y también el nuevo `apps/web/test/channel/why.test.tsx` (T122b): cada paso de los dos
+recorridos explica por qué importa en una o dos frases cortas, sin términos prohibidos.
+
+### §2 y §3. Recorridos de punta a punta
+
+- **Canal nuevo:** `channel-niche.spec.ts` y `a11y.spec.ts` (este, solo con teclado) van de los intereses al perfil. En
+  el camino: el importe antes de cada botón de IA, los nichos medidos con «Dato de YouTube · fecha», las ideas con sus
+  rangos y fuentes, los nombres con semáforo, la descarga `.md` y `.json` y Ajustes › Consumo.
+- **Canal existente:** `channel-existing.spec.ts` lleva `@cocinacorta30` del enlace al perfil. Comprueba lo que funciona
+  citando vídeos y la propuesta de enfoque con la misma forma que el perfil de un canal nuevo.
+- La auditoría de novato (T127) recorrió los dos a mano: ver `../novice-audit.md`.
+
+### §4. Casos difíciles
+
+| Caso | Dónde se comprueba |
+| --- | --- |
+| Nicho sin datos | `channel-niche.spec.ts` (nicho «sin datos» del YouTube falso) |
+| YouTube bloquea | `channel-niche.spec.ts` (nicho «bloqueado»: «Volver a intentarlo», el resto se mide) |
+| Sin lector | `channel-hard-cases.spec.ts`: nicho «sin lector» (entrada 135), aviso con «Ir a Ajustes» y «Actualizar el lector» |
+| Nombre en rojo | `channel-niche.spec.ts` y `a11y.spec.ts` (@ ocupada: rojo con razón y pregunta antes de quedárselo) |
+| Nombre aplazado | `channel-niche.spec.ts` y `a11y.spec.ts` («Decidir más tarde» y después «Elegir el nombre» desde «Tu canal») |
+| Menos de 5 vídeos | `channel-existing.spec.ts` (`@cocinatres`, «Seguir como canal nuevo» con nombre y @) |
+| Cerrar a mitad | `channel-niche.spec.ts` («Seguir donde lo dejaste» con lo ya medido) |
+| Límite de gasto | `channel-hard-cases.spec.ts` (1 céntimo por operación: preguntas sí, nichos no, «Ver mis límites») |
+| Cifra inventada | `channel-hard-cases.spec.ts` (escenario `cifra_inventada`: frase quitada y aviso) |
+| Versiones | `channel-hard-cases.spec.ts` (dos ediciones, volver a la 1, se guarda como la 4 y la 2 y la 3 siguen) |
+
+### §5. Seguridad de la clave de YouTube
+
+`secrets-leak.spec.ts` guarda una clave de prueba y la busca en la base de datos, los logs, la carpeta de datos, los
+ficheros del repositorio y las respuestas HTTP: no aparece, ni entera ni sin sus 4 últimos caracteres. Solo se ve su pista de 4 caracteres.
+
+### T125b. YouTube real con yt-dlp
+
+`pnpm test:real-youtube` (`packages/youtube/test/youtube.real.test.ts`), yt-dlp 2026.08.19, sin clave, con los mismos
+límites de la app (3 procesos y 4 comprobaciones de @ a la vez). 8 de 8 en verde.
+
+| Comprobación | Resultado |
+| --- | --- |
+| SC-004: 10 @ ocupadas conocidas | 0,6 s; las 10 salen `ocupado`. Antes falló: desde la UE la página de una @ redirige al aviso de cookies (corregido con `SOCS=CAI`, entrada 133, P35) |
+| SC-003: medir 5 nichos | 37,8 s (límite 120 s); los 5 con cifras: un «con reservas» y cuatro «conviene» |
+| SC-005: leer @veritasium | 4,5 s (límite 60 s); 200 vídeos, 94 Shorts, la imagen en `yt3.googleusercontent.com` |
+| Entrada 57: @MrBeast | 5,9 s; 200 vídeos, 100 Shorts y vídeos largos |
+| Entrada 88: direcciones `/user/` y `/c/` | Las dos llevan a un id `UC…` que yt-dlp lee. El creador decidió aceptarlas (entrada 144); se volvió a ejecutar solo esta comprobación con el `resolve` de la app y `/user/Vsauce` y `/c/veritasium` llevan a su canal |
+| Entrada 84: @ con ñ | `@niños` se resuelve a un id `UC…` |
+
+No se comprueban las entradas 68 y 81 porque no hay un canal real estable con esas condiciones (entrada 134).
+
 ## US5: Puerta A de la fase 7 completa, T111 a T121f y T124 (2026-11-06): PASADA
 
 **Resultado: pasada tras tres vueltas de revisión.** El creador respondió P27 a P34 y todo está implementado. Los hallazgos

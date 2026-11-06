@@ -481,6 +481,10 @@ export function channelRoutes(deps: ChannelRoutesDeps) {
       { channels, profiles, measures, readings },
       channel.id,
       (deps.now ?? (() => new Date()))().toISOString(),
+      {
+        hoursPerLongVideo: deps.warningKnowledge.hoursPerLongVideo,
+        hoursPerShort: deps.warningKnowledge.hoursPerShort,
+      },
     )
     if (!input) throw new ApiError({ code: 'no_encontrado' })
     const name = exportFileName(input.version.profile.name, format)
@@ -519,6 +523,10 @@ export function channelRoutes(deps: ChannelRoutesDeps) {
       jobs: jobs.listByJourney(journey.id),
       warnings: warningsOf(journey.id),
       measureStaleDays: deps.measureStaleDays,
+      rhythm: {
+        hoursPerLongVideo: deps.warningKnowledge.hoursPerLongVideo,
+        hoursPerShort: deps.warningKnowledge.hoursPerShort,
+      },
       reading: currentReading(journey, readings),
     })
   })

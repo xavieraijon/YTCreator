@@ -91,14 +91,18 @@ export function createConcepts({ measures, knowledge, warningKnowledge, sourceLa
     )
   }
 
-  // The hours and the way to appear of a positioning are what the creator answered, not what the AI wrote (entry 72).
+  // The hours a concept has are the ones the creator answered, not what the AI wrote (entry 136): what the rhythm needs
+  // is worked out apart from them, and the profile keeps them as the creator's.
+  const withHours = (journey: Journey, concept: ConceptOutput): ConceptOutput => {
+    const { hoursPerWeek } = journey.state as JourneyState
+    return { ...concept, cadence: { ...concept.cadence, hoursPerWeek: hoursPerWeek ?? concept.cadence.hoursPerWeek } }
+  }
+
+  // The way to appear of a positioning is what the creator answered too (entry 72).
   const answered = (journey: Journey, concept: ConceptOutput): ConceptOutput => {
-    const { hoursPerWeek, onCamera } = journey.state as JourneyState
-    return {
-      ...concept,
-      cadence: { ...concept.cadence, hoursPerWeek: hoursPerWeek ?? concept.cadence.hoursPerWeek },
-      format: { ...concept.format, presence: onCamera ?? concept.format.presence },
-    }
+    const { onCamera } = journey.state as JourneyState
+    const now = withHours(journey, concept)
+    return { ...now, format: { ...now.format, presence: onCamera ?? now.format.presence } }
   }
 
   // `ownMedianViews`, for a channel that exists: what a long video of its own gets, in place of a measure of the niche.
@@ -111,7 +115,7 @@ export function createConcepts({ measures, knowledge, warningKnowledge, sourceLa
   ) => {
     const now = followingJourney(
       journey,
-      ownMedianViews === undefined ? concept : answered(journey, concept),
+      ownMedianViews === undefined ? withHours(journey, concept) : answered(journey, concept),
       regionByHand,
     )
     return { concept: now, figures: figuresOf(journey, niche as NicheChosen, now, ownMedianViews) }

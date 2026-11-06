@@ -203,6 +203,20 @@ describe('yt-dlp adapter', () => {
     expect(!result.ok && result.failure.code).toBe('tiempo_agotado')
   })
 
+  it('a handle check answers the EU cookie notice with «reject all», so the page itself comes back (entry 133)', async () => {
+    const cookies: (string | null)[] = []
+    const yt = createYtDlpYouTube({
+      binPath: MISSING_BIN,
+      fetch: (async (_: string, init?: RequestInit) => {
+        cookies.push(new Headers(init?.headers).get('cookie'))
+        return new Response('', { status: 200 })
+      }) as typeof fetch,
+    })
+    const result = await yt.checkHandle('algo')
+    expect(result.ok && result.value.data).toBe('ocupado')
+    expect(cookies).toEqual(['SOCS=CAI'])
+  })
+
   it('a handle check that is neither 200 nor 404 is a failure, never a guess', async () => {
     const answer = (status: number) =>
       createYtDlpYouTube({ binPath: MISSING_BIN, fetch: (async () => new Response('', { status })) as typeof fetch })

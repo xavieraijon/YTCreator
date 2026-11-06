@@ -90,6 +90,16 @@ describe('POST /api/journeys/:id/resolve', () => {
     }
   })
 
+  it('the old /c/ and /user/ links find the channel too (FR-019, entry 144)', async () => {
+    const t = makeTestApp({ fakeAi: 'ok' })
+    const id = await atLink(t)
+    for (const input of ['https://www.youtube.com/c/cocinacorta30', 'youtube.com/user/cocinacorta30/videos']) {
+      const { status, body } = await call(t, 'POST', `/api/journeys/${id}/resolve`, { input })
+      expect(status, input).toBe(200)
+      expect(JSON.stringify(body)).toContain(CHANNEL_30)
+    }
+  })
+
   it('validates the body and the journey', async () => {
     const t = makeTestApp({ fakeAi: 'ok' })
     const id = await atLink(t)

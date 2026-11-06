@@ -183,6 +183,8 @@ export const es = {
       data_api: 'Ahora leemos YouTube con tu clave de YouTube.',
       fake: 'Ahora leemos YouTube con el lector de YouTube.',
     },
+    // Novice audit 003, M5: the reader is the one to use but it is not prepared, so nothing reads YouTube yet.
+    inUseNoReader: 'Leeremos YouTube con el lector de YouTube en cuanto esté preparado.',
     source: '¿Cómo leemos YouTube?',
     sourceOptions: {
       auto: 'Automático',

@@ -14,6 +14,20 @@ describe('parseChannelInput', () => {
     expect(parseChannelInput(input)).toEqual({ kind: 'handle', handle })
   })
 
+  it.each([
+    ['https://www.youtube.com/user/Vsauce/videos', 'user', 'Vsauce'],
+    ['youtube.com/c/veritasium', 'c', 'veritasium'],
+    ['https://m.youtube.com/c/Ni%C3%B1osCanal', 'c', 'NiñosCanal'],
+  ] as const)('reads an old link %s (entry 144)', (input, path, name) => {
+    expect(parseChannelInput(input)).toEqual({ kind: 'legacy', path, name })
+  })
+
+  it('an old link without a name, or with one that cannot be, is nothing', () => {
+    expect(parseChannelInput('https://www.youtube.com/c/')).toBeNull()
+    expect(parseChannelInput('https://www.youtube.com/user/a%ZZ')).toBeNull()
+    expect(parseChannelInput('https://www.youtube.com/c/a b')).toBeNull()
+  })
+
   it('reads a channel id link', () => {
     expect(parseChannelInput(`https://www.youtube.com/channel/${ID}`)).toEqual({ kind: 'channel', channelId: ID })
     expect(parseChannelInput(ID)).toEqual({ kind: 'channel', channelId: ID })

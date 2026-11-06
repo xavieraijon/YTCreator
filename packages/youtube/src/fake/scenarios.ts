@@ -2,11 +2,13 @@ import type { ChannelInfo, VideoInfo } from '@ytcreator/core'
 import { SHORT_MAX_SECONDS } from '@ytcreator/core'
 
 // The fake's world (contracts/youtube-data.md, «fake»): a normal niche for any query, the «sin datos» and «bloqueado»
-// niches, a channel of 30 videos and one of 3, and taken handles. Deterministic, with some fields null on purpose.
+// niches (and one «sin lector»), a channel of 30 videos and one of 3, and taken handles. Deterministic, with some fields null on purpose.
 
 // Queries that contain these words give the matching failure.
 export const EMPTY_QUERY_WORDS = ['sin datos', 'sin_datos']
 export const BLOCKED_QUERY_WORDS = ['bloqueado']
+// As if the reader were not installed (quickstart §4, «Sin lector»).
+export const NO_READER_QUERY_WORDS = ['sin lector']
 // Handles that start like this are taken even if no fake channel uses them.
 export const TAKEN_HANDLE_PREFIX = 'ocupad'
 

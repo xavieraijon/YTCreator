@@ -207,6 +207,22 @@ describe('the figures of a concept follow the journey (G4)', () => {
     expect(figuresIn((await latestConcepts(t, id)).payload).warnings.map((w) => w.code)).toContain('ritmo_insostenible')
   })
 
+  it('a concept has the hours the creator answered, edited too, and the view says what a video takes (entry 136)', async () => {
+    const t = makeTestApp({ fakeAi: 'ok' })
+    const id = await atConcepts(t)
+    const proposal = await propose(t, id, 'conceptos')
+    const hours = (payload: unknown) =>
+      conceptsOf(payload).map((c) => (c['cadence'] as { hoursPerWeek: number }).hoursPerWeek)
+    expect(hours((await latestConcepts(t, id)).payload)).toEqual(conceptsOf(proposal.payload).map(() => 8))
+
+    const [first, ...rest] = conceptsOf((await latestConcepts(t, id)).payload)
+    const cadence = first!['cadence'] as Record<string, number>
+    const edited = { ...first!, cadence: { ...cadence, shortsPerWeek: 1, hoursPerWeek: 30 } }
+    await call(t, 'PATCH', `/api/proposals/${proposal.id}`, { editedPayload: { concepts: [edited, ...rest] } })
+    expect(hours((await latestConcepts(t, id)).payload)[0]).toBe(8)
+    expect((await view(t, id)).rhythm).toEqual({ hoursPerLongVideo: 4, hoursPerShort: 1 })
+  })
+
   it('concepts written for this niche are not stale', async () => {
     const t = makeTestApp({ fakeAi: 'ok' })
     const id = await atConcepts(t)

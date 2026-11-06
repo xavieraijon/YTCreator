@@ -326,14 +326,14 @@ que solo se ve por su `hint`.
 
 ## Polish & Cross-Cutting Concerns
 
-- [ ] T122 [P] Revisar todos los textos nuevos con `apps/web/test/glossary.test.ts` y `packages/knowledge/writing/human.md`
-- [ ] T122b [P] Test en `apps/web/test/channel/why.test.tsx`: cada pantalla de los dos recorridos tiene su frase de por qué importa el paso (FR-004)
-- [ ] T125 [P] E2E de casos difíciles de quickstart §4 que falten (sin lector, límite de 1 céntimo, cifra inventada, versiones) en `apps/web/e2e/channel-hard-cases.spec.ts`
-- [ ] T125b [P] Pruebas con YouTube real en `packages/youtube/test/youtube.real.test.ts` (`pnpm test:real-youtube`, fuera de CI): 10 @ conocidas y ocupadas salen en rojo (SC-004), medir 5 nichos tarda menos de 2 min (SC-003) y analizar un canal menos de 1 min (SC-005). También lo que US4 deja por comprobar: la imagen del canal (entrada 56), `/shorts` y canales grandes (57), canales sin lista de vídeos (68), canal sin título y 404 en `/videos` (81), una @ con ñ (84) y las URL `/c/` y `/user/` (88)
-- [ ] T126 Pasar `specs/003-channel-and-niche/quickstart.md` §1–§5 entero, ejecutar T125b y anotar resultados en `specs/003-channel-and-niche/checklists/validation.md`
-- [ ] T127 Auditoría de novato (§6) con el agente `usuario-novato` sobre los dos recorridos; anotar en `specs/003-channel-and-niche/novice-audit.md` y corregir los bloqueos
-- [ ] T128b [A] Puerta A de Polish: ejecutar `/puerta-a Polish`. No se marca `[X]` hasta que la skill diga «pasada»; el informe queda en `specs/003-channel-and-niche/checklists/validation.md`
-- [ ] T128 Actualizar el estado de la 003 en `CLAUDE.md`
+- [X] T122 [P] Revisar todos los textos nuevos con `apps/web/test/glossary.test.ts` y `packages/knowledge/writing/human.md`
+- [X] T122b [P] Test en `apps/web/test/channel/why.test.tsx`: cada pantalla de los dos recorridos tiene su frase de por qué importa el paso (FR-004)
+- [X] T125 [P] E2E de casos difíciles de quickstart §4 que falten (sin lector, límite de 1 céntimo, cifra inventada, versiones) en `apps/web/e2e/channel-hard-cases.spec.ts`
+- [X] T125b [P] Pruebas con YouTube real en `packages/youtube/test/youtube.real.test.ts` (`pnpm test:real-youtube`, fuera de CI): 10 @ conocidas y ocupadas salen en rojo (SC-004), medir 5 nichos tarda menos de 2 min (SC-003) y analizar un canal menos de 1 min (SC-005). También lo que US4 deja por comprobar: la imagen del canal (entrada 56), `/shorts` y canales grandes (57), canales sin lista de vídeos (68), canal sin título y 404 en `/videos` (81), una @ con ñ (84) y las URL `/c/` y `/user/` (88). **Hecha con yt-dlp (entrada 141); 68 y 81 sin comprobar con YouTube real (entrada 134).**
+- [X] T126 Pasar `specs/003-channel-and-niche/quickstart.md` §1–§5 entero, ejecutar T125b y anotar resultados en `specs/003-channel-and-niche/checklists/validation.md`
+- [X] T127 Auditoría de novato (§6) con el agente `usuario-novato` sobre los dos recorridos; anotar en `specs/003-channel-and-niche/novice-audit.md` y corregir los bloqueos
+- [X] T128b [A] Puerta A de Polish: ejecutar `/puerta-a Polish`. No se marca `[X]` hasta que la skill diga «pasada»; el informe queda en `specs/003-channel-and-niche/checklists/validation.md`
+- [X] T128 Actualizar el estado de la 003 en `CLAUDE.md`
 
 ---
 

@@ -3,6 +3,7 @@ import {
   apiErrorSchema,
   type ApiErrorBody,
   channelCurrentSchema,
+  channelSchema,
   createChannelResponseSchema,
   estimateSchema,
   type JobEvent,
@@ -169,6 +170,9 @@ export const profileApi = {
     apiClient.get(`/api/channels/${encodeURIComponent(channelId)}/profile/versions/${version}`, profileVersionSchema),
   save: (channelId: string, body: { baseVersion: number; profile: ChannelProfile }) =>
     apiClient.put(`/api/channels/${encodeURIComponent(channelId)}/profile`, body, profileVersionSchema),
+  // A new name for a new channel, with the check of its @ (entry 136): it is saved as a version `manual`.
+  rename: (channelId: string, body: { displayName: string; handle: string; checkId?: string }) =>
+    apiClient.patch(`/api/channels/${encodeURIComponent(channelId)}/name`, body, channelSchema),
   restore: (channelId: string, version: number) =>
     apiClient.post(`/api/channels/${encodeURIComponent(channelId)}/profile/restore`, { version }, profileVersionSchema),
   // «Volver a medir» (entry 114): a job; the new version is there once it is done.

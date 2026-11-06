@@ -88,6 +88,7 @@ describe('channel schemas', () => {
       measures: [],
       warnings: {},
       measureStaleDays: 90,
+      rhythm: { hoursPerLongVideo: 4, hoursPerShort: 1 },
       nameChecks: [],
       jobs: [],
       reading: null,

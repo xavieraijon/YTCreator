@@ -9,6 +9,7 @@ import {
   type YouTubeResult,
   type YouTubeSource,
   createLimiter,
+  parseChannelInput,
 } from '@ytcreator/core'
 import type { YouTubeSourceSetting } from '@ytcreator/core/api'
 import type { YouTubeAdapters } from '@ytcreator/youtube'
@@ -104,7 +105,15 @@ export function createYouTubeService(deps: YouTubeServiceDeps): YouTubeData & {
       limitFor = processLimit,
       canFallBack = true,
       fresh = false,
-    }: { limitFor?: (adapter: YouTubeData) => Limiter; canFallBack?: boolean; fresh?: boolean } = {},
+      onlyReader = false,
+    }: {
+      limitFor?: (adapter: YouTubeData) => Limiter
+      canFallBack?: boolean
+      fresh?: boolean
+      // What only the reader can answer (an old /c/ link): the Data API says no_disponible and it falls back whatever
+      // the source (logic review of Polish, round 2; entry 144).
+      onlyReader?: boolean
+    } = {},
   ): Promise<YouTubeResult<Sourced<T>>> {
     const cacheKeyOf = (source: YouTubeSource) => `${source}:${operation}:${key}`
     const kept = (result: YouTubeResult<Sourced<T>>) => {
@@ -123,7 +132,10 @@ export function createYouTubeService(deps: YouTubeServiceDeps): YouTubeData & {
     if (adapter.source === 'data_api' && isNearLimit()) {
       logger.warn('youtube.quota_near_limit', { used: quota.used(), limit: quota.limit })
     }
-    const fellBack = !first.ok && canFallBack && fallsBack(first.failure.code)
+    const fellBack =
+      !first.ok &&
+      canFallBack &&
+      (fallsBack(first.failure.code) || (onlyReader && first.failure.code === 'no_disponible'))
     if (!fellBack || !('ytdlp' in adapters) || adapter === adapters.ytdlp) return kept(first)
 
     // What yt-dlp already answered is not asked again each time the Data API says no.
@@ -167,7 +179,11 @@ export function createYouTubeService(deps: YouTubeServiceDeps): YouTubeData & {
         canFallBack: false,
       }),
 
-    resolve: (input, signal) => call('resolve', normalize(input), CACHE_TTL_MS, (a) => a.resolve(input, signal)),
+    resolve: (input, signal) => {
+      const parsed = parseChannelInput(input)
+      const onlyReader = parsed?.kind === 'legacy' && parsed.path === 'c'
+      return call('resolve', normalize(input), CACHE_TTL_MS, (a) => a.resolve(input, signal), { onlyReader })
+    },
 
     async health(): Promise<YouTubeHealth> {
       const adapter = picked()

@@ -36,6 +36,14 @@ export const handleShortsArgs = (handle: string): string[] => listingArgs(`${han
 
 export const handlePageArgs = (handle: string): string[] => listingArgs(handleUrl(handle), 1)
 
+// The old /c/ and /user/ links: YouTube still answers them with the channel (T125b, entry 144).
+const legacyUrl = (path: 'c' | 'user', name: string) => `https://www.youtube.com/${path}/${encodeURIComponent(name)}`
+
+export const legacyVideosArgs = (path: 'c' | 'user', name: string): string[] =>
+  listingArgs(`${legacyUrl(path, name)}/videos`, 1)
+
+export const legacyPageArgs = (path: 'c' | 'user', name: string): string[] => listingArgs(legacyUrl(path, name), 1)
+
 export const videoChannelArgs = (videoId: string): string[] => [
   ...BASE,
   '--skip-download',

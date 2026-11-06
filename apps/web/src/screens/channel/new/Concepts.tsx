@@ -1,10 +1,11 @@
-import { AUDIENCE_REGIONS, type ConceptOutput, ON_CAMERA } from '@ytcreator/core'
+import { AUDIENCE_REGIONS, type ConceptOutput, hoursNeeded, ON_CAMERA, type Rhythm } from '@ytcreator/core'
 import { type ConceptFigures, conceptsViewSchema, type JourneyFullView, type ProposalView } from '@ytcreator/core/api'
 import {
   Button,
   Card,
   Checkbox,
   DataSource,
+  Dialog,
   ErrorMessage,
   format,
   RadioGroup,
@@ -32,6 +33,28 @@ export type ShownConcept = Omit<Concept, 'monetization' | 'warnings'> & {
 }
 
 const number = (value: number) => new Intl.NumberFormat('es-ES').format(value)
+/** «1 vídeo largo», «2 vídeos largos»: the number with its word in singular or plural. */
+export const counted = (value: number, words: { one: string; other: string }) =>
+  format(value === 1 ? words.one : words.other, { n: number(value) })
+
+/** How much to publish, and the hours that takes next to the ones the creator has (novice audit 003, M2). */
+export function cadenceLines(cadence: ShownConcept['cadence'], rhythm: Rhythm | undefined): string[] {
+  const rate = format(text.cadenceText, {
+    largos: counted(cadence.longPerWeek, text.cadenceLong),
+    shorts: counted(cadence.shortsPerWeek, text.cadenceShorts),
+  })
+  const has = counted(cadence.hoursPerWeek, text.hours)
+  if (!rhythm) return [rate, format(text.cadenceHas, { tienes: has })]
+  return [
+    rate,
+    format(text.cadenceNeeded, { necesarias: counted(hoursNeeded(cadence, rhythm), text.hours), tienes: has }),
+    format(text.cadenceEstimate, {
+      largo: counted(rhythm.hoursPerLongVideo, text.hours),
+      short: counted(rhythm.hoursPerShort, text.hours),
+    }),
+  ]
+}
+
 const euros = (value: number) => new Intl.NumberFormat('es-ES', { maximumFractionDigits: 2 }).format(value)
 
 function Part({ title, why, children }: { title: string; why: string; children: React.ReactNode }) {
@@ -106,6 +129,10 @@ export interface ConceptCardProps {
   readonly busy?: boolean
   readonly onChoose: () => void
   readonly onEdit: () => void
+  /** «Seguir», next to the one chosen and not at the end of the list (novice audit 003, M1). */
+  readonly onNext?: (() => void) | undefined
+  readonly nextBusy?: boolean
+  readonly rhythm?: Rhythm | undefined
 }
 
 // What a concept says; a positioning has the same parts (FR-021b).
@@ -119,9 +146,12 @@ export function ConceptDetails({
   concept,
   own,
   promiseNote,
+  rhythm,
 }: {
   concept: ShownConcept
   own?: OwnVideos | undefined
+  /** What a video takes, to say the hours the rhythm needs. */
+  rhythm?: Rhythm | undefined
   /** The promise was written by the creator, not the AI (principle II): this note replaces «Opinión de la IA». */
   promiseNote?: string | undefined
 }) {
@@ -153,13 +183,9 @@ export function ConceptDetails({
         <p>{format(text.shortsRole, { texto: shape.shortsRole })}</p>
       </Part>
       <Part title={text.cadence} why={text.cadenceWhy}>
-        <p>
-          {format(text.cadenceText, {
-            largos: number(cadence.longPerWeek),
-            shorts: number(cadence.shortsPerWeek),
-            horas: number(cadence.hoursPerWeek),
-          })}
-        </p>
+        {cadenceLines(cadence, rhythm).map((line) => (
+          <p key={line}>{line}</p>
+        ))}
       </Part>
       {figures.warnings.map((warning) => (
         <div key={warning.code} className={styles['indicator-row']}>
@@ -174,13 +200,65 @@ export function ConceptDetails({
   )
 }
 
-export function ConceptCard({ concept, chosen = false, busy = false, onChoose, onEdit }: ConceptCardProps) {
+/** The rhythm needs more hours than the creator has (novice audit 003, round 2, M1). */
+export const overHours = (concept: { readonly figures: ConceptFigures }) =>
+  concept.figures.warnings.some(({ code }) => code === 'ritmo_insostenible')
+
+/** Before choosing a rhythm that does not fit: change it first, or keep it knowing so. */
+export function RhythmAsk({
+  open,
+  onCancel,
+  onConfirm,
+}: {
+  open: boolean
+  onCancel: () => void
+  onConfirm: () => void
+}) {
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        if (!next) onCancel()
+      }}
+      title={text.rhythmAsk.title}
+      description={text.rhythmAsk.body}
+      size="sm"
+      footer={
+        <>
+          {/* The safe way is the one that stands out (round 3 of the audit). */}
+          <Button onClick={onConfirm}>{text.rhythmAsk.confirm}</Button>
+          <Button variant="primary" onClick={onCancel}>
+            {text.rhythmAsk.cancel}
+          </Button>
+        </>
+      }
+    />
+  )
+}
+
+export function ConceptCard({
+  concept,
+  chosen = false,
+  busy = false,
+  onChoose,
+  onEdit,
+  onNext,
+  nextBusy = false,
+  rhythm,
+}: ConceptCardProps) {
   return (
     <Card as="article" className={styles.niche} aria-label={concept.promise}>
-      <ConceptDetails concept={concept} />
+      <ConceptDetails concept={concept} rhythm={rhythm} />
       <div className={styles.actions}>
         {chosen ? (
-          <Semaphore state="verde">{text.chosen}</Semaphore>
+          <>
+            <Semaphore state="verde">{text.chosen}</Semaphore>
+            {onNext && (
+              <Button variant="primary" loading={nextBusy} onClick={onNext}>
+                {text.next}
+              </Button>
+            )}
+          </>
         ) : (
           <Button variant="primary" disabled={busy} onClick={onChoose}>
             {text.choose}
@@ -383,6 +461,7 @@ export function Concepts({ view, busy, reload, onStep }: ConceptsProps) {
       )}
       {proposal ? (
         <Proposal
+          key={proposal.id}
           estimate={estimate}
           failure={generate.failure}
           claimsTrimmed={proposal.claimsTrimmed}
@@ -410,6 +489,7 @@ function List({ view, proposal, busy, reload, onStep }: ConceptsProps & { propos
   const concepts = payloadOf<{ concepts: Concept[] }>(proposal).concepts
   const [editing, setEditing] = useState<number | null>(null)
   const [deciding, setDeciding] = useState(false)
+  const [asking, setAsking] = useState<number | null>(null)
   const [error, setError] = useState<unknown>(null)
   const review = view.state.conceptNeedsReview === true
   const chosenIndex = proposal.status === 'aprobada' && !review ? proposal.selectedIndex : null
@@ -450,18 +530,25 @@ function List({ view, proposal, busy, reload, onStep }: ConceptsProps & { propos
             concept={concept}
             chosen={chosenIndex === index}
             busy={deciding}
-            onChoose={() => void decide({ selectedIndex: index, status: 'aprobada' })}
+            onChoose={() =>
+              overHours(concept) ? setAsking(index) : void decide({ selectedIndex: index, status: 'aprobada' })
+            }
             onEdit={() => setEditing(index)}
+            onNext={() => onStep({})}
+            nextBusy={busy}
+            rhythm={view.rhythm}
           />
         ),
       )}
-      {chosenIndex !== null && (
-        <div className={styles.actions}>
-          <Button variant="primary" loading={busy} onClick={() => onStep({})}>
-            {text.next}
-          </Button>
-        </div>
-      )}
+      <RhythmAsk
+        open={asking !== null}
+        onCancel={() => setAsking(null)}
+        onConfirm={() => {
+          const index = asking
+          setAsking(null)
+          if (index !== null) void decide({ selectedIndex: index, status: 'aprobada' })
+        }}
+      />
     </div>
   )
 }

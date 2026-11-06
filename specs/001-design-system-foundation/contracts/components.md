@@ -45,7 +45,7 @@ error se asocian con `useId` mediante `aria-describedby`. El error añade `aria-
 
 | Componente | Props clave | Garantías |
 |---|---|---|
-| `ToastProvider` + `useToast()` | `toast({ title, description?, tone?: 'neutral' \| 'success' \| 'warning' \| 'danger', action?: { label; onClick }, duration?: number \| 'persistent' })` | Radix Toast arriba (ver research R15), 3 visibles como mucho. Temporal o persistente según FR-012a; `duration` lo fuerza. El temporal muestra una barra de tiempo. Siempre lleva botón de cerrar |
+| `ToastProvider` + `useToast()` | `ToastProvider({ offsetTop? })`; `toast({ title, description?, tone?: 'neutral' \| 'success' \| 'warning' \| 'danger', action?: { label; onClick }, duration?: number \| 'persistent' })` | Radix Toast arriba (ver research R15), 3 visibles como mucho. `offsetTop` (longitud CSS, `--c-toast-offset-top`) baja la región por debajo de una cabecera fija para no tapar sus enlaces; añadido en la 003 (decisión 143 de `specs/003-channel-and-niche/decisions.md`). Temporal o persistente según FR-012a; `duration` lo fuerza. El temporal muestra una barra de tiempo. Con «reducir movimiento», sin animación al entrar ni al salir. Siempre lleva botón de cerrar |
 | `Badge` | `tone`, `children` | Una línea. Si el texto es largo se recorta con elipsis y el texto completo va en `title` y en el nombre accesible |
 | `Tooltip` | `content: string`, `children` (disparador enfocable) | Aparece con el ratón encima y con el foco. En táctil no se garantiza que aparezca, así que su contenido DEBE estar también disponible por otra vía (nombre accesible del disparador o texto visible). Nunca lleva información esencial |
 | `EmptyState` | `icon?`, `title`, `description`, `action?` | Una sola acción principal |

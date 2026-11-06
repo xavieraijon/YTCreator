@@ -28,7 +28,7 @@ Las mismas de la 002:
 |---|---|---|
 | `GET /api/channels/current` | — | `{channel, profile, journey}` o `{channel: null}` |
 | `POST /api/channels` | `{origin}` | `201 {channel, journey}`; `409` guard `ya_hay_canal` |
-| `GET /api/journeys/:id` | — | `Journey` con `state`, propuestas vigentes, medidas, comprobaciones, trabajos y `reading` (la lectura del canal elegido o `null`). La propuesta de conceptos trae las cifras de ahora, `basedOn` (nicho, horas y forma de salir en vídeo para los que se escribió) y `stale` |
+| `GET /api/journeys/:id` | — | `Journey` con `state`, propuestas vigentes, medidas, comprobaciones, trabajos y `reading` (la lectura del canal elegido o `null`). La propuesta de conceptos trae las cifras de ahora, `basedOn` (nicho, horas y forma de salir en vídeo para los que se escribió) y `stale`; las horas de su ritmo son siempre las del creador (decisión 136). `rhythm: {hoursPerLongVideo, hoursPerShort}`, la estimación de horas por vídeo con la que se calcula lo que pide un ritmo (decisión 142) |
 | `POST /api/journeys/:id/step` | `{revision, step, data?}` | `Journey`; `400` si falta la aprobación del paso |
 | `POST /api/journeys/:id/estimate` | `{use, proposalId?}` | `Estimate`; `400` en `posicionamiento` sin perfil actual aprobado o sin respuestas de ritmo |
 | `POST /api/journeys/:id/proposals` | `{revision, kind, estimateId, instructions?, parentId?}` | `Proposal` (con `failure` si falló); `400` como en `estimate`; `409 conflicto` si el recorrido pasó a otro canal mientras la IA respondía |
@@ -66,7 +66,7 @@ servidor se reinicia, los trabajos `en_curso` pasan a `interrumpido` y la pantal
 | `DELETE /api/channels/:id/profile/regeneration/:regenerationId` | — | `204`; `404` si ya no está |
 | `POST /api/channels/:id/profile/regenerated` | `{regenerationId, baseVersion}` | Nueva versión `ia` con la parte propuesta, el dinero y los avisos mirados de nuevo; `404` si la propuesta ya no está; `409` si el perfil cambió (entrada 119) |
 | `PATCH /api/channels/:id/name` | `{displayName, handle, checkId?}` | `Channel` |
-| `GET /api/channels/:id/export?format=md\|json` | — | Descarga con `Content-Disposition` |
+| `GET /api/channels/:id/export?format=md\|json` | — | Descarga con `Content-Disposition`. En el `.md`, el ritmo dice las horas que pide y si no caben, marcado «(Estimación de YTCreator)», como la pantalla (decisión 142). El `.json` no cambia: lleva el perfil tal como se guarda |
 
 ## Ajustes
 

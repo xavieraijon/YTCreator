@@ -1,14 +1,14 @@
 @layer components {
   .viewport {
     position: fixed;
-    inset-block-start: 0;
+    inset-block-start: var(--c-toast-offset-top, 0);
     inset-inline-end: 0;
     z-index: var(--s-z-toast);
     display: flex;
     flex-direction: column;
     gap: var(--s-space-3);
     inline-size: min(24rem, 100%);
-    max-block-size: 100dvh;
+    max-block-size: calc(100dvh - var(--c-toast-offset-top, 0px));
     margin: 0;
     padding: var(--s-space-5);
     list-style: none;
@@ -132,7 +132,10 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .toast[data-state='open'] {
+    /* Closing too: with reduced motion nothing fades (principle VI). */
+    .toast[data-state='open'],
+    .toast[data-state='closed'],
+    .toast[data-swipe='end'] {
       animation: none;
     }
 

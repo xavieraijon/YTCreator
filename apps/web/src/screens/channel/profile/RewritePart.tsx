@@ -1,6 +1,6 @@
 import { PROFILE_PARTS, type ProfilePart } from '@ytcreator/core'
 import type { AiRunFailure, EstimateView, ProfileRegeneration } from '@ytcreator/core/api'
-import { Button, DataSource, RadioGroup, TextArea } from '@ytcreator/ui'
+import { Button, DataSource, format, RadioGroup, TextArea } from '@ytcreator/ui'
 import { useState } from 'react'
 import { channelEs } from '../../../strings/channel.es.ts'
 import styles from '../channel.module.css'
@@ -102,7 +102,7 @@ export function RewritePart({
           />
           <TextArea
             label={channelEs.proposal.whatToChange}
-            description={channelEs.proposal.whatToChangeHelp}
+            description={format(text.whatToChangeHelp, { boton: text.ask })}
             optional
             maxLength={500}
             rows={2}

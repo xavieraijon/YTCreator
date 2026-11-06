@@ -76,9 +76,10 @@ export function Proposal({
       {blockedBy && (
         <ErrorMessage title={text.blocked[blockedBy]} action={{ label: text.goLimits, onClick: toLimits }} />
       )}
+      {onApprove && instructions.trim() !== '' && <p role="status">{text.pendingChange}</p>}
       <div className={styles.actions}>
         {onApprove && (
-          <Button variant="primary" disabled={busy} onClick={onApprove}>
+          <Button variant="primary" disabled={busy || instructions.trim() !== ''} onClick={onApprove}>
             {approveLabel}
           </Button>
         )}

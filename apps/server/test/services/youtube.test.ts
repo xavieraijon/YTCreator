@@ -48,7 +48,7 @@ function stubAdapter(source: 'ytdlp' | 'data_api', calls: string[], failure?: Yo
     },
     async resolve(input) {
       calls.push(`${source}:resolve:${input}`)
-      return sourced({ channelId: 'UC1' })
+      return failure ? youtubeFailure(failure) : sourced({ channelId: 'UC1' })
     },
     async health() {
       return { source, available: true, version: '1' }
@@ -319,6 +319,16 @@ describe('which source answers (G1)', () => {
     const result = await service.search('recetas', { limit: 10 })
     expect(result.ok).toBe(false)
     expect(calls).toEqual(['data_api:search:recetas'])
+  })
+
+  it('an old /c/ link goes to the reader even with the key chosen by hand: the Data API has no way for it', async () => {
+    const { service, calls } = setup({ source: () => 'data_api', hasKey: () => true, apiFailure: 'no_disponible' })
+    const old = await service.resolve('https://www.youtube.com/c/veritasium')
+    expect(old).toMatchObject({ ok: true, value: { source: 'ytdlp' } })
+    expect(calls.map((call) => call.split(':')[0])).toEqual(['data_api', 'ytdlp'])
+    // A @ stays with the source chosen.
+    const handle = await service.resolve('@veritasium')
+    expect(handle.ok).toBe(false)
   })
 })
 

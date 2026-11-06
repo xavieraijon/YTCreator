@@ -3,7 +3,9 @@ import {
   AUDIENCE_REGIONS,
   type ChannelProfile,
   ON_CAMERA,
+  hoursNeeded,
   type ProfilePart,
+  type Rhythm,
   type YouTubeFailureCode,
 } from '@ytcreator/core'
 import type {
@@ -28,9 +30,9 @@ import {
   TextField,
   useToast,
 } from '@ytcreator/ui'
-import { useCallback, useEffect, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { ApiClientError, channelApi, profileApi } from '../../../api/client.ts'
-import { navigate } from '../../../router.ts'
+import { navigate, useLeaveGuard } from '../../../router.ts'
 import { errorText } from '../../../shell/errorText.ts'
 import { useJob } from '../../../shell/useJob.ts'
 import { channelEs } from '../../../strings/channel.es.ts'
@@ -44,6 +46,7 @@ import styles from '../channel.module.css'
 import { ConceptDetails, parseCount, type ShownConcept } from '../new/Concepts.tsx'
 import { Measured, isStale } from '../new/NicheCard.tsx'
 import { ExportButtons } from './Export.tsx'
+import { NamePanel } from './NamePanel.tsx'
 import { ProfileHistory } from './ProfileHistory.tsx'
 import { RewritePart } from './RewritePart.tsx'
 
@@ -58,16 +61,18 @@ export interface ProfileData {
   readonly measure: MeasureView | null
   readonly reading: ChannelReadingView | null
   readonly staleDays: number
+  /** What a video takes, to say the hours the rhythm needs (entry 136). */
+  readonly rhythm?: Rhythm | undefined
   /** The promise of the last version the AI proposed, to tell what the creator wrote since (principle II). */
   /** The promises the AI wrote, to mark the one the creator wrote instead (entry 111). */
   readonly aiPromises?: readonly string[]
 }
 
 // The profile shown with the same parts as a concept (FR-021b): the money and the warnings with their sources.
-export function profileConcept({
-  profile,
-  createdAt,
-}: Pick<ProfileVersionView, 'profile' | 'createdAt'>): ShownConcept {
+export function profileConcept(
+  { profile, createdAt }: Pick<ProfileVersionView, 'profile' | 'createdAt'>,
+  rhythm?: Rhythm,
+): ShownConcept {
   const source = (id: string) => profile.sources.find((s) => s.id === id)
   const rpm = source('rpm')
   const ypp = source('ypp')
@@ -88,11 +93,18 @@ export function profileConcept({
         rpmSource: { label: rpm?.label ?? '', reviewedAt: rpm?.date ?? createdAt, confidence: monetization.confidence },
         yppSource: { label: ypp?.label ?? '', reviewedAt: ypp?.date ?? createdAt },
       },
-      warnings: profile.concept.warnings.map(({ code, sourceId }) => ({
-        code,
-        sourceLabel: source(sourceId)?.label ?? null,
-        reviewedAt: source(sourceId)?.date ?? null,
-      })),
+      warnings: [
+        ...profile.concept.warnings.map(({ code, sourceId }) => ({
+          code,
+          sourceLabel: source(sourceId)?.label ?? null,
+          reviewedAt: source(sourceId)?.date ?? null,
+        })),
+        // It comes from the creator's own hours, not from the knowledge, so it is not stored: it is worked out here
+        // from the rhythm as it is now (novice audit 003, round 2, M1).
+        ...(rhythm && hoursNeeded(profile.concept.cadence, rhythm) > profile.concept.cadence.hoursPerWeek
+          ? [{ code: 'ritmo_insostenible' as const, sourceLabel: null, reviewedAt: null }]
+          : []),
+      ],
     },
   }
 }
@@ -117,6 +129,10 @@ export interface ProfileViewProps {
   readonly now: Date
   readonly onEdit: () => void
   readonly onChooseName: () => void
+  /** The panel to change the name, once open (entry 136): it takes the place of the name's button. */
+  readonly naming?: ReactNode
+  /** Where the download went (novice audit 003, M7). */
+  readonly onDownloaded?: ((message: string) => void) | undefined
   /** «Volver a medir» (entry 114): only for a niche that was measured. */
   readonly onRemeasure?: (() => void) | undefined
   readonly remeasuring?: boolean
@@ -131,12 +147,14 @@ export function ProfileView({
   now,
   onEdit,
   onChooseName,
+  naming,
+  onDownloaded,
   onRemeasure,
   remeasuring = false,
   onRewrite,
   rewrite,
 }: ProfileViewProps) {
-  const { channel, current, measure, reading, staleDays, aiPromises } = data
+  const { channel, current, measure, reading, staleDays, rhythm, aiPromises } = data
   const { profile } = current
   const measured = measure?.status === 'medida' && measure.measuredAt ? measure : null
   const ownReading = profile.context && reading?.id === profile.context.readingId ? reading : null
@@ -156,8 +174,8 @@ export function ProfileView({
         {named ? (
           <>
             {profile.name.handle && <p>{format(text.handle, { arroba: profile.name.handle })}</p>}
-            {/* Entry 116: a new channel changes its name in the step of names, with the check of the @. */}
-            {channel.origin === 'nuevo' && (
+            {/* Entry 136: a new channel changes its name here, with the check of the @. */}
+            {channel.origin === 'nuevo' && !naming && (
               <div className={styles.actions}>
                 <Button onClick={onChooseName}>{text.changeName}</Button>
               </div>
@@ -168,13 +186,17 @@ export function ProfileView({
             <>
               <h3>{channelEs.start.nameMissing}</h3>
               <p>{channelEs.start.nameMissingWhy}</p>
-              <div className={styles.actions}>
-                <Button onClick={onChooseName}>{channelEs.start.chooseName}</Button>
-              </div>
+              {!naming && (
+                <div className={styles.actions}>
+                  <Button onClick={onChooseName}>{channelEs.start.chooseName}</Button>
+                </div>
+              )}
             </>
           )
         )}
       </section>
+      {naming}
+      <p className={styles.why}>{channelEs.start.oneChannelHere}</p>
 
       <section className={styles.option}>
         <h2>{text.niche}</h2>
@@ -228,7 +250,8 @@ export function ProfileView({
       )}
 
       <ConceptDetails
-        concept={profileConcept(current)}
+        concept={profileConcept(current, rhythm)}
+        rhythm={rhythm}
         promiseNote={
           aiPromises && aiPromises.length > 0 && !aiPromises.includes(current.profile.concept.promise)
             ? text.promiseByCreator
@@ -255,7 +278,7 @@ export function ProfileView({
       </div>
       {rewrite}
 
-      <ExportButtons channelId={channel.id} />
+      <ExportButtons channelId={channel.id} onDownloaded={onDownloaded} />
 
       <p className={styles.why}>{text.nextStep}</p>
     </>
@@ -286,6 +309,32 @@ export function ProfileEditor({ profile, busy, onSave, onCancel }: ProfileEditor
   const [shorts, setShorts] = useState(String(profile.concept.cadence.shortsPerWeek))
   const [assumptions, setAssumptions] = useState(profile.concept.monetization.assumptions.join('\n'))
   const [invalid, setInvalid] = useState(false)
+  // What is written and not saved yet: leaving asks first (novice audit 003, M4).
+  const fields = JSON.stringify([
+    summary,
+    promise,
+    pillars,
+    audience,
+    longForm,
+    shortsRole,
+    madeForKids,
+    region,
+    presence,
+    hours,
+    long,
+    shorts,
+    assumptions,
+  ])
+  const [initial] = useState(fields)
+  useLeaveGuard(fields !== initial && !busy ? text.unsaved : null)
+  // Opened, the editor starts at its top with the first field ready, not where the button was (novice audit 003,
+  // round 3, M2).
+  const formRef = useRef<HTMLFormElement>(null)
+  useEffect(() => {
+    const opened = formRef.current
+    opened?.scrollIntoView?.({ block: 'start' })
+    opened?.querySelector<HTMLElement>('textarea, input')?.focus({ preventScroll: true })
+  }, [])
 
   const save = () => {
     const texts = [
@@ -338,6 +387,7 @@ export function ProfileEditor({ profile, busy, onSave, onCancel }: ProfileEditor
 
   return (
     <form
+      ref={formRef}
       className={styles.form}
       onSubmit={(event) => {
         event.preventDefault()
@@ -436,11 +486,12 @@ async function aiPromisesOf(channelId: string, list: readonly ProfileVersionItem
 export interface ProfileProps {
   readonly channel: ChannelView
   readonly journeyId: string | null
-  readonly onChooseName: () => void
 }
 
 // «Mi canal» once the journey is done: the profile, its versions and its export (US5).
-export function Profile({ channel, journeyId, onChooseName }: ProfileProps) {
+export function Profile({ channel, journeyId }: ProfileProps) {
+  // The panel to change the name (entry 136).
+  const [naming, setNaming] = useState(false)
   const [data, setData] = useState<ProfileData | null>(null)
   const [versions, setVersions] = useState<readonly ProfileVersionItem[]>([])
   const [error, setError] = useState<unknown>(null)
@@ -494,6 +545,7 @@ export function Profile({ channel, journeyId, onChooseName }: ProfileProps) {
         measure: journey?.measures.find((m) => m.id === profile.niche.measureId) ?? null,
         reading,
         staleDays: journey?.measureStaleDays ?? 90,
+        rhythm: journey?.rhythm,
         aiPromises,
       }
       setData(next)
@@ -748,7 +800,26 @@ export function Profile({ channel, journeyId, onChooseName }: ProfileProps) {
               setDraft(null)
               setEditing(true)
             }}
-            onChooseName={onChooseName}
+            onChooseName={() => {
+              setEditing(false)
+              setNaming(true)
+            }}
+            onDownloaded={(message) => toast({ title: message, tone: 'success' })}
+            naming={
+              naming && journeyId ? (
+                <NamePanel
+                  channelId={channel.id}
+                  journeyId={journeyId}
+                  current={data.current.profile.name}
+                  onCancel={() => setNaming(false)}
+                  onSaved={(message) => {
+                    setNaming(false)
+                    toast({ title: message, tone: 'success' })
+                    void load()
+                  }}
+                />
+              ) : undefined
+            }
             onRemeasure={() => void remeasure()}
             remeasuring={remeasureJob !== null}
             onRewrite={() => {
@@ -807,7 +878,7 @@ export function Profile({ channel, journeyId, onChooseName }: ProfileProps) {
               <p>
                 <strong>{shown.profile.niche.label}</strong>
               </p>
-              <ConceptDetails concept={profileConcept(shown)} />
+              <ConceptDetails concept={profileConcept(shown, data.rhythm)} rhythm={data.rhythm} />
             </div>
           )}
         </Disclosure>

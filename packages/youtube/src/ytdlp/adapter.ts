@@ -20,6 +20,8 @@ import {
   handleShortsArgs,
   channelVideosArgs,
   handleVideosArgs,
+  legacyPageArgs,
+  legacyVideosArgs,
   searchArgs,
   versionArgs,
   videoChannelArgs,
@@ -174,6 +176,15 @@ export function createYtDlpYouTube(options: YtDlpYouTubeOptions): YouTubeData {
       if (parsed.kind === 'handle') {
         const result = await channelInAnyList(
           [handleVideosArgs(parsed.handle), handleShortsArgs(parsed.handle), handlePageArgs(parsed.handle)],
+          signal,
+        )
+        if (isFailed(result)) return result
+        const channelId = typeof result.root.channel_id === 'string' ? result.root.channel_id : ''
+        return isChannelId(channelId) ? sourced<ChannelRef>({ channelId }) : youtubeFailure('no_encontrado')
+      }
+      if (parsed.kind === 'legacy') {
+        const result = await channelInAnyList(
+          [legacyVideosArgs(parsed.path, parsed.name), legacyPageArgs(parsed.path, parsed.name)],
           signal,
         )
         if (isFailed(result)) return result

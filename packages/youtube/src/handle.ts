@@ -1,5 +1,8 @@
 import { type HandleStatus, type Sourced, type YouTubeResult, isValidHandle, youtubeFailure } from '@ytcreator/core'
 
+/** YouTube's cookie notice answered «reject all»: nothing else is stored or sent. */
+export const CONSENT_REJECTED = 'SOCS=CAI'
+
 // Both adapters check a handle the same way: the public @handle page, with no key and no units (spike S2).
 export async function checkHandleAt(
   fetch: typeof globalThis.fetch,
@@ -12,6 +15,9 @@ export async function checkHandleAt(
     const response = await fetch(`https://www.youtube.com/@${encodeURIComponent(handle)}`, {
       method: 'GET',
       redirect: 'manual',
+      // In the EU YouTube first sends every page to its cookie notice (302), which says nothing of the @. This is the
+      // «reject all» answer to that notice, as yt-dlp sends it: the page itself comes back (T125b, entry 133).
+      headers: { cookie: CONSENT_REJECTED },
       signal,
     })
     // 404 means nobody has it, 200 means taken. Anything else is not an answer.

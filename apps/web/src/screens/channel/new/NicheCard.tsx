@@ -42,6 +42,9 @@ export interface NicheCardProps {
   readonly busy?: boolean
   readonly onChoose: () => void
   readonly onRetry: () => void
+  /** «Seguir», next to the one chosen and not at the end of the list (novice audit 003, M1). */
+  readonly onNext?: (() => void) | undefined
+  readonly nextBusy?: boolean
 }
 
 function Row({ title, level, body, date }: { title: string; level?: string; body: string; date: string }) {
@@ -124,6 +127,8 @@ export function NicheCard({
   busy = false,
   onChoose,
   onRetry,
+  onNext,
+  nextBusy = false,
 }: NicheCardProps) {
   const failure = measure?.status === 'fallida' ? measure.failure : null
   const measured = measure?.status === 'medida' && measure.measuredAt ? measure : null
@@ -188,9 +193,14 @@ export function NicheCard({
       ))}
 
       {chosen ? (
-        <p>
+        <div className={styles.actions}>
           <Semaphore state="verde">{text.chosen}</Semaphore>
-        </p>
+          {onNext && (
+            <Button variant="primary" loading={nextBusy} onClick={onNext}>
+              {channelEs.niches.next}
+            </Button>
+          )}
+        </div>
       ) : (
         <div className={styles.actions}>
           <Button disabled={busy || !measure || measure.status === 'en_curso'} onClick={onChoose}>

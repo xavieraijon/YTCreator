@@ -127,6 +127,30 @@ describe('profileMarkdown and profileJson', () => {
     expect(json.sections.fuentes).toEqual(profile.sources)
   })
 
+  it('the rhythm in words: singular for one, what it needs as an estimate, and when it does not fit; the data is unchanged', () => {
+    const markdown = profileMarkdown(input)
+    expect(markdown).toContain('- 1 vídeo largo y 3 Shorts por semana.')
+    expect(markdown).toContain('- Tienes 6 horas a la semana.')
+    expect(markdown).not.toContain('Este ritmo pide')
+
+    // 1 long (4 h) and 3 Shorts (1 h each) need 7 hours: with 6 it does not fit.
+    const tight = { ...input, rhythm: { hoursPerLongVideo: 4, hoursPerShort: 1 } }
+    const over = profileMarkdown(tight)
+    expect(over).toContain(
+      '- Este ritmo pide unas 7 horas a la semana: unas 4 horas por vídeo largo y 1 hora por Short. (Estimación de YTCreator)',
+    )
+    expect(over).toContain(
+      '- Este ritmo no te cabe en las horas que tienes: baja los vídeos por semana o dedícale más horas. (Estimación de YTCreator)',
+    )
+    // The data keeps the format of the saved profile (no estimate in it), and both files keep the same sections.
+    expect(profileJson(tight)).toEqual(profileJson(input))
+    expect(headings(over)).toEqual(headings(profileMarkdown(input)))
+
+    const fits = profileMarkdown({ ...input, rhythm: { hoursPerLongVideo: 3, hoursPerShort: 1 } })
+    expect(fits).toContain('Este ritmo pide unas 6 horas a la semana')
+    expect(fits).not.toContain('Este ritmo no te cabe')
+  })
+
   it('says what the screen says: niche with its figures and date, concept, name and @', () => {
     const markdown = profileMarkdown(input)
     expect(markdown).toContain('# Cocina Clara')

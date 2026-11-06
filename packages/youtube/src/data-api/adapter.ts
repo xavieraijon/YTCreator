@@ -293,6 +293,15 @@ export function createDataApiYouTube(options: DataApiYouTubeOptions): YouTubeDat
         const channelId = body.items[0]?.id ?? ''
         return isChannelId(channelId) ? sourced<ChannelRef>({ channelId }) : youtubeFailure('no_encontrado')
       }
+      if (parsed.kind === 'legacy') {
+        // A /user/ name is still asked by its name; a /c/ one has no way in the Data API: it says so, and with the
+        // source in «auto» the reader answers it (entry 144).
+        if (parsed.path === 'c') return youtubeFailure('no_disponible')
+        const body = await get('channels', { part: 'id', forUsername: parsed.name }, ChannelsBody, signal)
+        if (isFailed(body)) return body
+        const channelId = body.items[0]?.id ?? ''
+        return isChannelId(channelId) ? sourced<ChannelRef>({ channelId }) : youtubeFailure('no_encontrado')
+      }
       const body = await get('videos', { part: 'snippet', id: parsed.videoId }, VideosBody, signal)
       if (isFailed(body)) return body
       const channelId = body.items[0]?.snippet.channelId ?? ''

@@ -23,7 +23,7 @@ describe('changing the niche with a concept approved (FR-025, US2 AS5)', () => {
 
   it('says it and lets the creator cancel', () => {
     const html = renderToStaticMarkup(<NicheChange open onCancel={() => {}} onConfirm={() => {}} />)
-    expect(html).toContain('Tu concepto se basaba en el nicho anterior. ¿Cambiar igualmente?')
+    expect(html).toContain('Tu idea se basaba en el nicho anterior. ¿Cambiar igualmente?')
     expect(html).toContain('Cancelar')
     expect(html).toContain('Cambiar igualmente')
   })

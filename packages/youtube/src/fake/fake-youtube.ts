@@ -11,6 +11,7 @@ import {
 } from '@ytcreator/core'
 import {
   BLOCKED_QUERY_WORDS,
+  NO_READER_QUERY_WORDS,
   EMPTY_QUERY_WORDS,
   FAKE_CHANNELS,
   type FakeChannel,
@@ -48,6 +49,7 @@ export function createFakeYouTube(options: FakeYouTubeOptions = {}): YouTubeData
       const text = query.toLowerCase()
       if (EMPTY_QUERY_WORDS.some((w) => text.includes(w))) return youtubeFailure('sin_datos')
       if (BLOCKED_QUERY_WORDS.some((w) => text.includes(w))) return youtubeFailure('bloqueado')
+      if (NO_READER_QUERY_WORDS.some((w) => text.includes(w))) return youtubeFailure('no_disponible')
       // The query shifts the views so two niches do not look the same.
       const seed = [...text].reduce((sum, ch) => sum + ch.charCodeAt(0), 0)
       const hits: VideoHit[] = Array.from({ length: Math.min(limit, 40) }, (_, i) => {
@@ -99,7 +101,9 @@ export function createFakeYouTube(options: FakeYouTubeOptions = {}): YouTubeData
             ? byId(parsed.channelId)
             : parsed?.kind === 'video'
               ? byVideo(parsed.videoId)
-              : undefined
+              : parsed?.kind === 'legacy'
+                ? byHandle(parsed.name)
+                : undefined
       return channel ? sourced<ChannelRef>({ channelId: channel.info.channelId }) : youtubeFailure('no_encontrado')
     },
 

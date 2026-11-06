@@ -47,7 +47,11 @@ export function YouTubeSettingsView({
   return (
     <div className={styles.stack}>
       <p className={styles.text}>{text.why}</p>
-      <p>{text.inUse[settings.effectiveSource]}</p>
+      <p>
+        {settings.effectiveSource !== 'data_api' && !settings.ytdlpVersion
+          ? text.inUseNoReader
+          : text.inUse[settings.effectiveSource]}
+      </p>
 
       <section className={styles.section}>
         <RadioGroup

@@ -93,6 +93,8 @@ function run() {
   const channel = CHANNELS.find(
     (c) =>
       target === `https://www.youtube.com/@${c.handle}/videos` ||
+      target === `https://www.youtube.com/c/${c.handle}/videos` ||
+      target === `https://www.youtube.com/user/${c.handle}/videos` ||
       target === `https://www.youtube.com/channel/${c.id}/videos`,
   )
   if (channel) return answerChannel(channel, end)

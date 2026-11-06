@@ -1,6 +1,7 @@
 import type { ChannelReadingView, MeasureView, ReferenceChannelView } from '../api/channel.ts'
 import type { ChannelOrigin, ProfileOrigin } from './model.ts'
 import type { ChannelProfile, Source } from './profile.ts'
+import { hoursNeeded, type Rhythm } from './warnings.ts'
 
 // The profile as files to keep outside the app (FR-026, R17): a document anyone can read and the same content as
 // open data. It never calls the AI: it only puts in order what is already saved.
@@ -20,6 +21,8 @@ export interface ProfileExportInput {
   // What was read of the channel (channels that already existed).
   reading: ChannelReadingView | null
   exportedAt: string
+  // The hours a video takes, an estimate of YTCreator (P7): what the rhythm needs is worked out with it, as on screen.
+  rhythm?: Rhythm
 }
 
 export type ExportFormat = 'md' | 'json'
@@ -34,6 +37,8 @@ function day(date: string): string {
   return new Intl.DateTimeFormat('es-ES', options).format(new Date(date))
 }
 const number = (value: number) => new Intl.NumberFormat('es-ES', { useGrouping: 'always' }).format(value)
+// «1 vídeo largo», «2 vídeos largos» (novice audit 003, minor 16).
+const counted = (value: number, one: string, other: string) => `${number(value)} ${value === 1 ? one : other}`
 const percent = (share: number) => Math.round(share * 100)
 const youtube = (date: string) => `Dato de YouTube · ${day(date)}`
 const knowledge = (source: Pick<Source, 'label' | 'date'>) => `${source.label} · revisado el ${day(source.date)}`
@@ -219,6 +224,24 @@ function moneyLines(profile: ChannelProfile, sources: readonly Source[]): string
   ]
 }
 
+// What the rhythm needs, from the hours a video takes (an estimate of ours, entry 142), and whether it fits. Only in the
+// document: the data keeps the profile as it is saved (its format does not change), and the rhythm warning is not
+// saved because it has no source (novice audit 003, round 2, M1).
+function rhythmLines(cadence: ChannelProfile['concept']['cadence'], rhythm: Rhythm | undefined): string[] {
+  const has = `- Tienes ${counted(cadence.hoursPerWeek, 'hora', 'horas')} a la semana.`
+  if (!rhythm) return [has]
+  const needed = hoursNeeded(cadence, rhythm)
+  return [
+    `- Este ritmo pide unas ${counted(needed, 'hora', 'horas')} a la semana: unas ${counted(rhythm.hoursPerLongVideo, 'hora', 'horas')} por vídeo largo y ${counted(rhythm.hoursPerShort, 'hora', 'horas')} por Short. (${ESTIMATE})`,
+    has,
+    ...(needed > cadence.hoursPerWeek
+      ? [
+          `- Este ritmo no te cabe en las horas que tienes: baja los vídeos por semana o dedícale más horas. (${ESTIMATE})`,
+        ]
+      : []),
+  ]
+}
+
 /** The document anyone can read, with the same sections as the data and «Fuentes» at the end. */
 export function profileMarkdown(input: ProfileExportInput): string {
   const { version, measure, references, reading, exportedAt } = input
@@ -262,7 +285,8 @@ export function profileMarkdown(input: ProfileExportInput): string {
       '',
       '### Cuánto publicar',
       '',
-      `- ${number(concept.cadence.longPerWeek)} vídeos largos y ${number(concept.cadence.shortsPerWeek)} Shorts por semana, unas ${number(concept.cadence.hoursPerWeek)} horas en total.`,
+      `- ${counted(concept.cadence.longPerWeek, 'vídeo largo', 'vídeos largos')} y ${counted(concept.cadence.shortsPerWeek, 'Short', 'Shorts')} por semana.`,
+      ...rhythmLines(concept.cadence, input.rhythm),
     ],
     dinero: moneyLines(profile, profile.sources),
     avisos: concept.warnings.map((warning) => {

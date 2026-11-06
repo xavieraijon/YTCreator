@@ -18,15 +18,26 @@ function download(url: string) {
 }
 
 // FR-026: the document anyone can read first, the open data second. The format only shows in the file's name.
-export function ExportButtons({ channelId }: { channelId: string }) {
+// Novice audit 003, M7: the browser keeps it without a word, so the screen says where it went and what opens it.
+export function ExportButtons({
+  channelId,
+  onDownloaded,
+}: {
+  channelId: string
+  onDownloaded?: ((message: string) => void) | undefined
+}) {
+  const save = (format: 'md' | 'json') => {
+    download(exportUrl(channelId, format))
+    onDownloaded?.(format === 'md' ? text.downloadedDocument : text.downloadedData)
+  }
   return (
     <div className={styles.option}>
       <p className={styles.why}>{text.downloadWhy}</p>
       <div className={styles.actions}>
-        <Button variant="primary" onClick={() => download(exportUrl(channelId, 'md'))}>
+        <Button variant="primary" onClick={() => save('md')}>
           {text.downloadDocument}
         </Button>
-        <Button onClick={() => download(exportUrl(channelId, 'json'))}>{text.downloadData}</Button>
+        <Button onClick={() => save('json')}>{text.downloadData}</Button>
       </div>
     </div>
   )

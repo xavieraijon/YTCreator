@@ -16,6 +16,10 @@ export const channelEs = {
     nextStep: 'Lo siguiente será llenar tu banco de ideas. Llega muy pronto.',
     nameMissing: 'Te falta elegir el nombre',
     nameMissingWhy: 'Tu canal ya sirve así, pero sin nombre no podrás publicar.',
+    // Novice audit 003, M6 (entry 137): one channel in this version (FR-028).
+    oneChannel:
+      'Por ahora YTCreator lleva un solo canal: elige con calma. Poder tener varios canales llegará más adelante.',
+    oneChannelHere: 'Por ahora YTCreator lleva un solo canal, este. Poder tener varios canales llegará más adelante.',
     chooseName: 'Elegir el nombre',
     unnamed: 'Tu canal',
   },
@@ -115,7 +119,8 @@ export const channelEs = {
       infantil: 'Parece contenido para niños: YouTube paga mucho menos por él y limita los comentarios.',
       no_autentico: 'YouTube no paga por contenido repetitivo o hecho en serie. Tenlo presente si eliges este nicho.',
       solo_shorts: 'Un canal solo de Shorts gana mucho menos que uno con vídeos largos.',
-      ritmo_insostenible: 'Este ritmo no te cabe en las horas que tienes.',
+      ritmo_insostenible:
+        'Este ritmo no te cabe en las horas que tienes. Baja los vídeos por semana con «Cambiar algo» o «Editar», o dedícale más horas.',
     },
     opinion: {
       trimmed: 'Hemos quitado parte de esta opinión, quizá algún aviso, porque daba cifras que no podíamos comprobar.',
@@ -154,7 +159,7 @@ export const channelEs = {
     hoursHelp: 'Un número del 1 al 60. Mejor quedarte corto que prometer de más.',
     hoursInvalid: 'Escribe un número del 1 al 60.',
     onCamera: '¿Cómo quieres aparecer?',
-    onCameraOptions: { cara: 'Saliendo en cámara', voz: 'Solo con mi voz', ninguna: 'Ni cara ni voz' },
+    onCameraOptions: { cara: 'Saliendo en cámara', voz: 'Solo con mi voz', ninguna: 'Sin cara ni voz' },
     region: '¿Dónde está tu público?',
     regionOptions: { espana: 'España', latam: 'Latinoamérica', mixto: 'Las dos' },
     choiceMissing: 'Elige una opción.',
@@ -164,13 +169,13 @@ export const channelEs = {
     title: 'La idea de tu canal',
     why: 'Con tu nicho y tu ritmo te proponemos varias ideas de canal. Elige la que más te encaje, cámbiala a tu gusto o pide otras.',
     generate: 'Proponer ideas',
-    choose: 'Elegir este concepto',
-    chosen: 'Concepto elegido',
+    choose: 'Elegir esta idea',
+    chosen: 'Idea elegida',
     edit: 'Cambiar algo',
     next: 'Seguir',
     stale:
-      'Estos conceptos se escribieron con otras respuestas tuyas: otro nicho, horas o forma de salir en vídeo. El texto y el ritmo que proponen pueden no encajar. Puedes elegir uno igualmente o pedir otra propuesta.',
-    needsReview: 'Este concepto se basaba en el nicho anterior. Elige uno de nuevo o pide otros.',
+      'Estas ideas se escribieron con otras respuestas tuyas: otro nicho, horas o forma de salir en vídeo. El texto y el ritmo que proponen pueden no encajar. Puedes elegir una igualmente o pedir otra propuesta.',
+    needsReview: 'Esta idea se basaba en el nicho anterior. Elige una de nuevo o pide otras.',
     promise: 'Qué se lleva quien ve tus vídeos',
     promiseWhy: 'Es la frase que une todo el canal: si un vídeo no la cumple, no va en este canal.',
     pillars: 'Los temas del canal',
@@ -183,7 +188,22 @@ export const channelEs = {
     shortsRole: 'Los Shorts: {texto}',
     cadence: 'Cuánto publicar',
     cadenceWhy: 'Un ritmo que puedes mantener vale más que uno que abandonas en un mes.',
-    cadenceText: '{largos} vídeos largos y {shorts} Shorts por semana, unas {horas} horas en total.',
+    // Novice audit 003 (M2 and minor 16): what the rhythm needs, apart from what the creator has, and in singular for 1.
+    cadenceText: '{largos} y {shorts} por semana.',
+    cadenceLong: { one: '{n} vídeo largo', other: '{n} vídeos largos' },
+    cadenceShorts: { one: '{n} Short', other: '{n} Shorts' },
+    cadenceNeeded: 'Este ritmo pide unas {necesarias} a la semana. Tú tienes {tienes}.',
+    // P7 (entry 142): the hours a video takes have no source; they are said to be ours.
+    cadenceEstimate: 'Es una estimación nuestra: unas {largo} por vídeo largo y {short} por Short.',
+    cadenceHas: 'Tú tienes {tienes} a la semana.',
+    // Novice audit 003, round 2 (M1): what does not fit asks before it is chosen.
+    rhythmAsk: {
+      title: 'Este ritmo no te cabe en tus horas',
+      body: 'Pide más horas a la semana de las que tienes. Puedes cambiarlo antes o quedarte con él igualmente.',
+      cancel: 'Cambiarlo antes',
+      confirm: 'Quedarme con él igualmente',
+    },
+    hours: { one: '{n} hora', other: '{n} horas' },
     money: 'Lo que podría ganar',
     moneyWhy: 'Es una estimación, no una promesa. Son rangos amplios porque cada canal es distinto.',
     moneyRange: 'De {min} a {max} € al mes con anuncios.',
@@ -225,8 +245,8 @@ export const channelEs = {
     },
   },
   nicheChange: {
-    title: 'Tu concepto se basaba en el nicho anterior. ¿Cambiar igualmente?',
-    body: 'Si vuelves a los nichos, tendrás que elegir de nuevo el concepto antes de seguir. Si cancelas, todo queda como está.',
+    title: 'Tu idea se basaba en el nicho anterior. ¿Cambiar igualmente?',
+    body: 'Si vuelves a los nichos, tendrás que elegir de nuevo la idea antes de seguir. Si cancelas, todo queda como está.',
     confirm: 'Cambiar igualmente',
     cancel: 'Cancelar',
   },
@@ -289,6 +309,13 @@ export const channelEs = {
       label: 'El enlace de tu canal o su @',
       help: 'Por ejemplo: @micanal o youtube.com/@micanal. También vale el enlace de uno de tus vídeos.',
       search: 'Buscar mi canal',
+      // Novice audit 003, round 2 (M4): where a novice finds their own @.
+      find: '¿Dónde veo mi @?',
+      findSteps: [
+        'Abre YouTube y entra con tu cuenta.',
+        'Pulsa tu foto, arriba a la derecha, y después «Ver tu canal».',
+        'Tu @ sale debajo del nombre del canal. También puedes copiar la dirección de esa página y pegarla aquí.',
+      ],
       empty: 'Pega el enlace de tu canal o su @.',
       notFound:
         'No hemos encontrado ese canal. Pega el enlace de tu canal, su @ o el enlace de uno de tus vídeos. Por ejemplo: @micanal.',
@@ -356,7 +383,7 @@ export const channelEs = {
     },
     positioning: {
       title: 'Cómo enfocar tu canal',
-      why: 'Primero, cómo creemos que es hoy tu canal. Después, cómo enfocarlo a partir de lo que ya te funciona. Puedes cambiar lo que quieras.',
+      why: 'Primero, cómo creemos que es hoy tu canal; después, cómo enfocarlo con lo que ya te funciona. Puedes cambiar lo que quieras.',
       current: 'Tu perfil actual',
       niche: 'De qué va',
       pillars: 'Temas',
@@ -398,15 +425,33 @@ export const channelEs = {
     readAt: 'Leímos {videos} vídeos de tu canal.',
     edit: 'Editar',
     editWhy:
-      'Puedes cambiar los textos y tus respuestas. Al guardar volvemos a calcular el dinero y los avisos con lo que pongas: si dices que es para niños, aunque sea en el texto, cambian. Las cifras de YouTube no se cambian a mano.',
+      'Puedes cambiar los textos y tus respuestas. Al guardar volvemos a calcular el dinero y los avisos. Las cifras que vienen de YouTube no se editan.',
     downloadDocument: 'Descargar como documento',
     downloadData: 'Descargar como datos',
     downloadWhy:
-      'El documento se lee con cualquier editor de texto. Los datos sirven para llevar tu perfil a otra herramienta.',
+      'El documento es un archivo de texto. Si el ordenador pregunta con qué abrirlo, elige el Bloc de notas, TextEdit o Word: los # marcan los títulos y los ** las negritas. Los datos sirven para llevar tu perfil a otra herramienta.',
+    downloadedDocument:
+      'Hemos preparado tu perfil. Si el navegador no te pregunta dónde guardarlo, estará en «Descargas». Ábrelo con el Bloc de notas, TextEdit o Word.',
+    downloadedData:
+      'Hemos preparado los datos de tu perfil. Si el navegador no te pregunta dónde guardarlos, estarán en «Descargas».',
     nextStep: 'Lo siguiente será llenar tu banco de ideas. Llega muy pronto.',
     saved: 'Cambios guardados. Es la versión {version}.',
+    unsaved: 'Tienes cambios sin guardar en tu perfil. Si sales ahora, se pierden. ¿Salir igualmente?',
     promiseByCreator: 'Escrita por ti',
     changeName: 'Cambiar el nombre',
+    // Cambiar el nombre sin salir de «Tu canal» (entrada 136).
+    namePanel: {
+      title: 'Cambiar el nombre',
+      titleFirst: 'Elegir el nombre',
+      why: 'Quédate con otro de los propuestos, pide más o escribe el tuyo. Tu canal no cambia de nombre hasta que pulses «Usar este nombre».',
+      finish: 'Usar este nombre',
+      cancel: 'Cancelar',
+      current: 'Tu nombre ahora',
+      chosen: 'Elegido, aún sin usar',
+      saved: 'Nombre cambiado: ahora es «{nombre}». Es la versión {version} del perfil.',
+      savedNoVersion: 'Nombre cambiado: ahora es «{nombre}».',
+      unchanged: 'Sigue con el mismo nombre.',
+    },
     remeasure: 'Volver a medir',
     remeasuring: 'Midiendo tu nicho…',
     remeasuredDone: 'Tu nicho está medido de nuevo, con las cifras de hoy. Se ha guardado como una versión nueva.',
@@ -417,6 +462,8 @@ export const channelEs = {
     rewrite: {
       open: 'Reescribir con la IA',
       title: 'Reescribir una parte con la IA',
+      // Logic review, round 2: the help names the button of this panel.
+      whatToChangeHelp: 'Cuéntalo con tus palabras y lo tendremos en cuenta al pulsar «{boton}».',
       why: 'Elige qué parte quieres que la IA vuelva a escribir. En el botón ves lo que cuesta, y no se guarda nada hasta que lo apruebes.',
       part: '¿Qué parte quieres reescribir?',
       parts: { promesa: 'La promesa', temas: 'Los temas', publico: 'Tu público' },
@@ -467,7 +514,7 @@ export const channelEs = {
       assumptions: 'Lo que supone la IA para calcular el dinero',
       assumptionsHelp: 'Un supuesto en cada línea. Si cambias tus respuestas, revisa que sigan siendo ciertos.',
       invalid:
-        'Revisa los campos: ninguno puede quedar vacío, la promesa no puede pasar de 160 caracteres, las horas van de 1 a 60 y los vídeos por semana de 0 a 60, sin decimales.',
+        'Revisa los campos. Ninguno puede quedar vacío y la promesa no pasa de 160 caracteres. Las horas van de 1 a 60, sin decimales, y los vídeos por semana no pueden ser negativos.',
       save: 'Guardar cambios',
       cancel: 'Cancelar',
     },
@@ -479,7 +526,10 @@ export const channelEs = {
     edit: 'Editar',
     regenerate: 'Proponer otra',
     whatToChange: '¿Qué cambiarías?',
-    whatToChangeHelp: 'Opcional. Cuéntalo con tus palabras y lo tendremos en cuenta.',
+    whatToChangeHelp: 'Cuéntalo con tus palabras y lo tendremos en cuenta al pulsar «Proponer otra».',
+    // Novice audit 003, round 3 (M1): what is written there is not lost by approving.
+    pendingChange:
+      'Has escrito qué cambiarías. Pulsa «Proponer otra» para usarlo, o bórralo si prefieres quedarte con esto.',
     estimateCost: 'unos {importe} €',
     included: 'Incluido en tu suscripción',
     actionWithCost: '{accion} · {importe}',

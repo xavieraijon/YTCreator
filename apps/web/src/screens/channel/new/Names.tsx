@@ -62,6 +62,13 @@ export interface NameCardProps {
   readonly busy?: boolean
   readonly onChoose: () => void
   readonly onRetry: () => void
+  /** The button to go on, next to the one chosen and not at the end of the list (novice audit 003, M1). */
+  readonly next?:
+    | { readonly label: string; readonly busy: boolean; readonly onClick: () => void; readonly primary?: boolean }
+    | undefined
+  /** In «Tu canal»: what «chosen» says, and the name the channel has now, which has nothing to choose. */
+  readonly chosenLabel?: string | undefined
+  readonly currentLabel?: string | undefined
 }
 
 export function NameCard({
@@ -72,6 +79,9 @@ export function NameCard({
   busy = false,
   onChoose,
   onRetry,
+  next,
+  chosenLabel = text.chosen,
+  currentLabel,
 }: NameCardProps) {
   return (
     <Card as="article" className={styles.niche} aria-label={name.displayName}>
@@ -91,8 +101,21 @@ export function NameCard({
         <p className={styles.why}>{text.pending}</p>
       )}
       <div className={styles.actions}>
-        {chosen ? (
-          <Semaphore state="verde">{text.chosen}</Semaphore>
+        {currentLabel ? (
+          <Semaphore state="verde">{currentLabel}</Semaphore>
+        ) : chosen ? (
+          <>
+            <Semaphore state="verde">{chosenLabel}</Semaphore>
+            {next && (
+              <Button
+                variant={next.primary === false ? 'secondary' : 'primary'}
+                loading={next.busy}
+                onClick={next.onClick}
+              >
+                {next.label}
+              </Button>
+            )}
+          </>
         ) : (
           <Button disabled={busy || !check} onClick={onChoose}>
             {text.choose}
@@ -143,6 +166,18 @@ export interface NamesProps {
   readonly busy: boolean
   readonly reload: () => Promise<unknown>
   readonly onFinish: (nameLater: boolean) => void
+  /** From «Tu canal» (entry 136): the button to keep the one chosen says so, and «Cancelar» leaves it as it was. */
+  readonly fromProfile?:
+    | {
+        readonly finish: string
+        readonly cancel: string
+        readonly onCancel: () => void
+        /** The name the channel has now: it is not chosen again (round 3 of the audit). */
+        readonly current: { readonly displayName: string | null; readonly handle: string | null }
+        readonly currentLabel: string
+        readonly chosenLabel: string
+      }
+    | undefined
 }
 
 // FR-022: a channel that already has its name goes on with it.
@@ -161,10 +196,10 @@ function KeptName({ view, busy, onFinish }: Pick<NamesProps, 'view' | 'busy' | '
 }
 
 export function Names(props: NamesProps) {
-  return props.view.state.keptName ? <KeptName {...props} /> : <ChooseName {...props} />
+  return props.view.state.keptName && !props.fromProfile ? <KeptName {...props} /> : <ChooseName {...props} />
 }
 
-function ChooseName({ view, busy, reload, onFinish }: NamesProps) {
+function ChooseName({ view, busy, reload, onFinish, fromProfile }: NamesProps) {
   const proposal = latestOf(view, 'nombres')
   const { estimate, error: estimateError, refresh } = useEstimate(view.id, 'nombres')
   const generate = useGenerate(view, estimate, async () => {
@@ -175,13 +210,14 @@ function ChooseName({ view, busy, reload, onFinish }: NamesProps) {
 
   return (
     <div className={styles.options}>
-      <p className={styles.why}>{text.why}</p>
+      {!fromProfile && <p className={styles.why}>{text.why}</p>}
       <p role="note">{text.notice}</p>
       {failed !== null && (
         <ErrorMessage live title={errorText(failed)} action={{ label: es.app.retry, onClick: () => void refresh() }} />
       )}
       {proposal ? (
         <Proposal
+          key={proposal.id}
           estimate={estimate}
           failure={generate.failure}
           claimsTrimmed={proposal.claimsTrimmed}
@@ -190,23 +226,42 @@ function ChooseName({ view, busy, reload, onFinish }: NamesProps) {
             void generate.run('nombres', { parentId: proposal.id, ...(instructions ? { instructions } : {}) })
           }
         >
-          <List view={view} proposal={proposal} busy={busy} reload={reload} onFinish={onFinish} />
+          <List
+            view={view}
+            proposal={proposal}
+            busy={busy}
+            reload={reload}
+            onFinish={onFinish}
+            fromProfile={fromProfile}
+          />
         </Proposal>
       ) : (
         <AiAction
           label={text.generate}
+          primary={!fromProfile}
           estimate={estimate}
           failure={generate.failure}
           busy={generate.busy}
           onRun={() => void generate.run('nombres')}
         />
       )}
-      <div className={styles.option}>
-        <p>{text.laterWhy}</p>
-        <Button disabled={busy || generate.busy} onClick={() => onFinish(true)}>
-          {text.later}
-        </Button>
-      </div>
+      {fromProfile ? (
+        <div className={styles.actions}>
+          <Button disabled={busy || generate.busy} onClick={fromProfile.onCancel}>
+            {fromProfile.cancel}
+          </Button>
+        </div>
+      ) : (
+        // Novice audit 003, minor 28: with a name chosen there is nothing to leave for later.
+        proposal?.status !== 'aprobada' && (
+          <div className={styles.option}>
+            <p>{text.laterWhy}</p>
+            <Button disabled={busy || generate.busy} onClick={() => onFinish(true)}>
+              {text.later}
+            </Button>
+          </div>
+        )
+      )}
     </div>
   )
 }
@@ -214,7 +269,7 @@ function ChooseName({ view, busy, reload, onFinish }: NamesProps) {
 const checkOf = (view: JourneyFullView, { displayName, handle }: Name) =>
   view.nameChecks.findLast((check) => check.displayName === displayName && check.handle === handle) ?? null
 
-function List({ view, proposal, busy, reload, onFinish }: NamesProps & { proposal: ProposalView }) {
+function List({ view, proposal, busy, reload, onFinish, fromProfile }: NamesProps & { proposal: ProposalView }) {
   const names = payloadOf<{ names: Name[] }>(proposal).names
   const original = (proposal.payload as { names: Name[] }).names
   const running = view.jobs.findLast((job) => job.kind === 'comprobar_nombres' && job.status === 'en_curso') ?? null
@@ -285,7 +340,8 @@ function List({ view, proposal, busy, reload, onFinish }: NamesProps & { proposa
 
   const addOwn = async () => {
     const displayName = ownName.trim()
-    const handle = ownHandle.trim().replace(/^@/, '') || handleFrom(displayName)
+    // Novice audit 003, minor 23: the @ and the spaces written by habit are taken out.
+    const handle = ownHandle.replace(/[@\s]/g, '') || handleFrom(displayName)
     if (!displayName) return
     if (names.some((name) => name.displayName.toLowerCase() === displayName.toLowerCase())) {
       setOwnError({ name: text.own.repeated })
@@ -338,6 +394,21 @@ function List({ view, proposal, busy, reload, onFinish }: NamesProps & { proposa
             else choose(index)
           }}
           onRetry={() => void check([name])}
+          next={{
+            label: fromProfile?.finish ?? text.finish,
+            busy,
+            onClick: () => onFinish(false),
+            // In «Tu canal» the page has its own main button: the panel has none (as RewritePart, entry 130).
+            primary: !fromProfile,
+          }}
+          chosenLabel={fromProfile?.chosenLabel}
+          currentLabel={
+            fromProfile &&
+            name.displayName === fromProfile.current.displayName &&
+            name.handle === fromProfile.current.handle
+              ? fromProfile.currentLabel
+              : undefined
+          }
         />
       ))}
       <Disclosure summary={text.own.title}>
@@ -371,13 +442,6 @@ function List({ view, proposal, busy, reload, onFinish }: NamesProps & { proposa
           </div>
         </form>
       </Disclosure>
-      {chosenIndex !== null && (
-        <div className={styles.actions}>
-          <Button variant="primary" loading={busy} onClick={() => onFinish(false)}>
-            {text.finish}
-          </Button>
-        </div>
-      )}
       <RedName
         name={red?.displayName ?? null}
         reasons={redCheck ? reasonTexts(redCheck) : []}

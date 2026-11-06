@@ -46,6 +46,7 @@ export function StartView({ current, busy = null, onCreate, onResume, onChooseNa
             </Button>
           </div>
         </div>
+        <p className={styles.why}>{text.oneChannel}</p>
       </>
     )
   }
@@ -132,11 +133,7 @@ export function Start() {
       )}
       {current?.channel && current.profile && current.journey?.status !== 'activo' ? (
         // US5: with the journey done, the channel's own page.
-        <Profile
-          channel={current.channel}
-          journeyId={current.journey?.id ?? null}
-          onChooseName={() => void chooseName()}
-        />
+        <Profile channel={current.channel} journeyId={current.journey?.id ?? null} />
       ) : current ? (
         <StartView
           current={current}

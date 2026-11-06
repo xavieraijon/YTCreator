@@ -1,5 +1,5 @@
 import type { JourneyFullView } from '@ytcreator/core/api'
-import { Button, ErrorMessage, TextField } from '@ytcreator/ui'
+import { Button, Disclosure, ErrorMessage, TextField } from '@ytcreator/ui'
 import { useState } from 'react'
 import { ApiClientError, channelApi } from '../../../api/client.ts'
 import { navigate } from '../../../router.ts'
@@ -59,6 +59,18 @@ export function ChannelUrlView({
         {...(fieldError ? { error: fieldError } : {})}
         onChange={(event) => onChange(event.target.value)}
       />
+      {/* Open by itself once the channel was not found: that is when the @ is not known. */}
+      <Disclosure
+        key={(failure ?? fieldError) ? 'abierto' : 'cerrado'}
+        summary={text.find}
+        defaultOpen={Boolean(failure ?? fieldError)}
+      >
+        <ol>
+          {text.findSteps.map((step) => (
+            <li key={step}>{step}</li>
+          ))}
+        </ol>
+      </Disclosure>
       <div className={styles.actions}>
         <Button type="submit" variant="primary" loading={busy}>
           {text.search}

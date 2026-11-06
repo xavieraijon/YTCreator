@@ -101,7 +101,8 @@ function answer(url: URL): Response {
 
   if (endpoint === 'channels') {
     const ids = (q.get('id') ?? '').split(',')
-    const handle = q.get('forHandle')?.replace(/^@/, '')
+    // forUsername: the old /user/ links; here the fake channels have the same name as their @.
+    const handle = q.get('forHandle')?.replace(/^@/, '') ?? q.get('forUsername') ?? undefined
     const found = FAKE_CHANNELS.filter((c) => ids.includes(c.info.channelId) || c.info.handle === handle)
     // Like the API: no match gives no `items` at all.
     return json(found.length > 0 ? { items: found.map(channelItem) } : {})

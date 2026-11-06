@@ -140,8 +140,8 @@ test('from the interests to the rhythm with the fakes (US1)', async ({ page: fir
   await page.getByRole('button', { name: 'Guardar cambios' }).click()
   await expect(page.getByRole('article', { name: 'Cenas de diario sin complicarte la vida.' })).toBeVisible()
 
-  await concepts.first().getByRole('button', { name: 'Elegir este concepto' }).click()
-  await expect(page.getByText('Concepto elegido')).toBeVisible()
+  await concepts.first().getByRole('button', { name: 'Elegir esta idea' }).click()
+  await expect(page.getByText('Idea elegida')).toBeVisible()
   await page.getByRole('button', { name: 'Seguir', exact: true }).click()
   await expect(page).toHaveURL(/\/canal\/nuevo\/nombres$/)
 
@@ -151,7 +151,7 @@ test('from the interests to the rhythm with the fakes (US1)', async ({ page: fir
   await page.getByRole('button', { name: 'Volver', exact: true }).click()
   await expect(heading(page, 'Tu ritmo')).toBeVisible()
   await page.getByRole('button', { name: 'Volver', exact: true }).click()
-  const dialog = page.getByRole('dialog', { name: /Tu concepto se basaba en el nicho anterior/ })
+  const dialog = page.getByRole('dialog', { name: /Tu idea se basaba en el nicho anterior/ })
   await expect(dialog).toBeVisible()
   await audit(page)
   await dialog.getByRole('button', { name: 'Cancelar' }).click()
@@ -167,7 +167,7 @@ test('from the interests to the rhythm with the fakes (US1)', async ({ page: fir
   await expect(heading(page, 'La idea de tu canal')).toBeVisible()
   await expect(page.getByText(/se basaba en el nicho anterior/)).toBeVisible()
   await expect(page.getByRole('button', { name: 'Seguir', exact: true })).toHaveCount(0)
-  await concepts.first().getByRole('button', { name: 'Elegir este concepto' }).click()
+  await concepts.first().getByRole('button', { name: 'Elegir esta idea' }).click()
   await page.getByRole('button', { name: 'Seguir', exact: true }).click()
   await expect(page).toHaveURL(/\/canal\/nuevo\/nombres$/)
 
@@ -184,15 +184,18 @@ test('from the interests to the rhythm with the fakes (US1)', async ({ page: fir
   await page.getByRole('button', { name: 'Ver mi canal' }).click()
   await page.getByRole('button', { name: 'Elegir el nombre' }).click()
 
-  await expect(heading(page, 'El nombre de tu canal')).toBeVisible()
+  // Entry 136: the name is chosen in a panel of «Tu canal», not in the journey again.
+  const choosing = page.getByRole('region', { name: 'Elegir el nombre' })
+  await expect(choosing).toBeVisible()
+  await expect(page).toHaveURL(/\/canal$/)
   await page.getByRole('button', { name: /Proponer nombres/ }).click()
-  const names = page.getByRole('article')
+  const names = choosing.getByRole('article')
   await expect(names.first().getByText('Camino libre')).toBeVisible()
   await audit(page)
 
   await page.getByText('Escribir el mío').click()
   await page.getByLabel('Tu nombre').fill('Canal Ocupado')
-  await page.getByLabel('La @ que quieres').fill('a b')
+  await page.getByLabel('La @ que quieres').fill('a!b')
   await page.getByRole('button', { name: 'Comprobar mi nombre' }).click()
   await expect(page.getByText('Esa @ no vale')).toBeVisible()
   await page.getByLabel('La @ que quieres').fill('ocupado1')
@@ -205,7 +208,7 @@ test('from the interests to the rhythm with the fakes (US1)', async ({ page: fir
   await expect(askRed.getByText('Esa @ ya la tiene otro canal.')).toBeVisible()
   await audit(page)
   await askRed.getByRole('button', { name: 'Mirar otros' }).click()
-  await expect(mine.getByText('Nombre elegido')).toHaveCount(0)
+  await expect(mine.getByText('Elegido, aún sin usar')).toHaveCount(0)
 
   // A name whose check fails is never green.
   await page.getByLabel('Tu nombre').fill('nombre bloqueado')
@@ -218,8 +221,9 @@ test('from the interests to the rhythm with the fakes (US1)', async ({ page: fir
 
   // Chooses one and the journey ends at the channel, with its name.
   await names.first().getByRole('button', { name: 'Quedarme con este nombre' }).click()
-  await expect(names.first().getByText('Nombre elegido')).toBeVisible()
-  await page.getByRole('button', { name: 'Terminar' }).click()
+  await expect(names.first().getByText('Elegido, aún sin usar')).toBeVisible()
+  await names.first().getByRole('button', { name: 'Usar este nombre' }).click()
+  await expect(page.getByText(/Nombre cambiado: ahora es/).first()).toBeVisible()
   await expect(page).toHaveURL(/\/canal$/)
   await expect(page.getByRole('button', { name: 'Elegir el nombre' })).toHaveCount(0)
   await audit(page)
@@ -228,6 +232,9 @@ test('from the interests to the rhythm with the fakes (US1)', async ({ page: fir
   const document = page.waitForEvent('download')
   await page.getByRole('button', { name: 'Descargar como documento' }).click()
   expect((await document).suggestedFilename()).toMatch(/^perfil-.+\.md$/)
+  await expect(
+    page.getByText(/Hemos preparado tu perfil\. Si el navegador no te pregunta dónde guardarlo/).first(),
+  ).toBeVisible()
   const data = page.waitForEvent('download')
   await page.getByRole('button', { name: 'Descargar como datos' }).click()
   expect((await data).suggestedFilename()).toMatch(/^perfil-.+\.json$/)
@@ -236,12 +243,12 @@ test('from the interests to the rhythm with the fakes (US1)', async ({ page: fir
   await audit(page)
   await page.getByLabel('La promesa').fill('Una promesa cambiada a mano.')
   await page.getByRole('button', { name: 'Guardar cambios' }).click()
-  await expect(page.getByText(/Cambios guardados\. Es la versión \d+\./)).toBeVisible()
+  await expect(page.getByText(/Cambios guardados\. Es la versión \d+\./).first()).toBeVisible()
   await expect(page.getByText('Una promesa cambiada a mano.')).toBeVisible()
   await page.getByText('Versiones anteriores').click()
   await audit(page)
   await page.getByRole('button', { name: 'Volver a esta versión' }).first().click()
-  await expect(page.getByText(/Has vuelto a la versión \d+/)).toBeVisible()
+  await expect(page.getByText(/Has vuelto a la versión \d+/).first()).toBeVisible()
   await expect(page.getByText('Una promesa cambiada a mano.')).toHaveCount(0)
 
   // Entry 117: the answers can be edited too; the money and the warnings are worked out again.
@@ -259,15 +266,23 @@ test('from the interests to the rhythm with the fakes (US1)', async ({ page: fir
   await expect(page.getByRole('heading', { name: 'Los temas que propone la IA' })).toBeVisible()
   await audit(page)
   await page.getByRole('button', { name: 'Guardar como versión nueva' }).click()
-  await expect(page.getByText(/Cambios guardados\. Es la versión \d+\./)).toBeVisible()
+  await expect(page.getByText(/Cambios guardados\. Es la versión \d+\./).first()).toBeVisible()
   await expect(page.getByText(/Comidas que aguantan bien en el tupper/).first()).toBeVisible()
 
-  // Entry 116: the name changes in the step of names, with the @ checked again.
+  // Entry 136: the name changes in a panel of the profile, with the @ checked again; «Cancelar» changes nothing.
   await page.getByRole('button', { name: 'Cambiar el nombre' }).click()
-  await expect(heading(page, 'El nombre de tu canal')).toBeVisible()
-  await names.nth(2).getByRole('button', { name: 'Quedarme con este nombre' }).click()
-  await expect(names.nth(2).getByText('Nombre elegido')).toBeVisible()
-  await page.getByRole('button', { name: 'Terminar' }).click()
+  const panel = page.getByRole('region', { name: 'Cambiar el nombre' })
+  await expect(panel.getByRole('article').first()).toBeVisible()
+  await audit(page)
+  await panel.getByRole('button', { name: 'Cancelar' }).click()
+  await expect(panel).toHaveCount(0)
+  await page.getByRole('button', { name: 'Cambiar el nombre' }).click()
+  const proposed = panel.getByRole('article')
+  await proposed.nth(2).getByRole('button', { name: 'Quedarme con este nombre' }).click()
+  await expect(proposed.nth(2).getByText('Elegido, aún sin usar')).toBeVisible()
+  await proposed.nth(2).getByRole('button', { name: 'Usar este nombre' }).click()
+  await expect(page.getByText(/Nombre cambiado: ahora es «.+»\. Es la versión \d+ del perfil\./).first()).toBeVisible()
+  await expect(panel).toHaveCount(0)
   await expect(page).toHaveURL(/\/canal$/)
   await expect(page.getByRole('button', { name: 'Cambiar el nombre' })).toBeVisible()
   // Entry 122: only the name moved; what was rewritten and edited since the journey stays.

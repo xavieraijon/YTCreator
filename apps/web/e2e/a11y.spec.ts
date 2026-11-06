@@ -277,7 +277,7 @@ test('a new channel from the interests to the name with the keyboard alone (T123
 
     await expect(heading(page, 'La idea de tu canal')).toBeVisible()
     await press(/Proponer ideas/)
-    await expect(page.getByRole('button', { name: 'Elegir este concepto' }).first()).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Elegir esta idea' }).first()).toBeVisible()
 
     // Changing something in a concept, without leaving the keyboard.
     await press('Cambiar algo')
@@ -287,7 +287,7 @@ test('a new channel from the interests to the name with the keyboard alone (T123
     await press('Guardar cambios')
     await expect(page.getByRole('article', { name: 'Cenas de diario sin complicarte la vida.' })).toBeVisible()
 
-    await press('Elegir este concepto')
+    await press('Elegir esta idea')
     await tabTo(page, page.getByRole('button', { name: 'Seguir', exact: true }))
     await page.keyboard.press('Enter')
 
@@ -296,7 +296,8 @@ test('a new channel from the interests to the name with the keyboard alone (T123
     await expect(page.getByRole('button', { name: 'Elegir el nombre' })).toBeVisible()
     await press('Elegir el nombre')
 
-    await expect(heading(page, 'El nombre de tu canal')).toBeVisible()
+    // Entry 136: from the profile, in its own panel.
+    await expect(page.getByRole('region', { name: 'Elegir el nombre' })).toBeVisible()
     await press(/Proponer nombres/)
     await expect(page.getByRole('article').first().getByText('Camino libre')).toBeVisible()
 
@@ -319,8 +320,9 @@ test('a new channel from the interests to the name with the keyboard alone (T123
     await expect(ask).toHaveCount(0)
 
     await press('Quedarme con este nombre')
-    await expect(page.getByText('Nombre elegido')).toBeVisible()
-    await press('Terminar')
+    await expect(page.getByText('Elegido, aún sin usar')).toBeVisible()
+    await press('Usar este nombre')
+    await expect(page.getByText(/Nombre cambiado: ahora es/).first()).toBeVisible()
     await expect(page).toHaveURL(/\/canal$/)
   } finally {
     await server.stop()

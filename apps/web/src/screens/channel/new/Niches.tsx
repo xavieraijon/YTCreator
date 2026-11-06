@@ -82,6 +82,7 @@ export function Niches({ view, busy, reload, onStep }: NichesProps) {
           onStep={onStep}
           proposalActions={
             <Proposal
+              key={proposal.id}
               estimate={estimate}
               failure={generate.failure}
               claimsTrimmed={proposal.claimsTrimmed}
@@ -227,6 +228,8 @@ function Batch({ view, proposal, busy, reload, onStep, proposalActions }: BatchP
             busy={deciding}
             onChoose={() => void decide({ selectedIndex: index, status: 'aprobada' })}
             onRetry={() => void measure([niche], nicheMeasure?.status === 'medida')}
+            onNext={() => onStep({})}
+            nextBusy={busy}
           />
         )
       })}
@@ -275,13 +278,6 @@ function Batch({ view, proposal, busy, reload, onStep, proposalActions }: BatchP
 
       {chosen && chosenMeasure?.status === 'medida' && (
         <References key={chosenMeasure.id} view={view} measureId={chosenMeasure.id} />
-      )}
-      {chosen && (
-        <div className={styles.actions}>
-          <Button variant="primary" loading={busy} onClick={() => onStep({})}>
-            {text.next}
-          </Button>
-        </div>
       )}
     </>
   )

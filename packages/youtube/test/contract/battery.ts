@@ -147,6 +147,16 @@ export function runYouTubeContract(name: string, make: YouTubeFactory, options: 
       }
     })
 
+    test('Y9b', 'resolve reads the old /user/ and /c/ links; the Data API has no way for /c/ (entry 144)', async () => {
+      const yt = await make('normal')
+      const user = ok(await yt.resolve(`https://www.youtube.com/user/${INPUTS.channelHandle}`))
+      expect(user.data).toEqual({ channelId: INPUTS.channelId })
+      const custom = await yt.resolve(`youtube.com/c/${INPUTS.channelHandle}/videos`)
+      if (yt.source === 'data_api') expect(failed(custom)).toBe('no_disponible')
+      else expect(ok(custom).data).toEqual({ channelId: INPUTS.channelId })
+      expect(failed(await yt.resolve(`https://www.youtube.com/user/${INPUTS.missingHandle}`))).toBe('no_encontrado')
+    })
+
     test('Y10', 'resolve of a missing channel or of text that is not a link is no_encontrado', async () => {
       const yt = await make('normal')
       expect(failed(await yt.resolve(`@${INPUTS.missingHandle}`))).toBe('no_encontrado')

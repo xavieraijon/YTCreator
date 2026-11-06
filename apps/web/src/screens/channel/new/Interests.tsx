@@ -41,7 +41,11 @@ export function InterestsView({ initial = '', busy = false, onNext }: InterestsP
         rows={5}
         value={value}
         {...(error ? { error } : {})}
-        onChange={(event) => setValue(event.target.value)}
+        onChange={(event) => {
+          setValue(event.target.value)
+          // Novice audit 003, minor 8: the error goes as soon as what is written is enough.
+          if (error && !interestsError(event.target.value)) setError(undefined)
+        }}
       />
       <div className={styles.actions}>
         <Button type="submit" variant="primary" loading={busy}>

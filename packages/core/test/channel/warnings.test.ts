@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { type WarningKnowledge, conceptWarnings, nicheWarnings, yppSummary } from '../../src/channel/warnings.ts'
+import {
+  type WarningKnowledge,
+  conceptWarnings,
+  hoursNeeded,
+  nicheWarnings,
+  yppSummary,
+} from '../../src/channel/warnings.ts'
 
 const KNOWLEDGE: WarningKnowledge = {
   madeForKids: { reviewedAt: '2026-11-01', audienceKeywords: ['niños', 'infantil', 'bebés'], label: 'Niños' },
@@ -96,6 +102,14 @@ describe('nicheWarnings (US1 AS7, FR-015)', () => {
     expect(codes(nicheWarnings({ label: 'Humor', summary: 'Chistes cortos.', shortsOnly: true }, KNOWLEDGE))).toEqual([
       'solo_shorts',
     ])
+  })
+})
+
+describe('hoursNeeded (novice audit 003, M2)', () => {
+  it('is what the videos of a week take, apart from the hours the creator has', () => {
+    const rhythm = { hoursPerLongVideo: 4, hoursPerShort: 1 }
+    expect(hoursNeeded({ longPerWeek: 1, shortsPerWeek: 3 }, rhythm)).toBe(7)
+    expect(hoursNeeded({ longPerWeek: 0, shortsPerWeek: 0 }, rhythm)).toBe(0)
   })
 })
 

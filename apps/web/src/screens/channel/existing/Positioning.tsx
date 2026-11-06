@@ -7,7 +7,7 @@ import { errorText } from '../../../shell/errorText.ts'
 import { channelEs } from '../../../strings/channel.es.ts'
 import { es } from '../../../strings/es.ts'
 import styles from '../channel.module.css'
-import { type Concept, ConceptDetails, ConceptEditor } from '../new/Concepts.tsx'
+import { type Concept, ConceptDetails, ConceptEditor, overHours, RhythmAsk } from '../new/Concepts.tsx'
 import { AiAction, Proposal } from '../Proposal.tsx'
 import { latestOf, payloadOf, useEstimate, useGenerate } from '../useJourney.ts'
 import { videoLine } from './format.ts'
@@ -254,6 +254,7 @@ export function CurrentSection({ view, reload, proposal, onApproved }: CurrentSe
         />
       ) : (
         <Proposal
+          key={proposal.id}
           estimate={estimate}
           failure={generate.failure}
           claimsTrimmed={proposal.claimsTrimmed}
@@ -350,8 +351,16 @@ function ProposalSection({ view, busy, reload, onStep, current }: PositioningPro
   const [editing, setEditing] = useState(false)
   const [changes, setChanges] = useState<Positioned['changes']>([])
   const [backError, setBackError] = useState<unknown>(null)
+  // A rhythm that does not fit asks before it is approved (novice audit 003, round 2, M1).
+  const [askingRhythm, setAskingRhythm] = useState(false)
   const failed = estimateError ?? generate.error ?? error ?? backError
   const positioned = proposal ? payloadOf<Positioned>(proposal) : null
+  const approvePositioning = () => {
+    if (!proposal) return
+    void decide(proposal.id, { status: 'aprobada' }).then((approved) => {
+      if (approved) onStep({})
+    })
+  }
   const { hoursPerWeek, onCamera } = view.state
   const stale =
     positioned?.basedOn !== undefined &&
@@ -399,15 +408,12 @@ function ProposalSection({ view, busy, reload, onStep, current }: PositioningPro
         />
       ) : (
         <Proposal
+          key={proposal.id}
           estimate={estimate}
           failure={generate.failure}
           claimsTrimmed={proposal.claimsTrimmed}
           busy={generate.busy || deciding || busy}
-          onApprove={() =>
-            void decide(proposal.id, { status: 'aprobada' }).then((approved) => {
-              if (approved) onStep({})
-            })
-          }
+          onApprove={() => (overHours(positioned as Concept) ? setAskingRhythm(true) : approvePositioning())}
           onEdit={() => {
             setChanges(positioned.changes)
             setEditing(true)
@@ -421,6 +427,7 @@ function ProposalSection({ view, busy, reload, onStep, current }: PositioningPro
             <Changes list={positioned.changes} reading={view.reading} />
             <ConceptDetails
               concept={positioned as Concept}
+              rhythm={view.rhythm}
               own={
                 view.reading
                   ? { medianViews: view.reading.summary.long.medianViews, readAt: view.reading.fetchedAt }
@@ -430,6 +437,14 @@ function ProposalSection({ view, busy, reload, onStep, current }: PositioningPro
           </Card>
         </Proposal>
       )}
+      <RhythmAsk
+        open={askingRhythm}
+        onCancel={() => setAskingRhythm(false)}
+        onConfirm={() => {
+          setAskingRhythm(false)
+          approvePositioning()
+        }}
+      />
       {proposal && !editing && (
         <Previous
           proposal={proposal}

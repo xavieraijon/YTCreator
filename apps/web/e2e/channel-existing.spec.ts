@@ -111,11 +111,17 @@ test('an existing channel from its link to the profile, with the fakes (US4)', a
   const proposal = page.getByRole('region', { name: 'Lo que te proponemos' })
   await expect(proposal.getByText('Centrar el canal en cenas rápidas.')).toBeVisible()
   await expect(proposal.getByRole('button', { name: 'Aprobar' })).toBeVisible()
+  // Novice audit 003, round 3: what is written in «¿Qué cambiarías?» is not lost by approving.
+  await proposal.getByLabel(/¿Qué cambiarías\?/).fill('Más cerámica y menos cocina.')
+  await expect(proposal.getByRole('button', { name: 'Aprobar' })).toBeDisabled()
+  await expect(proposal.getByText(/Has escrito qué cambiarías/)).toBeVisible()
+  await proposal.getByLabel(/¿Qué cambiarías\?/).fill('')
+  await expect(proposal.getByRole('button', { name: 'Aprobar' })).toBeEnabled()
   // The money, from its own videos and with what it supposes in sight; the hours, the answer.
   await expect(proposal.getByText(/€ al mes con anuncios/)).toBeVisible()
   await expect(proposal.getByText(/Supone unas .* visitas al mes/)).toBeVisible()
   await expect(proposal.getByText(/Un vídeo largo típico de tu canal consigue/)).toBeVisible()
-  await expect(proposal.getByText(/unas 8 horas en total/)).toBeVisible()
+  await expect(proposal.getByText(/Tú tienes 8 horas\./)).toBeVisible()
   await audit(page)
 
   // Edits a topic of the channel and approves.

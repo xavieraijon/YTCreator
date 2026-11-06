@@ -6,6 +6,7 @@ import {
   type JourneyState,
   type PositioningOutput,
   type ProfileExportInput,
+  type Rhythm,
   cadenceWithinLimits,
 } from '@ytcreator/core'
 import type { ConceptFigures } from '@ytcreator/core/api'
@@ -180,8 +181,8 @@ export function createProfile(deps: ProfileDeps) {
         name &&
         names.listByJourney(journey.id).findLast((c) => c.displayName === name.displayName && c.handle === name.handle)
 
-      // The money and the warnings are worked out now, with the journey as it stands. What the AI wrote, such as the
-      // hours in the cadence, stays: if the answers changed, the screen said so before choosing.
+      // The money and the warnings are worked out now, with the journey as it stands. The hours in the cadence are the
+      // creator's answer (entry 136); the rest of what the AI wrote stays: if the answers changed, the screen said so.
       const { concept: now, figures } = conceptNow(journey, chosen, chosen.regionByHand === true)
       const { concept, warnings } = conceptOf(figures, now)
       const profile: ChannelProfile = channelProfileSchema.parse({
@@ -367,6 +368,7 @@ export function exportInput(
   { channels, profiles, measures, readings }: ProfileExportSources,
   channelId: string,
   exportedAt: string,
+  rhythm?: Rhythm,
 ): ProfileExportInput | null {
   const channel = channels.get(channelId)
   const current = profiles.getCurrent(channelId)
@@ -386,5 +388,6 @@ export function exportInput(
     references: measure ? measures.listReferences(measure.id) : [],
     reading: profile.context ? readings.get(profile.context.readingId) : null,
     exportedAt,
+    ...(rhythm ? { rhythm } : {}),
   }
 }

@@ -318,6 +318,8 @@ export const journeyViewSchema = journeySchema.extend({
   warnings: z.record(z.string(), z.array(channelWarningViewSchema)),
   // Older measures ask to be measured again (FR-027).
   measureStaleDays: z.number().int().positive(),
+  // What a video takes, to say the hours a rhythm needs next to the ones the creator has (novice audit 003, M2).
+  rhythm: z.object({ hoursPerLongVideo: z.number().positive(), hoursPerShort: z.number().positive() }),
   // What was read of the channel the journey is about: not the one of a channel it no longer is.
   reading: channelReadingSchema.nullable(),
 })

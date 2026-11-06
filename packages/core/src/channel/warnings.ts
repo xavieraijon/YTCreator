@@ -62,6 +62,15 @@ export function warningOfCode(code: ChannelWarningCode, knowledge: WarningKnowle
   return { code, sourceId: null, reviewedAt: null }
 }
 
+/** What a video takes, from the knowledge package: to tell the hours a rhythm needs. */
+export type Rhythm = Pick<WarningKnowledge, 'hoursPerLongVideo' | 'hoursPerShort'>
+
+/** The hours a week a rhythm needs (novice audit 003, M2): apart from the hours the creator has. */
+export const hoursNeeded = (
+  { longPerWeek, shortsPerWeek }: { longPerWeek: number; shortsPerWeek: number },
+  rhythm: Rhythm,
+) => longPerWeek * rhythm.hoursPerLongVideo + shortsPerWeek * rhythm.hoursPerShort
+
 export function conceptWarnings(
   concept: ConceptForWarnings,
   { hoursPerWeek }: { hoursPerWeek?: number },
@@ -78,8 +87,8 @@ export function conceptWarnings(
   const { longPerWeek, shortsPerWeek } = concept.cadence
   if (longPerWeek === 0 && shortsPerWeek > 0) warnings.push(onlyShorts(knowledge))
   if (hoursPerWeek !== undefined) {
-    const needed = longPerWeek * knowledge.hoursPerLongVideo + shortsPerWeek * knowledge.hoursPerShort
-    if (needed > hoursPerWeek) warnings.push({ code: 'ritmo_insostenible', sourceId: null, reviewedAt: null })
+    if (hoursNeeded(concept.cadence, knowledge) > hoursPerWeek)
+      warnings.push({ code: 'ritmo_insostenible', sourceId: null, reviewedAt: null })
   }
   return warnings
 }
