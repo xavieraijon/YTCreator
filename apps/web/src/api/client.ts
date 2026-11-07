@@ -132,10 +132,8 @@ export const channelApi = {
   current: (options?: RequestOptions) => apiClient.get('/api/channels/current', channelCurrentSchema, options),
   create: (origin: ChannelOrigin) => apiClient.post('/api/channels', { origin }, createChannelResponseSchema),
   journey: (id: string, options?: RequestOptions) => apiClient.get(`/api/journeys/${id}`, journeyViewSchema, options),
-  step: (
-    id: string,
-    body: { revision: number; step: JourneyStep; data?: object; confirm?: boolean; nameLater?: boolean },
-  ) => apiClient.post(`/api/journeys/${id}/step`, body, journeySchema),
+  step: (id: string, body: { revision: number; step: JourneyStep; data?: object; nameLater?: boolean }) =>
+    apiClient.post(`/api/journeys/${id}/step`, body, journeySchema),
   // With the proposal being redone, the estimate counts it too: it is sent with the request (P17).
   estimate: (id: string, use: ChannelUse, options?: RequestOptions, proposalId?: string) =>
     apiClient.post(

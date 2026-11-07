@@ -69,6 +69,18 @@ describe('ConceptCard', () => {
     expect(html).toContain('sin fuente')
   })
 
+  it('says the kind of content the money is worked out with, or that it is for children (P8)', () => {
+    expect(card()).toContain('contenido de tipo «Estilo de vida»')
+    const kids = card({
+      figures: {
+        ...concept.figures,
+        warnings: [{ code: 'infantil', sourceLabel: 'Hecho para niños', reviewedAt: '2026-11-01' }],
+      },
+    })
+    expect(kids).toContain(text.moneyCategoryKids)
+    expect(kids).not.toContain('contenido de tipo')
+  })
+
   it('without a figure says so and gives no amount', () => {
     const html = card({
       figures: {
@@ -119,6 +131,7 @@ describe('ConceptEditor (US2 AS3)', () => {
       text.form.shortsPerWeek,
       text.form.assumptions,
       text.form.madeForKids,
+      text.form.category,
     ]) {
       expect(html).toContain(label)
     }

@@ -15,7 +15,6 @@ import { Reading } from './existing/Reading.tsx'
 import { Concepts } from './new/Concepts.tsx'
 import { Interests } from './new/Interests.tsx'
 import { Names } from './new/Names.tsx'
-import { NicheChange, needsNicheConfirm } from './new/NicheChange.tsx'
 import { Niches } from './new/Niches.tsx'
 import { Questions } from './new/Questions.tsx'
 import { Rhythm } from './new/Rhythm.tsx'
@@ -40,7 +39,6 @@ export function ChannelStep({ kind, step }: { kind: ChannelOrigin; step: Journey
   const { view, noChannel, error, reload } = useJourneyView()
   const [busy, setBusy] = useState(false)
   const [stepError, setStepError] = useState<unknown>(null)
-  const [askNicheChange, setAskNicheChange] = useState(false)
 
   useEffect(() => {
     // The end of the journey is the channel's own screen, with the next step.
@@ -50,10 +48,7 @@ export function ChannelStep({ kind, step }: { kind: ChannelOrigin; step: Journey
     }
   }, [noChannel, view, kind, step])
 
-  const moveTo = async (
-    target: JourneyStep,
-    { data, confirm, nameLater }: { data?: object; confirm?: boolean; nameLater?: boolean } = {},
-  ) => {
+  const moveTo = async (target: JourneyStep, { data, nameLater }: { data?: object; nameLater?: boolean } = {}) => {
     if (!view) return
     setBusy(true)
     setStepError(null)
@@ -62,7 +57,6 @@ export function ChannelStep({ kind, step }: { kind: ChannelOrigin; step: Journey
         revision: view.revision,
         step: target,
         ...(data ? { data } : {}),
-        ...(confirm ? { confirm } : {}),
         ...(nameLater ? { nameLater } : {}),
       })
       // The address follows the view: moving it first would send the creator back to the old step.
@@ -85,16 +79,7 @@ export function ChannelStep({ kind, step }: { kind: ChannelOrigin; step: Journey
   return (
     <Screen
       title={TITLES[step] ?? channelEs.steps[step]}
-      before={
-        <StepIndicator
-          kind={kind}
-          step={step}
-          onBack={(back) => {
-            if (view && needsNicheConfirm(view, back)) setAskNicheChange(true)
-            else void moveTo(back)
-          }}
-        />
-      }
+      before={<StepIndicator kind={kind} step={step} onBack={(back) => void moveTo(back)} />}
     >
       {failed !== null && (
         <ErrorMessage live title={errorText(failed)} action={{ label: es.app.retry, onClick: () => void reload() }} />
@@ -114,15 +99,6 @@ export function ChannelStep({ kind, step }: { kind: ChannelOrigin; step: Journey
       )}
       {ready && step === 'lectura' && <Reading view={ready} busy={busy} reload={reload} onStep={onStep} />}
       {ready && step === 'posicionamiento' && <Positioning view={ready} busy={busy} reload={reload} onStep={onStep} />}
-      <NicheChange
-        open={askNicheChange}
-        busy={busy}
-        onCancel={() => setAskNicheChange(false)}
-        onConfirm={() => {
-          setAskNicheChange(false)
-          void moveTo('nichos', { confirm: true })
-        }}
-      />
       {ready && !TITLES[step] && <p className={styles.why}>{channelEs.stepSoon}</p>}
     </Screen>
   )

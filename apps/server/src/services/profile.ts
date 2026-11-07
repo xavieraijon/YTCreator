@@ -8,6 +8,8 @@ import {
   type ProfileExportInput,
   type Rhythm,
   cadenceWithinLimits,
+  RPM_CATEGORIES,
+  type RpmCategory,
 } from '@ytcreator/core'
 import type { ConceptFigures } from '@ytcreator/core/api'
 import type { ConceptKnowledge } from '@ytcreator/knowledge'
@@ -119,12 +121,16 @@ export function createProfile(deps: ProfileDeps) {
     const payload = (proposal.editedPayload ?? proposal.payload) as Partial<ConceptOutput> & {
       concepts?: ConceptOutput[]
     }
-    const promise = channelProfileSchema.parse(from.profile).concept.promise
+    // A version that no longer reads, or a kind that is not one of ours, shows nothing rather than failing the screen.
+    const read = channelProfileSchema.safeParse(from.profile)
+    if (!read.success) return null
+    const promise = read.data.concept.promise
     const concept =
       proposal.kind === 'conceptos'
         ? (payload.concepts?.find((c) => c.promise === promise) ?? payload.concepts?.[proposal.selectedIndex ?? -1])
         : payload
-    return concept?.monetization?.category ?? null
+    const category = concept?.monetization?.category
+    return (RPM_CATEGORIES as readonly unknown[]).includes(category) ? (category as RpmCategory) : null
   }
 
   // The money and the warnings worked out again for a profile, as at the end of the journey (entries 114, 117 and 121).
@@ -251,6 +257,9 @@ export function createProfile(deps: ProfileDeps) {
 
     // Whether the money of this channel can be worked out again (the kind of content behind it is still there).
     canRecalculate: (channelId: string) => categoryOf(channelId) !== null,
+
+    // The kind of content its money is worked out with, to show it (P8).
+    category: (channelId: string) => categoryOf(channelId),
 
     // «Volver a medir» (entry 114): the niche with its new measure, and the money worked out again with it.
     // Null if the profile no longer points to the measure measured again (another version was brought back meanwhile).

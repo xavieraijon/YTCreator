@@ -114,6 +114,14 @@ function run() {
 
 function answerSearch(limit, query) {
   if (query.includes('sin datos')) return print({ _type: 'playlist', id: query, entries: [] })
+  // A run that ends well with output that is not JSON (P9): unreadable, not empty.
+  // JSON that is not a list, and a list whose entries cannot be read (P9): unreadable too.
+  if (query.includes('sin lista')) return print({ _type: 'playlist', id: query })
+  if (query.includes('formato raro')) return print({ _type: 'playlist', id: query, entries: [{ id: 'abc', title: 'x' }] })
+  if (query.includes('ilegible')) {
+    process.stdout.write('WARNING: something unexpected\n{"_type": "playl')
+    process.exit(0)
+  }
   if (query.includes('bloqueado')) {
     fail('[youtube:search] Unable to download API page: HTTP Error 429: Too Many Requests')
   }

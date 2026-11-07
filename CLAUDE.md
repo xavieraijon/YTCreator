@@ -28,7 +28,8 @@ Spec-Driven Development with GitHub Spec Kit (`/speckit-*`).
   Puerta A passed. Real YouTube tested only through yt-dlp (T125b, entry 141); real AI not tested. Novice audit passed
   in round 3 (`specs/003-channel-and-niche/novice-audit.md`); its open minors go to the UI pass with Design mode. P1,
   P3, P6 and P17 closed and merged on 2026-11-06 (PR #4, entries 148 to 152; P1 has no source, only marked as an
-  assumption). Still open from before: P2, P4, P5, P8, P9, P19. Reports in `specs/003-channel-and-niche/checklists/validation.md`.
+  assumption). P2, P4, P5, P8, P9 and P19 closed on 2026-11-06 (branch `003-pendientes-2`, entries 153 to 158). Open:
+  P36 (change the money category from the profile; not blocking). Reports in `specs/003-channel-and-niche/checklists/validation.md`.
 - Provider subscriptions beyond Claude are a later feature, not part of 002. First one planned: Gemini
   (Google AI Pro, with its CLI).
 - Commands (Node 24, `fnm exec --using=24 --`): `pnpm dev` (server + web), `pnpm lint`, `pnpm typecheck`,

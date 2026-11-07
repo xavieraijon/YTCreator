@@ -29,6 +29,8 @@ export const journeyStateSchema = z.object({
     .optional(),
   // FR-025: the niche changed after the concept was approved.
   conceptNeedsReview: z.boolean().optional(),
+  // P4: the niche the approved concept was chosen on; choosing another one is what asks for a new concept.
+  conceptNiche: z.string().min(1).optional(),
 })
 export type JourneyState = z.infer<typeof journeyStateSchema>
 
@@ -70,35 +72,30 @@ export interface StepRequest {
   from: JourneyStep
   to: JourneyStep
   approvals: ApprovalState
-  confirm?: boolean
   nameLater?: boolean
 }
 
-export type StepFailure = 'sin_aprobar' | 'salto_no_permitido' | 'requiere_confirmar'
-export type StepPlan = { ok: true; needsReview: boolean } | { ok: false; reason: StepFailure }
+export type StepFailure = 'sin_aprobar' | 'salto_no_permitido'
+export type StepPlan = { ok: true } | { ok: false; reason: StepFailure }
 
 // Forward one step at a time with its approval; back to any earlier step, keeping what was approved after it.
-export function planStep({ kind, from, to, approvals, confirm, nameLater }: StepRequest): StepPlan {
+export function planStep({ kind, from, to, approvals, nameLater }: StepRequest): StepPlan {
   const steps = stepsOf(kind)
   const fromIndex = steps.indexOf(from)
   const toIndex = steps.indexOf(to)
   // A channel that exists has no step to choose a name: only a new one comes back to it, to choose the name left for
   // later (FR-018b) or to change the one chosen (entry 116).
   if (kind === 'nuevo' && from === 'hecho' && to === 'nombres') {
-    return { ok: true, needsReview: false }
+    return { ok: true }
   }
   if (fromIndex < 0 || toIndex < 0 || from === 'hecho') return { ok: false, reason: 'salto_no_permitido' }
 
-  if (toIndex < fromIndex) {
-    if (to === 'nichos' && approvals.concept) {
-      return confirm ? { ok: true, needsReview: true } : { ok: false, reason: 'requiere_confirmar' }
-    }
-    return { ok: true, needsReview: false }
-  }
+  // P4: going back to look at the niches changes nothing; choosing another niche is what asks for a new concept.
+  if (toIndex < fromIndex) return { ok: true }
   if (toIndex !== fromIndex + 1) return { ok: false, reason: 'salto_no_permitido' }
 
   const needed = NEEDS[from]
   const approved = needed !== undefined && approvals[needed] === true
-  if (approved || (from === 'nombres' && nameLater)) return { ok: true, needsReview: false }
+  if (approved || (from === 'nombres' && nameLater)) return { ok: true }
   return { ok: false, reason: 'sin_aprobar' }
 }

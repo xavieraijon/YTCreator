@@ -1,13 +1,22 @@
 import type { JourneyFullView } from '@ytcreator/core/api'
 import { Button, Dialog } from '@ytcreator/ui'
 import { channelEs } from '../../../strings/channel.es.ts'
-import { latestOf } from '../useJourney.ts'
+import { latestOf, payloadOf } from '../useJourney.ts'
 
 const text = channelEs.nicheChange
 
-// FR-025: the server asks for this confirmation when going back to the niches with a concept approved.
-export function needsNicheConfirm(view: JourneyFullView, target: string): boolean {
-  return target === 'nichos' && latestOf(view, 'conceptos')?.status === 'aprobada' && !view.state.conceptNeedsReview
+// The niche chosen in the batch in use, if one is.
+function chosenNiche(view: JourneyFullView): string | null {
+  const niches = latestOf(view, 'nichos')
+  if (niches?.status !== 'aprobada' || niches.selectedIndex === null) return null
+  return payloadOf<{ niches: { label: string }[] }>(niches).niches[niches.selectedIndex]?.label ?? null
+}
+
+// FR-025 and P4: looking at the niches again asks nothing; choosing another one than the concept's does.
+export function needsNicheConfirm(view: JourneyFullView, label: string): boolean {
+  if (latestOf(view, 'conceptos')?.status !== 'aprobada' || view.state.conceptNeedsReview) return false
+  const base = view.state.conceptNiche ?? chosenNiche(view)
+  return base !== null && base !== label
 }
 
 export interface NicheChangeProps {

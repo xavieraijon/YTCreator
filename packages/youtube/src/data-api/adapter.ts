@@ -232,7 +232,8 @@ export function createDataApiYouTube(options: DataApiYouTubeOptions): YouTubeDat
           },
         ]
       })
-      return hits.length > 0 ? sourced(hits) : youtubeFailure('sin_datos')
+      // The search found videos but none could be read: not «nothing found», so a name is never green (P9).
+      return hits.length > 0 ? sourced(hits) : youtubeFailure('no_disponible')
     },
 
     async getChannel(ref, signal) {

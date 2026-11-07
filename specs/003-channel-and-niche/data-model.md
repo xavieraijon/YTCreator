@@ -92,6 +92,8 @@ Un recorrido guiado. Un canal tiene como mucho un recorrido `activo` a la vez.
 | `channelInput` | `string` | `enlace` | URL de canal, `@` o URL de vídeo (FR-019) |
 | `resolvedChannelId` | `string` | `confirmar` | |
 | `keptName` | `{displayName, handle \| null}` | `intereses` | Nombre y @ que conserva un canal con pocos vídeos (FR-022) |
+| `conceptNeedsReview` | `boolean` | `nichos` | Lo pone el servidor al elegir otro nicho con un concepto aprobado; se quita al elegir concepto o al volver al nicho del concepto (FR-025) |
+| `conceptNiche` | `string` | `conceptos` | Nicho con el que se aprobó el concepto; lo guarda el servidor (P4, entrada 155). Ninguno de los dos llega desde la pantalla |
 
 ### Transiciones
 
@@ -99,8 +101,8 @@ Canal nuevo:
 
 ```text
 intereses → preguntas → nichos → ritmo → conceptos → nombres → hecho
-                          ↑  └──────── (cambiar nicho: FR-025, pide confirmación) ──┐
-                          └─────────────────────────────────────────────────────────┘
+                          ↑  └──────── (volver: libre; elegir otro nicho pide confirmación, FR-025, P4) ──┐
+                          └──────────────────────────────────────────────────────────────────────────────┘
 nombres ──(dejar para más tarde, FR-018b)──→ hecho   [channel.name_status = provisional]
 hecho ──(elegir el nombre aplazado, FR-018b)──→ nombres   [el recorrido vuelve a activo; al terminar, versión nueva del perfil con origen manual]
 ```

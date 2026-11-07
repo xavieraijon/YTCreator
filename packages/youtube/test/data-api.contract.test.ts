@@ -111,6 +111,15 @@ describe('Data API adapter', () => {
     expect(!result.ok && result.failure.code).toBe('cupo_agotado')
   })
 
+  it('videos found that cannot be read are no_disponible, not «no results» (P9)', async () => {
+    const api = dataApiFetch((url) =>
+      url.pathname.endsWith('/videos') ? new Response(JSON.stringify({ items: [] }), { status: 200 }) : undefined,
+    )
+    const { yt } = make({ fetch: api.fetch })
+    const result = await yt.search(INPUTS.query, { limit: SEARCH_LIMIT })
+    expect(!result.ok && result.failure.code).toBe('no_disponible')
+  })
+
   it('a key that Google rejects is no_disponible', async () => {
     const api = dataApiFetch(() => apiError(400, 'keyInvalid'))
     const { yt } = make({ fetch: api.fetch })

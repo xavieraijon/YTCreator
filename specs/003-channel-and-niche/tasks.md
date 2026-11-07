@@ -32,7 +32,8 @@ separado.
   (nunca en la URL), solo se muestra su `hint` de 4 caracteres y `Secret.reveal()` solo se permite en
   `packages/ai/src/**`, `packages/youtube/src/data-api/**` y `apps/server/src/secrets/**`. Los logs nunca llevan URLs
   completas ni cabeceras.
-- yt-dlp se lanza con `execFile` y argumentos en lista, nunca con `shell: true`.
+- yt-dlp se lanza con `spawn`, `shell: false` y argumentos en lista, nunca con `shell: true` (entrada 157, P5: `spawn`
+  porque no tiene el límite `maxBuffer` de `execFile`).
 - Comandos con Node 24: `fnm exec --using=24 -- pnpm lint|typecheck|test|test:installer|test:e2e`.
 - Al acabar cada fase o historia: lint + typecheck + test en verde y commit (`feat(003): …`).
 
@@ -83,7 +84,7 @@ rutas y pantallas.
 - [X] T024 [P] Tests de RSS y Data API en `packages/youtube/test/rss.test.ts` y `packages/youtube/test/data-api.contract.test.ts` con `fetch` simulado: clave en `X-Goog-Api-Key` y nunca en la URL, 403 `quotaExceeded` = `cupo_agotado`, contador de unidades, `health().quota.nearLimit` es verdadero al pasar el umbral de `thresholds.json` (FR-030)
 - [X] T025 [P] Test del servicio `youtube` en `apps/server/test/services/youtube.test.ts`: elige Data API si hay clave y cupo, si no yt-dlp; usa la caché; como mucho 3 procesos yt-dlp y 4 comprobaciones de @ a la vez; los logs no contienen la clave, URLs completas ni cabeceras
 - [X] T026 [P] Test de trabajos en segundo plano en `apps/server/test/http/jobs.test.ts`: `GET /api/jobs/:id/events` emite `progress`, `item`, `done`, `failed` por SSE; el trabajo sigue si se cierra la conexión; al reiniciar, `en_curso` pasa a `interrumpido`
-- [X] T027 [P] Test del recorrido en `packages/core/test/channel/journey.test.ts`: transiciones `intereses→preguntas→nichos→ritmo→conceptos→nombres→hecho` y `enlace→confirmar→lectura→posicionamiento→hecho`; saltar un paso no aprobado falla; volver a un paso anterior conserva lo aprobado después hasta que se cambie; volver a `nichos` con un concepto aprobado lo marca para revisar y exige `confirm: true` (FR-025); `journeyStateSchema` (intereses 10–1.000 caracteres, 0–3 respuestas, `hoursPerWeek` 1–60, `onCamera` `cara|voz|ninguna`)
+- [X] T027 [P] Test del recorrido en `packages/core/test/channel/journey.test.ts`: transiciones `intereses→preguntas→nichos→ritmo→conceptos→nombres→hecho` y `enlace→confirmar→lectura→posicionamiento→hecho`; saltar un paso no aprobado falla; volver a un paso anterior conserva lo aprobado después hasta que se cambie; volver a `nichos` está permitido sin confirmar (FR-025; desde la entrada 155, P4, lo que marca el concepto es elegir otro nicho); `journeyStateSchema` (intereses 10–1.000 caracteres, 0–3 respuestas, `hoursPerWeek` 1–60, `onCamera` `cara|voz|ninguna`)
 - [X] T028 [P] Test del esquema `ChannelProfile` en `packages/core/test/channel/profile.test.ts`: promesa ≤ 160 caracteres, 3–4 pilares, monetización con `monthlyEurRange` = visitas × RPM / 1.000, `displayName` 1–100 caracteres
 - [X] T029 [P] Tests de esquemas de API en `packages/core/test/api/channel.test.ts`, `youtube.test.ts`, `usage.test.ts`: cada cuerpo de petición y respuesta de http-api.md
 - [X] T030 [P] Tests de rutas base en `apps/server/test/http/channel-base.test.ts`: `GET /api/channels/current` con y sin canal, `POST /api/channels` (201 y `409 ya_hay_canal`), `GET /api/journeys/:id`, `POST /api/journeys/:id/step` con `revision` desfasada (`409` con `current`) y paso no aprobado (`400`), `POST /api/journeys/:id/estimate`, `POST /api/journeys/:id/proposals` con `estimateId` caducado, `PATCH /api/proposals/:id`, guardia de Host/Origin
@@ -196,7 +197,7 @@ ritmo y monetización honesta en rangos con fuentes) y el creador elige uno.
 - [X] T089 [P] [US2] Prompt `packages/knowledge/prompts/conceptos/v1.md` (promesa ≤ 160 caracteres, 3–4 pilares unidos por la promesa, formato largo + Shorts de escaparate, sin cifras propias; reglas de `writing/human.md`)
 - [X] T090 [US2] Montar en el servidor los conceptos: datos de entrada (nicho medido, referencias, ritmo, conocimiento) y cálculo de monetización y avisos tras la IA en `apps/server/src/services/concepts.ts`, llamado desde `apps/server/src/http/routes/channel.ts`
 - [X] T091 [US2] Pantalla `apps/web/src/screens/channel/new/Concepts.tsx`
-- [X] T091b [US2] Aviso y confirmación al cambiar de nicho con un concepto aprobado en `apps/web/src/screens/channel/new/NicheChange.tsx` y `ChannelStep.tsx` (el servidor pide la confirmación al volver a Nichos, así que el aviso sale al volver, antes de elegir otro), enviando `confirm: true` a `POST /api/journeys/:id/step`
+- [X] T091b [US2] Aviso y confirmación al cambiar de nicho con un concepto aprobado en `apps/web/src/screens/channel/new/NicheChange.tsx` y `Niches.tsx`: desde la entrada 155 (P4) el aviso sale al elegir otro nicho, volver a mirarlos no pide nada, y el servidor marca el concepto solo si el nicho cambió (ya no hay `confirm` en `POST /api/journeys/:id/step`)
 
 **Checkpoint**: US1 + US2 forman el MVP.
 

@@ -108,6 +108,8 @@ describe('PUT /api/channels/:id/profile', () => {
     expect(profileVersionSchema.parse(saved.body)).toMatchObject({ version: 2, origin: 'manual' })
     const current = await call(t, 'GET', '/api/channels/current')
     expect((current.body['profile'] as { version: number }).version).toBe(2)
+    // P8: the kind of content the money is worked out with comes with it, also after an edit by hand.
+    expect(current.body['category']).toEqual(expect.any(String))
     expect((await versionOf(t, channelId, 2)).profile.concept.promise).toBe('Cenas de diario en 15 minutos.')
   })
 

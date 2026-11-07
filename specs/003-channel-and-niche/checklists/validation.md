@@ -1,5 +1,100 @@
 # Validación: 003 canal y nicho
 
+## Pendientes P2, P4, P5, P8, P9 y P19: Puerta A (2026-11-06): PASADA
+
+### Resumen
+
+Quedan cerrados los seis pendientes, con las recomendaciones que aceptó el creador (entradas 153 a 158). P9 deja de dar
+verde con una lectura de YouTube que no se pudo leer; P8 muestra y deja cambiar el tipo de contenido del dinero; P4 avisa
+solo al elegir otro nicho. P2, P5 y P19 son solo documentación. Queda abierto P36, que es nuevo y no bloquea.
+
+### Requisitos
+
+| Requisito | Estado | Evidencia | Fecha |
+|---|---|---|---|
+| P9 / US3 AS4: «sin comprobar» nunca es verde, también con salida ilegible | Cumplido | `ytdlp.contract.test.ts` (no JSON, sin `entries`, entradas ilegibles), `data-api.contract.test.ts`, `name-check.test.ts` | 2026-11-06 |
+| P8 / US2 AS2: el tipo de contenido del dinero se ve y se cambia | Cumplido (en el recorrido) | `concepts.test.tsx`, `profile.test.ts`; perfil solo lo muestra (P36) | 2026-11-06 |
+| P4 / FR-025: aviso al elegir otro nicho, no al volver | Cumplido | `journey.test.ts`, `concepts.test.ts` (dos tests), `channel-base.test.ts`, `niche-change.test.tsx`, e2e `channel-niche.spec.ts` | 2026-11-06 |
+| P2 / US2 AS3: original y última edición | Cumplido (aclarado en la spec) | `spec.md` US2 AS3 y huecos | 2026-11-06 |
+| P5: `spawn` en vez de `execFile` | Cumplido (tarea corregida) | `tasks.md` | 2026-11-06 |
+| P19: referencias con fallos parciales | Cumplido (sin cambios, opción a) | entrada 158 | 2026-11-06 |
+
+### Cómo se comprobó
+
+`fnm exec --using=24 -- pnpm lint` → 0; `typecheck` → 0; `test` → 123 ficheros, 1464 pasados y 2 omitidos;
+`test:e2e` → 97 y 35 pasados. Las cuatro órdenes se ejecutaron una tras otra tras la última corrección. En una primera
+vuelta, el e2e falló por el entorno: se editaba durante la ejecución y fallaron el catálogo (tiempo agotado) y algunas
+conexiones. Además, un contrato de IA que no se tocó superó su tiempo por 232 ms. Las dos cosas quedaron en verde al
+repetir.
+
+### Controles obligatorios
+
+- **Pasados:**
+  - lint, typecheck, test y e2e;
+  - glosario y `secrets-leak` (dentro de `test` y `test:e2e`);
+  - axe en claro y oscuro (`a11y.spec.ts`) y el diálogo de cambio de nicho auditado en `channel-niche.spec.ts`.
+- **No ejecutados:**
+  - `test:installer`: el instalador no cambia;
+  - fallos de IA: no se tocó el adaptador de IA;
+  - YouTube real: no se ejecutó, y el caso de salida ilegible solo se probó con el yt-dlp falso.
+
+### Hallazgos de revisión
+
+Cuatro revisores, sin hallazgos graves. Confirmados y corregidos:
+
+- **P9 incompleto (medio, lógica y fidelidad):**
+  - un JSON sin `entries`, o con entradas que no se pueden leer, daba `sin_datos`;
+  - en la Data API, vídeos encontrados que no se pueden leer daban lo mismo;
+  - ahora los tres casos dan `no_disponible`, con tests.
+- **Texto de `no_disponible` (medio, seguridad y regresión):** mandaba a «prepararlo» con el lector instalado. Ahora dice
+  «No hemos podido usar el lector de YouTube. Desde Ajustes puedes prepararlo o actualizarlo.»
+- **`conceptNiche` con tope de 200 (medio, lógica):** la etiqueta de un nicho no tiene tope, así que una muy larga podía
+  dejar el recorrido sin poder abrirse. Se quita el tope.
+- **Riesgo mal clasificado (medio, fidelidad):** las entradas 155 y 156 pasan a Alto y la 158 a Medio.
+- **P8 sin reflejo en la spec (medio, fidelidad):** se añade a US2 AS2.
+- **Volver al nicho del concepto tras confirmar (menor, tres revisores):** ahora conserva el concepto. Test y entrada
+  155.
+- **Edición a mano de la tanda de nichos (menor):** ahora se comprueba con el nicho de antes de editar. Test.
+- **`categoryOf` (menor):** con un perfil antiguo que no valida o una categoría desconocida devuelve `null`, en vez de
+  un 500.
+- **Texto de la categoría (menor):** ahora dice que la clasificó la IA y que se puede cambiar.
+- **Selector inútil con «para niños» (menor):** se oculta.
+- **Documentación (menores):**
+  - `tasks.md` (T027 y T091b);
+  - `data-model.md` (`conceptNeedsReview` y `conceptNiche`);
+  - `http-api.md` (`PATCH` puede cambiar la revisión);
+  - motivo de la entrada 157 (`maxBuffer`);
+  - formato de los textos.
+
+Descartado: «tests del recorrido de antes, sin `conceptNiche`» (menor). La rama existe y está comentada, pero
+reproducirla exige escribir en la base de datos a mano. Se cubren el regenerar, el volver y la edición. Abiertos:
+ninguno.
+
+### Desviaciones
+
+- Desaparece `confirm` de `POST /api/journeys/:id/step` (contrato actualizado).
+- `data` ya no admite los campos que lleva el servidor.
+- Aprobar un concepto puede cambiar la `revision` del recorrido.
+
+### Decisiones
+
+- Del creador: entradas 153 a 158.
+- Pendiente nueva: P36, cambiar la categoría desde el perfil. Supone un cambio de formato del perfil y del `.json`, y la
+  recomendación es b. No bloquea.
+
+### Impacto en la constitución
+
+- **Principio V:** el dinero dice con qué se calcula.
+- **Principio II:** la categoría es una propuesta de la IA y se puede cambiar.
+- **Principio I:** los textos son claros y el diálogo sale en el momento justo.
+- **Principio IV:** sin cambios.
+- **Principio VIII:** spec, contratos y tareas al día.
+
+### Cómo revertir y qué queda
+
+- Revertir: un `git revert` del commit; no hay migraciones.
+- Queda: P36 y la pasada de interfaz con modo Design.
+
 ## Pendientes P1, P3, P6 y P17: Puerta A (2026-11-06): PASADA
 
 **Resultado: pasada tras dos vueltas de revisión.** Los cuatro revisores hicieron la primera vuelta, y los de lógica y

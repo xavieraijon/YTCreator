@@ -150,16 +150,25 @@ describe('POST /api/journeys/:id/proposals, kind conceptos', () => {
     expect(figures.monetization.rpmEurRange.max).toBeLessThan(before.monetization.rpmEurRange.max)
   })
 
-  it('going back to the niches asks for confirmation and the concept must be chosen again (FR-025)', async () => {
+  it('looking at the niches again keeps the concept; choosing another niche asks for it again (FR-025, P4)', async () => {
     const t = makeTestApp({ fakeAi: 'ok' })
     const id = await atConcepts(t)
     const proposal = await propose(t, id, 'conceptos')
     await call(t, 'PATCH', `/api/proposals/${proposal.id}`, { selectedIndex: 0, status: 'aprobada' })
     await step(t, id, 'ritmo')
-    expect((await step(t, id, 'nichos')).status).not.toBe(200)
-    expect((await view(t, id)).step).toBe('ritmo')
+    expect((await step(t, id, 'nichos')).status).toBe(200)
+    expect((await view(t, id)).state.conceptNeedsReview).toBeUndefined()
 
-    expect((await step(t, id, 'nichos', { confirm: true })).status).toBe(200)
+    // The same niche again, even from a new batch, keeps the concept.
+    const first = (await view(t, id)).proposals.findLast((p) => p.kind === 'nichos')!
+    const chosen = first.selectedIndex!
+    const batch = await propose(t, id, 'nichos', { parentId: first.id })
+    await call(t, 'PATCH', `/api/proposals/${batch.id}`, { selectedIndex: chosen, status: 'aprobada' })
+    expect((await view(t, id)).state).toMatchObject({ conceptNiche: expect.any(String) })
+    expect((await view(t, id)).state.conceptNeedsReview).toBeUndefined()
+
+    // Another one is what asks for a new concept.
+    await call(t, 'PATCH', `/api/proposals/${batch.id}`, { selectedIndex: chosen === 0 ? 1 : 0, status: 'aprobada' })
     expect((await view(t, id)).state.conceptNeedsReview).toBe(true)
     await step(t, id, 'ritmo')
     await step(t, id, 'conceptos')
@@ -168,6 +177,36 @@ describe('POST /api/journeys/:id/proposals, kind conceptos', () => {
     await call(t, 'PATCH', `/api/proposals/${proposal.id}`, { selectedIndex: 0, status: 'aprobada' })
     expect((await view(t, id)).state.conceptNeedsReview).toBeUndefined()
     expect((await step(t, id, 'nombres')).status).toBe(200)
+  })
+
+  it('choosing again the niche of the concept keeps it; a batch left or edited by hand is checked too (P4)', async () => {
+    const t = makeTestApp({ fakeAi: 'ok' })
+    const id = await atConcepts(t)
+    const proposal = await propose(t, id, 'conceptos')
+    await call(t, 'PATCH', `/api/proposals/${proposal.id}`, { selectedIndex: 0, status: 'aprobada' })
+    await step(t, id, 'nichos')
+    const first = (await view(t, id)).proposals.findLast((p) => p.kind === 'nichos')!
+    const chosen = first.selectedIndex!
+    const other = chosen === 0 ? 1 : 0
+    const review = async () => (await view(t, id)).state.conceptNeedsReview
+
+    // Another niche and back to the first: the concept is kept.
+    await call(t, 'PATCH', `/api/proposals/${first.id}`, { selectedIndex: other, status: 'aprobada' })
+    expect(await review()).toBe(true)
+    await call(t, 'PATCH', `/api/proposals/${first.id}`, { selectedIndex: chosen, status: 'aprobada' })
+    expect(await review()).toBeUndefined()
+
+    // A new batch, and back to the first one: nothing is chosen, so nothing changes yet.
+    const batch = await propose(t, id, 'nichos', { parentId: first.id })
+    expect((await call(t, 'POST', `/api/proposals/${batch.id}/back`)).status).toBe(200)
+    expect(await review()).toBeUndefined()
+
+    // An edit by hand that renames the niche chosen changes the niche.
+    await call(t, 'PATCH', `/api/proposals/${first.id}`, { selectedIndex: chosen, status: 'aprobada' })
+    const niches = ((first.editedPayload ?? first.payload) as { niches: { label: string }[] }).niches
+    const renamed = niches.map((niche, i) => (i === chosen ? { ...niche, label: `${niche.label} (otro)` } : niche))
+    await call(t, 'PATCH', `/api/proposals/${first.id}`, { editedPayload: { niches: renamed } })
+    expect(await review()).toBe(true)
   })
 })
 

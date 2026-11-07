@@ -107,6 +107,13 @@ describe('name-check', () => {
     expect(t.items[0]!.semaphore).toBe('verde')
   })
 
+  it('a search that could not be read is not «no results»: never green (P9, US3 AS4)', async () => {
+    const t = setup({ search: async () => youtubeFailure('no_disponible') })
+    t.service.start('j1', [name('Uno')])
+    await t.done()
+    expect(t.items[0]!.semaphore).toBe('sin_comprobar')
+  })
+
   it('a search blocked leaves it unchecked, and one that throws does not stop the rest', async () => {
     const t = setup({
       search: async (query) => {

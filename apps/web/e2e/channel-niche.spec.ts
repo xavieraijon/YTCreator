@@ -149,22 +149,27 @@ test('from the interests to the rhythm with the fakes (US1)', async ({ page: fir
   await page.getByRole('button', { name: 'Seguir', exact: true }).click()
   await expect(page).toHaveURL(/\/canal\/nuevo\/nombres$/)
 
-  // Going back to the niches warns; cancelling changes nothing.
+  // Going back to the niches only looks at them: the same niche keeps the concept (P4).
   await page.getByRole('button', { name: 'Volver', exact: true }).click()
   await expect(heading(page, 'La idea de tu canal')).toBeVisible()
   await page.getByRole('button', { name: 'Volver', exact: true }).click()
   await expect(heading(page, 'Tu ritmo')).toBeVisible()
   await page.getByRole('button', { name: 'Volver', exact: true }).click()
+  await expect(heading(page, 'Elige el tema de tu canal')).toBeVisible()
+
+  // Choosing another niche warns; cancelling changes nothing.
+  const niches = page.getByRole('article')
+  await niches.nth(1).getByRole('button', { name: 'Elegir este nicho' }).click()
   const dialog = page.getByRole('dialog', { name: /Tu idea se basaba en el nicho anterior/ })
   await expect(dialog).toBeVisible()
   await audit(page)
   await dialog.getByRole('button', { name: 'Cancelar' }).click()
-  await expect(heading(page, 'Tu ritmo')).toBeVisible()
+  await expect(niches.first().getByText('Nicho elegido')).toBeVisible()
 
-  // Confirming goes back, and the concept has to be chosen again.
-  await page.getByRole('button', { name: 'Volver', exact: true }).click()
+  // Confirming changes it, and the concept has to be chosen again.
+  await niches.nth(1).getByRole('button', { name: 'Elegir este nicho' }).click()
   await dialog.getByRole('button', { name: 'Cambiar igualmente' }).click()
-  await expect(heading(page, 'Elige el tema de tu canal')).toBeVisible()
+  await expect(niches.nth(1).getByText('Nicho elegido')).toBeVisible()
   await page.getByRole('button', { name: 'Seguir', exact: true }).last().click()
   await expect(heading(page, 'Tu ritmo')).toBeVisible()
   await page.getByRole('button', { name: 'Seguir' }).click()

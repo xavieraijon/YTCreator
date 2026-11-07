@@ -58,13 +58,17 @@ export function createYtDlpYouTube(options: YtDlpYouTubeOptions): YouTubeData {
   const run = (args: string[], signal?: AbortSignal): Promise<YtDlpRun> =>
     runYtDlp(options.binPath, args, { signal: withTimeout(processMs, signal) })
 
-  // A listing that ran well but does not parse, or has no entries, is sin_datos.
+  // A listing with no entries is sin_datos: YouTube really has nothing. One that does not parse is not «nothing», it
+  // could not be read, like any failure of the reader it cannot name: no_disponible (P9, entry 153). Taken as empty,
+  // a name check would show a free @ in green without having looked (US3 AS4).
   async function listing(args: string[], signal?: AbortSignal): Promise<Listing | Failed> {
     const result = await run(args, signal)
     const failure = classifyRun(result)
     if (failure) return youtubeFailure(failure)
     const parsed = parseListing(result.stdout)
-    return parsed && parsed.entries.length > 0 ? parsed : youtubeFailure('sin_datos')
+    // JSON that is not a list (no `entries`) could not be read either.
+    if (!parsed || !Array.isArray(parsed.root.entries)) return youtubeFailure('no_disponible')
+    return parsed.entries.length > 0 ? parsed : youtubeFailure('sin_datos')
   }
   const isFailed = (value: Listing | Failed): value is Failed => 'ok' in value
 
@@ -96,7 +100,9 @@ export function createYtDlpYouTube(options: YtDlpYouTubeOptions): YouTubeData {
       if (failure === 'sin_datos') continue
       if (failure) return youtubeFailure(failure)
       const parsed = parseListing(result.stdout)
-      if (parsed && toChannel(parsed)) return parsed
+      // Unreadable is not «not found» (P9).
+      if (!parsed) return youtubeFailure('no_disponible')
+      if (toChannel(parsed)) return parsed
     }
     return youtubeFailure('no_encontrado')
   }
@@ -127,7 +133,8 @@ export function createYtDlpYouTube(options: YtDlpYouTubeOptions): YouTubeData {
       const result = await listing(searchArgs(query, limit), signal)
       if (isFailed(result)) return result
       const hits = toHits(result).slice(0, limit)
-      if (hits.length === 0) return youtubeFailure('sin_datos')
+      // Entries came but none could be read: the format changed, it is not «nothing found» (P9).
+      if (hits.length === 0) return youtubeFailure('no_disponible')
       return withoutDates ? sourced(hits) : withFeedDates(hits, signal)
     },
 

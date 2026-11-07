@@ -441,12 +441,17 @@ describe('PATCH /api/proposals/:id', () => {
     rev = (await step(t, id, rev, 'conceptos', { data: { hoursPerWeek: 6, onCamera: 'voz' } })).body.revision as number
     const concepts = proposalSchema.parse((await generate(t, id, rev, 'conceptos')).body)
     await call(t, 'PATCH', `/api/proposals/${concepts.id}`, { selectedIndex: 0 })
+    // Choosing it keeps the niche it was chosen on, in the journey (P4).
+    rev = journeyViewSchema.parse((await call(t, 'GET', `/api/journeys/${id}`)).body).revision
     rev = (await step(t, id, rev, 'nombres')).body.revision as number
 
-    const refused = await step(t, id, rev, 'nichos')
-    expect(refused.body.error).toEqual({ code: 'validacion', fields: { confirm: 'no_valido' } })
-    const back = await step(t, id, rev, 'nichos', { confirm: true })
-    expect(back.body).toMatchObject({ step: 'nichos', state: { conceptNeedsReview: true } })
+    // P4: going back asks nothing; choosing another niche marks the concept.
+    const back = await step(t, id, rev, 'nichos')
+    expect(back.body).toMatchObject({ step: 'nichos' })
+    expect(back.body.state).not.toHaveProperty('conceptNeedsReview')
+    await call(t, 'PATCH', `/api/proposals/${niches.id}`, { selectedIndex: 1 })
+    const marked = journeyViewSchema.parse((await call(t, 'GET', `/api/journeys/${id}`)).body)
+    expect(marked.state.conceptNeedsReview).toBe(true)
 
     await call(t, 'PATCH', `/api/proposals/${concepts.id}`, { selectedIndex: 1 })
     const view = journeyViewSchema.parse((await call(t, 'GET', `/api/journeys/${id}`)).body)
