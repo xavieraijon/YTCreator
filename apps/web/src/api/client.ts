@@ -9,7 +9,9 @@ import {
   batchDecideResultSchema,
   ideaBankSchema,
   ideaBatchOutcomeSchema,
+  ideaQueriesOutcomeSchema,
   ideaSchema,
+  measureEstimateSchema,
   newIdeaResultSchema,
   type IdeaPatchBody,
   type NewIdeaBody,
@@ -230,6 +232,16 @@ export const ideasApi = {
     apiClient.post(`${channelPath(channelId)}/idea-batches`, body, ideaBatchOutcomeSchema),
   decide: (batchId: string, body: { keep: number[]; discard: number[] }) =>
     apiClient.post(`/api/idea-batches/${encodeURIComponent(batchId)}/decide`, body, batchDecideResultSchema),
+  measureEstimate: (channelId: string, ideaIds: string[]) =>
+    apiClient.post(`${channelPath(channelId)}/idea-measures/estimate`, { ideaIds }, measureEstimateSchema),
+  measure: (channelId: string, ideaIds: string[], fresh = false) =>
+    apiClient.post(
+      `${channelPath(channelId)}/idea-measures`,
+      { ideaIds, ...(fresh ? { fresh: true } : {}) },
+      jobStartedSchema,
+    ),
+  queries: (ideaId: string, body: { estimateId: string; revision: number }) =>
+    apiClient.post(`/api/ideas/${encodeURIComponent(ideaId)}/queries`, body, ideaQueriesOutcomeSchema),
 }
 
 export const usageApi = {

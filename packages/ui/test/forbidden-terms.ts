@@ -32,6 +32,9 @@ export const forbiddenTerms: readonly string[] = [
   'CTR',
   'handle',
   'yt-dlp',
+  // The words of the measure that only the code uses (004, contracts/ui-screens.md).
+  'clon',
+  'tema amplio',
 ]
 
 export interface StringEntry {

@@ -130,6 +130,12 @@ export const ideaBankSchema = z.object({
   profileVersion: z.number().int().positive(),
   pendingBatch: ideaBatchSchema.nullable(),
   runningJob: id.nullable(),
+  // The last «Medir todas» was cut short (a restart): the ideas it had left, for «Seguir midiendo» (entry 28).
+  interrupted: z.object({ jobId: id, ideaIds: z.array(id) }).nullable(),
+  // Where the limits of the semaphore come from: an assumption of thresholds.json (principle V, R4).
+  measureBasis: z.object({ label: z.string(), date: z.string(), recentDays: count, audienceViews: count }),
+  // What measuring one idea spends with the Data API; null with yt-dlp (FR-007c).
+  measureUnits: z.object({ withoutEnglish: count, withEnglish: count }).nullable(),
 })
 export type IdeaBankView = z.infer<typeof ideaBankSchema>
 

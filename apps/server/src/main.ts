@@ -25,6 +25,7 @@ import { createConnectionsRepo } from './db/repos/connections.ts'
 import { createJobsRepo } from './db/repos/jobs.ts'
 import { createIdeaBatchesRepo } from './db/repos/idea-batches.ts'
 import { createIdeaMeasuresRepo } from './db/repos/idea-measures.ts'
+import { createIdeaMeasure } from './services/idea-measure.ts'
 import { createIdeasRepo } from './db/repos/ideas.ts'
 import { createJourneysRepo } from './db/repos/journeys.ts'
 import { createLimitsRepo } from './db/repos/limits.ts'
@@ -338,6 +339,18 @@ export async function startServer({
     logger,
     now,
   })
+  const ideasRepo = createIdeasRepo(db, now)
+  const ideaMeasures = createIdeaMeasuresRepo(db, now)
+  const ideaMeasure = createIdeaMeasure({
+    youtube,
+    ideas: ideasRepo,
+    measures: ideaMeasures,
+    jobs,
+    thresholds: market.thresholds.data.ideas,
+    thresholdsVersion: market.thresholds.version,
+    logger,
+    now,
+  })
   app = createApp({
     port,
     version,
@@ -358,11 +371,19 @@ export async function startServer({
       journeys: channel.journeys,
       aiRun: channel.aiRun,
       promptFor: channelPrompt,
-      ideas: createIdeasRepo(db, now),
+      ideas: ideasRepo,
       batches: createIdeaBatchesRepo(db, now),
-      measures: createIdeaMeasuresRepo(db, now),
+      measures: ideaMeasures,
       jobs: jobsRepo,
       staleDays: market.thresholds.data.ideas.staleDays,
+      measure: ideaMeasure,
+      youtube,
+      dataApiUnits: market.thresholds.data.dataApi,
+      measureBasis: {
+        ...market.thresholds.data.ideas.basis,
+        recentDays: market.thresholds.data.ideas.recentDays,
+        audienceViews: market.thresholds.data.ideas.audienceViews,
+      },
       now,
     },
     jobs,

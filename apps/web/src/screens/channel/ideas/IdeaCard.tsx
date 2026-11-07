@@ -31,6 +31,7 @@ export function IdeaCard({ idea, sourceTitle, onEdit, children }: IdeaCardProps)
       </p>
       {idea.hook && <p>{format(text.hook, { texto: idea.hook })}</p>}
       {idea.pillar && <p>{format(text.pillar, { texto: idea.pillar })}</p>}
+      {idea.fromOlderProfile && <p className={styles.notice}>{ideasEs.measure.olderProfile}</p>}
       {children}
       <div className={styles.actions}>
         <Button variant="ghost" aria-label={format(text.editNamed, { titulo: idea.title })} onClick={onEdit}>

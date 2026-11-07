@@ -70,7 +70,7 @@ test('fills the bank: a batch of the AI, two kept, the rest left, and one of the
 
   // One of their own, a Short.
   await page.getByText('Escribir una idea mía').click()
-  await page.getByLabel('Título').fill('Mi receta de pan sin amasar')
+  await page.getByRole('textbox', { name: 'Título' }).fill('Mi receta de pan sin amasar')
   await page.getByText('Short', { exact: true }).last().click()
   await audit(page)
   await page.getByRole('button', { name: 'Guardar la idea' }).click()
@@ -78,7 +78,7 @@ test('fills the bank: a batch of the AI, two kept, the rest left, and one of the
   await expect(list.getByText('Tuya', { exact: true })).toBeVisible()
 
   // The same title again, written another way: it is saved, and the app says the bank already had it (R15).
-  await page.getByLabel('Título').fill('mi receta de pan sin amasar')
+  await page.getByRole('textbox', { name: 'Título' }).fill('mi receta de pan sin amasar')
   await page.getByRole('button', { name: 'Guardar la idea' }).click()
   await expect(page.getByText('Ya tenías una idea con el mismo título: «Mi receta de pan sin amasar».')).toBeVisible()
   await expect(list.getByRole('listitem')).toHaveCount(4)

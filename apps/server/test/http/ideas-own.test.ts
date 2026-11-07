@@ -1,4 +1,4 @@
-import { ideaSchema, newIdeaResultSchema } from '@ytcreator/core/api'
+import { estimateSchema, ideaSchema, newIdeaResultSchema } from '@ytcreator/core/api'
 import { describe, expect, it } from 'vitest'
 import { makeTestApp } from '../helpers.ts'
 import { call, finished } from './flows.ts'
@@ -77,5 +77,50 @@ describe('the creator’s own ideas (US1)', () => {
     const result = await call(t, 'POST', `/api/channels/${channelId}/ideas`, body)
     expect(result.status).toBe(400)
     expect(result.body).toMatchObject({ error: { code: 'validacion' } })
+  })
+
+  it('«Preparar la medida»: estimated first, the AI writes the three searches and the revision goes up', async () => {
+    const t = makeTestApp({ fakeAi: 'ok' })
+    const { channelId } = await finished(t)
+    const { idea } = newIdeaResultSchema.parse(
+      (await call(t, 'POST', `/api/channels/${channelId}/ideas`, { title: 'Cena con sobras', format: 'largo' })).body,
+    )
+    const without = await call(t, 'POST', `/api/channels/${channelId}/ideas/estimate`, { use: 'busquedas_idea' })
+    expect(without.body).toMatchObject({ error: { fields: { ideaId: 'no_valido' } } })
+    const estimate = estimateSchema.parse(
+      (await call(t, 'POST', `/api/channels/${channelId}/ideas/estimate`, { use: 'busquedas_idea', ideaId: idea.id }))
+        .body,
+    )
+    expect(estimate.use).toBe('busquedas_idea')
+    const done = await call(t, 'POST', `/api/ideas/${idea.id}/queries`, {
+      estimateId: estimate.estimateId,
+      revision: 1,
+    })
+    expect(ideaSchema.parse(done.body)).toMatchObject({
+      query: 'cena rapida con sobras',
+      broadQuery: 'cenas rapidas',
+      queryEn: 'quick dinner with leftovers',
+      revision: 2,
+    })
+    expect(t.usage.list().filter((row) => row.use === 'busquedas_idea')).toMatchObject([{ outcome: 'ok' }])
+  })
+
+  it('«Preparar la medida» on an old revision is a conflict, and nothing is spent', async () => {
+    const t = makeTestApp({ fakeAi: 'ok' })
+    const { channelId } = await finished(t)
+    const { idea } = newIdeaResultSchema.parse(
+      (await call(t, 'POST', `/api/channels/${channelId}/ideas`, { title: 'Cena', format: 'largo' })).body,
+    )
+    await call(t, 'PATCH', `/api/ideas/${idea.id}`, { revision: 1, title: 'Cena otra' })
+    const estimate = estimateSchema.parse(
+      (await call(t, 'POST', `/api/channels/${channelId}/ideas/estimate`, { use: 'busquedas_idea', ideaId: idea.id }))
+        .body,
+    )
+    const stale = await call(t, 'POST', `/api/ideas/${idea.id}/queries`, {
+      estimateId: estimate.estimateId,
+      revision: 1,
+    })
+    expect(stale.status).toBe(409)
+    expect(t.usage.list().filter((row) => row.use === 'busquedas_idea')).toEqual([])
   })
 })

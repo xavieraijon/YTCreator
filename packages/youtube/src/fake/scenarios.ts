@@ -1,4 +1,4 @@
-import type { ChannelInfo, VideoInfo } from '@ytcreator/core'
+import type { ChannelInfo, VideoHit, VideoInfo } from '@ytcreator/core'
 import { SHORT_MAX_SECONDS } from '@ytcreator/core'
 
 // The fake's world (contracts/youtube-data.md, «fake»): a normal niche for any query, the «sin datos» and «bloqueado»
@@ -80,3 +80,55 @@ export const SEARCH_CHANNELS: FakeChannel[] = [
 ]
 
 export const FAKE_CHANNELS: FakeChannel[] = /* @__PURE__ */ SEARCH_CHANNELS.concat(CHANNEL_3)
+
+// The ideas of the bank (004, T034): a search that contains «idea <scenario>» gives that semaphore. The general topic
+// has an audience if its search says «con publico», and the English search is an opportunity if it says
+// «opportunity». «idea bloqueado» fails as any «bloqueado».
+export const IDEA_SCENARIOS = {
+  hueco: { similar: 3, recent: 1, views: 40_000 },
+  competida: { similar: 14, recent: 1, views: 20_000 },
+  quemada: { similar: 12, recent: 4, views: 20_000 },
+  agotada: { similar: 14, recent: 0, views: 300 },
+  fria: { similar: 2, recent: 0, views: 300 },
+  oportunidad: { similar: 1, recent: 0, views: 2_000 },
+} as const
+export type IdeaScenario = keyof typeof IDEA_SCENARIOS
+export const AUDIENCE_WORDS = 'con publico'
+export const OPPORTUNITY_WORDS = 'opportunity'
+
+const IDEA_RESULTS = 20
+const BIG_VIEWS = [250_000, 180_000, 120_000]
+
+const hitOf = (index: number, title: string, views: number, publishedAt: string | null): VideoHit => {
+  const channel = SEARCH_CHANNELS[index % SEARCH_CHANNELS.length]!
+  return {
+    videoId: fakeVideoId('idea', index),
+    title,
+    channelId: channel.info.channelId,
+    channelTitle: channel.info.title,
+    views,
+    publishedAt,
+    durationSeconds: 600,
+  }
+}
+
+const others = (from: number, views: number) =>
+  Array.from({ length: IDEA_RESULTS - from }, (_, i) => hitOf(from + i, `Otro tema distinto ${i + 1}`, views, null))
+
+// null when the search is not one of the idea scenarios: the normal niche answers it.
+export function ideaSearch(text: string, now: Date): VideoHit[] | null {
+  const daysAgo = (days: number) => new Date(now.getTime() - days * DAY_MS).toISOString()
+  if (text.includes(OPPORTUNITY_WORDS)) {
+    return [...BIG_VIEWS.map((views, i) => hitOf(i, `English video ${i + 1}`, views, null)), ...others(3, 900)]
+  }
+  if (text.includes(AUDIENCE_WORDS)) {
+    return [...BIG_VIEWS.map((views, i) => hitOf(i, `Tema general ${i + 1}`, views, null)), ...others(3, 900)]
+  }
+  const scenario = (Object.keys(IDEA_SCENARIOS) as IdeaScenario[]).find((key) => text.includes(`idea ${key}`))
+  if (!scenario) return null
+  const { similar, recent, views } = IDEA_SCENARIOS[scenario]
+  const alike = Array.from({ length: similar }, (_, i) =>
+    hitOf(i, `${text} (${i + 1})`, views + i * 10, i < recent ? daysAgo(5 + i) : daysAgo(200 + i)),
+  )
+  return [...alike, ...others(similar, 500)]
+}

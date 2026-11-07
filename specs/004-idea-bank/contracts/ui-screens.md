@@ -38,7 +38,8 @@ aspecto se revisa en la pasada final con el modo Design: aquí cuenta que funcio
   - los avisos que toquen: «Medida antigua (de hace {n} días)», «Medida de una versión anterior de la idea»,
     «Propuesta con una versión anterior de tu perfil».
 - **Escribir una idea:** `Disclosure` «Escribir una idea mía», con título, formato y, si se quiere, gancho y pilar. Las
-  búsquedas van en «Modo experto», junto a «Preparar la medida · {coste}».
+  búsquedas van en «Modo experto», junto a «Preparar la medida · {coste}» al cambiar una idea guardada (decisión 42). En
+  la tarjeta de una idea sin búsquedas, «¿Tiene hueco?» abre «Preparar la medida · {coste}» (decisión 41).
 - **Archivadas:** `Disclosure`, con «Recuperar» en cada una.
 - **Descargar:** «Descargar como documento» y «Descargar como datos».
 

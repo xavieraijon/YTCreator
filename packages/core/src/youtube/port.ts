@@ -64,9 +64,10 @@ export const SHORT_MAX_SECONDS = 180
 export interface YouTubeData {
   readonly source: YouTubeSource
   // `withoutDates`: the dates are not needed, so nothing extra is asked to YouTube to get them.
+  // `fresh`: asked for again on purpose, not answered from what was kept («Volver a medir»).
   search(
     query: string,
-    options: { limit: number; signal?: AbortSignal; withoutDates?: true },
+    options: { limit: number; signal?: AbortSignal; withoutDates?: true; fresh?: true },
   ): Promise<YouTubeResult<Sourced<VideoHit[]>>>
   getChannel(ref: ChannelRef, signal?: AbortSignal): Promise<YouTubeResult<Sourced<ChannelInfo>>>
   listChannelVideos(

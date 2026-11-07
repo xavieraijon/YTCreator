@@ -213,3 +213,147 @@ Informes de la Puerta A (`/puerta-a`), uno por fase o historia.
 
 - **Revertir:** revertir el commit de US1. No hay migraciones nuevas.
 - **Queda:** US2 (medir), US3 (otro enfoque y búsquedas), US4 (orden, cola, filtros, archivo) y Polish.
+
+## US2: ¿Tiene hueco? Medir ideas contra YouTube (T030–T044)
+
+### 1. Resumen
+
+- El creador mide una idea («¿Tiene hueco?») o todas («Medir todas»). Cada medida da uno de cuatro semáforos con su
+  frase, sus cifras, los vídeos parecidos plegados, la fecha, la fuente, el sello del supuesto y, si hay búsqueda en
+  inglés, el aviso de oportunidad. La medida sigue en el servidor aunque se cierre la pestaña.
+- Los cuatro revisores dieron 4 graves distintos (contando repetidos). Los cuatro eran reales y están corregidos:
+  - una idea con medida fallida no se podía volver a medir;
+  - «Medir todas» no decía cuántas ideas iba a medir;
+  - «Frío» salía en ámbar, contra la spec;
+  - (seguridad y coste) medir una idea sola gastaba unidades sin avisar.
+- Resultado: **pasada**. Controles con código 0, sin hallazgos graves abiertos y sin pendientes de riesgo alto.
+
+### 2. Requisitos
+
+| Requisito | Estado | Evidencia | Fecha |
+|---|---|---|---|
+| FR-007 medir solo cuando se pide; una y todas | Cumplido | `ideas-measure.test.ts`; e2e `ideas-measure.spec.ts` | 2026-11-07 |
+| FR-007 un trabajo por canal; `409` con `jobId` y la pantalla sigue ese | Cumplido | `ideas-measure.test.ts` (con `hold`); aviso `otherRunning` | 2026-11-07 |
+| FR-007b búsqueda en inglés y aviso de oportunidad sin tocar el semáforo | Cumplido | `opportunity.test.ts`, `idea-measure.test.ts` (servicio y pantalla), e2e | 2026-11-07 |
+| FR-007c antes de «Medir todas»: cuántas ideas y, con la Data API, unidades; también al medir una sola y en «Seguir midiendo» | Cumplido | `idea-measure.test.tsx` (`countOne`, `unitsOne`, `measureUnits`); e2e «Se medirán 6 ideas.» | 2026-11-07 |
+| FR-008 cuatro semáforos con su frase; «Frío» gris | Cumplido | `verdict.test.ts` (bordes 5/6, 11/12, 3/4, 999/1.000); `VERDICT_STATE`; decisión 29 corregida | 2026-11-07 |
+| FR-009 vídeos parecidos, fecha, fuente y sello del supuesto | Cumplido | `idea-measure.test.tsx`; e2e | 2026-11-07 |
+| FR-010 medida de más de 30 días marcada como antigua, con volver a medir | Cumplido | `ideas-measure.test.ts` «stale»; `idea-measure.test.tsx` (singular «1 día») | 2026-11-07 |
+| AS3 un fallo deja la idea «Sin medir», con el fallo explicado y su acción | Cumplido | `idea-measure.test.tsx` (fallo, lector, `no_encontrado`); e2e «Bloqueada» | 2026-11-07 |
+| Cerrar la pestaña a media medida y volver; «Seguir midiendo» tras un reinicio | Cumplido | e2e (cierre tras el `202`); `ideas-measure.test.ts` «after a restart» | 2026-11-07 |
+| R6 idea propia sin búsquedas: «Preparar la medida» desde la tarjeta o «Medir con el título» | Cumplido | e2e «Sin búsquedas»; `idea-measure.test.tsx`; decisiones 37, 41 y 42 | 2026-11-07 |
+| Anuncio educado, una vez por idea | Cumplido | e2e (región `status`); efecto de `items` anuncia todas las que llegan | 2026-11-07 |
+| SC-002 ningún semáforo sin frase, evidencia, fecha y fuente | Cumplido | `idea-measure.test.tsx` «measured» | 2026-11-07 |
+| SC-003 menos de 2 minutos por idea | Parcial | Solo con los falsos; no se midió con YouTube real (prohibido en pruebas) | 2026-11-07 |
+
+### 3. Cómo se comprobó
+
+- `fnm exec --using=24 -- pnpm lint` y `typecheck`: código 0.
+- `fnm exec --using=24 -- pnpm test`, tras borrar `node_modules/.vitest-cache`: 140 ficheros, 1652 pasadas y 2
+  saltadas (proveedores reales), código 0.
+- `fnm exec --using=24 -- pnpm test:e2e` antes de corregir: 36 pasadas y 1 fallo (`ideas.spec.ts:81`, un
+  `getByLabel('Título')` que también casaba con «Medir con el título «…»»; el selector se cambió a `textbox`).
+  Después de las correcciones: 97 + 37 pasadas, código 0.
+- `vite build --mode production` del servidor: el `grep` de `release.yml`, con los marcadores nuevos del YouTube falso,
+  no encuentra nada (0 coincidencias de IA falsa y de YouTube falso).
+- El flujo real con los falsos es `apps/web/e2e/ideas-measure.spec.ts`:
+  - seis ideas, una por escenario, y una sin búsquedas;
+  - el aviso «Se medirán 6 ideas.» y «Medir todas»;
+  - cerrar la pestaña tras el `202` y volver;
+  - los cuatro semáforos, el fallo con su vuelta a medir, la oportunidad y los parecidos;
+  - el anuncio al volver a medir;
+  - «¿Tiene hueco?» → «Preparar la medida» en la idea sin búsquedas;
+  - axe en cada paso.
+
+### 4. Controles obligatorios
+
+- **Pasados:**
+  - `lint`, `typecheck` y `test`;
+  - el glosario, ahora también con «clon» y «tema amplio»;
+  - `secrets-leak`, y axe en claro y oscuro a 375 y 1280 px (`audit.ts`) en el banco con medidas;
+  - teclado: todos los botones de medir nombran su idea («¿Tiene hueco? «…»», «Ir a Ajustes «…»»);
+  - fallos de IA en «Preparar la medida»: `AiAction`, el mismo de la 003, y tras un fallo se pide otra estimación;
+  - fallos de YouTube: los seis códigos tienen su frase; `no_disponible` lleva a Ajustes.
+- **No ejecutados:**
+  - `test:installer`: la historia no toca el instalador;
+  - `prefers-reduced-motion`: solo se usa el `ProgressBar` del design system, ya auditado.
+
+### 5. Hallazgos de revisión
+
+- **Confirmados y corregidos:**
+  - **G** (regresión, lógica, fidelidad): tras un fallo, sobre todo `no_disponible`, la idea no se podía volver a
+    medir. Ahora siempre hay «¿Tiene hueco?» con su nombre, más «Ir a Ajustes» si el fallo es del lector, y «Medir
+    todas» incluye las fallidas (decisiones 39 y 40).
+  - **G** (fidelidad, seguridad): «Medir todas» y «Seguir midiendo» no decían cuántas ideas ni cuántas unidades; medir
+    una sola no avisaba de las unidades. Ahora se dice en los tres casos (decisión 45).
+  - **G** (fidelidad, regresión): «Frío» salía en ámbar con el mismo icono que «Competido». Ahora va en gris, como
+    fija la spec; la decisión 29 está corregida.
+  - **M**: «Reintentar» en «Preparar la medida» usaba una estimación ya gastada. Ahora se pide otra tras cada fallo.
+  - **M**: «Preparar la medida» cerraba el editor y perdía lo no guardado. Ahora espera a que se guarde
+    (decisión 42).
+  - **M**: «ninguno reciente» era falso con 1 a 3 recientes. Corregido en los textos y en el contrato (decisión 46).
+  - **M**: sin `broadQuery`, el semáforo decía «sin público» sin haberlo mirado. Ahora hacen falta las dos búsquedas,
+    y «Medir con el título» usa el pilar o el nicho (decisión 37).
+  - **M**: lo básico dependía del «Modo experto». Ahora «¿Tiene hueco?» lleva a «Preparar la medida» en la tarjeta
+    (decisión 41).
+  - **M**: los textos de fallo de canal y la acción «esperar» no encajaban en una idea (decisión 40).
+  - **M**: las decisiones 27 y 36 estaban en riesgo Bajo y pasan a Medio.
+  - **M**: faltaban «clon» y «tema amplio» en el glosario.
+  - **Menores corregidos:**
+    - una búsqueda en inglés vacía contaba como fallo (decisión 38);
+    - `asSearch` no quitaba `or` en minúscula, y los títulos que quedan vacíos no ofrecen «Medir con el título»;
+    - «Medir con el título» pisaba `broadQuery` y no usaba `conflictOr`;
+    - se aceptaban `ideaIds` repetidos y archivadas (decisión 43);
+    - el anuncio solo decía la última de un lote y tocaba el estado dentro del `setState`;
+    - con todo medido no había acción principal;
+    - un «¿Tiene hueco?» suelto escondía «Seguir midiendo» (decisión 44);
+    - los singulares («1 día», «Midiendo la idea», «1 idea»);
+    - «100.000» escrito a mano; la etiqueta de `thresholds.json` era jerga y repetía la fecha;
+    - `quickstart.md`, `http-api.md` y T034 no casaban con el código;
+    - faltaban marcadores del YouTube falso en `release.yml`;
+    - el e2e cerraba la pestaña antes de que llegara el `POST`.
+- **Descartados con justificación:**
+  - m2 (seguridad): la estimación de `busquedas_idea` no queda atada a su idea. Es el mismo patrón de estimación de un
+    solo uso de la 003, y el coste no depende de la idea.
+  - N9 (fidelidad): enseñar las búsquedas fuera de «Modo experto». No lo pide ningún requisito, y siguen visibles en
+    «Cambiar algo».
+  - N8: las unidades cuentan el tema general. Ahora siempre existe (decisión 37), así que la cifra es exacta.
+- **Abiertos:** ninguno.
+
+### 6. Desviaciones respecto a la spec
+
+- **De más:** el aviso «Propuesta con una versión anterior de tu perfil» sale ya en la US2 (decisión 47; su test es
+  T062).
+- **De menos:**
+  - «Preparar la medida» no está en «Escribir una idea mía», porque la idea aún no existe; al guardarla, la tarjeta lo
+    ofrece (decisión 42);
+  - SC-003 no se ha medido con YouTube real.
+
+### 7. Decisiones
+
+- **Del agente:** 27 a 47. Riesgo medio: 27, 28, 36, 37, 38, 39, 40, 41 y 46. El resto, bajo. La 29 está corregida
+  para seguir la spec.
+- **Pendientes del creador:** ninguna de esta historia.
+
+### 8. Impacto en la constitución
+
+- **I:**
+  - una acción principal según el estado («Medir todas», o «Proponer más ideas de vídeo» con todo medido);
+  - lo básico sin «Modo experto»;
+  - errores en llano con salida.
+- **II:** la IA solo escribe las búsquedas («Preparar la medida»), con su coste antes; las cifras y el semáforo son
+  funciones puras.
+- **V:**
+  - el sello del supuesto con su fecha y el umbral citado de `thresholds.json`;
+  - «sin datos» nunca se lee como cero, en inglés tampoco;
+  - sin tema general no hay veredicto de público.
+- **IX:** axe y teclado en el e2e; la auditoría de novato llega en Polish.
+- **X:** sin dependencias nuevas.
+
+### 9. Cómo revertir y qué queda
+
+- **Revertir:** `git revert` del commit de la US2. No hay migraciones nuevas: `ideaIds` y `skipped` van en el JSON de
+  `jobs.progress`, y las medidas en la tabla `idea_measure` de la Fase 2.
+- **Queda:**
+  - la US3 (otro enfoque), la US4 (ordenar, cola, archivar y exportar) y Polish, con la auditoría de novato;
+  - SC-003 con YouTube real, cuando el creador lo autorice.

@@ -34,9 +34,10 @@
 |---|---|
 | La búsqueda en castellano da `sin_datos` (lista vacía) | `similar = 0`. El semáforo se calcula: `frio` si el tema no tiene público y `hueco` si lo tiene |
 | La búsqueda del tema general da `sin_datos` | `hasAudience` solo mira `maxViews` |
-| La búsqueda en inglés falla con cualquier código | Se mide sin oportunidad, y `opportunity` es solo `{failure}` |
+| La búsqueda en inglés falla con cualquier código salvo `sin_datos` | Se mide sin oportunidad, y `opportunity` es solo `{failure}` |
+| La búsqueda en inglés no encuentra nada (`sin_datos`) | `opportunity: {english: false, englishBigVideos: 0, topVideos: []}` (decisión 38) |
 | Castellano o tema general fallan con `bloqueado`, `cupo_agotado`, `tiempo_agotado`, `no_disponible` o `no_encontrado` | `status: 'fallida'` con `failure`. La pantalla usa el texto y la acción de `youtube-failures.es.ts` |
-| La idea no tiene `query` | No se mide, y el `progress` la cuenta como saltada |
+| La idea no tiene `query` o `broadQuery` | No se mide, y el `progress` la cuenta como saltada (decisión 37) |
 
 `no_disponible` nunca se lee como «sin resultados» (entrada 153 de la 003).
 
@@ -52,9 +53,9 @@ La pantalla traduce `verdict` y `reason` con las cifras ([ui-screens](./ui-scree
 | `llenandose` | competido | «Hay {n} vídeos casi iguales y {r} son recientes: se está llenando, hace falta un enfoque propio.» |
 | `pocos_con_publico` | hueco | «Solo hay {n} vídeos casi iguales y el tema tiene público: hay hueco.» |
 | `pocos_sin_publico` | frio | «Solo hay {n} vídeos casi iguales, pero tampoco se ve público para el tema: puede ser muy de nicho.» |
-| `sin_racha_con_publico` | hueco | «Hay {n} vídeos casi iguales, pero ninguno reciente, y el tema tiene público: hay sitio.» |
-| `sin_racha_sin_publico` | frio | «Hay {n} vídeos casi iguales, ninguno reciente, y no se ve mucho público.» |
+| `sin_racha_con_publico` | hueco | «Hay {n} vídeos casi iguales, pero pocos son recientes ({r}), y el tema tiene público: hay sitio.» (decisión 46) |
+| `sin_racha_sin_publico` | frio | «Hay {n} vídeos casi iguales, pocos son recientes ({r}), y no se ve mucho público.» |
 
 Junto a todos, el sello del supuesto: «Los límites de este semáforo son un supuesto nuestro, sin un estudio que los
-respalde.» La oportunidad dice: «En inglés este tema tiene vídeos con más de 100.000 visitas y en castellano casi
-nadie lo cuenta: puede ser una oportunidad.»
+respalde.» La oportunidad dice: «En inglés este tema tiene vídeos con {audienceViews} visitas o más y en castellano
+casi nadie lo cuenta: puede ser una oportunidad.» (el umbral sale de `thresholds.json`, decisión 45)

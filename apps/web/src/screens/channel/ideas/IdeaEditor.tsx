@@ -1,13 +1,22 @@
 import { IDEA_FORMATS, IDEA_LIMITS, type IdeaFormat } from '@ytcreator/core'
-import type { IdeaView, NewIdeaBody } from '@ytcreator/core/api'
+import type { AiRunFailure, EstimateView, IdeaView, NewIdeaBody } from '@ytcreator/core/api'
 import { Button, Disclosure, RadioGroup, Select, TextArea, TextField } from '@ytcreator/ui'
 import { useState, type FormEvent } from 'react'
 import { ideasEs } from '../../../strings/ideas.es.ts'
 import styles from '../channel.module.css'
+import { AiAction } from '../Proposal.tsx'
 
 const text = ideasEs.editor
 // Radix Select shows its placeholder for an empty value: «none» needs a value of its own.
 const NO_PILLAR = 'ninguno'
+
+// «Preparar la medida · {coste}»: the AI writes the three searches of an idea being changed (T043).
+export interface PrepareMeasure {
+  readonly estimate: EstimateView | null
+  readonly failure: AiRunFailure | null
+  readonly busy: boolean
+  readonly onRun: () => void
+}
 
 export interface IdeaEditorProps {
   /** The pillars of the profile: an idea of the creator's may name one, or none. */
@@ -17,6 +26,7 @@ export interface IdeaEditorProps {
   /** The format a new idea starts with: a channel of only Shorts starts with «Short». */
   readonly defaultFormat?: IdeaFormat
   readonly busy: boolean
+  readonly prepare?: PrepareMeasure | undefined
   readonly onSave: (body: NewIdeaBody & { notes?: string }) => void
   readonly onCancel?: () => void
 }
@@ -24,7 +34,15 @@ export interface IdeaEditorProps {
 const orNull = (value: string) => (value.trim() === '' ? null : value.trim())
 
 // «Escribir una idea mía» and «Cambiar algo»: title and format are enough; the searches go in «Modo experto».
-export function IdeaEditor({ pillars, idea, defaultFormat = 'largo', busy, onSave, onCancel }: IdeaEditorProps) {
+export function IdeaEditor({
+  pillars,
+  idea,
+  defaultFormat = 'largo',
+  busy,
+  prepare,
+  onSave,
+  onCancel,
+}: IdeaEditorProps) {
   const [title, setTitle] = useState(idea?.title ?? '')
   const [format, setFormat] = useState<IdeaFormat>(idea?.format ?? defaultFormat)
   const [hook, setHook] = useState(idea?.hook ?? '')
@@ -35,6 +53,19 @@ export function IdeaEditor({ pillars, idea, defaultFormat = 'largo', busy, onSav
   const [queryEn, setQueryEn] = useState(idea?.queryEn ?? '')
 
   // A pillar the profile no longer has (or written another way) is still offered, so what shows is what is saved.
+  // The AI writes the searches of the idea as saved: with changes not saved, they would be written for another one
+  // and the changes lost when the form closes.
+  const dirty =
+    idea !== undefined &&
+    (title !== idea.title ||
+      format !== idea.format ||
+      hook !== idea.hook ||
+      pillar !== (idea.pillar ?? NO_PILLAR) ||
+      notes !== idea.notes ||
+      query !== (idea.query ?? '') ||
+      broadQuery !== (idea.broadQuery ?? '') ||
+      queryEn !== (idea.queryEn ?? ''))
+
   const pillarOptions = idea?.pillar && !pillars.includes(idea.pillar) ? [...pillars, idea.pillar] : pillars
 
   const submit = (event: FormEvent) => {
@@ -100,6 +131,21 @@ export function IdeaEditor({ pillars, idea, defaultFormat = 'largo', busy, onSav
       )}
       <Disclosure summary={text.expert}>
         <p className={styles.why}>{text.expertWhy}</p>
+        {prepare && (
+          <>
+            <p className={styles.why}>{ideasEs.measure.prepareWhy}</p>
+            {dirty && <p className={styles.notice}>{text.prepareSaveFirst}</p>}
+            <AiAction
+              label={ideasEs.measure.prepare}
+              estimate={prepare.estimate}
+              failure={prepare.failure}
+              busy={prepare.busy}
+              primary={false}
+              disabled={busy || dirty}
+              onRun={prepare.onRun}
+            />
+          </>
+        )}
         <TextField
           label={text.query}
           optional

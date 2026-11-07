@@ -32,21 +32,24 @@ Lo esperado es que todo termine con código 0. `apps/web/e2e/ideas.spec.ts` reco
 
 ## 3. Medir (US2)
 
-El yt-dlp falso tiene preparadas búsquedas para cada semáforo. Escribe ideas propias con estas búsquedas en «Modo
-experto» y pulsa «¿Tiene hueco?» en cada una:
+El YouTube falso tiene preparadas búsquedas para cada semáforo. Escribe ideas propias con estas búsquedas en «Modo
+experto» (las dos en castellano hacen falta: sin el tema general la idea no se mide, decisión 37) y pulsa «¿Tiene
+hueco?» en cada una. Como tema general (`broadQuery`) usa `pan con publico`, salvo en la fría:
 
-| Búsqueda (`query`) | Resultado |
-|---|---|
-| `idea con hueco` | verde, «hay hueco» |
-| `idea competida` | ámbar |
-| `idea quemada` | rojo, con «ahora mismo lo está contando mucha gente» |
-| `idea fria` | gris |
-| `idea bloqueado` | «sin medir», con el fallo y «Volver a intentarlo» |
-| `idea ilegible` | «sin medir», con «Ir a Ajustes» (entrada 153 de la 003) |
-| `idea oportunidad` (con `queryEn`) | verde con el aviso de oportunidad y los vídeos en inglés |
+| Búsqueda (`query`) | Tema general (`broadQuery`) | Resultado |
+|---|---|---|
+| `pan idea hueco` | `pan con publico` | verde, «Hay hueco» |
+| `pan idea competida` | `pan con publico` | ámbar, «Competido» |
+| `pan idea quemada` | `pan con publico` | rojo, «Quemado», con «ahora mismo lo está contando mucha gente» |
+| `pan idea fria` | `pan casero` | gris, «Frío» (decisión 29) |
+| `pan idea bloqueado` | `pan con publico` | «Sin medir», con el fallo y «¿Tiene hueco?» para medirla otra vez |
+| `pan sin lector` | `pan con publico` | «Sin medir», con «Ir a Ajustes» y «¿Tiene hueco?» (entrada 153 de la 003) |
+| `pan idea oportunidad` (con `queryEn` `bread opportunity`) | `pan con publico` | verde con el aviso de oportunidad y los vídeos en inglés |
 
 En cada medida deben verse la frase, «Ver los vídeos parecidos», la fecha, la fuente y el sello «un supuesto nuestro».
-Si cierras la pestaña a media «Medir todas» y vuelves, el progreso sigue.
+Antes de «Medir todas» se ve cuántas ideas se medirán (y, con la Data API, las unidades). Si cierras la pestaña a media
+«Medir todas» y vuelves, el progreso sigue. Una idea sin búsquedas ofrece «¿Tiene hueco?», que abre «Preparar la medida
+· {coste}», y «Medir con el título», sin IA.
 
 ## 4. Otro enfoque (US3)
 

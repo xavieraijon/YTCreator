@@ -20,6 +20,8 @@ export interface NewJob {
   channelId?: string | null
   kind: JobKind
   total?: number
+  ideaIds?: string[]
+  skipped?: number
 }
 
 interface Row {
@@ -91,7 +93,12 @@ export function createJobsRepo(db: DatabaseSync, now: () => Date = () => new Dat
         job.journeyId,
         job.channelId ?? null,
         job.kind,
-        JSON.stringify({ done: 0, total: job.total ?? 0 }),
+        JSON.stringify({
+          done: 0,
+          total: job.total ?? 0,
+          ...(job.ideaIds ? { ideaIds: job.ideaIds } : {}),
+          ...(job.skipped !== undefined ? { skipped: job.skipped } : {}),
+        }),
         now().toISOString(),
       )
       return get(id)!
@@ -100,7 +107,7 @@ export function createJobsRepo(db: DatabaseSync, now: () => Date = () => new Dat
     progress(id: string, done: number, total?: number): Job | null {
       const current = get(id)
       if (!current) return null
-      updateProgress.run(JSON.stringify({ done, total: total ?? current.progress.total }), id)
+      updateProgress.run(JSON.stringify({ ...current.progress, done, total: total ?? current.progress.total }), id)
       return get(id)
     },
 

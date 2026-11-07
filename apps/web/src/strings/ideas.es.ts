@@ -1,3 +1,5 @@
+import type { YouTubeFailureCode } from '@ytcreator/core'
+
 // Texts of the idea bank (specs/004-idea-bank/contracts/ui-screens.md). Plain words, addressed as «tú».
 export const ideasEs = {
   bank: {
@@ -47,6 +49,70 @@ export const ideasEs = {
     },
   },
   format: { largo: 'Vídeo largo', short: 'Short' },
+  measure: {
+    check: '¿Tiene hueco?',
+    again: 'Volver a medir',
+    measureAll: 'Medir todas',
+    unmeasured: 'Sin medir',
+    noQuery: 'Para medirla hacen falta sus búsquedas en YouTube.',
+    useTitle: 'Medir con el título',
+    useTitleWhy:
+      'Sin la IA: buscaremos el título tal cual y, como tema general, el tema del canal de la idea o, si no tiene, el nicho de tu canal.',
+    prepare: 'Preparar la medida',
+    prepareWhy: 'La IA escribe las tres búsquedas por ti.',
+    verdict: { hueco: 'Hay hueco', competido: 'Competido', quemado: 'Quemado', frio: 'Frío' },
+    reason: {
+      racha_reciente:
+        'Ya hay {n} vídeos casi iguales y {r} son de los últimos {d} días: ahora mismo lo está contando mucha gente.',
+      agotado: 'Ya hay {n} vídeos casi iguales y casi nadie los ve (unas {v} visitas cada uno): está agotado.',
+      muchos_con_visitas:
+        'Ya hay {n} vídeos casi iguales, pero se ven: solo merece la pena con un enfoque claramente distinto.',
+      llenandose: 'Hay {n} vídeos casi iguales y {r} son recientes: se está llenando, hace falta un enfoque propio.',
+      pocos_con_publico: 'Solo hay {n} vídeos casi iguales y el tema tiene público: hay hueco.',
+      pocos_sin_publico:
+        'Solo hay {n} vídeos casi iguales, pero tampoco se ve público para el tema: puede ser muy de nicho.',
+      sin_racha_con_publico:
+        'Hay {n} vídeos casi iguales, pero pocos son recientes ({r}), y el tema tiene público: hay sitio.',
+      sin_racha_sin_publico: 'Hay {n} vídeos casi iguales, pocos son recientes ({r}), y no se ve mucho público.',
+    },
+    assumption: 'Los límites de este semáforo son un supuesto nuestro, sin un estudio que los respalde.',
+    basisLabel: 'Límites del semáforo',
+    opportunity:
+      'En inglés este tema tiene vídeos con {v} visitas o más y en castellano casi nadie lo cuenta: puede ser una oportunidad.',
+    englishMissing: 'No se ha mirado en inglés: a esta idea le falta su búsqueda en inglés.',
+    englishFailed: 'Esta vez no hemos podido mirar en inglés.',
+    partial: 'A muchos de estos vídeos no les hemos visto la fecha: puede haber más recientes de los que decimos.',
+    similar: 'Ver los vídeos parecidos',
+    noSimilar: 'No hemos encontrado vídeos casi iguales.',
+    english: 'Vídeos en inglés con más visitas',
+    video: '{titulo} · {canal} · {visitas} · {fecha}',
+    views: '{n} visitas',
+    viewsUnknown: 'visitas sin dato',
+    dateUnknown: 'sin fecha',
+    stale: 'Medida antigua (de hace {n} días).',
+    staleOne: 'Medida antigua (de hace 1 día).',
+    olderRevision: 'Medida de una versión anterior de la idea.',
+    olderProfile: 'Propuesta con una versión anterior de tu perfil.',
+    progress: 'Midiendo {hecho} de {total} ideas',
+    progressOne: 'Midiendo la idea',
+    progressNote: 'Puedes seguir usando la app: la medida sigue aunque cierres esta pestaña.',
+    interrupted: 'La medida se cortó. Puedes seguir donde se quedó.',
+    resume: 'Seguir midiendo',
+    count: 'Se medirán {n} ideas.',
+    countOne: 'Se medirá 1 idea.',
+    units: 'Medirlas gasta unas {unidades} unidades de tu cupo diario de YouTube.',
+    unitsOne: 'Medirla gasta unas {unidades} unidades de tu cupo diario de YouTube.',
+    otherRunning: 'Ya había una medida en marcha: te enseñamos esa. Cuando acabe, puedes medir esta.',
+    failure: {
+      no_encontrado: 'YouTube no ha encontrado nada con las búsquedas de esta idea.',
+      sin_datos: 'YouTube no ha devuelto datos suficientes para medir esta idea.',
+    } as Partial<Record<YouTubeFailureCode, string>>,
+    skipped: 'Hay ideas sin búsquedas: esas no se medirán.',
+    skippedOne: 'Hay una idea sin búsquedas: esa no se medirá.',
+    measured: '«{titulo}»: {semaforo}.',
+    failed: '«{titulo}»: no se ha podido medir.',
+    named: '{accion} «{titulo}»',
+  },
   status: { banco: 'En el banco', elegida: 'Elegida para guion', hecha: 'Hecha', archivada: 'Archivada' },
   editor: {
     open: 'Escribir una idea mía',
@@ -71,5 +137,8 @@ export const ideasEs = {
     saved: 'Idea guardada.',
     duplicate: 'Ya tenías una idea con el mismo título: «{titulo}». La hemos guardado igualmente.',
     conflict: 'Esta idea ha cambiado en otra pestaña. Te enseñamos cómo está ahora.',
+    prepared: 'Búsquedas preparadas. Ya puedes ver si tiene hueco.',
+    prepareSaveFirst:
+      'Guarda los cambios antes de preparar la medida: la IA escribe las búsquedas de la idea guardada.',
   },
 }

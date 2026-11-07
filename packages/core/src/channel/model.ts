@@ -61,4 +61,7 @@ export type JobStatus = (typeof JOB_STATUSES)[number]
 export interface JobProgress {
   done: number
   total: number
+  // `medir_ideas` (004): the ideas it measures, for «Seguir midiendo», and those left out for having no search.
+  ideaIds?: string[]
+  skipped?: number
 }

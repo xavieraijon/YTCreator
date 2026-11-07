@@ -42,6 +42,8 @@ export const apiErrorSchema = z.object({
     youtubeFailure: z.enum(YOUTUBE_FAILURES).optional(),
     // A stale `revision`: what the server has now (the wizard's state, the journey or the idea).
     current: z.union([onboardingStateSchema, journeySchema, ideaSchema]).optional(),
+    // The job already running, for a 409 of «Medir todas» (004).
+    jobId: z.string().optional(),
   }),
 })
 export type ApiErrorBody = z.infer<typeof apiErrorSchema>

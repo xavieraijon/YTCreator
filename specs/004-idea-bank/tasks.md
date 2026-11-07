@@ -140,24 +140,24 @@ separado.
 
 ### Tests de US2
 
-- [ ] T030 [P] [US2] Test en `packages/core/test/ideas/similar.test.ts`:
+- [X] T030 [P] [US2] Test en `packages/core/test/ideas/similar.test.ts`:
   - `keywordsOf(query)` quita las palabras vacías en español e inglés y normaliza;
   - `isSimilar(title, keywords, share = 0.75)` pide el 75 % redondeado hacia arriba, con un mínimo de 2, y con una sola palabra basta con esa;
   - tildes y mayúsculas no cuentan.
-- [ ] T031 [P] [US2] Test en `packages/core/test/ideas/figures.test.ts`, que comprueba `ideaFigures({hits, broadHits, format, thresholds, now})`:
+- [X] T031 [P] [US2] Test en `packages/core/test/ideas/figures.test.ts`, que comprueba `ideaFigures({hits, broadHits, format, thresholds, now})`:
   - filtra por formato (`short` ≤ 180 s, `largo` > 180 s);
   - cuenta `similar`, y `dated` y `recent` sobre los 12 primeros;
   - `medianViews` y `maxViews` ignoran los nulos;
   - `broadTopViews` y `broadBigVideos`;
   - `hasAudience`;
   - `partial` si falta la fecha en más de la mitad de la muestra.
-- [ ] T032 [P] [US2] Test en `packages/core/test/ideas/verdict.test.ts`: los ocho `reason` de [idea-measure](./contracts/idea-measure.md), en el orden de R3, con los bordes de cada umbral: 5 y 6, 11 y 12, `recent` 3 y 4, mediana 999 y 1.000, y `hasAudience` verdadero y falso
-- [ ] T033 [P] [US2] Test en `packages/core/test/ideas/opportunity.test.ts`:
+- [X] T032 [P] [US2] Test en `packages/core/test/ideas/verdict.test.ts`: los ocho `reason` de [idea-measure](./contracts/idea-measure.md), en el orden de R3, con los bordes de cada umbral: 5 y 6, 11 y 12, `recent` 3 y 4, mediana 999 y 1.000, y `hasAudience` verdadero y falso
+- [X] T033 [P] [US2] Test en `packages/core/test/ideas/opportunity.test.ts`:
   - `englishOpportunity({similar, englishHits, thresholds})` da oportunidad con 2 o más vídeos en inglés de 100.000 visitas o más y 5 o menos casi iguales en castellano;
   - devuelve los 5 vídeos en inglés con más visitas;
   - sin `englishHits` devuelve `null`.
-- [ ] T034 [P] [US2] Escenarios del YouTube falso en `packages/youtube/src/fake/scenarios.ts` y su test de contrato en `packages/youtube/test/fake.contract.test.ts`: `idea con hueco`, `idea competida`, `idea quemada` (12 casi iguales, 4 recientes), `idea agotada`, `idea fria`, `idea oportunidad` (con su búsqueda en inglés) e `idea bloqueado`
-- [ ] T035 [P] [US2] Test del servicio en `apps/server/test/services/idea-measure.test.ts`, que comprueba que:
+- [X] T034 [P] [US2] Escenarios del YouTube falso en `packages/youtube/src/fake/scenarios.ts` y su test de contrato en `packages/youtube/test/fake.contract.test.ts`: `idea hueco` (la clave es `hueco`; la búsqueda casa con «idea hueco»), `idea competida`, `idea quemada` (12 casi iguales, 4 recientes), `idea agotada`, `idea fria`, `idea oportunidad` (con su búsqueda en inglés) e `idea bloqueado`
+- [X] T035 [P] [US2] Test del servicio en `apps/server/test/services/idea-measure.test.ts`, que comprueba que:
   - cada idea hace sus tres búsquedas (dos sin `queryEn`);
   - el castellano lleva fechas, y el tema general y el inglés no;
   - se guarda `idea_measure` con `idea_revision`, `queries`, `source`, `thresholds_version` y `partial`;
@@ -166,7 +166,7 @@ separado.
   - un fallo en inglés solo quita la oportunidad;
   - una idea sin `query` se salta y se cuenta;
   - `fresh` salta la caché.
-- [ ] T036 [P] [US2] Test de servidor en `apps/server/test/http/ideas-measure.test.ts`:
+- [X] T036 [P] [US2] Test de servidor en `apps/server/test/http/ideas-measure.test.ts`:
   - `POST .../idea-measures/estimate` da `units: null` con yt-dlp y, con la Data API, 303 por idea con `queryEn` y 202 sin él;
   - `POST .../idea-measures` da `202 {jobId}`, y con otro en curso, `409` con su `jobId`;
   - los eventos SSE `item` llevan `{ideaId, measure}`;
@@ -175,11 +175,11 @@ separado.
 
 ### Implementación de US2
 
-- [ ] T037 [US2] Implementar `packages/core/src/ideas/similar.ts`, `figures.ts`, `verdict.ts` y `opportunity.ts`, que pasan T030 a T033
-- [ ] T038 [US2] Escenarios del YouTube falso (pasa T034)
-- [ ] T039 [US2] Servicio `apps/server/src/services/idea-measure.ts`: trabajo `medir_ideas` con `channel_id`; las ideas una tras otra; las tres búsquedas a la vez con el límite de procesos de la 003; progreso `{done, total, ideaIds}`; e `item` por SSE. Recuperarlo tras reiniciar en `apps/server/src/services/jobs.ts`. Pasa T035
-- [ ] T040 [US2] Rutas `POST .../idea-measures/estimate` y `POST .../idea-measures` en `apps/server/src/http/routes/ideas.ts`, y `runningJob` en `GET .../ideas`. Pasa T036
-- [ ] T041 [P] [US2] Test de pantalla en `apps/web/test/ideas/measure.test.tsx`:
+- [X] T037 [US2] Implementar `packages/core/src/ideas/similar.ts`, `figures.ts`, `verdict.ts` y `opportunity.ts`, que pasan T030 a T033
+- [X] T038 [US2] Escenarios del YouTube falso (pasa T034)
+- [X] T039 [US2] Servicio `apps/server/src/services/idea-measure.ts`: trabajo `medir_ideas` con `channel_id`; las ideas una tras otra; las tres búsquedas a la vez con el límite de procesos de la 003; progreso `{done, total, ideaIds}`; e `item` por SSE. Recuperarlo tras reiniciar en `apps/server/src/services/jobs.ts`. Pasa T035
+- [X] T040 [US2] Rutas `POST .../idea-measures/estimate` y `POST .../idea-measures` en `apps/server/src/http/routes/ideas.ts`, y `runningJob` en `GET .../ideas`. Pasa T036
+- [X] T041 [P] [US2] Test de pantalla en `apps/web/test/ideas/measure.test.tsx` (hecho en `apps/web/test/channel/idea-measure.test.tsx`):
   - «¿Tiene hueco?» y «Medir todas», con el aviso de unidades si hay Data API;
   - el `Semaphore` con la frase de cada `reason`;
   - el `DataSource` con la fuente, la fecha y el sello de supuesto;
@@ -188,19 +188,19 @@ separado.
   - los avisos «Medida antigua», «Medida de una versión anterior de la idea» y el de la parte en inglés que falta;
   - un fallo con el texto y la acción de `youtube-failures.es.ts`;
   - el progreso y «Seguir midiendo».
-- [ ] T042 [US2] Pantallas `apps/web/src/screens/channel/ideas/IdeaMeasure.tsx` y la parte de medida de `IdeaCard.tsx` e `IdeaBank.tsx`, con `useJob` de la 003 y una región `aria-live` educada. Las búsquedas van en «Modo experto» dentro de `IdeaEditor.tsx`. Para una idea propia sin búsquedas, «Medir con el título» usa `title` como `query` y el pilar del perfil como `broadQuery`. Textos en `ideas.es.ts`, con el glosario («clon» y «tema amplio» prohibidos). Pasa T041
-- [ ] T043 [US2] Uso `busquedas_idea`:
+- [X] T042 [US2] Pantallas `apps/web/src/screens/channel/ideas/IdeaMeasure.tsx` y la parte de medida de `IdeaCard.tsx` e `IdeaBank.tsx`, con `useJob` de la 003 y una región `aria-live` educada. Las búsquedas van en «Modo experto» dentro de `IdeaEditor.tsx`. Para una idea propia sin búsquedas, «Medir con el título» usa `title` como `query` y el pilar del perfil como `broadQuery`. Textos en `ideas.es.ts`, con el glosario («clon» y «tema amplio» prohibidos). Pasa T041
+- [X] T043 [US2] Uso `busquedas_idea`:
   - prompt `packages/knowledge/prompts/busquedas_idea/v1.md` y `lock.json`;
   - perfil (300 tokens, 30 s) y salida falsa;
   - test de contrato en la batería de IA;
   - ruta `POST /api/ideas/:id/queries` (sube la `revision`), con su test en `apps/server/test/http/ideas-own.test.ts`;
   - botón «Preparar la medida · {coste}» en `IdeaEditor.tsx`.
-- [ ] T044 [US2] e2e en `apps/web/e2e/ideas.spec.ts` (US2):
+- [X] T044 [US2] e2e en `apps/web/e2e/ideas.spec.ts` (US2; hecho en `apps/web/e2e/ideas-measure.spec.ts`, con su propio servidor):
   - medir las ideas con búsquedas preparadas;
   - ver los cuatro semáforos, el fallo y la oportunidad;
   - cerrar la pestaña a media «Medir todas» y volver;
   - axe en claro y oscuro.
-- [ ] T045 [A] [US2] Puerta A de US2: ejecutar `/puerta-a 004 US2`
+- [X] T045 [A] [US2] Puerta A de US2: ejecutar `/puerta-a 004 US2`
 
 **Checkpoint**: Cada idea se puede medir con evidencia.
 

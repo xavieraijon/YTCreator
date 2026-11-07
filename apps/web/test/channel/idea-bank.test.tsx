@@ -16,7 +16,16 @@ const estimate = {
   maxCents: 0,
   pricingVersion: 1,
 }
-const empty: IdeaBankView = { ideas: [], queue: [], profileVersion: 1, pendingBatch: null, runningJob: null }
+const empty: IdeaBankView = {
+  ideas: [],
+  queue: [],
+  profileVersion: 1,
+  pendingBatch: null,
+  runningJob: null,
+  interrupted: null,
+  measureBasis: { label: 'Supuesto de prueba', date: '2026-09-27', recentDays: 90, audienceViews: 100_000 },
+  measureUnits: null,
+}
 const idea = (fields: Partial<IdeaView> = {}): IdeaView => ({
   id: 'i1',
   origin: 'creador',
@@ -79,6 +88,7 @@ const ready = (bank: IdeaBankView): IdeaBankState => ({
   kind: 'ready',
   channelId: 'c1',
   pillars: ['Cenas rápidas', 'Táper'],
+  niche: 'Cocina casera',
   defaultFormat: 'largo',
   bank,
 })
@@ -103,8 +113,17 @@ describe('IdeaBank (contracts/ui-screens.md)', () => {
     expect(propose).toContain(channelEs.proposal.included)
   })
 
-  it('with ideas, proposing more is not the main action, and each idea says where it came from', () => {
-    const html = render(ready({ ...empty, ideas: [idea(), idea({ id: 'i2', origin: 'ia', title: 'Otra' })] }))
+  it('with ideas to measure, proposing more is not the main action, and each idea says where it came from', () => {
+    const state = ready({ ...empty, ideas: [idea(), idea({ id: 'i2', origin: 'ia', title: 'Otra' })] })
+    const toMeasure = {
+      job: null,
+      estimate: { ideas: 2, measurable: 2, withoutEnglish: 0, units: null },
+      announcement: '',
+      now: new Date(),
+      onMeasure: () => {},
+      onMeasureWithTitle: () => {},
+    }
+    const html = renderToStaticMarkup(<IdeaBankContent state={state} estimate={estimate} measure={toMeasure} />)
     expect(button(html, text.proposeMore)).not.toContain('data-variant="primary"')
     expect(html).toContain(ideasEs.card.origin.creador)
     expect(html).toContain(ideasEs.card.origin.ia)

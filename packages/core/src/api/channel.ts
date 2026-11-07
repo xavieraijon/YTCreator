@@ -171,7 +171,12 @@ export const jobSchema = z.object({
   journeyId: z.string().nullable(),
   kind: z.enum(JOB_KINDS),
   status: z.enum(JOB_STATUSES),
-  progress: z.object({ done: count, total: count }),
+  progress: z.object({
+    done: count,
+    total: count,
+    ideaIds: z.array(z.string()).optional(),
+    skipped: count.optional(),
+  }),
   failure: z.string().nullable(),
   startedAt: z.string(),
   finishedAt: z.string().nullable(),

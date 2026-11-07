@@ -6,13 +6,18 @@ import {
   dropRepeats,
   duplicateOf,
   type Idea,
+  ideaMeasureUnits,
   ideasOutputFor,
+  type YouTubeSource,
 } from '@ytcreator/core'
 import {
   batchDecideBodySchema,
   ideaBatchBodySchema,
   ideaEstimateBodySchema,
+  ideaMeasuresBodySchema,
   ideaPatchBodySchema,
+  ideaQueriesBodySchema,
+  measureEstimateBodySchema,
   newIdeaBodySchema,
 } from '@ytcreator/core/api'
 import { Hono } from 'hono'
@@ -26,6 +31,7 @@ import type { JourneysRepo } from '../../db/repos/journeys.ts'
 import type { ProfilesRepo } from '../../db/repos/profiles.ts'
 import { inTransaction } from '../../db/transaction.ts'
 import type { AiRunService, PromptRef } from '../../services/ai-run.ts'
+import { type IdeaMeasureService, isMeasurable } from '../../services/idea-measure.ts'
 import { avoidList, batchView, ideaView, profileInput } from '../../services/ideas.ts'
 import { ApiError } from '../errors.ts'
 import { parseBody } from '../validate.ts'
@@ -43,6 +49,12 @@ export interface IdeaRoutesDeps {
   promptFor: (use: ChannelUse) => PromptRef
   // `ideas.staleDays` of thresholds.json (FR-010).
   staleDays: number
+  measure: IdeaMeasureService
+  youtube: { effectiveSource(): YouTubeSource }
+  // The prices of the Data API in thresholds.json (`dataApi`), for the units of «Medir todas» (R2).
+  dataApiUnits: { searchUnits: number; otherUnits: number }
+  // `ideas.basis` of thresholds.json: the semaphore says it is an assumption, with its date.
+  measureBasis: { label: string; date: string; recentDays: number; audienceViews: number }
   now?: () => Date
 }
 
@@ -95,16 +107,46 @@ export function ideaRoutes(deps: IdeaRoutesDeps) {
   const profilePillar = (pillars: readonly string[], pillar: string) =>
     pillars.find((title) => title.toLowerCase() === pillar.toLowerCase()) ?? pillar
 
+  const measureJobs = (channelId: string) => jobs.listByChannel(channelId, 'medir_ideas')
+  const runningJobOf = (channelId: string) => measureJobs(channelId).find((job) => job.status === 'en_curso') ?? null
+
+  // What the last cut «Medir todas» left unmeasured, if a restart cut it short (contracts/http-api.md). A later
+  // «¿Tiene hueco?» of one idea does not hide it: only a newer measure of each idea does.
+  const interruptedOf = (channelId: string) => {
+    const last = measureJobs(channelId).findLast((job) => job.status === 'interrumpido')
+    if (!last) return null
+    const left = (last.progress.ideaIds ?? []).filter((id) => {
+      const idea = ideas.get(id)
+      const latest = measures.latest(id)
+      return idea && idea.status !== 'archivada' && (!latest || latest.measuredAt < last.startedAt)
+    })
+    return left.length > 0 ? { jobId: last.id, ideaIds: left } : null
+  }
+
   routes.get('/channels/:id/ideas', (c) => {
     const { channel, profileVersion } = withProfile(c.req.param('id'))
     const pending = batches.pending(channel.id, 'ideas')
-    const running = jobs.listByChannel(channel.id, 'medir_ideas').find((job) => job.status === 'en_curso')
     return c.json({
       ideas: viewsOf(channel.id, profileVersion, ideas.listBank(channel.id)),
       queue: ideas.listQueue(channel.id).map((idea) => idea.id),
       profileVersion,
       pendingBatch: pending ? batchView(pending) : null,
-      runningJob: running?.id ?? null,
+      runningJob: runningJobOf(channel.id)?.id ?? null,
+      interrupted: interruptedOf(channel.id),
+      measureBasis: {
+        label: deps.measureBasis.label,
+        date: deps.measureBasis.date,
+        recentDays: deps.measureBasis.recentDays,
+        audienceViews: deps.measureBasis.audienceViews,
+      },
+      // What measuring one idea spends with the Data API; null with yt-dlp (FR-007c).
+      measureUnits:
+        deps.youtube.effectiveSource() === 'data_api'
+          ? {
+              withoutEnglish: ideaMeasureUnits(deps.dataApiUnits, false),
+              withEnglish: ideaMeasureUnits(deps.dataApiUnits, true),
+            }
+          : null,
     })
   })
 
@@ -153,13 +195,59 @@ export function ideaRoutes(deps: IdeaRoutesDeps) {
     return c.json(viewOf(changed!, profileVersion))
   })
 
+  // «Preparar la medida»: what the AI needs to write the three searches of one idea (contracts/ai-uses.md).
+  const queriesInput = (idea: Idea, profile: ChannelProfile) => {
+    const { niche, pillars } = profileInput(profile)
+    return {
+      idea: { title: idea.title, hook: idea.hook, pillar: idea.pillar, format: idea.format },
+      profile: { niche, pillars },
+    }
+  }
+
+  // An idea named in a body must be one of this channel.
+  const ideaOf = (channelId: string, ideaId: string | undefined) => {
+    const idea = ideaId ? ideas.get(ideaId) : null
+    if (!idea || idea.channelId !== channelId)
+      throw new ApiError({ code: 'validacion', fields: { ideaId: 'no_valido' } })
+    return idea
+  }
+
   // What a use costs before asking for it (principle III).
   routes.post('/channels/:id/ideas/estimate', async (c) => {
     const { channel, profile } = withProfile(c.req.param('id'))
-    const { use } = await parseBody(c, ideaEstimateBodySchema)
-    if (use !== 'ideas') throw new ApiError({ code: 'validacion', fields: { use: 'no_valido' } })
-    const { input } = ideasInput(channel.id, profile)
-    return c.json(aiRun.estimate({ journeyId: journeyOf(channel.id), use, input }))
+    const { use, ideaId } = await parseBody(c, ideaEstimateBodySchema)
+    const journeyId = journeyOf(channel.id)
+    if (use === 'ideas') return c.json(aiRun.estimate({ journeyId, use, input: ideasInput(channel.id, profile).input }))
+    if (use === 'busquedas_idea') {
+      return c.json(aiRun.estimate({ journeyId, use, input: queriesInput(ideaOf(channel.id, ideaId), profile) }))
+    }
+    throw new ApiError({ code: 'validacion', fields: { use: 'no_valido' } })
+  })
+
+  // «Preparar la medida»: the AI writes the searches; the idea moves to a new revision (contracts/http-api.md).
+  routes.post('/ideas/:id/queries', async (c) => {
+    const { idea, profile, profileVersion } = findIdea(c.req.param('id'))
+    const { estimateId, revision } = await parseBody(c, ideaQueriesBodySchema)
+    const stale = () => {
+      const current = ideas.get(idea.id)!
+      if (current.revision !== revision) {
+        throw new ApiError({ code: 'conflicto', current: viewOf(current, profileVersion) as never })
+      }
+    }
+    stale()
+    const result = await aiRun.run({
+      estimateId,
+      journeyId: journeyOf(idea.channelId),
+      use: 'busquedas_idea',
+      input: queriesInput(idea, profile),
+    })
+    if (!result.ok) return c.json({ failure: result.failure })
+    // Changed in another tab while the AI wrote: what it wrote is not put over it.
+    const changed = inTransaction(db, () => {
+      stale()
+      return ideas.edit(idea.id, result.value)!
+    })
+    return c.json(viewOf(changed, profileVersion))
   })
 
   // «Proponer ideas de vídeo»: a batch of candidates, waiting for the creator (US1).
@@ -197,6 +285,45 @@ export function ideaRoutes(deps: IdeaRoutesDeps) {
       })
     })
     return c.json(batchView(batch))
+  })
+
+  const ideasOfChannel = (channelId: string, ids: readonly string[]) =>
+    ids.map((id) => ideas.get(id)).filter((idea): idea is Idea => idea?.channelId === channelId)
+
+  // What «Medir todas» will do before doing it: how many, and the Data API units it spends (FR-007c).
+  routes.post('/channels/:id/idea-measures/estimate', async (c) => {
+    const { channel } = withProfile(c.req.param('id'))
+    const { ideaIds } = await parseBody(c, measureEstimateBodySchema)
+    const list = ideasOfChannel(channel.id, [...new Set(ideaIds)])
+    const measurable = list.filter(isMeasurable)
+    const units =
+      deps.youtube.effectiveSource() === 'data_api'
+        ? measurable.reduce((sum, idea) => sum + ideaMeasureUnits(deps.dataApiUnits, idea.queryEn !== null), 0)
+        : null
+    return c.json({
+      ideas: list.length,
+      measurable: measurable.length,
+      withoutEnglish: measurable.filter((idea) => idea.queryEn === null).length,
+      units,
+    })
+  })
+
+  // «¿Tiene hueco?» and «Medir todas»: one job at a time per channel, or the quota would go twice.
+  routes.post('/channels/:id/idea-measures', async (c) => {
+    const { channel } = withProfile(c.req.param('id'))
+    const body = await parseBody(c, ideaMeasuresBodySchema)
+    // The same idea twice would spend its quota twice.
+    const ideaIds = [...new Set(body.ideaIds)]
+    const fresh = body.fresh
+    const running = runningJobOf(channel.id)
+    if (running) throw new ApiError({ code: 'conflicto', jobId: running.id })
+    const list = ideasOfChannel(channel.id, ideaIds)
+    if (list.length !== ideaIds.length) throw new ApiError({ code: 'no_encontrado' })
+    // An archived idea is out of the bank: it is recovered before it is measured.
+    if (list.some((idea) => idea.status === 'archivada'))
+      throw new ApiError({ code: 'validacion', fields: { ideaIds: 'no_valido' } })
+    const job = deps.measure.start(channel.id, ideaIds, { fresh: fresh === true })
+    return c.json({ jobId: job.id }, 202)
   })
 
   // «Me la quedo» and «No me interesa»: the kept ones go to the end of the bank.

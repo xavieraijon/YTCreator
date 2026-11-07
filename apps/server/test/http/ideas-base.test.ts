@@ -25,6 +25,15 @@ describe('GET /api/channels/:id/ideas', () => {
       profileVersion: 1,
       pendingBatch: null,
       runningJob: null,
+      interrupted: null,
+      measureBasis: {
+        label: expect.stringContaining('Supuesto'),
+        date: '2026-09-27',
+        recentDays: 90,
+        audienceViews: 100_000,
+      },
+      // The fake YouTube is not the Data API: measuring spends no units.
+      measureUnits: null,
     })
     expect(await call(t, 'GET', `/api/channels/${channelId}/ideas/archived`)).toEqual({ status: 200, body: [] })
   })
