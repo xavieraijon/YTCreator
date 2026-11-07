@@ -172,8 +172,12 @@ export function makeTestApp({
     now,
   })
   const ideas = {
+    db,
     channels: channel.channels,
     profiles: channel.profiles,
+    journeys: channel.journeys,
+    aiRun,
+    promptFor,
     ideas: createIdeasRepo(db, now),
     batches: createIdeaBatchesRepo(db, now),
     measures: createIdeaMeasuresRepo(db, now),

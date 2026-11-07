@@ -6,7 +6,13 @@ import {
   channelSchema,
   createChannelResponseSchema,
   estimateSchema,
+  batchDecideResultSchema,
   ideaBankSchema,
+  ideaBatchOutcomeSchema,
+  ideaSchema,
+  newIdeaResultSchema,
+  type IdeaPatchBody,
+  type NewIdeaBody,
   type JobEvent,
   jobStartedSchema,
   jobEventSchema,
@@ -26,7 +32,7 @@ import {
   youtubeSettingsSchema,
   type YouTubeSourceSetting,
 } from '@ytcreator/core/api'
-import type { ChannelProfile, ProfilePart } from '@ytcreator/core'
+import type { ChannelProfile, IdeaUse, ProfilePart } from '@ytcreator/core'
 
 // Any Zod schema from @ytcreator/core/api; structural so the web needs no direct zod import.
 export interface Parser<T> {
@@ -209,9 +215,21 @@ export const profileApi = {
 }
 
 // The idea bank of a channel (specs/004-idea-bank/contracts/http-api.md).
+const channelPath = (channelId: string) => `/api/channels/${encodeURIComponent(channelId)}`
 export const ideasApi = {
   list: (channelId: string, options?: RequestOptions) =>
-    apiClient.get(`/api/channels/${encodeURIComponent(channelId)}/ideas`, ideaBankSchema, options),
+    apiClient.get(`${channelPath(channelId)}/ideas`, ideaBankSchema, options),
+  archived: (channelId: string) => apiClient.get(`${channelPath(channelId)}/ideas/archived`, ideaSchema.array()),
+  create: (channelId: string, body: NewIdeaBody) =>
+    apiClient.post(`${channelPath(channelId)}/ideas`, body, newIdeaResultSchema),
+  change: (ideaId: string, body: IdeaPatchBody) =>
+    apiClient.patch(`/api/ideas/${encodeURIComponent(ideaId)}`, body, ideaSchema),
+  estimate: (channelId: string, use: IdeaUse, ideaId?: string) =>
+    apiClient.post(`${channelPath(channelId)}/ideas/estimate`, { use, ...(ideaId ? { ideaId } : {}) }, estimateSchema),
+  propose: (channelId: string, body: { estimateId: string; instructions?: string }) =>
+    apiClient.post(`${channelPath(channelId)}/idea-batches`, body, ideaBatchOutcomeSchema),
+  decide: (batchId: string, body: { keep: number[]; discard: number[] }) =>
+    apiClient.post(`/api/idea-batches/${encodeURIComponent(batchId)}/decide`, body, batchDecideResultSchema),
 }
 
 export const usageApi = {

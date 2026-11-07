@@ -2,6 +2,7 @@ import { z } from 'zod'
 import { YOUTUBE_FAILURES } from '../youtube/failures.ts'
 import { aiFailureSchema } from './ai.ts'
 import { journeySchema } from './channel.ts'
+import { ideaSchema } from './ideas.ts'
 import { onboardingStateSchema } from './onboarding.ts'
 
 export const API_ERROR_CODES = [
@@ -39,8 +40,8 @@ export const apiErrorSchema = z.object({
     guard: z.enum(GUARDS).optional(),
     failure: aiFailureSchema.optional(),
     youtubeFailure: z.enum(YOUTUBE_FAILURES).optional(),
-    // A stale `revision`: what the server has now (the wizard's state or the journey).
-    current: z.union([onboardingStateSchema, journeySchema]).optional(),
+    // A stale `revision`: what the server has now (the wizard's state, the journey or the idea).
+    current: z.union([onboardingStateSchema, journeySchema, ideaSchema]).optional(),
   }),
 })
 export type ApiErrorBody = z.infer<typeof apiErrorSchema>

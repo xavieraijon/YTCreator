@@ -91,12 +91,12 @@ separado.
 
 ### Tests de US1
 
-- [ ] T015 [P] [US1] Test de salidas en `packages/core/test/ideas/outputs.test.ts`:
+- [X] T015 [P] [US1] Test de salidas en `packages/core/test/ideas/outputs.test.ts`:
   - `ideasOutput`: de 6 a 10 `IdeaDraft`; `pillar` tiene que ser uno de los pilares dados (fábrica `ideasOutputFor(pillars)`), sin distinguir mayúsculas;
   - `busquedasOutput`: `{query, broadQuery, queryEn}`.
-- [ ] T016 [P] [US1] Test de repetidas en `packages/core/test/ideas/repeats.test.ts`: `dropRepeats(candidates, existing)` quita las que repiten título normalizado o `query` normalizada (con `normalizeName` de `packages/core/src/market/names.ts`) y devuelve las que quedan y cuántas quitó
-- [ ] T017 [P] [US1] Test de contrato del uso `ideas` en la batería de IA (`packages/ai/test/contract/`), con el proveedor falso: salida válida; `pilar_invalido` (la primera no valida y el reintento sí); `cifra_inventada` con `claimsTrimmed`; y los cinco fallos tipados
-- [ ] T018 [P] [US1] Test de servidor en `apps/server/test/http/ideas-batch.test.ts`:
+- [X] T016 [P] [US1] Test de repetidas en `packages/core/test/ideas/repeats.test.ts`: `dropRepeats(candidates, existing)` quita las que repiten título normalizado o `query` normalizada (con `normalizeName` de `packages/core/src/market/names.ts`) y devuelve las que quedan y cuántas quitó
+- [X] T017 [P] [US1] Test de contrato del uso `ideas` en la batería de IA (`packages/ai/test/contract/`), con el proveedor falso: salida válida; `pilar_invalido` (la primera no valida y el reintento sí); `cifra_inventada` con `claimsTrimmed`; y los cinco fallos tipados
+- [X] T018 [P] [US1] Test de servidor en `apps/server/test/http/ideas-batch.test.ts`:
   - `POST .../ideas/estimate` con `use: 'ideas'` da un `Estimate`;
   - `POST .../idea-batches` da 6–10 candidatas, y con `ideas_repetidas` quita 2 y devuelve `removedRepeats: 2`;
   - `POST /api/idea-batches/:id/decide` crea las elegidas al final del banco con `origin: 'ia'`, `batch_id` y `profile_version`;
@@ -104,7 +104,7 @@ separado.
   - pedir otra tanda descarta las pendientes de la anterior;
   - el `input` del uso lleva `avoid` con las ideas del banco, las archivadas y las descartadas (hasta 200);
   - límite de gasto: `limite_de_gasto` sin gastar.
-- [ ] T019 [P] [US1] Test de servidor en `apps/server/test/http/ideas-own.test.ts`:
+- [X] T019 [P] [US1] Test de servidor en `apps/server/test/http/ideas-own.test.ts`:
   - `POST .../ideas` con `{title, format}` da `201`, `origin: 'creador'` y `duplicateOf` cuando el título normalizado ya existe;
   - `PATCH /api/ideas/:id` con una `revision` vieja da `409` con la idea actual;
   - editar sube la `revision` y conserva `original`;
@@ -112,21 +112,21 @@ separado.
 
 ### Implementación de US1
 
-- [ ] T020 [US1] Implementar `packages/core/src/ideas/outputs.ts` y `packages/core/src/ideas/repeats.ts` (pasan T015 y T016), y añadir `ideas`, `otro_enfoque` y `busquedas_idea` a `AI_USES` en `packages/core/src/ai/uses.ts`
-- [ ] T021 [US1] Prompt `packages/knowledge/prompts/ideas/v1.md` según [ai-uses](./contracts/ai-uses.md): fijo, en español, con `writing/human.md`, sin pedir cifras, sin repetir `avoid`, y respetando el formato del perfil. Actualizar `packages/knowledge/prompts/lock.json` y los tests de `packages/knowledge/test/prompts.test.ts`
-- [ ] T022 [US1] Perfil por proveedor del uso `ideas` (tope de salida 3.000 tokens, 90 s) en el registro de `packages/ai`, y salidas del proveedor falso: `ok`, `ideas_repetidas`, `pilar_invalido` y `cifra_inventada`. Pasa T017
-- [ ] T023 [US1] Rutas `POST .../ideas/estimate`, `POST .../idea-batches` y `POST /api/idea-batches/:id/decide` en `apps/server/src/http/routes/ideas.ts`, con `ai-run.ts`, el presupuesto (reintento reservado), `claims.ts` y `dropRepeats`. Pasa T018
-- [ ] T024 [US1] Rutas `POST .../ideas` y `PATCH /api/ideas/:id` (campos y `revision`) en `apps/server/src/http/routes/ideas.ts`. Pasa T019
-- [ ] T025 [P] [US1] Test de pantalla en `apps/web/test/ideas/batch.test.tsx`:
+- [X] T020 [US1] Implementar `packages/core/src/ideas/outputs.ts` y `packages/core/src/ideas/repeats.ts` (pasan T015 y T016), y añadir `ideas`, `otro_enfoque` y `busquedas_idea` a `AI_USES` en `packages/core/src/ai/uses.ts`
+- [X] T021 [US1] Prompt `packages/knowledge/prompts/ideas/v1.md` según [ai-uses](./contracts/ai-uses.md): fijo, en español, con `writing/human.md`, sin pedir cifras, sin repetir `avoid`, y respetando el formato del perfil. Actualizar `packages/knowledge/prompts/lock.json` y los tests de `packages/knowledge/test/prompts.test.ts`
+- [X] T022 [US1] Perfil por proveedor del uso `ideas` (tope de salida 3.000 tokens, 90 s) en el registro de `packages/ai`, y salidas del proveedor falso: `ok`, `ideas_repetidas`, `pilar_invalido` y `cifra_inventada`. Pasa T017
+- [X] T023 [US1] Rutas `POST .../ideas/estimate`, `POST .../idea-batches` y `POST /api/idea-batches/:id/decide` en `apps/server/src/http/routes/ideas.ts`, con `ai-run.ts`, el presupuesto (reintento reservado), `claims.ts` y `dropRepeats`. Pasa T018
+- [X] T024 [US1] Rutas `POST .../ideas` y `PATCH /api/ideas/:id` (campos y `revision`) en `apps/server/src/http/routes/ideas.ts`. Pasa T019
+- [X] T025 [P] [US1] Test de pantalla en `apps/web/test/ideas/batch.test.tsx` (hecho en `apps/web/test/channel/idea-bank.test.tsx`; el aviso de duplicada, en `apps/web/e2e/ideas.spec.ts`, porque la web no tiene pruebas interactivas fuera del e2e):
   - con el banco vacío, la acción principal es «Proponer ideas de vídeo» con el coste;
   - la tanda tiene «Me la quedo», «No me interesa», «Quedarme con todas» y «Proponer otras» con indicaciones;
   - sale el aviso de repetidas;
   - «Escribir una idea mía» con título y formato;
   - el aviso de duplicada.
-- [ ] T026 [US1] Pantallas `apps/web/src/screens/channel/ideas/IdeaBatch.tsx`, `IdeaEditor.tsx` y `IdeaCard.tsx` (título, gancho, pilar, formato, origen y «Cambiar algo»), con los textos en `apps/web/src/strings/ideas.es.ts`. Usan `useEstimate` y el patrón de `AiAction` de la 003. Pasa T025
-- [ ] T027 [US1] Entrada desde la pantalla del canal: en `apps/web/src/screens/channel/start/Start.tsx`, la frase `nextStep` de `apps/web/src/strings/channel.es.ts` pasa a ser el botón «Ir al banco de ideas» con el perfil aprobado. Actualizar su test y el e2e que busca la frase vieja
-- [ ] T028 [US1] e2e en `apps/web/e2e/ideas.spec.ts` (US1): desde el canal, ir al banco, proponer, quedarse 2, descartar el resto y escribir una propia; recargar y comprobar que siguen; axe en claro y oscuro a 375 y 1280 px
-- [ ] T029 [A] [US1] Puerta A de US1: ejecutar `/puerta-a 004 US1`. No se marca `[X]` hasta que la skill diga «pasada»
+- [X] T026 [US1] Pantallas `apps/web/src/screens/channel/ideas/IdeaBatch.tsx`, `IdeaEditor.tsx` y `IdeaCard.tsx` (título, gancho, pilar, formato, origen y «Cambiar algo»), con los textos en `apps/web/src/strings/ideas.es.ts`. Usan `useEstimate` y el patrón de `AiAction` de la 003. Pasa T025
+- [X] T027 [US1] Entrada desde la pantalla del canal: en `apps/web/src/screens/channel/start/Start.tsx`, la frase `nextStep` de `apps/web/src/strings/channel.es.ts` pasa a ser el botón «Ir al banco de ideas» con el perfil aprobado. Actualizar su test y el e2e que busca la frase vieja
+- [X] T028 [US1] e2e en `apps/web/e2e/ideas.spec.ts` (US1): desde el canal, ir al banco, proponer, quedarse 2, descartar el resto y escribir una propia; recargar y comprobar que siguen; axe en claro y oscuro a 375 y 1280 px
+- [X] T029 [A] [US1] Puerta A de US1: ejecutar `/puerta-a 004 US1`. No se marca `[X]` hasta que la skill diga «pasada»
 
 **Checkpoint**: El banco ya sirve: ideas de la IA y propias.
 

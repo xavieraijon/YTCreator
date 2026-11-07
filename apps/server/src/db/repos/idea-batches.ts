@@ -124,7 +124,11 @@ export function createIdeaBatchesRepo(db: DatabaseSync, now: () => Date = () => 
 
     // The last batch of this kind with candidates still waiting, if it is the last one (http-api.md).
     pending(channelId: string, kind: IdeaBatchKind): IdeaBatch | null {
-      const last = (selectByChannel.all(channelId, kind) as unknown as Row[]).map(fromRow).at(-1)
+      // A batch left empty by the repeats is skipped: the one before it is still the one being decided (entry 17).
+      const last = (selectByChannel.all(channelId, kind) as unknown as Row[])
+        .map(fromRow)
+        .filter((batch) => candidatesOf(batch).length > 0)
+        .at(-1)
       return last && isPending(last) ? last : null
     },
 

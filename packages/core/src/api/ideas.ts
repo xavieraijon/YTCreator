@@ -151,6 +151,7 @@ export const newIdeaBodySchema = z.object({
   broadQuery: optionalQuery,
   queryEn: optionalQuery,
 })
+export type NewIdeaBody = z.input<typeof newIdeaBodySchema>
 export const newIdeaResultSchema = z.object({ idea: ideaSchema, duplicateOf: id.nullable() })
 
 // PATCH /api/ideas/:id
@@ -158,6 +159,8 @@ export const ideaPatchBodySchema = newIdeaBodySchema.partial().extend({
   revision,
   status: z.enum(IDEA_STATUSES).optional(),
 })
+
+export type IdeaPatchBody = z.input<typeof ideaPatchBodySchema>
 
 // PUT /api/channels/:id/ideas/order and /queue: every idea once, in its new place.
 export const ideaOrderBodySchema = z.object({ ids: z.array(id).min(1) })

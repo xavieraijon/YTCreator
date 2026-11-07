@@ -178,7 +178,7 @@ Tres usos en `AI_USES`, cada uno con perfil por proveedor, prompt `v1` en `packa
 
 ## R15. Varias ideas iguales y perfil cambiado
 
-- **Idea duplicada (escrita por el creador):** al guardar, el servidor responde `200` con `duplicateOf` si el título
+- **Idea duplicada (escrita por el creador):** al guardar, el servidor responde `201` con `duplicateOf` si el título
   normalizado ya existe. La pantalla avisa y deja seguir. No es un error, porque el creador decide.
 - **Perfil cambiado:** `idea.profile_version` se compara con la versión actual del perfil. Si es más antigua, la idea
   lleva el aviso «propuesta con una versión anterior de tu perfil».

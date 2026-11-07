@@ -352,8 +352,12 @@ export async function startServer({
     settings,
     channel: { ...channel, research, reading },
     ideas: {
+      db,
       channels: channel.channels,
       profiles: channel.profiles,
+      journeys: channel.journeys,
+      aiRun: channel.aiRun,
+      promptFor: channelPrompt,
       ideas: createIdeasRepo(db, now),
       batches: createIdeaBatchesRepo(db, now),
       measures: createIdeaMeasuresRepo(db, now),
