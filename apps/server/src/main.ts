@@ -23,6 +23,9 @@ import { createAccountsRepo } from './db/repos/accounts.ts'
 import { createChannelsRepo } from './db/repos/channels.ts'
 import { createConnectionsRepo } from './db/repos/connections.ts'
 import { createJobsRepo } from './db/repos/jobs.ts'
+import { createIdeaBatchesRepo } from './db/repos/idea-batches.ts'
+import { createIdeaMeasuresRepo } from './db/repos/idea-measures.ts'
+import { createIdeasRepo } from './db/repos/ideas.ts'
 import { createJourneysRepo } from './db/repos/journeys.ts'
 import { createLimitsRepo } from './db/repos/limits.ts'
 import { createMeasuresRepo } from './db/repos/measures.ts'
@@ -348,6 +351,16 @@ export async function startServer({
     limits,
     settings,
     channel: { ...channel, research, reading },
+    ideas: {
+      channels: channel.channels,
+      profiles: channel.profiles,
+      ideas: createIdeasRepo(db, now),
+      batches: createIdeaBatchesRepo(db, now),
+      measures: createIdeaMeasuresRepo(db, now),
+      jobs: jobsRepo,
+      staleDays: market.thresholds.data.ideas.staleDays,
+      now,
+    },
     jobs,
     youtubeSettings,
     usage,

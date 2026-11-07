@@ -12,6 +12,9 @@ import { createAccountsRepo } from '../src/db/repos/accounts.ts'
 import { createConnectionsRepo } from '../src/db/repos/connections.ts'
 import { createChannelsRepo } from '../src/db/repos/channels.ts'
 import { createJobsRepo } from '../src/db/repos/jobs.ts'
+import { createIdeaBatchesRepo } from '../src/db/repos/idea-batches.ts'
+import { createIdeaMeasuresRepo } from '../src/db/repos/idea-measures.ts'
+import { createIdeasRepo } from '../src/db/repos/ideas.ts'
 import { createJourneysRepo } from '../src/db/repos/journeys.ts'
 import { createLimitsRepo } from '../src/db/repos/limits.ts'
 import { createMeasuresRepo } from '../src/db/repos/measures.ts'
@@ -168,6 +171,16 @@ export function makeTestApp({
     logger,
     now,
   })
+  const ideas = {
+    channels: channel.channels,
+    profiles: channel.profiles,
+    ideas: createIdeasRepo(db, now),
+    batches: createIdeaBatchesRepo(db, now),
+    measures: createIdeaMeasuresRepo(db, now),
+    jobs: jobsRepo,
+    staleDays: market.thresholds.data.ideas.staleDays,
+    now,
+  }
   const version = '0.1.0'
   const ytQuota = createYtQuotaRepo(db, now)
   const keyCheck = createFakeKeyCheck()
@@ -184,6 +197,7 @@ export function makeTestApp({
     limits,
     settings,
     channel: { ...channel, now, research, reading },
+    ideas,
     jobs,
     usage,
     now,
@@ -247,6 +261,7 @@ export function makeTestApp({
     jobs,
     jobsRepo,
     channel,
+    ideas,
     measures: channel.measures,
     channelProposals: channel.proposals,
     research,

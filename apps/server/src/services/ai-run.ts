@@ -59,6 +59,14 @@ export interface Estimate {
   pricingVersion: number
 }
 
+// The fields whose figures the validator checks, per use; every text when a use is not here. A title or a search
+// may well say «1.000 suscriptores» as a topic, not as a market figure (004, contracts/ai-uses.md, «Cifras»).
+const CLAIM_FIELDS: Partial<Record<ChannelUse, readonly string[]>> = {
+  ideas: ['hook'],
+  otro_enfoque: ['hook', 'why'],
+  busquedas_idea: [],
+}
+
 // One request can become up to four calls: an answer that does not validate is always asked for again by the adapter
 // (principle IV), and one with figures that have no source is asked for again here. So nothing starts unless two calls
 // fit the budget, and the figures are asked for again only if two more still fit; otherwise they are trimmed (P17,
@@ -163,6 +171,7 @@ export function createAiRunService(deps: AiRunDeps) {
       input,
       instructions,
       signal,
+      schema: strict,
     }: {
       estimateId: string
       /** When given, the estimate has to be one asked for this journey. */
@@ -171,6 +180,8 @@ export function createAiRunService(deps: AiRunDeps) {
       input: Record<string, unknown>
       instructions?: string
       signal?: AbortSignal
+      /** A stricter schema than the use's own, such as one that knows the pillars of the profile (004, ai-uses.md). */
+      schema?: { safeParse(value: unknown): { success: boolean } }
     }): Promise<RunResult<U>> {
       const saved = estimates.get(estimateId)
       if (
@@ -209,7 +220,7 @@ export function createAiRunService(deps: AiRunDeps) {
       }
 
       const prompt = deps.promptFor(use)
-      const schema = CHANNEL_OUTPUTS[use] as unknown as AiRequest<ChannelOutput<U>>['schema']
+      const schema = (strict ?? CHANNEL_OUTPUTS[use]) as unknown as AiRequest<ChannelOutput<U>>['schema']
       let inputTokens = 0
       let outputTokens = 0
       // Asking again for the figures goes only if what was spent, plus two more calls (that one and the repetition the
@@ -248,7 +259,7 @@ export function createAiRunService(deps: AiRunDeps) {
 
       let result = await call(prompt.text)
       if (result.ok) {
-        const violations = checkClaims(result.value, sources)
+        const violations = checkClaims(result.value, sources, CLAIM_FIELDS[use])
         // Without room for another call, the figures with no source are trimmed below instead (P17).
         if (violations.length > 0 && mayAskAgain()) {
           result = await call(`${prompt.text}\n\n${claimsFeedback(violations)}`)
@@ -259,9 +270,9 @@ export function createAiRunService(deps: AiRunDeps) {
         finish(failure)
         return { ok: false, failure }
       }
-      const { output, trimmed } = trimClaims(result.value, sources)
+      const { output, trimmed } = trimClaims(result.value, sources, CLAIM_FIELDS[use])
       // Trimming can empty a field its schema requires: saved like that, the journey could not end later.
-      if (trimmed && !CHANNEL_OUTPUTS[use].safeParse(output).success) {
+      if (trimmed && !(strict ?? CHANNEL_OUTPUTS[use]).safeParse(output).success) {
         finish('respuesta_invalida')
         return { ok: false, failure: 'respuesta_invalida' }
       }

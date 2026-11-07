@@ -9,5 +9,8 @@ export const AI_USES = [
   'lectura_canal',
   'posicionamiento',
   'perfil_parte',
+  'ideas',
+  'otro_enfoque',
+  'busquedas_idea',
 ] as const
 export type AiUse = (typeof AI_USES)[number]

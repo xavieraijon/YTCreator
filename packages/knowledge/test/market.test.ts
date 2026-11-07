@@ -27,6 +27,27 @@ describe('market knowledge', () => {
     expect(knowledge.hoursPerShort).toBe(1)
   })
 
+  it('keeps the thresholds of the idea traffic light, marked as an assumption (004, R4)', () => {
+    const { thresholds } = loadMarket(files)
+    expect(thresholds.version).toBe(5)
+    expect(thresholds.data.ideas).toMatchObject({
+      searchResults: 40,
+      broadResults: 20,
+      similarHigh: 12,
+      similarLow: 5,
+      recentDays: 90,
+      recentBurst: 4,
+      datedSample: 12,
+      deadMedianViews: 1000,
+      audienceViews: 100000,
+      audienceVideos: 2,
+      keywordShare: 0.75,
+      staleDays: 30,
+      opportunity: { englishBigVideos: 2, maxSimilar: 5 },
+    })
+    expect(thresholds.data.ideas.basis.assumption).toBe(true)
+  })
+
   it('keeps the thresholds of the market contract', () => {
     const { thresholds } = loadMarket(files)
     expect(thresholds.data.demand).toEqual({ high: 50000, medium: 5000 })

@@ -45,7 +45,14 @@ export type Semaphore = (typeof SEMAPHORES)[number]
 export type StoredHandleStatus = 'libre' | 'ocupado' | 'sin_comprobar'
 export type NameReason = 'handle_ocupado' | 'nombre_igual' | 'parecidos' | 'titulos_con_nombre' | 'largo' | 'fallo'
 
-export const JOB_KINDS = ['medir_nichos', 'comprobar_nombres', 'leer_canal', 'ia', 'actualizar_lector'] as const
+export const JOB_KINDS = [
+  'medir_nichos',
+  'comprobar_nombres',
+  'leer_canal',
+  'ia',
+  'actualizar_lector',
+  'medir_ideas',
+] as const
 export type JobKind = (typeof JOB_KINDS)[number]
 
 export const JOB_STATUSES = ['en_curso', 'hecho', 'fallido', 'interrumpido'] as const

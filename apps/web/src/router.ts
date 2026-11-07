@@ -13,6 +13,7 @@ export type Route =
   | { readonly page: 'connectAi' }
   | { readonly page: 'home' }
   | { readonly page: 'channelStart' }
+  | { readonly page: 'ideaBank' }
   | { readonly page: 'channelStep'; readonly kind: ChannelOrigin; readonly step: JourneyStep }
   | { readonly page: 'settings' }
   | { readonly page: 'aiSettings' }
@@ -44,6 +45,7 @@ export function parseRoute(pathname: string): Route {
   if (first === 'inicio' && !second) return { page: 'home' }
   if (first === 'canal') {
     if (!second) return { page: 'channelStart' }
+    if (second === 'ideas' && !third) return { page: 'ideaBank' }
     const kind = KIND_BY_SEGMENT[second]
     if (kind && third && !fourth && isJourneyStep(kind, third)) return { page: 'channelStep', kind, step: third }
   }
@@ -75,6 +77,8 @@ export function href(route: Target): string {
       return '/inicio'
     case 'channelStart':
       return '/canal'
+    case 'ideaBank':
+      return '/canal/ideas'
     case 'channelStep':
       return `/canal/${route.kind}/${route.step}`
     case 'settings':

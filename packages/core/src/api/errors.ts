@@ -26,6 +26,9 @@ export const FIELD_CODES = [
   'mayor_que_diario',
   'mayor_que_mensual',
   'demasiado_alto',
+  // The idea bank (004): a channel without a profile, and «Buscar otro enfoque» for an idea that is not burned.
+  'sin_perfil',
+  'sin_medida_quemada',
 ] as const
 export type FieldCode = (typeof FIELD_CODES)[number]
 

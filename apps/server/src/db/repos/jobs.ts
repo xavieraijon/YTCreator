@@ -5,6 +5,8 @@ import type { JobKind, JobProgress, JobStatus } from '@ytcreator/core'
 export interface Job {
   id: string
   journeyId: string | null
+  // The idea bank hangs from the channel, not from a journey (004, data-model.md).
+  channelId: string | null
   kind: JobKind
   status: JobStatus
   progress: JobProgress
@@ -15,6 +17,7 @@ export interface Job {
 
 export interface NewJob {
   journeyId: string | null
+  channelId?: string | null
   kind: JobKind
   total?: number
 }
@@ -22,6 +25,7 @@ export interface NewJob {
 interface Row {
   id: string
   journey_id: string | null
+  channel_id: string | null
   kind: JobKind
   status: JobStatus
   progress: string
@@ -33,6 +37,7 @@ interface Row {
 const fromRow = (row: Row): Job => ({
   id: row.id,
   journeyId: row.journey_id,
+  channelId: row.channel_id,
   kind: row.kind,
   status: row.status,
   progress: JSON.parse(row.progress) as JobProgress,
@@ -48,7 +53,10 @@ export function createJobsRepo(db: DatabaseSync, now: () => Date = () => new Dat
   )
   const selectByJourney = db.prepare('SELECT * FROM background_job WHERE journey_id = ? ORDER BY started_at, rowid')
   const insert = db.prepare(
-    "INSERT INTO background_job (id, journey_id, kind, status, progress, started_at) VALUES (?, ?, ?, 'en_curso', ?, ?)",
+    "INSERT INTO background_job (id, journey_id, channel_id, kind, status, progress, started_at) VALUES (?, ?, ?, ?, 'en_curso', ?, ?)",
+  )
+  const selectByChannel = db.prepare(
+    'SELECT * FROM background_job WHERE channel_id = ? AND kind = ? ORDER BY started_at, rowid',
   )
   const updateProgress = db.prepare('UPDATE background_job SET progress = ? WHERE id = ?')
   const updateEnd = db.prepare('UPDATE background_job SET status = ?, failure = ?, finished_at = ? WHERE id = ?')
@@ -68,13 +76,24 @@ export function createJobsRepo(db: DatabaseSync, now: () => Date = () => new Dat
       return (selectRunning.all(journeyId) as unknown as Row[]).map(fromRow)
     },
 
+    listByChannel(channelId: string, kind: JobKind): Job[] {
+      return (selectByChannel.all(channelId, kind) as unknown as Row[]).map(fromRow)
+    },
+
     listByJourney(journeyId: string): Job[] {
       return (selectByJourney.all(journeyId) as unknown as Row[]).map(fromRow)
     },
 
     start(job: NewJob): Job {
       const id = randomUUID()
-      insert.run(id, job.journeyId, job.kind, JSON.stringify({ done: 0, total: job.total ?? 0 }), now().toISOString())
+      insert.run(
+        id,
+        job.journeyId,
+        job.channelId ?? null,
+        job.kind,
+        JSON.stringify({ done: 0, total: job.total ?? 0 }),
+        now().toISOString(),
+      )
       return get(id)!
     },
 

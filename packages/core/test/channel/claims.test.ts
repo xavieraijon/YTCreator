@@ -170,3 +170,24 @@ describe('trimClaims', () => {
     expect(trimClaims(output, input)).toEqual({ output, trimmed: false })
   })
 })
+
+describe('figures checked only in some fields (004, contracts/ai-uses.md)', () => {
+  const output = {
+    ideas: [{ title: 'Cómo llegar a 1.000 suscriptores', hook: 'Este tema mueve 250.000 visitas al mes.' }],
+  }
+
+  it('a title may name a figure as its topic; the hook may not', () => {
+    expect(checkClaims(output, {}, ['hook']).map((v) => v.path)).toEqual(['ideas.0.hook'])
+    expect(checkClaims(output, {}, []).length).toBe(0)
+  })
+
+  it('trims only the fields it checks', () => {
+    const { output: trimmed, trimmed: was } = trimClaims(
+      { title: 'Llegar a 1.000 suscriptores', why: 'Uno. Mueve 250.000 visitas.' },
+      {},
+      ['why'],
+    )
+    expect(was).toBe(true)
+    expect(trimmed).toEqual({ title: 'Llegar a 1.000 suscriptores', why: 'Uno.' })
+  })
+})

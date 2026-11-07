@@ -4,6 +4,7 @@ import { findForbiddenTerms, forbiddenTerms } from '../../../packages/ui/test/fo
 import { channelEs } from '../src/strings/channel.es.ts'
 import { es } from '../src/strings/es.ts'
 import { failuresEs } from '../src/strings/failures.es.ts'
+import { ideasEs } from '../src/strings/ideas.es.ts'
 import { youtubeFailureActionsEs, youtubeFailuresEs } from '../src/strings/youtube-failures.es.ts'
 
 // The creator has to know which service each option uses (contracts/ui-screens.md), so the web may name the
@@ -30,7 +31,7 @@ function installerStrings(): Record<string, string> {
 describe('glossary of the web (FR-032, principle I)', () => {
   it('no text of apps/web/src/strings uses a forbidden term', () => {
     expect(
-      findForbiddenTerms({ es, failuresEs, channelEs, youtubeFailuresEs, youtubeFailureActionsEs }, webTerms),
+      findForbiddenTerms({ es, failuresEs, channelEs, ideasEs, youtubeFailuresEs, youtubeFailureActionsEs }, webTerms),
     ).toEqual([])
   })
 

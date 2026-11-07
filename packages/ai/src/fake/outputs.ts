@@ -2,7 +2,14 @@ import type { ChannelUse } from '@ytcreator/core'
 
 // What the fake answers for each channel use (contracts/ai-uses.md, «Pruebas»). Plain texts with no market figures,
 // so the figure validator lets them through; the readings cite videos of `input`.
-export type FakeOutputMode = 'normal' | 'cifra_inventada' | 'salida_rota' | 'limite_de_gasto'
+export type FakeOutputMode =
+  | 'normal'
+  | 'cifra_inventada'
+  | 'salida_rota'
+  | 'limite_de_gasto'
+  // The idea bank (004, contracts/ai-uses.md, «Proveedor falso»).
+  | 'ideas_repetidas'
+  | 'pilar_invalido'
 
 export const INVENTED_SENTENCE = 'Este tema mueve 250.000 visitas al mes.'
 export const INVENTED_VIDEO_ID = 'video-inventado'
@@ -41,7 +48,83 @@ function videoIdsOf(input: Record<string, unknown>): string[] {
   return ids.length > 0 ? ids : ['vid-1']
 }
 
-function normal(use: ChannelUse, input: Record<string, unknown>): Record<string, unknown> {
+// The pillars of the profile sent, so the ideas name one of them (contracts/ai-uses.md, «Pilar»).
+function pillarsOf(input: Record<string, unknown>): string[] {
+  const profile = input.profile as { pillars?: unknown } | undefined
+  const raw = Array.isArray(profile?.pillars) ? profile.pillars : []
+  const names = raw
+    .map((p) => (typeof p === 'string' ? p : (p as { title?: unknown })?.title))
+    .filter((p): p is string => typeof p === 'string' && p.trim().length > 0)
+  return names.length > 0 ? names : CONCEPT.pillars.map((p) => p.title)
+}
+
+function onlyShorts(input: Record<string, unknown>): boolean {
+  const profile = input.profile as { rhythm?: { longPerWeek?: unknown } } | undefined
+  return profile?.rhythm?.longPerWeek === 0
+}
+
+const IDEA_TITLES: readonly (readonly [string, string, string, string])[] = [
+  [
+    'Cena en quince minutos con lo que queda en la nevera',
+    'cena rapida con sobras',
+    'cenas rapidas',
+    'quick dinner with leftovers',
+  ],
+  [
+    'Tres tuppers para toda la semana en una tarde',
+    'tuppers para toda la semana',
+    'tupper semanal',
+    'meal prep for the week',
+  ],
+  ['El error que hace que el arroz se pegue', 'arroz se pega error', 'cocinar arroz', 'why rice sticks to the pan'],
+  [
+    'Desayunos salados sin encender el horno',
+    'desayunos salados sin horno',
+    'desayunos rapidos',
+    'savory breakfast no oven',
+  ],
+  ['Cómo cortar una cebolla sin llorar', 'cortar cebolla sin llorar', 'trucos de cocina', 'cut onion without crying'],
+  ['Una salsa para cinco platos distintos', 'una salsa cinco platos', 'salsas caseras', 'one sauce five dishes'],
+  [
+    'Comer bien con lo que hay en una despensa básica',
+    'recetas con despensa basica',
+    'cocina basica',
+    'pantry staples recipes',
+  ],
+  ['Legumbres que no parecen de abuela', 'legumbres recetas modernas', 'recetas de legumbres', 'modern legume recipes'],
+]
+
+function ideaDrafts(input: Record<string, unknown>, attempt: number, mode: FakeOutputMode) {
+  const pillars = pillarsOf(input)
+  const shorts = onlyShorts(input)
+  const drafts = IDEA_TITLES.map(([title, query, broadQuery, queryEn], i) => ({
+    title,
+    hook: 'Lo que casi nadie cuenta y que cambia el resultado desde el primer intento.',
+    pillar: pillars[i % pillars.length]!,
+    format: shorts || i % 3 === 2 ? ('short' as const) : ('largo' as const),
+    query,
+    broadQuery,
+    queryEn,
+  }))
+  // Every draft, so whichever slice a use takes fails first (ideas and otro_enfoque alike).
+  if (mode === 'pilar_invalido' && attempt === 1) {
+    drafts.forEach((draft, i) => (drafts[i] = { ...draft, pillar: 'Un tema que no es del canal' }))
+  }
+  if (mode === 'ideas_repetidas') {
+    const avoid = (Array.isArray(input.avoid) ? input.avoid : []) as { title?: unknown }[]
+    avoid.slice(0, 2).forEach((idea, i) => {
+      if (typeof idea.title === 'string') drafts[i] = { ...drafts[i]!, title: idea.title }
+    })
+  }
+  return drafts
+}
+
+function normal(
+  use: ChannelUse,
+  input: Record<string, unknown>,
+  attempt = 1,
+  mode: FakeOutputMode = 'normal',
+): Record<string, unknown> {
   const ids = videoIdsOf(input).slice(0, 2)
   switch (use) {
     case 'preguntas':
@@ -136,6 +219,25 @@ function normal(use: ChannelUse, input: Record<string, unknown>): Record<string,
         ],
         audienceDescription: 'Gente que trabaja fuera y quiere cenar bien sin complicarse.',
       }
+    case 'ideas':
+      return { ideas: ideaDrafts(input, attempt, mode) }
+    case 'otro_enfoque': {
+      const angles = ideaDrafts(input, attempt, mode === 'ideas_repetidas' ? 'normal' : mode)
+        .slice(3, 6)
+        .map((draft, i) => ({
+          ...draft,
+          title:
+            ['Lo que nadie te cuenta de', 'La versión para principiantes de', 'El mismo plato en la mitad de tiempo:'][
+              i
+            ]! +
+            ' ' +
+            draft.title.toLocaleLowerCase('es'),
+          why: 'Cambia a quién se dirige y qué promete, en vez de repetir lo que ya está hecho.',
+        }))
+      return { angles }
+    }
+    case 'busquedas_idea':
+      return { query: 'cena rapida con sobras', broadQuery: 'cenas rapidas', queryEn: 'quick dinner with leftovers' }
   }
 }
 
@@ -174,11 +276,27 @@ function invent(use: ChannelUse, output: Record<string, unknown>): Record<string
       return { ...output, promise: add(output.promise as string).slice(0, 160) }
     case 'perfil_parte':
       return { ...output, audienceDescription: add(output.audienceDescription as string) }
+    case 'ideas': {
+      const [first, ...rest] = output.ideas as { hook: string }[]
+      return { ideas: [{ ...first, hook: add(first!.hook) }, ...rest] }
+    }
+    case 'otro_enfoque': {
+      const [first, ...rest] = output.angles as { why: string }[]
+      return { angles: [{ ...first, why: add(first!.why) }, ...rest] }
+    }
+    case 'busquedas_idea':
+      return { ...output, broadQuery: 'cenas con 250.000 visitas' }
   }
 }
 
-export function fakeChannelOutput(use: ChannelUse, input: Record<string, unknown>, mode: FakeOutputMode): unknown {
+// `attempt` counts the calls of one request: `pilar_invalido` fails the first and gives a valid second.
+export function fakeChannelOutput(
+  use: ChannelUse,
+  input: Record<string, unknown>,
+  mode: FakeOutputMode,
+  attempt = 1,
+): unknown {
   if (mode === 'salida_rota') return BROKEN_OUTPUT
-  const output = normal(use, input)
+  const output = normal(use, input, attempt, mode)
   return mode === 'cifra_inventada' ? invent(use, output) : output
 }

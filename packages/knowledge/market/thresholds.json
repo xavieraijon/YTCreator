@@ -1,5 +1,5 @@
 {
-  "version": 4,
+  "version": 5,
   "reviewedAt": "2026-11-05",
   "source": [
     {
@@ -31,6 +31,29 @@
     },
     "dataApi": { "dailyUnits": 10000, "nearLimitRatio": 0.8, "searchUnits": 100, "otherUnits": 1 },
     "cache": { "hours": 24, "handleHours": 1 },
-    "names": { "titleHits": 3, "maxLength": 30 }
+    "names": { "titleHits": 3, "maxLength": 30 },
+    "ideas": {
+      "basis": {
+        "label": "Supuesto de YTCreator, sin estudio que lo respalde (primera versión del proyecto de referencia, 2026-09-27)",
+        "assumption": true,
+        "date": "2026-09-27"
+      },
+      "searchResults": 40,
+      "broadResults": 20,
+      "similarHigh": 12,
+      "similarLow": 5,
+      "recentDays": 90,
+      "recentBurst": 4,
+      "datedSample": 12,
+      "deadMedianViews": 1000,
+      "audienceViews": 100000,
+      "audienceVideos": 2,
+      "keywordShare": 0.75,
+      "staleDays": 30,
+      "opportunity": {
+        "englishBigVideos": 2,
+        "maxSimilar": 5
+      }
+    }
   }
 }

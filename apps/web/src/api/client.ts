@@ -6,6 +6,7 @@ import {
   channelSchema,
   createChannelResponseSchema,
   estimateSchema,
+  ideaBankSchema,
   type JobEvent,
   jobStartedSchema,
   jobEventSchema,
@@ -205,6 +206,12 @@ export const profileApi = {
     ),
   approveRegeneration: (channelId: string, body: { regenerationId: string; baseVersion: number }) =>
     apiClient.post(`/api/channels/${encodeURIComponent(channelId)}/profile/regenerated`, body, profileVersionSchema),
+}
+
+// The idea bank of a channel (specs/004-idea-bank/contracts/http-api.md).
+export const ideasApi = {
+  list: (channelId: string, options?: RequestOptions) =>
+    apiClient.get(`/api/channels/${encodeURIComponent(channelId)}/ideas`, ideaBankSchema, options),
 }
 
 export const usageApi = {

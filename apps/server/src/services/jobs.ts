@@ -60,7 +60,10 @@ export function createJobsService({ jobs, logger }: { jobs: JobsRepo; logger: Lo
   return {
     get: (id: string): Job | null => jobs.get(id),
 
-    start(job: { journeyId: string | null; kind: JobKind; total?: number }, work: JobWork): Job {
+    start(
+      job: { journeyId: string | null; channelId?: string | null; kind: JobKind; total?: number },
+      work: JobWork,
+    ): Job {
       const started = jobs.start(job)
       void run(started.id, work)
       return started

@@ -316,7 +316,7 @@ aspecto nuevo. Regresión: los tests de axe y de teclado del design system.
 - El perfil del canal (003) está aprobado y tiene nicho, promesa, pilares, público, formato y ritmo.
 - Los umbrales del semáforo parten de la primera versión del proyecto de referencia (40 resultados mirados; 5 o menos
   casi iguales es poco y 12 o más es mucho; 4 recientes en 90 días es «se está llenando»; una mediana de menos de 1.000
-  visitas es «nadie los ve»; un vídeo de más de 100.000 visitas del tema general es «hay público»). No tienen fuente:
+  visitas es «nadie los ve»; dos vídeos del tema general con 100.000 visitas o más, o un casi igual que las tenga, es «hay público»). No tienen fuente:
   se marcan como supuesto.
 - La IA es la de la 002 (suscripción de Claude o API de Anthropic); no hay opción gratuita en la v1.
 - Las ideas se escriben en español y se miden en castellano, sin filtrar país, como los nichos de la 003.

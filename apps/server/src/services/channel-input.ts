@@ -96,8 +96,11 @@ export function channelInput(
     case 'lectura_canal':
     case 'posicionamiento':
       return {}
-    // Asked for from the profile, with its own data (routes/channel.ts).
+    // Asked for from the profile or the idea bank, with their own data (routes/channel.ts, routes/ideas.ts).
     case 'perfil_parte':
+    case 'ideas':
+    case 'otro_enfoque':
+    case 'busquedas_idea':
       return {}
   }
 }

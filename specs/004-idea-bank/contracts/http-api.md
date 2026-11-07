@@ -53,7 +53,7 @@ propuesta guardada del perfil en la 003. Pedir una tanda nueva descarta las pend
 
 | Método y ruta | Cuerpo | Respuesta |
 |---|---|---|
-| `POST /api/channels/:id/idea-measures/estimate` | `{ideaIds: string[]}` | `{ideas: number, measurable: number, withoutEnglish: number, units: number \| null}`. `units` es `null` con yt-dlp y, con la Data API, 303 por idea con `queryEn` y 202 sin él (R2) |
+| `POST /api/channels/:id/idea-measures/estimate` | `{ideaIds: string[]}` | `{ideas: number, measurable: number, withoutEnglish: number, units: number \| null}`. `units` es `null` con yt-dlp y, con la Data API, 303 por idea con `queryEn` y 202 sin él (R2). Se calculan con `ideaMeasureUnits` a partir de `dataApi.searchUnits` y `otherUnits` de `thresholds.json` |
 | `POST /api/channels/:id/idea-measures` | `{ideaIds: string[], fresh?: true}` | `202 {jobId}`. Las ideas sin `query` se saltan y lo dice el `progress`. Con un `medir_ideas` en curso para el canal, `409 conflicto` con su `jobId` |
 | `GET /api/jobs/:id/events` | — | El de la 003: `progress`, `item` (`{ideaId, measure}`), `done`, `failed` |
 

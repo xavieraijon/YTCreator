@@ -22,7 +22,7 @@
 - `similar`: vídeos de la búsqueda en castellano cuyo título casi iguala a `query` (R1).
 - `dated`, `recent`: de los primeros `datedSample` (12) casi iguales, cuántos tienen fecha y cuántos son de los últimos
   `recentDays` (90).
-- `medianViews`, `maxViews`: de los casi iguales con visitas conocidas.
+- `medianViews`, `maxViews`: de los casi iguales con visitas conocidas. La mediana se redondea al entero, porque la vista solo admite enteros.
 - `broadTopViews`, `broadBigVideos`: visitas del vídeo más visto del tema general, y cuántos tienen
   `audienceViews` (100.000) o más.
 - `hasAudience`: `broadBigVideos ≥ audienceVideos (2)` o `maxViews ≥ audienceViews`.
@@ -34,7 +34,7 @@
 |---|---|
 | La búsqueda en castellano da `sin_datos` (lista vacía) | `similar = 0`. El semáforo se calcula: `frio` si el tema no tiene público y `hueco` si lo tiene |
 | La búsqueda del tema general da `sin_datos` | `hasAudience` solo mira `maxViews` |
-| La búsqueda en inglés falla con cualquier código | Se mide sin oportunidad, y `opportunity` lleva `{failure}` |
+| La búsqueda en inglés falla con cualquier código | Se mide sin oportunidad, y `opportunity` es solo `{failure}` |
 | Castellano o tema general fallan con `bloqueado`, `cupo_agotado`, `tiempo_agotado`, `no_disponible` o `no_encontrado` | `status: 'fallida'` con `failure`. La pantalla usa el texto y la acción de `youtube-failures.es.ts` |
 | La idea no tiene `query` | No se mide, y el `progress` la cuenta como saltada |
 

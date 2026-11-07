@@ -123,15 +123,22 @@ function citesUnknownVideo(value: unknown, known: Set<string>): value is { text:
   return Array.isArray(ids) && ids.some((id) => typeof id !== 'string' || !known.has(id))
 }
 
-function walk(value: unknown, path: string, known: Facts, out: ClaimViolation[]): void {
+// The texts a use asks to check, by the name of their field (the idea uses check `hook` and `why`, ai-uses.md); all
+// of them when none is given.
+type Fields = ReadonlySet<string> | undefined
+const lastKey = (path: string) => path.slice(path.lastIndexOf('.') + 1)
+const checked = (fields: Fields, key: string) => !fields || fields.has(key)
+
+function walk(value: unknown, path: string, known: Facts, out: ClaimViolation[], fields?: Fields): void {
   if (typeof value === 'string') {
+    if (!checked(fields, lastKey(path))) return
     for (const sentence of sentences(value)) {
       if (unbacked(sentence, known)) {
         out.push({ path, text: sentence, reason: 'cifra_sin_respaldo' })
       }
     }
   } else if (Array.isArray(value)) {
-    value.forEach((item, i) => walk(item, path ? `${path}.${i}` : String(i), known, out))
+    value.forEach((item, i) => walk(item, path ? `${path}.${i}` : String(i), known, out, fields))
   } else if (value && typeof value === 'object') {
     if (citesUnknownVideo(value, known.videoIds)) {
       const { text, what } = value as { text?: unknown; what?: unknown }
@@ -140,14 +147,18 @@ function walk(value: unknown, path: string, known: Facts, out: ClaimViolation[])
     }
     for (const [key, item] of Object.entries(value)) {
       if (key === 'videoIds') continue
-      walk(item, path ? `${path}.${key}` : key, known, out)
+      walk(item, path ? `${path}.${key}` : key, known, out, fields)
     }
   }
 }
 
-export function checkClaims(output: unknown, input: Record<string, unknown>): ClaimViolation[] {
+export function checkClaims(
+  output: unknown,
+  input: Record<string, unknown>,
+  fields?: readonly string[],
+): ClaimViolation[] {
   const out: ClaimViolation[] = []
-  walk(output, '', facts(input), out)
+  walk(output, '', facts(input), out, fields ? new Set(fields) : undefined)
   return out
 }
 
@@ -170,8 +181,9 @@ const hasEmptyText = (value: unknown): boolean => {
 // Lists the creator has to see something in: left empty, an empty text remains for the schema to reject (FR-014).
 const MUST_KEEP_ONE = new Set(['assumptions'])
 
-function trim(value: unknown, known: Facts): unknown {
+function trim(value: unknown, known: Facts, fields?: Fields, key = ''): unknown {
   if (typeof value === 'string') {
+    if (!checked(fields, key)) return value
     return sentences(value)
       .filter((s) => !unbacked(s, known))
       .join(' ')
@@ -180,7 +192,7 @@ function trim(value: unknown, known: Facts): unknown {
     // An item of a list that loses a text goes away with it: the list may do without it, its fields may not.
     return value
       .filter((item) => !citesUnknownVideo(item, known.videoIds))
-      .map((item) => trim(item, known))
+      .map((item) => trim(item, known, fields, key))
       .filter((item) => !hasEmptyText(item))
   }
   if (value && typeof value === 'object') {
@@ -191,7 +203,7 @@ function trim(value: unknown, known: Facts): unknown {
     return Object.fromEntries(
       Object.entries(value as object).map(([k, v]) => {
         if (k === 'videoIds') return [k, v]
-        const trimmed = trim(v, known)
+        const trimmed = trim(v, known, fields, k)
         const lostAll = Array.isArray(v) && v.length > 0 && Array.isArray(trimmed) && trimmed.length === 0
         return [k, lostAll && MUST_KEEP_ONE.has(k) ? [''] : trimmed]
       }),
@@ -201,7 +213,11 @@ function trim(value: unknown, known: Facts): unknown {
 }
 
 // After the retry: drop what is still unbacked and say so (`claimsTrimmed`).
-export function trimClaims<T>(output: T, input: Record<string, unknown>): { output: T; trimmed: boolean } {
-  if (checkClaims(output, input).length === 0) return { output, trimmed: false }
-  return { output: trim(output, facts(input)) as T, trimmed: true }
+export function trimClaims<T>(
+  output: T,
+  input: Record<string, unknown>,
+  fields?: readonly string[],
+): { output: T; trimmed: boolean } {
+  if (checkClaims(output, input, fields).length === 0) return { output, trimmed: false }
+  return { output: trim(output, facts(input), fields ? new Set(fields) : undefined) as T, trimmed: true }
 }

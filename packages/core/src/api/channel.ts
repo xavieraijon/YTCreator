@@ -345,8 +345,9 @@ export const journeyStepBodySchema = z.object({
 })
 
 const CHANNEL_USES = Object.keys(CHANNEL_OUTPUTS) as [ChannelUse, ...ChannelUse[]]
-// `perfil_parte` is asked for from the profile, not from a journey.
-const JOURNEY_USES = CHANNEL_USES.filter((use) => use !== 'perfil_parte') as [ChannelUse, ...ChannelUse[]]
+// `perfil_parte` is asked for from the profile, and the idea uses from the idea bank, not from a journey.
+const NOT_JOURNEY: readonly string[] = ['perfil_parte', 'ideas', 'otro_enfoque', 'busquedas_idea']
+const JOURNEY_USES = CHANNEL_USES.filter((use) => !NOT_JOURNEY.includes(use)) as [ChannelUse, ...ChannelUse[]]
 
 // POST /api/journeys/:id/estimate
 export const estimateBodySchema = z.object({ use: z.enum(JOURNEY_USES), proposalId: id.optional() })

@@ -12,12 +12,12 @@ tres incluyen `writing/human.md`.
 - El `input` es JSON con los datos de la llamada; el prompt es fijo (`AiRequest.input` de la 003).
 - **Reintento reservado:** una salida que no valida se repite una vez, y el presupuesto cuenta dos llamadas (entrada
   152 de la 003).
-- **Cifras:** la IA no da cifras de mercado. `claims.ts` de la 003 se aplica a `hook` y a `why`. Si quita algo, la
+- **Cifras:** la IA no da cifras de mercado. `claims.ts` de la 003 se aplica solo a `hook` y a `why` (`CLAIM_FIELDS` en `ai-run.ts`): un título o una búsqueda pueden nombrar una cifra como tema, como «llegar a 1.000 suscriptores». Si quita algo, la
   respuesta lleva `claimsTrimmed: true` y la pantalla lo dice.
 - **Pilar:** `pillar` tiene que coincidir, sin distinguir mayúsculas, con uno de los pilares del perfil que se envía.
   Si no coincide, la salida no valida.
 - **Búsquedas:** `query`, `broadQuery` y `queryEn` son textos de búsqueda, no frases: de 1 a 120 caracteres, sin
-  comillas ni operadores. `queryEn` es la misma búsqueda que `query`, en inglés.
+  comillas ni operadores (`-palabra`, `+palabra`, `OR`, `|`, `campo:valor`). `queryEn` es la misma búsqueda que `query`, en inglés.
 
 ## `ideas`
 
@@ -54,6 +54,6 @@ escenarios para probar los fallos y las salidas raras:
 
 - `ideas_repetidas`: dos candidatas repiten ideas del banco (R9);
 - `pilar_invalido`: la primera salida no valida y la segunda sí;
-- `cifras_inventadas`: la IA mete cifras que se tienen que quitar;
+- `cifra_inventada` (el de la 003): la IA mete cifras que se tienen que quitar;
 - y los fallos tipados de la 002 (`sin_sesion`, `cupo_agotado`, `tiempo_agotado`, `contenido_filtrado`,
   `no_disponible`).

@@ -26,7 +26,13 @@ export class UnknownScenarioError extends Error {
 
 // `otra_cuenta` gives a new token on every login, like `ok`: re-logging an account gets another fingerprint.
 const LOGIN_MODES: readonly string[] = ['codigo_malo', 'duplicada', 'otra_cuenta']
-const OUTPUT_MODES: readonly string[] = ['cifra_inventada', 'salida_rota', 'limite_de_gasto']
+const OUTPUT_MODES: readonly string[] = [
+  'cifra_inventada',
+  'salida_rota',
+  'limite_de_gasto',
+  'ideas_repetidas',
+  'pilar_invalido',
+]
 
 function isFailureKind(kind: string): kind is FailureKind {
   return Object.hasOwn(FAILURE_REASONS, kind)

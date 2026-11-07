@@ -41,8 +41,8 @@ separado.
 
 **Purpose**: Dejar preparados los sitios donde va el código nuevo.
 
-- [ ] T001 Crear `packages/core/src/ideas/index.ts` y exportarlo desde `packages/core/src/index.ts`. Crear `packages/core/src/api/ideas.ts` (vacío, con su export) y exportarlo desde `packages/core/src/api/index.ts`
-- [ ] T002 [P] Crear `apps/web/src/strings/ideas.es.ts` con el objeto `ideasEs` vacío, y añadirlo a la lista de catálogos del test de glosario (buscar dónde se registra `channel.es.ts` en `apps/web/test`)
+- [X] T001 Crear `packages/core/src/ideas/index.ts` y exportarlo desde `packages/core/src/index.ts`. Crear `packages/core/src/api/ideas.ts` (vacío, con su export) y exportarlo desde `packages/core/src/api/index.ts`
+- [X] T002 [P] Crear `apps/web/src/strings/ideas.es.ts` con el objeto `ideasEs` vacío, y añadirlo a la lista de catálogos del test de glosario (buscar dónde se registra `channel.es.ts` en `apps/web/test`)
 
 ---
 
@@ -52,14 +52,14 @@ separado.
 
 **⚠️ CRITICAL**: Ninguna historia empieza antes de cerrar esta fase.
 
-- [ ] T003 [P] Test de modelo en `packages/core/test/ideas/model.test.ts`: `IDEA_STATUSES = ['banco','elegida','hecha','archivada']`, `IDEA_FORMATS = ['largo','short']`, `IDEA_ORIGINS = ['ia','creador','otro_enfoque']`, y el esquema `ideaDraftSchema` con `title` de 1 a 120 caracteres, `hook` de 1 a 300, `format` del enum y `query`, `broadQuery` y `queryEn` de 1 a 120 cada una, sin comillas
-- [ ] T004 Implementar `packages/core/src/ideas/model.ts` para que pase T003, con los tipos `Idea`, `IdeaDraft` e `IdeaStatus`
-- [ ] T005 [P] Test de migración en `apps/server/test/db/migration-0005.test.ts`. Se parte de una base con las migraciones 0001 a 0004 y un `background_job` de cada `kind`, y al aplicar 0005:
+- [X] T003 [P] Test de modelo en `packages/core/test/ideas/model.test.ts`: `IDEA_STATUSES = ['banco','elegida','hecha','archivada']`, `IDEA_FORMATS = ['largo','short']`, `IDEA_ORIGINS = ['ia','creador','otro_enfoque']`, y el esquema `ideaDraftSchema` con `title` de 1 a 120 caracteres, `hook` de 1 a 300, `format` del enum y `query`, `broadQuery` y `queryEn` de 1 a 120 cada una, sin comillas
+- [X] T004 Implementar `packages/core/src/ideas/model.ts` para que pase T003, con los tipos `Idea`, `IdeaDraft` e `IdeaStatus`
+- [X] T005 [P] Test de migración en `apps/server/test/db/migration-0005.test.ts`. Se parte de una base con las migraciones 0001 a 0004 y un `background_job` de cada `kind`, y al aplicar 0005:
   - se conservan todas sus filas;
   - se admiten `kind = 'medir_ideas'` y `channel_id`;
   - existen `idea_batch`, `idea` e `idea_measure` con las columnas y restricciones de `data-model.md`. Entre ellas: `status IN ('banco','elegida','hecha','archivada')`, `format IN ('largo','short')`, `origin IN ('ia','creador','otro_enfoque')` y `verdict IN ('hueco','competido','quemado','frio')` o nulo.
-- [ ] T006 Escribir `apps/server/src/db/migrations/0005_idea_bank.sql`, que pasa T005. Rehace `background_job` en una transacción (crear `background_job_new`, copiar, borrar, renombrar y recrear índices) y crea los índices `(channel_id, status, position)` y `(channel_id, queue_position)`
-- [ ] T007 [P] Tests de repos en `apps/server/test/db/ideas-repo.test.ts`:
+- [X] T006 Escribir `apps/server/src/db/migrations/0005_idea_bank.sql`, que pasa T005. Rehace `background_job` en una transacción (crear `background_job_new`, copiar, borrar, renombrar y recrear índices) y crea los índices `(channel_id, status, position)` y `(channel_id, queue_position)`
+- [X] T007 [P] Tests de repos en `apps/server/test/db/ideas-repo.test.ts`:
   - crear, leer por canal en orden de `position` (sin archivadas) y editar, con estas reglas:
     - `revision` sube solo al cambiar título, gancho, pilar, formato o búsquedas;
     - `original` no cambia;
@@ -68,16 +68,16 @@ separado.
   - `reorder` y `reorderQueue`;
   - `idea_measure` guarda una medida y la última es la que vale;
   - `idea_batch` guarda `decisions`.
-- [ ] T008 Implementar `apps/server/src/db/repos/ideas.ts`, `apps/server/src/db/repos/idea-batches.ts` y `apps/server/src/db/repos/idea-measures.ts`, que pasan T007, y añadir `medir_ideas` y `channel_id` a `apps/server/src/db/repos/jobs.ts` (o donde viva el repo de `background_job`)
-- [ ] T009 [P] Añadir a `packages/knowledge/market/thresholds.json` (subir `version` a 5 y `reviewedAt`) el bloque `ideas`: `{searchResults: 40, broadResults: 20, similarHigh: 12, similarLow: 5, recentDays: 90, recentBurst: 4, datedSample: 12, deadMedianViews: 1000, audienceViews: 100000, audienceVideos: 2, keywordShare: 0.75, staleDays: 30, opportunity: {englishBigVideos: 2, maxSimilar: 5}}`. Su fuente propia es `{label: 'Supuesto de YTCreator, sin estudio que lo respalde (primera versión del proyecto de referencia, 2026-09-27)', assumption: true}`. Ampliar el esquema y los tests de `packages/knowledge/src/market.ts` y `packages/knowledge/test/market.test.ts`
-- [ ] T010 [P] Esquemas de API en `packages/core/src/api/ideas.ts` (`IdeaView`, `IdeaMeasureView`, `IdeaBatchView` y los cuerpos de [http-api](./contracts/http-api.md)), con su test en `packages/core/test/api/ideas.test.ts`
-- [ ] T011 Test de servidor en `apps/server/test/http/ideas-base.test.ts`:
+- [X] T008 Implementar `apps/server/src/db/repos/ideas.ts`, `apps/server/src/db/repos/idea-batches.ts` y `apps/server/src/db/repos/idea-measures.ts`, que pasan T007, y añadir `medir_ideas` y `channel_id` a `apps/server/src/db/repos/jobs.ts` (o donde viva el repo de `background_job`)
+- [X] T009 [P] Añadir a `packages/knowledge/market/thresholds.json` (subir `version` a 5 y `reviewedAt`) el bloque `ideas`: `{searchResults: 40, broadResults: 20, similarHigh: 12, similarLow: 5, recentDays: 90, recentBurst: 4, datedSample: 12, deadMedianViews: 1000, audienceViews: 100000, audienceVideos: 2, keywordShare: 0.75, staleDays: 30, opportunity: {englishBigVideos: 2, maxSimilar: 5}}`. Su fuente propia es `{label: 'Supuesto de YTCreator, sin estudio que lo respalde (primera versión del proyecto de referencia, 2026-09-27)', assumption: true}`. Ampliar el esquema y los tests de `packages/knowledge/src/market.ts` y `packages/knowledge/test/market.test.ts`
+- [X] T010 [P] Esquemas de API en `packages/core/src/api/ideas.ts` (`IdeaView`, `IdeaMeasureView`, `IdeaBatchView` y los cuerpos de [http-api](./contracts/http-api.md)), con su test en `packages/core/test/api/ideas.test.ts`
+- [X] T011 Test de servidor en `apps/server/test/http/ideas-base.test.ts`:
   - `GET /api/channels/:id/ideas` sin perfil aprobado da `409` con `fields: {profile: 'sin_perfil'}`;
   - con perfil, da `{ideas: [], queue: [], profileVersion, pendingBatch: null, runningJob: null}`;
   - canal ajeno o inexistente: `404`.
-- [ ] T012 Implementar `apps/server/src/services/ideas.ts` (vista de una idea con `stale`, `fromOlderProfile` y `measuredOlderRevision`) y `apps/server/src/http/routes/ideas.ts` con `GET .../ideas`, montado en el servidor como las rutas de `channel.ts`, para que pase T011
-- [ ] T013 [P] Cliente `ideasApi` en `apps/web/src/api/client.ts` con `list`, y la ruta `/canal/ideas` en el router de la web con una pantalla `apps/web/src/screens/channel/ideas/IdeaBank.tsx` que, por ahora, enseña el título, el «por qué importa» y el aviso sin perfil
-- [ ] T014 [A] Puerta A de Foundational: ejecutar `/puerta-a 004 Foundational`. No se marca `[X]` hasta que la skill diga «pasada»; el informe queda en `checklists/validation.md`
+- [X] T012 Implementar `apps/server/src/services/ideas.ts` (vista de una idea con `stale`, `fromOlderProfile` y `measuredOlderRevision`) y `apps/server/src/http/routes/ideas.ts` con `GET .../ideas`, montado en el servidor como las rutas de `channel.ts`, para que pase T011
+- [X] T013 [P] Cliente `ideasApi` en `apps/web/src/api/client.ts` con `list`, y la ruta `/canal/ideas` en el router de la web con una pantalla `apps/web/src/screens/channel/ideas/IdeaBank.tsx` que, por ahora, enseña el título, el «por qué importa» y el aviso sin perfil
+- [X] T014 [A] Puerta A de Foundational: ejecutar `/puerta-a 004 Foundational`. No se marca `[X]` hasta que la skill diga «pasada»; el informe queda en `checklists/validation.md`
 
 **Checkpoint**: Hay base de datos, repos, umbrales y la pantalla vacía.
 
@@ -95,7 +95,7 @@ separado.
   - `ideasOutput`: de 6 a 10 `IdeaDraft`; `pillar` tiene que ser uno de los pilares dados (fábrica `ideasOutputFor(pillars)`), sin distinguir mayúsculas;
   - `busquedasOutput`: `{query, broadQuery, queryEn}`.
 - [ ] T016 [P] [US1] Test de repetidas en `packages/core/test/ideas/repeats.test.ts`: `dropRepeats(candidates, existing)` quita las que repiten título normalizado o `query` normalizada (con `normalizeName` de `packages/core/src/market/names.ts`) y devuelve las que quedan y cuántas quitó
-- [ ] T017 [P] [US1] Test de contrato del uso `ideas` en la batería de IA (`packages/ai/test/contract/`), con el proveedor falso: salida válida; `pilar_invalido` (la primera no valida y el reintento sí); `cifras_inventadas` con `claimsTrimmed`; y los cinco fallos tipados
+- [ ] T017 [P] [US1] Test de contrato del uso `ideas` en la batería de IA (`packages/ai/test/contract/`), con el proveedor falso: salida válida; `pilar_invalido` (la primera no valida y el reintento sí); `cifra_inventada` con `claimsTrimmed`; y los cinco fallos tipados
 - [ ] T018 [P] [US1] Test de servidor en `apps/server/test/http/ideas-batch.test.ts`:
   - `POST .../ideas/estimate` con `use: 'ideas'` da un `Estimate`;
   - `POST .../idea-batches` da 6–10 candidatas, y con `ideas_repetidas` quita 2 y devuelve `removedRepeats: 2`;
@@ -114,7 +114,7 @@ separado.
 
 - [ ] T020 [US1] Implementar `packages/core/src/ideas/outputs.ts` y `packages/core/src/ideas/repeats.ts` (pasan T015 y T016), y añadir `ideas`, `otro_enfoque` y `busquedas_idea` a `AI_USES` en `packages/core/src/ai/uses.ts`
 - [ ] T021 [US1] Prompt `packages/knowledge/prompts/ideas/v1.md` según [ai-uses](./contracts/ai-uses.md): fijo, en español, con `writing/human.md`, sin pedir cifras, sin repetir `avoid`, y respetando el formato del perfil. Actualizar `packages/knowledge/prompts/lock.json` y los tests de `packages/knowledge/test/prompts.test.ts`
-- [ ] T022 [US1] Perfil por proveedor del uso `ideas` (tope de salida 3.000 tokens, 90 s) en el registro de `packages/ai`, y salidas del proveedor falso: `ok`, `ideas_repetidas`, `pilar_invalido` y `cifras_inventadas`. Pasa T017
+- [ ] T022 [US1] Perfil por proveedor del uso `ideas` (tope de salida 3.000 tokens, 90 s) en el registro de `packages/ai`, y salidas del proveedor falso: `ok`, `ideas_repetidas`, `pilar_invalido` y `cifra_inventada`. Pasa T017
 - [ ] T023 [US1] Rutas `POST .../ideas/estimate`, `POST .../idea-batches` y `POST /api/idea-batches/:id/decide` en `apps/server/src/http/routes/ideas.ts`, con `ai-run.ts`, el presupuesto (reintento reservado), `claims.ts` y `dropRepeats`. Pasa T018
 - [ ] T024 [US1] Rutas `POST .../ideas` y `PATCH /api/ideas/:id` (campos y `revision`) en `apps/server/src/http/routes/ideas.ts`. Pasa T019
 - [ ] T025 [P] [US1] Test de pantalla en `apps/web/test/ideas/batch.test.tsx`:
