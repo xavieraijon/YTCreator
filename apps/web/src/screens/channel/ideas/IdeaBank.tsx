@@ -1,4 +1,4 @@
-import { IDEA_LIMITS, type IdeaFormat } from '@ytcreator/core'
+import { IDEA_LIMITS, type IdeaFormat, moveAmong } from '@ytcreator/core'
 import type {
   AiRunFailure,
   EstimateView,
@@ -23,6 +23,16 @@ import { IdeaBatch } from './IdeaBatch.tsx'
 import { IdeaCard } from './IdeaCard.tsx'
 import { IdeaEditor, type PrepareMeasure } from './IdeaEditor.tsx'
 import { IdeaMeasure, isMeasurable, number, unitsOf } from './IdeaMeasure.tsx'
+import {
+  type Direction,
+  type IdeaMove,
+  IdeaMoves,
+  IdeaQueue,
+  OrderButtons,
+  type OrderList,
+  orderKey,
+} from './IdeaQueue.tsx'
+import { Archive, Downloads, Filters, filterIdeas, NO_FILTERS } from './IdeaShelf.tsx'
 
 const text = ideasEs.bank
 const measureText = ideasEs.measure
@@ -112,6 +122,18 @@ const cardAiOf = (action: CardAi | undefined, ideaId: string) =>
       }
     : undefined
 
+/** US4: the queue, the order, the moves, the archive and the downloads. */
+export interface OrderControls {
+  readonly archived: readonly IdeaView[]
+  readonly busy: boolean
+  /** «Movida a la posición {n}», for the live region. */
+  readonly announcement: string
+  /** `visible` are the ideas of that list on screen, the filters applied: the move passes the one seen next to it. */
+  readonly onMove: (list: OrderList, ideaId: string, direction: Direction, visible: readonly string[]) => void
+  readonly onStatus: (idea: IdeaView, status: IdeaMove) => void
+  readonly onDownload: (format: 'md' | 'json') => void
+}
+
 export interface IdeaBankContentProps {
   readonly state: IdeaBankState
   readonly estimate?: EstimateView | null
@@ -123,6 +145,7 @@ export interface IdeaBankContentProps {
   /** Changes only when an idea of the creator is saved: the empty form comes back then, and only then. */
   readonly formKey?: number
   readonly measure?: MeasureControls
+  readonly order?: OrderControls
   /** «Preparar la medida» of the idea being changed. */
   readonly prepare?: PrepareMeasure | undefined
   readonly onPropose?: (instructions?: string) => void
@@ -142,6 +165,14 @@ const NO_MEASURE: MeasureControls = {
   now: new Date(0),
   onMeasure: noop,
   onMeasureWithTitle: noop,
+}
+const NO_ORDER: OrderControls = {
+  archived: [],
+  busy: false,
+  announcement: '',
+  onMove: noop,
+  onStatus: noop,
+  onDownload: noop,
 }
 
 // What the bank shows for each state, without the requests (tested on its own).
@@ -231,6 +262,7 @@ function ReadyBank({
   editing = null,
   formKey = 0,
   measure = NO_MEASURE,
+  order = NO_ORDER,
   prepare,
   onPropose = noop,
   onDecide = noop,
@@ -240,8 +272,15 @@ function ReadyBank({
   onChange = noop,
 }: IdeaBankContentProps & { state: Extract<IdeaBankState, { kind: 'ready' }> }) {
   const [instructions, setInstructions] = useState('')
+  const [filters, setFilters] = useState(NO_FILTERS)
   const { bank, pillars, defaultFormat, niche } = state
   const empty = bank.ideas.length === 0
+  // The idea being changed, or with angles waiting, stays in sight whatever the filters say.
+  const kept = new Set([editing, ...bank.pendingAngles.map((batch) => batch.sourceIdeaId)])
+  const passing = new Set(filterIdeas(bank.ideas, filters).map((idea) => idea.id))
+  const shown = bank.ideas.filter((idea) => passing.has(idea.id) || kept.has(idea.id))
+  const shownIds = shown.map((idea) => idea.id)
+  const queue = bank.queue.flatMap((id) => bank.ideas.find((idea) => idea.id === id) ?? [])
   const titleOf = (id: string | null) => bank.ideas.find((idea) => idea.id === id)?.title ?? null
   // The angles wait by the idea they came from, one set per idea; with that idea out of the bank, under the list.
   const anglesOf = (sourceIdeaId: string | null, sourceTitle: string | null) =>
@@ -307,13 +346,29 @@ function ReadyBank({
           />
         </div>
       )}
+      <p role="status" className={styles.why}>
+        {order.announcement}
+      </p>
+      {!empty && (
+        <IdeaQueue
+          ideas={queue}
+          busy={order.busy}
+          onMove={(ideaId, direction) => order.onMove('queue', ideaId, direction, bank.queue)}
+          onRemove={(idea) => order.onStatus(idea, 'banco')}
+        />
+      )}
       <section aria-label={text.listTitle}>
-        <h2>{text.listTitle}</h2>
+        <h2 tabIndex={-1} data-ideas-title>
+          {text.listTitle}
+        </h2>
+        {!empty && <Filters filters={filters} shown={shown.length} total={bank.ideas.length} onChange={setFilters} />}
         {empty ? (
           <p>{text.empty}</p>
+        ) : shown.length === 0 ? (
+          <p>{ideasEs.filters.none}</p>
         ) : (
           <ul className={styles.options}>
-            {bank.ideas.map((idea) =>
+            {shown.map((idea, index) =>
               editing === idea.id ? (
                 <li key={idea.id} className={styles.option}>
                   <h3>{ideasEs.editor.editTitle}</h3>
@@ -333,6 +388,19 @@ function ReadyBank({
                   idea={idea}
                   sourceTitle={titleOf(idea.sourceIdeaId)}
                   onEdit={() => onEdit(idea.id)}
+                  actions={
+                    <>
+                      <IdeaMoves idea={idea} busy={order.busy} onStatus={(status) => order.onStatus(idea, status)} />
+                      <OrderButtons
+                        list="bank"
+                        idea={idea}
+                        first={index === 0}
+                        last={index === shown.length - 1}
+                        busy={order.busy}
+                        onMove={(direction) => order.onMove('bank', idea.id, direction, shownIds)}
+                      />
+                    </>
+                  }
                 >
                   <IdeaMeasure
                     idea={idea}
@@ -357,6 +425,8 @@ function ReadyBank({
       <Disclosure summary={ideasEs.editor.open}>
         <IdeaEditor key={formKey} pillars={pillars} defaultFormat={defaultFormat} busy={saving} onSave={onCreate} />
       </Disclosure>
+      <Archive ideas={order.archived} busy={order.busy} onRecover={(idea) => order.onStatus(idea, 'banco')} />
+      {!empty && <Downloads onDownload={order.onDownload} />}
     </>
   )
 }
@@ -400,6 +470,11 @@ export function IdeaBank() {
   const [anglesFailure, setAnglesFailure] = useState<AiRunFailure | null>(null)
   const [anglesBusy, setAnglesBusy] = useState(false)
   const [anglesTurn, setAnglesTurn] = useState(0)
+  // US4: the archive, a move on its way and what it said.
+  const [archived, setArchived] = useState<IdeaView[]>([])
+  const [ordering, setOrdering] = useState(false)
+  const [orderAnnouncement, setOrderAnnouncement] = useState('')
+  const focusAfter = useRef<string | null>(null)
   const channelId = state.kind === 'ready' ? state.channelId : null
   const bank = state.kind === 'ready' ? state.bank : null
   const asked = useRef(0)
@@ -417,7 +492,11 @@ export function IdeaBank() {
         setState({ kind: 'noProfile' })
         return
       }
-      const loaded = await ideasApi.list(current.channel.id)
+      const [loaded, archive] = await Promise.all([
+        ideasApi.list(current.channel.id),
+        ideasApi.archived(current.channel.id),
+      ])
+      setArchived(archive)
       const { concept } = current.profile.profile
       const pillars = concept.pillars.map((pillar) => pillar.title)
       const onlyShorts = concept.cadence.longPerWeek === 0 && concept.cadence.shortsPerWeek > 0
@@ -443,6 +522,17 @@ export function IdeaBank() {
     setState((current) => (current.kind === 'ready' ? { ...current, bank: loaded } : current))
     return loaded
   }, [channelId])
+
+  // After a move the focus goes back to the same button of the same idea (contracts/ui-screens.md).
+  useEffect(() => {
+    if (!focusAfter.current) return
+    const target = focusAfter.current.startsWith('card:')
+      ? (document.querySelector<HTMLElement>(`[data-card="${focusAfter.current.slice(5)}"]`) ??
+        document.querySelector<HTMLElement>('[data-ideas-title]'))
+      : document.querySelector<HTMLElement>(`[data-order="${focusAfter.current}"]`)
+    target?.focus()
+    focusAfter.current = null
+  }, [state])
 
   // Each estimate serves one call: a fresh one after every batch (contracts/cost.md).
   const refreshEstimate = useCallback(async (id: string) => {
@@ -739,6 +829,99 @@ export function IdeaBank() {
     }
   }
 
+  // Another tab changed the bank: the server refuses the move (`validacion`). What is there now is shown, and said.
+  const staleOr = async (caught: unknown) => {
+    if (!(caught instanceof ApiClientError && caught.body?.code === 'validacion') || !channelId) {
+      await conflictOr(caught)
+      return
+    }
+    try {
+      const [, archive] = await Promise.all([reload(), ideasApi.archived(channelId)])
+      setArchived(archive)
+      toast({ title: ideasEs.order.stale, tone: 'warning' })
+    } catch (again) {
+      setError(again)
+    }
+  }
+
+  // «Subir» and «Bajar», of the bank or of the queue. With filters on, the idea passes the one seen next to it.
+  const move = async (list: OrderList, ideaId: string, direction: Direction, visible: readonly string[]) => {
+    if (!channelId || !bank || ordering) return
+    const all = list === 'bank' ? bank.ideas.map((idea) => idea.id) : bank.queue
+    const ids = moveAmong(all, visible, ideaId, direction)
+    if (ids.every((id, index) => id === all[index])) return
+    setOrdering(true)
+    setError(null)
+    try {
+      if (list === 'bank') {
+        const { ideas } = await ideasApi.order(channelId, ids)
+        setState((current) => (current.kind === 'ready' ? { ...current, bank: { ...current.bank, ideas } } : current))
+      } else {
+        const { queue } = await ideasApi.queue(channelId, ids)
+        setState((current) => (current.kind === 'ready' ? { ...current, bank: { ...current.bank, queue } } : current))
+      }
+      const place = visible.indexOf(ideaId) + (direction === 'up' ? 0 : 2)
+      focusAfter.current = orderKey(list, ideaId, direction)
+      const filtered = visible.length < all.length
+      setOrderAnnouncement(format(filtered ? ideasEs.order.movedShown : ideasEs.order.moved, { n: number(place) }))
+    } catch (caught) {
+      await staleOr(caught)
+    } finally {
+      setOrdering(false)
+    }
+  }
+
+  const moveSaid = (title: string, status: IdeaMove, wasArchived: boolean, queue: readonly string[]) => {
+    const moves = ideasEs.moves
+    if (status === 'elegida') return format(moves.chosen, { titulo: title, n: number(queue.length) })
+    if (status === 'hecha') return format(moves.madeDone, { titulo: title })
+    if (status === 'archivada') return format(moves.archived, { titulo: title })
+    return format(wasArchived ? moves.recovered : moves.removed, { titulo: title })
+  }
+
+  const changeStatus = async (idea: IdeaView, status: IdeaMove) => {
+    if (!channelId || ordering) return
+    setOrdering(true)
+    setError(null)
+    try {
+      await ideasApi.change(idea.id, { revision: idea.revision, status })
+      // The button pressed may be gone (archived, chosen): once the bank is read again, the focus goes to the card,
+      // or else to the list.
+      focusAfter.current = `card:${idea.id}`
+      const [loaded, archive] = await Promise.all([reload(), ideasApi.archived(channelId)])
+      setArchived(archive)
+      // Said once, by the notice: the live region is for the moves of the order.
+      toast({ title: moveSaid(idea.title, status, idea.status === 'archivada', loaded?.queue ?? []), tone: 'success' })
+    } catch (caught) {
+      await staleOr(caught)
+    } finally {
+      setOrdering(false)
+    }
+  }
+
+  // The file is asked for first: an error is said here, without leaving the app (Puerta A of US4).
+  const download = async (kind: 'md' | 'json') => {
+    if (!channelId) return
+    setError(null)
+    try {
+      const { blob, name } = await ideasApi.download(channelId, kind)
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = name
+      document.body.append(link)
+      link.click()
+      link.remove()
+      setTimeout(() => URL.revokeObjectURL(url), 0)
+      toast({
+        title: kind === 'md' ? ideasEs.download.downloadedDocument : ideasEs.download.downloadedData,
+        tone: 'success',
+      })
+    } catch (caught) {
+      setError(caught)
+    }
+  }
+
   return (
     <Screen title={text.title}>
       {error !== null && (
@@ -783,6 +966,14 @@ export function IdeaBank() {
               },
               onRun: (instructions) => void askAngles(instructions),
             },
+          }}
+          order={{
+            archived,
+            busy: ordering,
+            announcement: orderAnnouncement,
+            onMove: (list, ideaId, direction, visible) => void move(list, ideaId, direction, visible),
+            onStatus: (idea, status) => void changeStatus(idea, status),
+            onDownload: (kind) => void download(kind),
           }}
           prepare={
             editing && targetIdea

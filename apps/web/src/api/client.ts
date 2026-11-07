@@ -8,6 +8,8 @@ import {
   estimateSchema,
   batchDecideResultSchema,
   ideaBankSchema,
+  ideaOrderResultSchema,
+  ideaQueueResultSchema,
   ideaBatchOutcomeSchema,
   ideaQueriesOutcomeSchema,
   ideaSchema,
@@ -121,7 +123,32 @@ export function createApiClient({ fetch = globalThis.fetch.bind(globalThis), bas
     }
   }
 
+  // A download: the file and the name the server gives it. An error answers like any other call, so the page can
+  // say it instead of leaving the app for the error's JSON.
+  async function file(path: string): Promise<{ blob: Blob; name: string }> {
+    let response: Response
+    try {
+      response = await fetch(`${baseUrl}${path}`, { headers: { accept: '*/*' } })
+    } catch {
+      throw new ApiClientError('red', null, null)
+    }
+    if (!response.ok) {
+      const parsed = apiErrorSchema.safeParse(await response.json().catch(() => null))
+      throw parsed.success
+        ? new ApiClientError('api', response.status, parsed.data.error)
+        : new ApiClientError('respuesta', response.status, null)
+    }
+    const name = /filename="([^"]+)"/.exec(response.headers.get('Content-Disposition') ?? '')?.[1]
+    if (!name) throw new ApiClientError('respuesta', response.status, null)
+    try {
+      return { blob: await response.blob(), name }
+    } catch {
+      throw new ApiClientError('red', null, null)
+    }
+  }
+
   return {
+    file,
     get: <T>(path: string, schema: Parser<T>, options?: RequestOptions) =>
       request('GET', path, undefined, schema, options),
     post: <T>(path: string, body: unknown, schema: Parser<T>, options?: RequestOptions) =>
@@ -244,6 +271,12 @@ export const ideasApi = {
     apiClient.post(`/api/ideas/${encodeURIComponent(ideaId)}/angles`, body, ideaBatchOutcomeSchema),
   queries: (ideaId: string, body: { estimateId: string; revision: number }) =>
     apiClient.post(`/api/ideas/${encodeURIComponent(ideaId)}/queries`, body, ideaQueriesOutcomeSchema),
+  order: (channelId: string, ids: string[]) =>
+    apiClient.put(`${channelPath(channelId)}/ideas/order`, { ids }, ideaOrderResultSchema),
+  queue: (channelId: string, ids: string[]) =>
+    apiClient.put(`${channelPath(channelId)}/ideas/queue`, { ids }, ideaQueueResultSchema),
+  download: (channelId: string, format: 'md' | 'json') =>
+    apiClient.file(`${channelPath(channelId)}/ideas/export?format=${format}`),
 }
 
 export const usageApi = {

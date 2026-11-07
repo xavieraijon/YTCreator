@@ -35,24 +35,27 @@ describe('glossary of the web (FR-032, principle I)', () => {
     ).toEqual([])
   })
 
-  it('nor the texts of the downloaded profile, written by the server (packages/core/src/channel/export.ts)', () => {
-    const source = readFileSync(new URL('../../../packages/core/src/channel/export.ts', import.meta.url), 'utf8')
-      // Comments go first: an apostrophe in one would pair with the next quote.
-      .replace(/\/\*[\s\S]*?\*\//g, '')
-      .replace(/(^|[^:])\/\/.*$/gm, '$1')
-    const texts: Record<string, string> = {}
-    // The literals, read left to right; those with a space are texts the creator reads, the rest keys and code.
-    const literals = [...source.matchAll(/'(?:[^'\\\n]|\\.)*'|`(?:[^`\\]|\\.)*`/g)].map(([literal]) =>
-      literal.slice(1, -1),
-    )
-    literals
-      .filter((literal) => /\s/.test(literal))
-      .forEach((literal, index) => {
-        texts[`export.${index}`] = literal.replace(/\$\{[^}]*\}/g, '')
-      })
-    expect(Object.keys(texts).length).toBeGreaterThan(20)
-    expect(findForbiddenTerms(texts, webTerms)).toEqual([])
-  })
+  it.each(['channel', 'ideas'])(
+    'nor the texts of a download written by the server (packages/core/src/%s/export.ts)',
+    (folder) => {
+      const source = readFileSync(new URL(`../../../packages/core/src/${folder}/export.ts`, import.meta.url), 'utf8')
+        // Comments go first: an apostrophe in one would pair with the next quote.
+        .replace(/\/\*[\s\S]*?\*\//g, '')
+        .replace(/(^|[^:])\/\/.*$/gm, '$1')
+      const texts: Record<string, string> = {}
+      // The literals, read left to right; those with a space are texts the creator reads, the rest keys and code.
+      const literals = [...source.matchAll(/'(?:[^'\\\n]|\\.)*'|`(?:[^`\\]|\\.)*`/g)].map(([literal]) =>
+        literal.slice(1, -1),
+      )
+      literals
+        .filter((literal) => /\s/.test(literal))
+        .forEach((literal, index) => {
+          texts[`export.${index}`] = literal.replace(/\$\{[^}]*\}/g, '')
+        })
+      expect(Object.keys(texts).length).toBeGreaterThan(folder === 'channel' ? 20 : 10)
+      expect(findForbiddenTerms(texts, webTerms)).toEqual([])
+    },
+  )
 
   it('no source of the knowledge files uses one either: they are shown under the figures', () => {
     const dir = new URL('../../../packages/knowledge/market/', import.meta.url)

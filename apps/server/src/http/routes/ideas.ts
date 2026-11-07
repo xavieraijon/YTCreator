@@ -1,5 +1,8 @@
 import {
   anglesOutputFor,
+  bankFileName,
+  bankJson,
+  bankMarkdown,
   type ChannelProfile,
   type ChannelUse,
   canMoveIdea,
@@ -14,9 +17,11 @@ import {
 import {
   anglesBodySchema,
   batchDecideBodySchema,
+  exportQuerySchema,
   ideaBatchBodySchema,
   ideaEstimateBodySchema,
   ideaMeasuresBodySchema,
+  ideaOrderBodySchema,
   ideaPatchBodySchema,
   ideaQueriesBodySchema,
   measureEstimateBodySchema,
@@ -27,7 +32,7 @@ import type { DatabaseSync } from 'node:sqlite'
 import type { ChannelsRepo } from '../../db/repos/channels.ts'
 import { type CandidateDecision, candidatesOf, type IdeaBatchesRepo } from '../../db/repos/idea-batches.ts'
 import type { IdeaMeasure, IdeaMeasuresRepo } from '../../db/repos/idea-measures.ts'
-import type { IdeasRepo } from '../../db/repos/ideas.ts'
+import { IdeaOrderError, type IdeasRepo } from '../../db/repos/ideas.ts'
 import type { JobsRepo } from '../../db/repos/jobs.ts'
 import type { JourneysRepo } from '../../db/repos/journeys.ts'
 import type { ProfilesRepo } from '../../db/repos/profiles.ts'
@@ -159,6 +164,56 @@ export function ideaRoutes(deps: IdeaRoutesDeps) {
   routes.get('/channels/:id/ideas/archived', (c) => {
     const { channel, profileVersion } = withProfile(c.req.param('id'))
     return c.json(viewsOf(channel.id, profileVersion, ideas.listArchived(channel.id)))
+  })
+
+  // US4: the order of the bank and of the queue. The body names every idea once, or nothing moves (FR-012).
+  const ordered = <T>(move: () => T): T => {
+    try {
+      return move()
+    } catch (error) {
+      if (error instanceof IdeaOrderError) throw new ApiError({ code: 'validacion', fields: { ids: 'no_valido' } })
+      throw error
+    }
+  }
+
+  routes.put('/channels/:id/ideas/order', async (c) => {
+    const { channel, profileVersion } = withProfile(c.req.param('id'))
+    const { ids } = await parseBody(c, ideaOrderBodySchema)
+    const list = ordered(() => ideas.reorder(channel.id, ids))
+    return c.json({ ideas: viewsOf(channel.id, profileVersion, list) })
+  })
+
+  routes.put('/channels/:id/ideas/queue', async (c) => {
+    const { channel } = withProfile(c.req.param('id'))
+    const { ids } = await parseBody(c, ideaOrderBodySchema)
+    const queue = ordered(() => ideas.reorderQueue(channel.id, ids))
+    return c.json({ queue: queue.map((idea) => idea.id) })
+  })
+
+  // «Descargar como documento» and «Descargar como datos»: the bank without the archived ideas (data-model.md).
+  routes.get('/channels/:id/ideas/export', (c) => {
+    const { channel } = withProfile(c.req.param('id'))
+    const query = exportQuerySchema.safeParse({ format: c.req.query('format') })
+    if (!query.success) throw new ApiError({ code: 'validacion', fields: { format: 'no_valido' } })
+    const { format } = query.data
+    const latest = measures.latestByChannel(channel.id)
+    const input = {
+      exportedAt: now().toISOString(),
+      channel: { id: channel.id, displayName: channel.displayName },
+      ideas: ideas.listBank(channel.id).map((idea) => {
+        const measure = latest.get(idea.id) ?? null
+        if (!measure) return { idea, measure: null }
+        const age = (now().getTime() - new Date(measure.measuredAt).getTime()) / 86_400_000
+        return {
+          idea,
+          measure: { ...measure, olderRevision: measure.ideaRevision !== idea.revision, stale: age > deps.staleDays },
+        }
+      }),
+    }
+    return c.body(format === 'md' ? bankMarkdown(input) : `${JSON.stringify(bankJson(input), null, 2)}\n`, 200, {
+      'Content-Type': format === 'md' ? 'text/markdown; charset=utf-8' : 'application/json; charset=utf-8',
+      'Content-Disposition': `attachment; filename="${bankFileName(channel.displayName, format)}"`,
+    })
   })
 
   // «Escribir una idea mía»: it says if the bank already has one with the same title, without stopping it (R15).

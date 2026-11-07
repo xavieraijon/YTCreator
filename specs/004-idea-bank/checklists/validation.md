@@ -461,3 +461,120 @@ Informes de la Puerta A (`/puerta-a`), uno por fase o historia.
 - **Revertir:** `git revert` del commit de la US3. El prompt `otro_enfoque/v1.md` sigue en su sitio, así que basta con
   quitar la v2 y su línea de `lock.json`. No hay migraciones.
 - **Queda:** la US4, Polish y la auditoría de novato.
+
+## US4: ordenar el banco y elegir la próxima idea (T054–T061)
+
+### 1. Resumen
+
+- El creador ordena el banco y la cola de «Próximos vídeos» con «Subir» y «Bajar» (ratón o teclado). Filtra por
+  estado, formato y semáforo. Elige, marca como hecha, archiva y recupera. Descarga el banco como documento o como
+  datos. Todo se guarda y sigue igual al recargar.
+- Ningún revisor encontró nada grave. Se corrigieron los medios confirmados:
+  - el formato del `.json` ya no cambia;
+  - la exportación tiene tests de dominio;
+  - el glosario cubre el documento;
+  - los botones de la cola tienen nombres propios;
+  - una pestaña desfasada ya no deja un error mudo;
+  - los textos y las decisiones de efecto visible están registrados como riesgo medio.
+- Resultado: **pasada**. Controles con código 0, sin graves abiertos y sin pendientes de riesgo alto.
+
+### 2. Requisitos
+
+| Requisito | Estado | Evidencia | Fecha |
+|---|---|---|---|
+| AS1 / FR-012: ordenar con ratón y teclado; el orden se guarda | Cumplido (botones, sin arrastrar: decisión 4) | `ideas-order.test.ts`; `order.test.ts`; e2e (Enter en «Bajar», recargar) | 2026-11-07 |
+| AS2 / FR-012: filtros de estado, formato y semáforo, y «Quitar filtros» | Cumplido | `idea-queue.test.tsx` (`filterIdeas`); e2e (Short, «Se ven 1 de 3 ideas.») | 2026-11-07 |
+| AS3: elegir pone la idea al final de la cola; la cola se reordena; se ve cuál va primero | Cumplido | `ideas-order.test.ts`; e2e («1. …», «2. …», la nota del guion) | 2026-11-07 |
+| AS4 / FR-013: archivar y recuperar; nada se borra | Cumplido | `ideas-order.test.ts` (sin ruta DELETE); e2e | 2026-11-07 |
+| AS5 / FR-014: documento legible con estado y semáforo con fecha y fuente; datos `version: 1` sin archivadas | Cumplido | `export.test.ts`; `ideas-export.test.ts`; e2e (descarga de los dos) | 2026-11-07 |
+| El foco vuelve al mismo botón y se dice «Movida a la posición {n}» | Cumplido | e2e (`toBeFocused`); `idea-queue.test.tsx` | 2026-11-07 |
+
+### 3. Cómo se comprobó
+
+- Primera vuelta, antes de las correcciones: `typecheck`, `test` (código 0) y `test:installer` (29 pasadas, código
+  0). `test:e2e`: 97 + 37 pasadas y 1 fallo en `ideas-queue.spec.ts`. Fallaba el foco tras archivar, que se fijaba
+  después de la recarga. Corregido, ese e2e pasa (31 s).
+- Vuelta final con el código definitivo: `lint` y `typecheck` con código 0; `test` con 147 ficheros, 1701 pasadas y
+  2 saltadas, código 0; `test:e2e` con 97 + 38 pasadas, código 0.
+- El flujo real con los falsos es `apps/web/e2e/ideas-queue.spec.ts`:
+  - reordenar con teclado;
+  - el borde que no se mueve;
+  - filtrar y quitar los filtros (el foco va al primer filtro);
+  - elegir dos y reordenar la cola;
+  - archivar (el foco va a «Tus ideas») y recuperar;
+  - recargar;
+  - descargar el documento y los datos;
+  - axe en cada paso.
+
+### 4. Controles obligatorios
+
+- **Pasados:**
+  - `lint`, `typecheck` y `test`, con el glosario ampliado a `packages/core/src/ideas/export.ts` y `secrets-leak`;
+  - `test:installer`;
+  - axe en claro y oscuro a 1280 px, 375 px y zoom 200 %, en el banco, con filtros, con la cola y con «Archivadas»;
+  - teclado: los botones de orden y de estado nombran la idea, y los de la cola dicen «en la cola»;
+  - `prefers-reduced-motion`: el auditor lo emula y no hay animaciones nuevas.
+- **No ejecutados:**
+  - fallos de IA: la historia no llama a la IA;
+  - la build de producción: el proveedor falso no ha cambiado.
+
+### 5. Hallazgos de revisión
+
+- **Confirmados y corregidos:**
+  - **M**, de fidelidad: añadir `olderRevision` al `.json` cambiaba el formato de exportación, que es de riesgo alto.
+    Se quita, y el `.json` es exactamente el de `data-model.md` (decisión 57).
+  - **M**, de fidelidad: la exportación no tenía tests de dominio. Se añade `packages/core/test/ideas/export.test.ts`
+    con 6 tests.
+  - **M**, de fidelidad: los textos nuevos no estaban registrados. Ahora están en la decisión 60, y las 55 y 58 suben
+    a riesgo medio.
+  - **M**, de lógica: con una pestaña desfasada, cambiar el estado daba un error genérico y no recargaba. Ahora
+    recarga el banco y las archivadas y avisa (decisión 61).
+  - **M**, de regresión y lógica: dos «Subir «X»» hacían cosas distintas. Los de la cola se llaman «Subir en la cola
+    «X»» (decisión 63).
+  - **M**, de regresión: el glosario no leía el documento del banco. El test cubre ahora los dos `export.ts`.
+  - **m**, de seguridad: un error al descargar sacaba al creador de la app tras decirle que estaba listo. Ahora la
+    descarga pide el fichero primero (decisión 62).
+  - **m**, de seguridad: el rechazo del orden por otra pestaña no se decía. Ahora se avisa.
+  - **m**, de lógica: si la recarga tras el rechazo fallaba, el error se perdía. Ahora se enseña.
+  - **m**, de lógica y fidelidad: las fechas del `.md` iban en UTC. Ahora van en la hora local, como la tarjeta.
+  - **m**, de lógica, fidelidad y regresión: las notas de varias líneas rompían el documento. Ahora van en una línea.
+  - **m**, de fidelidad: el `.md` no marcaba la medida antigua ni el origen de la idea. Ahora sí.
+  - **m**, de fidelidad: la cola no enseñaba su numeración. Cada idea lleva su número escrito.
+  - **m**, de los tres: el foco se perdía tras «Quitar filtros», elegir o archivar, y el recuento de filtros podía no
+    anunciarse. Corregido y comprobado en el e2e.
+  - **m**, de regresión y fidelidad: cada cambio se anunciaba dos veces. Ahora solo el aviso.
+  - **m**, de lógica: una idea en edición o con variantes desaparecía al filtrar. Ahora sigue a la vista.
+- **Descartados:**
+  - «Reintentar» tras un fallo de descarga recarga la pantalla. Es el patrón de toda la pantalla (decisión 62), y el
+    botón de descargar sigue ahí.
+  - El documento no dice si la medida vino del lector o de la Data API. «Medida en YouTube» es la fuente para el
+    creador, el `.json` lleva `source`, y nombrar el lector choca con el glosario.
+  - El aviso del revisor de seguridad sobre si el e2e audita en claro y oscuro: el auditor lo hace (`e2e/audit.ts`).
+- **Abiertos:** ninguno.
+
+### 6. Desviaciones respecto a la spec
+
+- Sin arrastrar y soltar: ya estaba decidido (decisión 4).
+- Rutas de ficheros distintas de `tasks.md` en T057, T058 y T060 (decisiones 57 y 59).
+- De más: el origen y los avisos de medida en el `.md`, el número escrito en la cola, y el foco tras los cambios de
+  estado.
+
+### 7. Decisiones
+
+- Del agente: 55 a 63. Las 55, 57, 58, 60 y 63 son de riesgo medio; el resto, bajo.
+- Pendientes del creador: ninguna. El cambio de formato de exportación, que habría sido alto, se evitó.
+
+### 8. Impacto en la constitución
+
+- **I (accesible):** teclado, foco que no se pierde, nombres únicos y axe en claro y oscuro.
+- **II (la IA propone, el creador decide):** el documento dice qué propuso la IA y qué escribió el creador.
+- **V (datos con fuente y fecha):** el semáforo del documento lleva la fecha, la fuente, el supuesto, y si la medida
+  es antigua o de otra versión.
+- **VII (datos del creador):** la descarga en los dos formatos, sin archivadas, y nada se borra.
+- **IX y XI:** tests de dominio, e2e e informe.
+
+### 9. Cómo revertir y qué queda
+
+- Revertir el commit `feat(004): US4 …`. No hay migraciones: el orden, la cola y los estados ya existían en la
+  migración 0005.
+- Queda Polish (T062–T067) y la auditoría de novato.

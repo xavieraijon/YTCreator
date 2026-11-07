@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import type { DatabaseSync } from 'node:sqlite'
-import { canMoveIdea, type Idea, type IdeaFormat, type IdeaOrigin, type IdeaStatus } from '@ytcreator/core'
+import { canMoveIdea, checkOrder, type Idea, type IdeaFormat, type IdeaOrigin, type IdeaStatus } from '@ytcreator/core'
 import { inTransaction } from '../transaction.ts'
 
 // The idea bank of each channel (specs/004-idea-bank/data-model.md).
@@ -224,7 +224,7 @@ export function createIdeasRepo(db: DatabaseSync, now: () => Date = () => new Da
     reorder(channelId: string, ids: readonly string[]): Idea[] {
       const bank = list(selectBank, channelId)
       if (
-        !sameSet(
+        !checkOrder(
           ids,
           bank.map((idea) => idea.id),
         )
@@ -237,7 +237,7 @@ export function createIdeasRepo(db: DatabaseSync, now: () => Date = () => new Da
     reorderQueue(channelId: string, ids: readonly string[]): Idea[] {
       const queue = list(selectQueue, channelId)
       if (
-        !sameSet(
+        !checkOrder(
           ids,
           queue.map((idea) => idea.id),
         )
@@ -247,12 +247,6 @@ export function createIdeasRepo(db: DatabaseSync, now: () => Date = () => new Da
       return list(selectQueue, channelId)
     },
   }
-}
-
-function sameSet(given: readonly string[], current: readonly string[]): boolean {
-  if (given.length !== current.length || new Set(given).size !== given.length) return false
-  const known = new Set(current)
-  return given.every((id) => known.has(id))
 }
 
 export type IdeasRepo = ReturnType<typeof createIdeasRepo>

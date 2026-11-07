@@ -18,13 +18,17 @@ export interface IdeaCardProps {
   readonly onEdit: () => void
   /** What the stories after US1 add: the measure, the moves and the queue. */
   readonly children?: ReactNode
+  /** The moves and the order of the idea, next to «Cambiar algo» (US4). */
+  readonly actions?: ReactNode
 }
 
 // One idea of the bank (contracts/ui-screens.md, «Lista de ideas»).
-export function IdeaCard({ idea, sourceTitle, onEdit, children }: IdeaCardProps) {
+export function IdeaCard({ idea, sourceTitle, onEdit, children, actions }: IdeaCardProps) {
   return (
     <Card as="li" className={styles.option}>
-      <h3>{idea.title}</h3>
+      <h3 tabIndex={-1} data-card={idea.id}>
+        {idea.title}
+      </h3>
       <p>
         <Badge>{ideasEs.status[idea.status]}</Badge> <Badge>{originText(idea, sourceTitle)}</Badge>{' '}
         <Badge>{ideasEs.format[idea.format]}</Badge>
@@ -37,6 +41,7 @@ export function IdeaCard({ idea, sourceTitle, onEdit, children }: IdeaCardProps)
         <Button variant="ghost" aria-label={format(text.editNamed, { titulo: idea.title })} onClick={onEdit}>
           {text.edit}
         </Button>
+        {actions}
       </div>
     </Card>
   )

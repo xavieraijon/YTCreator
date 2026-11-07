@@ -236,26 +236,26 @@ separado.
 
 **Independent Test**: Con un banco grabado: reordenar con teclado, filtrar las verdes, elegir dos para guion, archivar y recuperar. Al recargar, todo sigue igual.
 
-- [ ] T054 [P] [US4] Test en `packages/core/test/ideas/order.test.ts`: `checkOrder(ids, current)` exige el mismo conjunto, sin repetir; `moveUp` y `moveDown` no salen de los bordes
-- [ ] T055 [P] [US4] Test de servidor en `apps/server/test/http/ideas-order.test.ts`:
+- [X] T054 [P] [US4] Test en `packages/core/test/ideas/order.test.ts`: `checkOrder(ids, current)` exige el mismo conjunto, sin repetir; `moveUp` y `moveDown` no salen de los bordes
+- [X] T055 [P] [US4] Test de servidor en `apps/server/test/http/ideas-order.test.ts`:
   - `PUT .../ideas/order` y `PUT .../ideas/queue` (`400` si falta o sobra alguna);
   - `PATCH` de estado según el diagrama de `data-model.md`: elegir pone al final de la cola, salir de `elegida` vuelve a numerar, `archivada` pasa a `GET .../ideas/archived` y recuperar la vuelve a `banco`;
   - no hay ninguna ruta que borre.
-- [ ] T056 [P] [US4] Test de exportación en `apps/server/test/http/ideas-export.test.ts`:
+- [X] T056 [P] [US4] Test de exportación en `apps/server/test/http/ideas-export.test.ts`:
   - `GET .../ideas/export?format=json` sigue el formato de `data-model.md` (`version: 1`, la medida con `assumption: true` y `thresholdsVersion`);
   - el `.md` lleva la cola, luego el banco y luego las hechas, sin las archivadas;
   - las dos respuestas llevan `Content-Disposition`.
-- [ ] T057 [US4] Implementar `packages/core/src/ideas/order.ts`, las rutas de orden, cola, estados, archivadas y exportación en `apps/server/src/http/routes/ideas.ts`, y la exportación en `apps/server/src/services/ideas.ts`. Pasa T054 a T056
-- [ ] T058 [P] [US4] Test de pantalla en `apps/web/test/ideas/queue.test.tsx`:
+- [X] T057 [US4] Implementar `packages/core/src/ideas/order.ts`, las rutas de orden, cola, estados, archivadas y exportación en `apps/server/src/http/routes/ideas.ts`, y la exportación en `apps/server/src/services/ideas.ts`. Pasa T054 a T056
+- [X] T058 [P] [US4] Test de pantalla en `apps/web/test/ideas/queue.test.tsx`:
   - «Próximos vídeos» en orden, con «Subir», «Bajar» y «Quitar de la cola»;
   - la nota de que el guion llegará después;
   - los filtros de estado, formato y semáforo, y «Quitar filtros»;
   - «Archivadas» plegado, con «Recuperar»;
   - «Descargar como documento» y «Descargar como datos»;
   - el nombre accesible de cada botón de orden lleva el título de la idea.
-- [ ] T059 [US4] Pantallas `apps/web/src/screens/channel/ideas/IdeaQueue.tsx`, más filtros, orden y archivo en `IdeaBank.tsx`. Después de mover, el foco se queda en el mismo botón y se anuncia «Movida a la posición {n}». Pasa T058
-- [ ] T060 [US4] e2e en `apps/web/e2e/ideas.spec.ts` (US4): reordenar con teclado, filtrar, elegir dos, archivar, recuperar, recargar y descargar; axe en claro y oscuro a 375 y 1280 px
-- [ ] T061 [A] [US4] Puerta A de US4: ejecutar `/puerta-a 004 US4`
+- [X] T059 [US4] Pantallas `apps/web/src/screens/channel/ideas/IdeaQueue.tsx`, más filtros, orden y archivo en `IdeaBank.tsx`. Después de mover, el foco se queda en el mismo botón y se anuncia «Movida a la posición {n}». Pasa T058
+- [X] T060 [US4] e2e en `apps/web/e2e/ideas.spec.ts` (US4): reordenar con teclado, filtrar, elegir dos, archivar, recuperar, recargar y descargar; axe en claro y oscuro a 375 y 1280 px
+- [X] T061 [A] [US4] Puerta A de US4: ejecutar `/puerta-a 004 US4`
 
 ---
 
