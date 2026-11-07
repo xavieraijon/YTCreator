@@ -1,6 +1,8 @@
 import type { IdeaVerdict, VideoHit, YouTubeFailureCode } from '@ytcreator/core'
 import type { AiRunFailure, EstimateView, IdeaMeasureView, IdeaView } from '@ytcreator/core/api'
-import { Button, DataSource, Disclosure, format, Semaphore, type SemaphoreState } from '@ytcreator/ui'
+import { IDEA_LIMITS } from '@ytcreator/core'
+import { Button, DataSource, Disclosure, format, Semaphore, type SemaphoreState, TextArea } from '@ytcreator/ui'
+import { useState } from 'react'
 import { navigate } from '../../../router.ts'
 import { ideasEs } from '../../../strings/ideas.es.ts'
 import { youtubeFailureActionsEs, youtubeFailuresEs } from '../../../strings/youtube-failures.es.ts'
@@ -73,8 +75,12 @@ export interface CardPrepare {
   readonly failure: AiRunFailure | null
   readonly busy: boolean
   readonly onOpen: () => void
-  readonly onRun: () => void
+  readonly onRun: (instructions?: string) => void
 }
+
+// Only a burnt or competed idea is offered another angle (FR-011, US3 AS3).
+export const offersAngles = (measure: IdeaMeasureView | null) =>
+  measure?.status === 'medida' && (measure.verdict === 'quemado' || measure.verdict === 'competido')
 
 export interface IdeaMeasureProps {
   readonly idea: IdeaView
@@ -84,7 +90,9 @@ export interface IdeaMeasureProps {
   readonly now: Date
   /** A measure of this idea is running (or another «Medir todas» is). */
   readonly busy: boolean
-  readonly prepare?: CardPrepare
+  readonly prepare?: CardPrepare | undefined
+  /** «Buscar otro enfoque»: the same two steps, first the button, then its cost (US3 AS1). */
+  readonly angles?: CardPrepare | undefined
   /** The title is a search: «Medir con el título» is offered only then. */
   readonly canUseTitle?: boolean
   readonly onMeasure: (fresh: boolean) => void
@@ -111,10 +119,12 @@ export function IdeaMeasure({
   now,
   busy,
   prepare,
+  angles,
   canUseTitle = true,
   onMeasure,
   onMeasureWithTitle,
 }: IdeaMeasureProps) {
+  const [instructions, setInstructions] = useState('')
   const { measure } = idea
   const measured = measure?.status === 'medida' ? measure : null
   const failure = measure?.status === 'fallida' ? measure.failure : null
@@ -152,6 +162,44 @@ export function IdeaMeasure({
               </>
             )}
           </Disclosure>
+          {angles &&
+            offersAngles(measured) &&
+            !idea.measuredOlderRevision &&
+            idea.status !== 'archivada' &&
+            (angles.open ? (
+              <>
+                <p className={styles.why}>{text.anglesWhy}</p>
+                <TextArea
+                  label={text.anglesInstructions}
+                  description={text.anglesInstructionsHelp}
+                  optional
+                  rows={2}
+                  maxLength={IDEA_LIMITS.instructions}
+                  value={instructions}
+                  onChange={(event) => setInstructions(event.target.value)}
+                />
+                <AiAction
+                  label={text.angles}
+                  estimate={angles.estimate}
+                  failure={angles.failure}
+                  busy={angles.busy}
+                  primary={false}
+                  disabled={busy}
+                  onRun={() => angles.onRun(instructions.trim() || undefined)}
+                />
+              </>
+            ) : (
+              <div className={styles.actions}>
+                <Button
+                  variant="secondary"
+                  aria-label={named(text.angles, idea.title)}
+                  disabled={busy}
+                  onClick={angles.onOpen}
+                >
+                  {text.angles}
+                </Button>
+              </div>
+            ))}
         </>
       ) : (
         <p>

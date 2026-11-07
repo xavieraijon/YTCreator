@@ -214,6 +214,7 @@ describe('measuring from the bank', () => {
     queue: [],
     profileVersion: 1,
     pendingBatch: null,
+    pendingAngles: [],
     runningJob: null,
     interrupted: null,
     measureBasis: basis,

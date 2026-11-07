@@ -129,6 +129,8 @@ export const ideaBankSchema = z.object({
   queue: z.array(id),
   profileVersion: z.number().int().positive(),
   pendingBatch: ideaBatchSchema.nullable(),
+  // The angles of «Buscar otro enfoque» still waiting, shown by the idea they came from (US3, entry 48).
+  pendingAngles: z.array(ideaBatchSchema),
   runningJob: id.nullable(),
   // The last «Medir todas» was cut short (a restart): the ideas it had left, for «Seguir midiendo» (entry 28).
   interrupted: z.object({ jobId: id, ideaIds: z.array(id) }).nullable(),
@@ -191,7 +193,10 @@ export const batchDecideBodySchema = z.object({ keep: z.array(count), discard: z
 export const batchDecideResultSchema = z.object({ batch: ideaBatchSchema, created: z.array(ideaSchema) })
 
 // POST /api/ideas/:id/angles
-export const anglesBodySchema = z.object({ estimateId: id })
+export const anglesBodySchema = z.object({
+  estimateId: id,
+  instructions: z.string().trim().max(IDEA_LIMITS.instructions).optional(),
+})
 
 // POST /api/ideas/:id/queries
 export const ideaQueriesBodySchema = z.object({ estimateId: id, revision })

@@ -203,12 +203,12 @@ describe('a batch of ideas from the AI (US1)', () => {
     expect(t.ideas.ideas.listAll(channelId)).toHaveLength(1)
   })
 
-  it('the estimate of a use not ready yet names the field use', async () => {
+  it('the estimate of otro_enfoque names the idea it needs', async () => {
     const t = makeTestApp({ fakeAi: 'ok' })
     const { channelId } = await finished(t)
     const result = await call(t, 'POST', `/api/channels/${channelId}/ideas/estimate`, { use: 'otro_enfoque' })
     expect(result.status).toBe(400)
-    expect(result.body).toMatchObject({ error: { fields: { use: 'no_valido' } } })
+    expect(result.body).toMatchObject({ error: { fields: { ideaId: 'no_valido' } } })
   })
 
   it('past the spending limit: limite_de_gasto, nothing spent and no batch', async () => {

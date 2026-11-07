@@ -34,6 +34,14 @@ export const ideasEs = {
     whyText: 'Por qué: {texto}',
     details: 'Tema del canal: {pilar} · {formato}',
     keepNamed: 'Me la quedo «{titulo}»',
+    anglesRegion: 'Otros enfoques de «{titulo}»',
+    anglesRegionUnknown: 'Otros enfoques de otra idea',
+    anglesWhy: 'Quédate las que te apetezca: entran en el banco sin medir. Las que descartes no volverán a salir.',
+    opinion: 'Opinión de la IA: {texto}',
+    anglesAgain: 'Proponer otras variantes',
+    anglesAgainNamed: 'Proponer otras variantes de «{titulo}»',
+    anglesAllRepeated:
+      'La IA solo propuso variantes que ya tenías o que ya habías visto. Prueba a pedir otras con alguna indicación.',
     discardNamed: 'No me interesa «{titulo}»',
   },
   card: {
@@ -59,6 +67,12 @@ export const ideasEs = {
     useTitleWhy:
       'Sin la IA: buscaremos el título tal cual y, como tema general, el tema del canal de la idea o, si no tiene, el nicho de tu canal.',
     prepare: 'Preparar la medida',
+    angles: 'Buscar otro enfoque',
+    anglesWhy:
+      'La IA propone 2 o 3 variantes del mismo tema que se apartan de los vídeos que ya hay. Si tienen hueco, solo lo dirá la medida.',
+    anglesInstructions: '¿Quieres pedirle algo concreto a la IA?',
+    anglesInstructionsHelp:
+      'Por ejemplo: «para gente que empieza». Puedes dejarlo vacío. Si esta idea ya tenía variantes sin decidir, se descartan.',
     prepareWhy: 'La IA escribe las tres búsquedas por ti.',
     verdict: { hueco: 'Hay hueco', competido: 'Competido', quemado: 'Quemado', frio: 'Frío' },
     reason: {

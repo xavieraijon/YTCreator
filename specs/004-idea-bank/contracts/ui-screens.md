@@ -34,7 +34,9 @@ aspecto se revisa en la pasada final con el modo Design: aquí cuenta que funcio
     «Archivar», «Subir» y «Bajar»;
   - «Ver los vídeos parecidos», plegado (`Disclosure`): título, canal, visitas y fecha de cada uno, y la oportunidad
     en inglés con sus vídeos si la hay;
-  - «Buscar otro enfoque · {coste}», solo con `quemado` o `competido`;
+  - «Buscar otro enfoque», solo con `quemado` o `competido` de la versión actual de la idea; al pulsarlo salen las
+    indicaciones opcionales y «Buscar otro enfoque · {coste}» (decisión 49). Las variantes esperan dentro de la
+    tarjeta, con su motivo como «Opinión de la IA» y «Proponer otras variantes», que vuelve a ese paso (decisión 48);
   - los avisos que toquen: «Medida antigua (de hace {n} días)», «Medida de una versión anterior de la idea»,
     «Propuesta con una versión anterior de tu perfil».
 - **Escribir una idea:** `Disclosure` «Escribir una idea mía», con título, formato y, si se quiere, gancho y pilar. Las

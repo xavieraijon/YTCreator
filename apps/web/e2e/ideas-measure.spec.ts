@@ -37,7 +37,7 @@ const card = (page: Page, title: string) =>
     .getByRole('listitem')
     .filter({ has: page.getByRole('heading', { name: title, exact: true }) })
 
-test('measures the bank: four semaphores, a failure, an opportunity, and coming back mid-way (US2)', async ({
+test('measures the bank: four semaphores, a failure, an opportunity, coming back mid-way (US2), and another angle (US3)', async ({
   page,
   context,
 }) => {
@@ -105,4 +105,28 @@ test('measures the bank: four semaphores, a failure, an opportunity, and coming 
   await expect(bare.getByRole('button', { name: '¿Tiene hueco? «Sin búsquedas»' })).toBeVisible()
   await expect(bare.getByText('Para medirla hacen falta sus búsquedas en YouTube.')).toHaveCount(0)
   await audit(back)
+
+  // US3: another angle for the burnt one, with its cost first; one kept enters the bank unmeasured, linked.
+  const burnt = card(back, 'Quemada')
+  await expect(card(back, 'Hueco').getByRole('button', { name: /Buscar otro enfoque/ })).toHaveCount(0)
+  await burnt.getByRole('button', { name: 'Buscar otro enfoque «Quemada»' }).click()
+  await burnt.getByRole('textbox', { name: /pedirle algo concreto/ }).fill('para gente que empieza')
+  await burnt.getByRole('button', { name: /^Buscar otro enfoque · / }).click()
+  const angles = back.getByRole('region', { name: 'Otros enfoques de «Quemada»' })
+  await expect(angles.getByText(/^Opinión de la IA:/).first()).toBeVisible()
+  await audit(back)
+  const keep = angles.getByRole('button', { name: /^Me la quedo «/ }).first()
+  const title = ((await keep.getAttribute('aria-label')) ?? '').replace(/^Me la quedo «|»$/g, '')
+  await keep.click()
+  await expect(angles.getByText('Te la has quedado.')).toBeVisible()
+  // The new idea is the last card with that title (the angle inside «Quemada» has it too).
+  const kept = card(back, title).last()
+  await expect(kept.getByText('Otro enfoque de «Quemada»')).toBeVisible()
+  await expect(kept.getByText('Sin medir')).toBeVisible()
+  await back.reload()
+  const after = back.getByRole('region', { name: 'Otros enfoques de «Quemada»' })
+  await expect(after).toBeVisible()
+  // «Proponer otras variantes» goes back to the request in the card, with its instructions and its cost.
+  await after.getByRole('button', { name: 'Proponer otras variantes de «Quemada»' }).click()
+  await expect(card(back, 'Quemada').getByRole('button', { name: /^Buscar otro enfoque · / })).toBeVisible()
 })

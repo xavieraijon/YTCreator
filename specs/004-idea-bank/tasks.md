@@ -212,21 +212,21 @@ separado.
 
 **Independent Test**: Con IA falsa y una idea quemada: pedir otro enfoque, ver 3 variantes con su motivo y quedarse una, que entra «sin medir» enlazada a la original.
 
-- [ ] T046 [P] [US3] Test en `packages/core/test/ideas/outputs.test.ts`: `anglesOutputFor(pillars)` pide de 2 a 3 variantes con `why` de 1 a 300 caracteres, y no valida un `why` que diga «tiene hueco» (o «hay hueco»)
-- [ ] T047 [P] [US3] Test de contrato del uso `otro_enfoque` en la batería de IA, con el proveedor falso
-- [ ] T048 [P] [US3] Test de servidor en `apps/server/test/http/ideas-angles.test.ts`:
+- [X] T046 [P] [US3] Test en `packages/core/test/ideas/outputs.test.ts`: `anglesOutputFor(pillars)` pide de 2 a 3 variantes con `why` de 1 a 300 caracteres, y no valida un `why` que diga «tiene hueco» (o «hay hueco»)
+- [X] T047 [P] [US3] Test de contrato del uso `otro_enfoque` en la batería de IA, con el proveedor falso (ya lo cubre `packages/ai/test/contract/battery.ts`, que recorre todos los usos de `CHANNEL_OUTPUTS`)
+- [X] T048 [P] [US3] Test de servidor en `apps/server/test/http/ideas-angles.test.ts`:
   - `estimate` con `otro_enfoque` sin medida quemada o competida da `400` con `ideaId: 'sin_medida_quemada'`;
   - `POST /api/ideas/:id/angles` da un `IdeaBatchView` de tipo `otro_enfoque`;
   - el `input` lleva los títulos de los casi iguales (hasta 12);
   - `decide` crea la idea con `origin: 'otro_enfoque'`, `source_idea_id` y sin medida.
-- [ ] T049 [US3] Implementar el uso: esquema en `packages/core/src/ideas/outputs.ts`; prompt `packages/knowledge/prompts/otro_enfoque/v1.md` y `lock.json`; perfil (1.500 tokens, 60 s) y salida falsa; y la ruta `POST /api/ideas/:id/angles` en `apps/server/src/http/routes/ideas.ts`. Pasa T046 a T048
-- [ ] T050 [P] [US3] Test de pantalla en `apps/web/test/ideas/angles.test.tsx`:
+- [X] T049 [US3] Implementar el uso: esquema en `packages/core/src/ideas/outputs.ts`; prompt `packages/knowledge/prompts/otro_enfoque/v1.md` y `lock.json`; perfil (1.500 tokens, 60 s) y salida falsa; y la ruta `POST /api/ideas/:id/angles` en `apps/server/src/http/routes/ideas.ts`. Pasa T046 a T048
+- [X] T050 [P] [US3] Test de pantalla en `apps/web/test/ideas/angles.test.tsx` (está en `apps/web/test/channel/idea-angles.test.tsx`, junto a los demás del banco):
   - «Buscar otro enfoque · {coste}» solo aparece con `quemado` o `competido`;
   - las variantes salen con su motivo marcado como opinión de la IA;
   - quedarse una la añade como «Otro enfoque de …».
-- [ ] T051 [US3] Pantalla: la acción en `IdeaCard.tsx` y las variantes con `IdeaBatch.tsx` en modo `otro_enfoque`. Pasa T050
-- [ ] T052 [US3] e2e en `apps/web/e2e/ideas.spec.ts` (US3), con axe
-- [ ] T053 [A] [US3] Puerta A de US3: ejecutar `/puerta-a 004 US3`
+- [X] T051 [US3] Pantalla: la acción en `IdeaCard.tsx` y las variantes con `IdeaBatch.tsx` en modo `otro_enfoque`. Pasa T050
+- [X] T052 [US3] e2e en `apps/web/e2e/ideas.spec.ts` (US3), con axe (está al final de `apps/web/e2e/ideas-measure.spec.ts`, que ya deja una idea quemada)
+- [X] T053 [A] [US3] Puerta A de US3: ejecutar `/puerta-a 004 US3`
 
 ---
 

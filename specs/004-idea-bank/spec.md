@@ -156,7 +156,7 @@ con el yt-dlp falso; e2e de la medida con axe. Evidencia en la sección «US2» 
 
 Cuando una idea sale **quemada** o **competida**, la app ofrece «Buscar otro enfoque». La IA propone de 2 a 3 variantes
 del mismo tema que cuentan el dato de al lado (un detalle menos contado, otra pregunta, otro público dentro del nicho),
-cada una con por qué podría tener más hueco. El creador puede quedarse una como idea nueva del banco, y medirla.
+cada una con por qué se aparta de lo que ya hay (una opinión: si tiene hueco solo lo dice la medida). El creador puede quedarse una como idea nueva del banco, y medirla.
 
 **Why this priority**: Convierte un «no» en una alternativa, que es lo que más ayuda a quien empieza. Depende de US1 y
 US2, y un creador puede vivir sin ella buscando el enfoque por su cuenta.

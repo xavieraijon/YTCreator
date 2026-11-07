@@ -36,9 +36,12 @@ tres incluyen `writing/human.md`.
 - **Entrada:**
   - `idea`: `{title, hook, pillar, format, query}`;
   - `measure`: `{verdict, similarTitles: string[] (≤ 12)}`;
-  - `profile`.
+  - `profile`;
+  - `avoid`: lo mismo que en `ideas` (banco, archivo y tandas, también las variantes ya propuestas), para no repetir
+    (prompt v2, decisión 52);
+  - `instructions` opcional, como en `ideas`.
 - **Salida:** `{angles: (IdeaDraft & {why})[]}`, de 2 a 3. `why` es una opinión, de 1 a 300 caracteres, y no puede
-  decir que la variante «tiene hueco».
+  hablar de «hueco» (decisión 53): eso solo lo dice una medida.
 - **Tope:** 1.500 tokens. **Tiempo:** 60 s.
 
 ## `busquedas_idea`

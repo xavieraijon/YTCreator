@@ -54,6 +54,13 @@ describe('idea uses (contracts/ai-uses.md)', () => {
   it('an angle gives 2 or 3, and its why never says it has room', () => {
     expect(anglesOutput.safeParse(angles()).success).toBe(true)
     expect(anglesOutput.safeParse(angles('Esta tiene hueco seguro.')).success).toBe(false)
+    expect(anglesOutput.safeParse(angles('Aquí hay hueco.')).success).toBe(false)
+    expect(anglesOutput.safeParse(angles('Esta tendrá más hueco.')).success).toBe(false)
+    expect(anglesOutput.safeParse(angles('Quedan huecos.')).success).toBe(false)
+    expect(anglesOutput.safeParse(angles('')).success).toBe(false)
+    expect(anglesOutput.safeParse(angles('a'.repeat(300))).success).toBe(true)
+    expect(anglesOutput.safeParse(angles('a'.repeat(301))).success).toBe(false)
+    expect(anglesOutput.safeParse({ angles: [0, 1, 2, 3].map(() => angles().angles[0]) }).success).toBe(false)
     expect(anglesOutput.safeParse({ angles: angles().angles.slice(0, 1) }).success).toBe(false)
   })
 })

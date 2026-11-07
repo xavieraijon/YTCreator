@@ -240,6 +240,8 @@ export const ideasApi = {
       { ideaIds, ...(fresh ? { fresh: true } : {}) },
       jobStartedSchema,
     ),
+  angles: (ideaId: string, body: { estimateId: string; instructions?: string }) =>
+    apiClient.post(`/api/ideas/${encodeURIComponent(ideaId)}/angles`, body, ideaBatchOutcomeSchema),
   queries: (ideaId: string, body: { estimateId: string; revision: number }) =>
     apiClient.post(`/api/ideas/${encodeURIComponent(ideaId)}/queries`, body, ideaQueriesOutcomeSchema),
 }

@@ -24,6 +24,7 @@ describe('GET /api/channels/:id/ideas', () => {
       queue: [],
       profileVersion: 1,
       pendingBatch: null,
+      pendingAngles: [],
       runningJob: null,
       interrupted: null,
       measureBasis: {

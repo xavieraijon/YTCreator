@@ -21,6 +21,7 @@ const empty: IdeaBankView = {
   queue: [],
   profileVersion: 1,
   pendingBatch: null,
+  pendingAngles: [],
   runningJob: null,
   interrupted: null,
   measureBasis: { label: 'Supuesto de prueba', date: '2026-09-27', recentDays: 90, audienceViews: 100_000 },

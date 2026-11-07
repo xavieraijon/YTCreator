@@ -132,6 +132,15 @@ export function createIdeaBatchesRepo(db: DatabaseSync, now: () => Date = () => 
       return last && isPending(last) ? last : null
     },
 
+    // The angles still waiting, one set per idea they came from (entry 48), oldest first.
+    pendingAngles(channelId: string): IdeaBatch[] {
+      const bySource = new Map<string, IdeaBatch>()
+      for (const batch of (selectByChannel.all(channelId, 'otro_enfoque') as unknown as Row[]).map(fromRow)) {
+        if (batch.sourceIdeaId && candidatesOf(batch).length > 0) bySource.set(batch.sourceIdeaId, batch)
+      }
+      return [...bySource.values()].filter(isPending)
+    },
+
     decide(id: string, decisions: Record<number, CandidateDecision>): IdeaBatch | null {
       const current = get(id)
       if (!current) return null
@@ -140,8 +149,10 @@ export function createIdeaBatchesRepo(db: DatabaseSync, now: () => Date = () => 
     },
 
     // A new batch leaves the candidates of the previous one that were still waiting.
-    discardPending(channelId: string, kind: IdeaBatchKind): void {
-      for (const batch of (selectByChannel.all(channelId, kind) as unknown as Row[]).map(fromRow)) {
+    // With `sourceIdeaId`, only the angles of that idea: those of another idea keep waiting (entry 48).
+    discardPending(channelId: string, kind: IdeaBatchKind, sourceIdeaId?: string): void {
+      const rows = (selectByChannel.all(channelId, kind) as unknown as Row[]).map(fromRow)
+      for (const batch of rows.filter((one) => sourceIdeaId === undefined || one.sourceIdeaId === sourceIdeaId)) {
         const waiting = candidatesOf(batch)
           .map((_, index) => index)
           .filter((index) => batch.decisions[index] === undefined)

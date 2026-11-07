@@ -4,13 +4,13 @@ import { IDEA_LIMITS, ideaDraftSchema, searchTextSchema } from './model.ts'
 // Output schemas of the three idea uses (specs/004-idea-bank/contracts/ai-uses.md).
 export const ideasOutput = z.object({ ideas: z.array(ideaDraftSchema).min(6).max(10) })
 
-// An opinion: it may say why the angle is different, never that it «tiene hueco» (only a measure says that).
+// An opinion: it may say why the angle is different, never talk of room («hueco»): only a measure says that.
 const angleWhy = z
   .string()
   .trim()
   .min(1)
   .max(IDEA_LIMITS.hook)
-  .refine((text) => !/tiene\s+hueco|hay\s+hueco/i.test(text), 'sin_veredicto')
+  .refine((text) => !/\bhuecos?\b/i.test(text), 'sin_veredicto')
 export const anglesOutput = z.object({
   angles: z
     .array(ideaDraftSchema.extend({ why: angleWhy }))

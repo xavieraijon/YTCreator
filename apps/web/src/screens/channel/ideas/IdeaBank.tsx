@@ -85,15 +85,32 @@ export interface MeasureControls {
   readonly onMeasure: (ideaIds: string[], fresh: boolean) => void
   readonly onMeasureWithTitle: (idea: IdeaView) => void
   /** «Preparar la medida» from the card of an idea without its searches (R6). */
-  readonly prepare?: {
-    readonly ideaId: string | null
-    readonly estimate: EstimateView | null
-    readonly failure: AiRunFailure | null
-    readonly busy: boolean
-    readonly onOpen: (ideaId: string) => void
-    readonly onRun: () => void
-  }
+  readonly prepare?: CardAi
+  /** «Buscar otro enfoque» from the card of a burnt or competed idea (US3). */
+  readonly angles?: CardAi
 }
+
+/** An AI action of one card: first its button, then the same button with its cost. */
+export interface CardAi {
+  readonly ideaId: string | null
+  readonly estimate: EstimateView | null
+  readonly failure: AiRunFailure | null
+  readonly busy: boolean
+  readonly onOpen: (ideaId: string) => void
+  readonly onRun: (instructions?: string) => void
+}
+
+const cardAiOf = (action: CardAi | undefined, ideaId: string) =>
+  action
+    ? {
+        open: action.ideaId === ideaId,
+        estimate: action.estimate,
+        failure: action.failure,
+        busy: action.busy,
+        onOpen: () => action.onOpen(ideaId),
+        onRun: action.onRun,
+      }
+    : undefined
 
 export interface IdeaBankContentProps {
   readonly state: IdeaBankState
@@ -110,6 +127,8 @@ export interface IdeaBankContentProps {
   readonly prepare?: PrepareMeasure | undefined
   readonly onPropose?: (instructions?: string) => void
   readonly onDecide?: (keep: number[], discard: number[]) => void
+  /** «Me la quedo» of the angles of «Buscar otro enfoque». */
+  readonly onDecideAngles?: (batchId: string, keep: number[], discard: number[]) => void
   readonly onCreate?: (body: NewIdeaBody) => void
   readonly onEdit?: (ideaId: string | null) => void
   readonly onChange?: (idea: IdeaView, body: NewIdeaBody & { notes?: string }) => void
@@ -215,6 +234,7 @@ function ReadyBank({
   prepare,
   onPropose = noop,
   onDecide = noop,
+  onDecideAngles = noop,
   onCreate = noop,
   onEdit = noop,
   onChange = noop,
@@ -223,6 +243,25 @@ function ReadyBank({
   const { bank, pillars, defaultFormat, niche } = state
   const empty = bank.ideas.length === 0
   const titleOf = (id: string | null) => bank.ideas.find((idea) => idea.id === id)?.title ?? null
+  // The angles wait by the idea they came from, one set per idea; with that idea out of the bank, under the list.
+  const anglesOf = (sourceIdeaId: string | null, sourceTitle: string | null) =>
+    bank.pendingAngles
+      .filter((batch) => batch.sourceIdeaId === sourceIdeaId || (sourceIdeaId === null && !titleOf(batch.sourceIdeaId)))
+      .map((batch) => (
+        <IdeaBatch
+          key={batch.id}
+          batch={batch}
+          sourceTitle={sourceTitle}
+          nested={sourceIdeaId !== null}
+          estimate={null}
+          failure={null}
+          busy={measure.angles?.busy ?? false}
+          deciding={deciding}
+          onDecide={(keep, discard) => onDecideAngles(batch.id, keep, discard)}
+          // «Proponer otras variantes» opens the request in the card, with its instructions and its cost.
+          {...(sourceIdeaId !== null && measure.angles ? { onAgain: () => measure.angles!.onOpen(sourceIdeaId) } : {})}
+        />
+      ))
   // With ideas to measure, measuring is the main action; with the bank empty, proposing (contracts/ui-screens.md).
   const canMeasureAll =
     measure.job === null &&
@@ -286,6 +325,7 @@ function ReadyBank({
                     onSave={(body) => onChange(idea, body)}
                     onCancel={() => onEdit(null)}
                   />
+                  {anglesOf(idea.id, idea.title)}
                 </li>
               ) : (
                 <IdeaCard
@@ -301,26 +341,18 @@ function ReadyBank({
                     now={measure.now}
                     busy={measure.job !== null}
                     canUseTitle={asSearch(idea.title) !== '' && asSearch(idea.pillar ?? niche) !== ''}
-                    {...(measure.prepare
-                      ? {
-                          prepare: {
-                            open: measure.prepare.ideaId === idea.id,
-                            estimate: measure.prepare.estimate,
-                            failure: measure.prepare.failure,
-                            busy: measure.prepare.busy,
-                            onOpen: () => measure.prepare!.onOpen(idea.id),
-                            onRun: measure.prepare.onRun,
-                          },
-                        }
-                      : {})}
+                    prepare={cardAiOf(measure.prepare, idea.id)}
+                    angles={cardAiOf(measure.angles, idea.id)}
                     onMeasure={(fresh) => measure.onMeasure([idea.id], fresh)}
                     onMeasureWithTitle={() => measure.onMeasureWithTitle(idea)}
                   />
+                  {anglesOf(idea.id, idea.title)}
                 </IdeaCard>
               ),
             )}
           </ul>
         )}
+        {anglesOf(null, null)}
       </section>
       <Disclosure summary={ideasEs.editor.open}>
         <IdeaEditor key={formKey} pillars={pillars} defaultFormat={defaultFormat} busy={saving} onSave={onCreate} />
@@ -362,6 +394,12 @@ export function IdeaBank() {
   const [preparing, setPreparing] = useState(false)
   const [prepareFor, setPrepareFor] = useState<string | null>(null)
   const [prepareTurn, setPrepareTurn] = useState(0)
+  // «Buscar otro enfoque»: the idea whose angles are being asked for, and their estimate.
+  const [anglesFor, setAnglesFor] = useState<string | null>(null)
+  const [anglesEstimate, setAnglesEstimate] = useState<EstimateView | null>(null)
+  const [anglesFailure, setAnglesFailure] = useState<AiRunFailure | null>(null)
+  const [anglesBusy, setAnglesBusy] = useState(false)
+  const [anglesTurn, setAnglesTurn] = useState(0)
   const channelId = state.kind === 'ready' ? state.channelId : null
   const bank = state.kind === 'ready' ? state.bank : null
   const asked = useRef(0)
@@ -555,8 +593,8 @@ export function IdeaBank() {
     }
   }
 
-  const decide = async (keep: number[], discard: number[]) => {
-    const batch = bank?.pendingBatch
+  const decide = async (keep: number[], discard: number[], anglesId?: string) => {
+    const batch = anglesId ? bank?.pendingAngles.find((one) => one.id === anglesId) : bank?.pendingBatch
     if (!batch) return
     setDeciding(true)
     setError(null)
@@ -660,6 +698,47 @@ export function IdeaBank() {
     }
   }
 
+  // The estimate of «Buscar otro enfoque» is for its idea: a new one after every call, as with the others.
+  useEffect(() => {
+    setAnglesEstimate(null)
+    if (!channelId || !anglesFor) return
+    let current = true
+    ideasApi
+      .estimate(channelId, 'otro_enfoque', anglesFor)
+      .then((fresh) => current && setAnglesEstimate(fresh))
+      .catch((caught) => current && setError(caught))
+    return () => {
+      current = false
+    }
+  }, [channelId, anglesFor, anglesTurn])
+  useEffect(() => setAnglesFailure(null), [anglesFor])
+
+  const askAngles = async (instructions?: string) => {
+    if (!anglesFor || !anglesEstimate) return
+    setAnglesBusy(true)
+    setAnglesFailure(null)
+    setError(null)
+    try {
+      const outcome = await ideasApi.angles(anglesFor, {
+        estimateId: anglesEstimate.estimateId,
+        ...(instructions ? { instructions } : {}),
+      })
+      if ('failure' in outcome) {
+        setAnglesFailure(outcome.failure)
+        setAnglesTurn((turn) => turn + 1)
+        return
+      }
+      if (outcome.candidates.length === 0) toast({ title: ideasEs.batch.anglesAllRepeated, tone: 'warning' })
+      setAnglesFor(null)
+      await reload()
+    } catch (caught) {
+      setError(caught)
+      setAnglesTurn((turn) => turn + 1)
+    } finally {
+      setAnglesBusy(false)
+    }
+  }
+
   return (
     <Screen title={text.title}>
       {error !== null && (
@@ -693,6 +772,17 @@ export function IdeaBank() {
               },
               onRun: () => void prepareQueries(),
             },
+            angles: {
+              ideaId: anglesFor,
+              estimate: anglesEstimate,
+              failure: anglesFailure,
+              busy: anglesBusy,
+              // One request of angles at a time: another card opens once this one has its answer.
+              onOpen: (ideaId) => {
+                if (!anglesBusy) setAnglesFor(ideaId)
+              },
+              onRun: (instructions) => void askAngles(instructions),
+            },
           }}
           prepare={
             editing && targetIdea
@@ -706,6 +796,7 @@ export function IdeaBank() {
           }
           onPropose={(instructions) => void propose(instructions)}
           onDecide={(keep, discard) => void decide(keep, discard)}
+          onDecideAngles={(batchId, keep, discard) => void decide(keep, discard, batchId)}
           onCreate={(body) => void create(body)}
           onEdit={(ideaId) => {
             setPrepareFor(null)

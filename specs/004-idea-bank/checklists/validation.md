@@ -357,3 +357,107 @@ Informes de la Puerta A (`/puerta-a`), uno por fase o historia.
 - **Queda:**
   - la US3 (otro enfoque), la US4 (ordenar, cola, archivar y exportar) y Polish, con la auditoría de novato;
   - SC-003 con YouTube real, cuando el creador lo autorice.
+
+## US3: el ángulo de al lado para una idea quemada (T046–T052)
+
+### 1. Resumen
+
+- Una idea quemada o competida ofrece «Buscar otro enfoque». Al pulsarlo salen las indicaciones opcionales y el
+  botón con su coste. La IA propone 2 o 3 variantes sabiendo qué vídeos parecidos hay y qué ideas ya tiene el
+  creador. Esperan en la tarjeta de su idea con el motivo como opinión de la IA, y la que se queda entra «Sin medir»
+  enlazada a su origen.
+- Los cuatro revisores no encontraron nada grave. El medio en el que coincidían todos era real y está corregido:
+  pedir variantes de una idea descartaba sin avisar las de otra. También se corrigieron las variantes repetidas que
+  se cobraban, la falta de indicaciones y los contratos sin actualizar.
+- Resultado: **pasada**. Controles con código 0, sin graves abiertos y sin pendientes de riesgo alto.
+
+### 2. Requisitos
+
+| Requisito | Estado | Evidencia | Fecha |
+|---|---|---|---|
+| FR-011 / AS1: solo con `quemado` o `competido`, coste antes, 2 a 3 variantes con su motivo, escritas con los parecidos | Cumplido | `ideas-angles.test.ts`, `idea-angles.test.tsx`, e2e | 2026-11-07 |
+| AS2: quedarse una la añade «Sin medir», con origen `otro_enfoque` y enlace | Cumplido | `ideas-angles.test.ts` «keeping one»; e2e | 2026-11-07 |
+| AS3: con hueco o fría no se ofrece | Cumplido | `idea-angles.test.tsx`; e2e (tarjeta «Hueco») | 2026-11-07 |
+| Principio II: regenerar con indicaciones | Cumplido | e2e (indicaciones y «Proponer otras variantes»); decisión 49 | 2026-11-07 |
+| Principio V: el motivo no habla de «hueco» y se enseña como opinión | Cumplido | `outputs.test.ts`; decisiones 50 y 53 | 2026-11-07 |
+| La propuesta queda registrada con su coste | Cumplido | `ideas-angles.test.ts` (`ai_usage` de `otro_enfoque`) | 2026-11-07 |
+
+### 3. Cómo se comprobó
+
+- `fnm exec --using=24 -- pnpm lint` y `typecheck`: código 0.
+- `fnm exec --using=24 -- pnpm test`, tras borrar `node_modules/.vitest-cache` (el prompt cambió): 142 ficheros, 1670
+  pasadas y 2 saltadas, código 0.
+- `fnm exec --using=24 -- pnpm test:e2e`, antes de corregir: 97 + 37 pasadas. Después: 97 + 37 pasadas, código 0.
+- El flujo real con los falsos está al final de `apps/web/e2e/ideas-measure.spec.ts`:
+  - «Buscar otro enfoque» en «Quemada», y que no sale en «Hueco»;
+  - las indicaciones y el coste;
+  - las variantes con su opinión;
+  - quedarse una;
+  - recargar;
+  - «Proponer otras variantes»;
+  - axe.
+
+### 4. Controles obligatorios
+
+- **Pasados:**
+  - `lint`, `typecheck` y `test`, con el glosario y `secrets-leak`;
+  - axe en claro y oscuro a 375 y 1280 px en el banco con variantes;
+  - teclado: los botones nombran la idea («Buscar otro enfoque «…»», «Proponer otras variantes de «…»»);
+  - fallos de IA: `AiAction` de la 003 en la tarjeta, con estimación nueva tras cada fallo;
+  - `checkPromptLock`: la v2 está registrada en `lock.json` y la v1 no cambió.
+- **No ejecutados:**
+  - `test:installer`: la historia no toca el instalador;
+  - `prefers-reduced-motion`: no hay animaciones nuevas;
+  - la build de producción: el proveedor falso no ha cambiado; su `grep` pasó en la US2.
+
+### 5. Hallazgos de revisión
+
+- **Confirmados y corregidos:**
+  - **M**, de los cuatro revisores: pedir variantes de una idea descartaba en silencio las pendientes de otra. Ahora
+    hay un lote por idea, y solo se descartan las de la misma idea, con aviso previo (decisión 48).
+  - **M**, de seguridad y lógica: la IA no sabía qué evitar, y pedir otra vez daba variantes repetidas que se
+    cobraban. La IA recibe ahora `avoid` (prompt v2, decisión 52).
+  - **M**, de fidelidad: no se podía regenerar con indicaciones (principio II). Ahora hay indicaciones en la tarjeta y
+    «Proponer otras variantes» (decisión 49).
+  - **M**: `http-api.md`, `ai-uses.md` y `ui-screens.md` no recogían los cambios. Están al día.
+  - **M**: el aviso de «todas repetidas» mandaba a unas indicaciones que no existían. Ahora tiene un texto propio y
+    las indicaciones existen.
+  - **Menores:**
+    - una medida de una versión anterior, una idea archivada, o una medida que cambia mientras la IA escribe: ahora se
+      rechazan, también al guardar (decisión 51);
+    - el filtro de «hueco» era estrecho (decisión 53, con la frase de la spec alineada al contrato);
+    - el salto de encabezados de las variantes sin su idea;
+    - las variantes desaparecían mientras se cambiaba su idea;
+    - dos peticiones a la vez se pisaban, y salían dos acciones principales iguales (decisión 54);
+    - el riesgo de las decisiones 49 y 50 sube a Medio.
+- **Descartados con justificación:**
+  - la estimación no queda atada a la idea: es el patrón de un solo uso de la 003, el tope se recalcula con lo que se
+    envía, y la pantalla no lo cruza;
+  - las cifras de los títulos de YouTube cuentan como fuente para `claimsTrimmed`: el prompt prohíbe cantidades y el
+    motivo se enseña como opinión. Queda anotado para revisar las fuentes de cifras en la 005;
+  - el tamaño por defecto de `h4` y `h5`: va a la pasada con el modo Design.
+- **Abiertos:** ninguno.
+
+### 6. Desviaciones respecto a la spec
+
+- La frase de la US3 en `spec.md` se alineó con el contrato: el motivo dice por qué se aparta, no por qué tendría
+  hueco (decisión 53).
+- Por lo demás, ninguna.
+
+### 7. Decisiones
+
+- **Del agente:** 48 a 54. Riesgo medio: 48, 49, 50 y 52. El resto, bajo.
+- **Pendientes del creador:** ninguna.
+
+### 8. Impacto en la constitución
+
+- **II:** propuesta de la IA con aprobar (quedarse), descartar y regenerar con indicaciones; el motivo es una opinión.
+- **III:** coste antes de cada petición y registrado en `ai_usage`; `avoid` evita pagar por repetidas.
+- **V:** el motivo no puede hablar de «hueco»; solo la medida lo dice.
+- **I y IX:** acciones con nombre, axe y teclado.
+
+### 9. Cómo revertir y qué queda
+
+- **Revertir:** `git revert` del commit de la US3. El prompt `otro_enfoque/v1.md` sigue en su sitio, así que basta con
+  quitar la v2 y su línea de `lock.json`. No hay migraciones.
+- **Queda:** la US4, Polish y la auditoría de novato.

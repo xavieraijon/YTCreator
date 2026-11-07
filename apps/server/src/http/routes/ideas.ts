@@ -1,4 +1,5 @@
 import {
+  anglesOutputFor,
   type ChannelProfile,
   type ChannelUse,
   canMoveIdea,
@@ -11,6 +12,7 @@ import {
   type YouTubeSource,
 } from '@ytcreator/core'
 import {
+  anglesBodySchema,
   batchDecideBodySchema,
   ideaBatchBodySchema,
   ideaEstimateBodySchema,
@@ -24,7 +26,7 @@ import { Hono } from 'hono'
 import type { DatabaseSync } from 'node:sqlite'
 import type { ChannelsRepo } from '../../db/repos/channels.ts'
 import { type CandidateDecision, candidatesOf, type IdeaBatchesRepo } from '../../db/repos/idea-batches.ts'
-import type { IdeaMeasuresRepo } from '../../db/repos/idea-measures.ts'
+import type { IdeaMeasure, IdeaMeasuresRepo } from '../../db/repos/idea-measures.ts'
 import type { IdeasRepo } from '../../db/repos/ideas.ts'
 import type { JobsRepo } from '../../db/repos/jobs.ts'
 import type { JourneysRepo } from '../../db/repos/journeys.ts'
@@ -60,6 +62,8 @@ export interface IdeaRoutesDeps {
 
 // How many ideas a batch asks for (contracts/ai-uses.md).
 const BATCH_SIZE = 8
+// How many titles of the similar videos the angles are written against (contracts/ai-uses.md).
+const SIMILAR_TITLES = 12
 
 // The idea bank of a channel (specs/004-idea-bank/contracts/http-api.md).
 export function ideaRoutes(deps: IdeaRoutesDeps) {
@@ -126,11 +130,13 @@ export function ideaRoutes(deps: IdeaRoutesDeps) {
   routes.get('/channels/:id/ideas', (c) => {
     const { channel, profileVersion } = withProfile(c.req.param('id'))
     const pending = batches.pending(channel.id, 'ideas')
+    const angles = batches.pendingAngles(channel.id)
     return c.json({
       ideas: viewsOf(channel.id, profileVersion, ideas.listBank(channel.id)),
       queue: ideas.listQueue(channel.id).map((idea) => idea.id),
       profileVersion,
       pendingBatch: pending ? batchView(pending) : null,
+      pendingAngles: angles.map(batchView),
       runningJob: runningJobOf(channel.id)?.id ?? null,
       interrupted: interruptedOf(channel.id),
       measureBasis: {
@@ -204,6 +210,39 @@ export function ideaRoutes(deps: IdeaRoutesDeps) {
     }
   }
 
+  // «Buscar otro enfoque» only for an idea in the bank whose last measure, of this version of the idea, says
+  // quemado or competido (FR-011, entry 51): an older measure would pair the new idea with other similar videos.
+  const burntMeasureOf = (idea: Idea) => {
+    const latest = measures.latest(idea.id)
+    if (
+      idea.status === 'archivada' ||
+      latest?.status !== 'medida' ||
+      latest.ideaRevision !== idea.revision ||
+      (latest.verdict !== 'quemado' && latest.verdict !== 'competido')
+    ) {
+      throw new ApiError({ code: 'validacion', fields: { ideaId: 'sin_medida_quemada' } })
+    }
+    return latest
+  }
+
+  // What the AI gets to write the angles: the idea, what YouTube already has like it, and the profile (ai-uses.md).
+  // `avoid` keeps the AI from writing again what the creator already has or saw (prompt v2, entry 52).
+  const anglesInput = (idea: Idea, measure: IdeaMeasure, profile: ChannelProfile) => {
+    const avoid = avoidList(ideas.listAll(idea.channelId), batches.list(idea.channelId))
+    return {
+      input: {
+        idea: { title: idea.title, hook: idea.hook, pillar: idea.pillar, format: idea.format, query: idea.query },
+        measure: {
+          verdict: measure.verdict,
+          similarTitles: measure.similarVideos.slice(0, SIMILAR_TITLES).map((video) => video.title),
+        },
+        profile: profileInput(profile),
+        avoid: avoid.forAi,
+      },
+      avoidAll: avoid.all,
+    }
+  }
+
   // An idea named in a body must be one of this channel.
   const ideaOf = (channelId: string, ideaId: string | undefined) => {
     const idea = ideaId ? ideas.get(ideaId) : null
@@ -218,6 +257,10 @@ export function ideaRoutes(deps: IdeaRoutesDeps) {
     const { use, ideaId } = await parseBody(c, ideaEstimateBodySchema)
     const journeyId = journeyOf(channel.id)
     if (use === 'ideas') return c.json(aiRun.estimate({ journeyId, use, input: ideasInput(channel.id, profile).input }))
+    if (use === 'otro_enfoque') {
+      const idea = ideaOf(channel.id, ideaId)
+      return c.json(aiRun.estimate({ journeyId, use, input: anglesInput(idea, burntMeasureOf(idea), profile).input }))
+    }
     if (use === 'busquedas_idea') {
       return c.json(aiRun.estimate({ journeyId, use, input: queriesInput(ideaOf(channel.id, ideaId), profile) }))
     }
@@ -248,6 +291,46 @@ export function ideaRoutes(deps: IdeaRoutesDeps) {
       return ideas.edit(idea.id, result.value)!
     })
     return c.json(viewOf(changed, profileVersion))
+  })
+
+  // «Buscar otro enfoque»: 2 to 3 angles of a burnt or competed idea, waiting for the creator (US3).
+  routes.post('/ideas/:id/angles', async (c) => {
+    const { idea, profile, profileVersion } = findIdea(c.req.param('id'))
+    const body = await parseBody(c, anglesBodySchema)
+    // Checked before spending: the idea may have been measured again since the estimate.
+    const { input, avoidAll } = anglesInput(idea, burntMeasureOf(idea), profile)
+    const result = await aiRun.run({
+      estimateId: body.estimateId,
+      journeyId: journeyOf(idea.channelId),
+      use: 'otro_enfoque',
+      input,
+      schema: anglesOutputFor(input.profile.pillars),
+      ...(body.instructions ? { instructions: body.instructions } : {}),
+    })
+    if (!result.ok) return c.json({ failure: result.failure })
+    const { kept, removed } = dropRepeats(result.value.angles, avoidAll)
+    const drafts = kept.map((draft) => ({ ...draft, pillar: profilePillar(input.profile.pillars, draft.pillar) }))
+    const prompt = deps.promptFor('otro_enfoque')
+    const batch = inTransaction(db, () => {
+      // Checked again: it may have been measured with room, changed or archived while the AI wrote (entry 51).
+      burntMeasureOf(ideas.get(idea.id)!)
+      // The angles of this idea still waiting are left, as a batch of ideas leaves the last one (entry 48).
+      if (drafts.length > 0) batches.discardPending(idea.channelId, 'otro_enfoque', idea.id)
+      return batches.create({
+        channelId: idea.channelId,
+        kind: 'otro_enfoque',
+        sourceIdeaId: idea.id,
+        payload: { angles: drafts },
+        removedRepeats: removed,
+        instructions: body.instructions ?? null,
+        promptId: prompt.id,
+        promptVersion: prompt.version,
+        claimsTrimmed: result.claimsTrimmed,
+        usageId: result.usageId,
+        profileVersion,
+      })
+    })
+    return c.json(batchView(batch))
   })
 
   // «Proponer ideas de vídeo»: a batch of candidates, waiting for the creator (US1).
