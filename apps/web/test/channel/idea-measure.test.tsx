@@ -177,6 +177,22 @@ describe('the measure of an idea (contracts/ui-screens.md)', () => {
     expect(html).toContain('Medirla gasta unas 303 unidades de tu cupo diario de YouTube.')
   })
 
+  it('«Medir con el título» says its units first with the Data API', () => {
+    const html = renderToStaticMarkup(
+      <IdeaMeasure
+        idea={idea({ query: null, broadQuery: null, queryEn: null })}
+        basis={basis}
+        units={{ withoutEnglish: 202, withEnglish: 303 }}
+        now={now}
+        busy={false}
+        onMeasure={noop}
+        onMeasureWithTitle={noop}
+      />,
+    )
+    expect(html).toContain(`aria-label="${text.useTitle} «Pan casero»"`)
+    expect(html).toContain('Medirla gasta unas 202 unidades de tu cupo diario de YouTube.')
+  })
+
   it('an idea without its searches offers «Medir con el título»', () => {
     const html = render(idea({ query: null, broadQuery: null, queryEn: null }))
     expect(html).toContain(text.noQuery)

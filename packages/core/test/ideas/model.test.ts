@@ -66,6 +66,7 @@ describe('the moves of an idea (data-model.md, «Estados»)', () => {
     expect(canMoveIdea('elegida', 'banco')).toBe(true)
     expect(canMoveIdea('elegida', 'hecha')).toBe(true)
     expect(canMoveIdea('hecha', 'archivada')).toBe(true)
+    expect(canMoveIdea('hecha', 'banco')).toBe(true)
     expect(canMoveIdea('archivada', 'banco')).toBe(true)
     expect(canMoveIdea('archivada', 'elegida')).toBe(false)
     expect(canMoveIdea('archivada', 'hecha')).toBe(false)

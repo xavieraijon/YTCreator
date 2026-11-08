@@ -175,6 +175,15 @@ describe('another angle (US3)', () => {
     expect(keepAll?.[0]).toContain('data-variant="secondary"')
   })
 
+  it('«Proponer otras variantes» only where the card can open the request', () => {
+    const again = 'Proponer otras variantes de «Pan casero»'
+    const pending = (fields: Partial<IdeaView>) =>
+      show(bank({ ideas: [idea({ measure: measure('quemado'), ...fields })], pendingAngles: [angles] }))
+    expect(pending({})).toContain(again)
+    expect(pending({ measuredOlderRevision: true })).not.toContain(again)
+    expect(pending({ measure: measure('hueco') })).not.toContain(again)
+  })
+
   it('the angles of two ideas wait at the same time, each by its own', () => {
     const other = idea({ id: 'i3', title: 'Bizcocho', measure: measure('competido') })
     const second = { ...angles, id: 'b3', sourceIdeaId: 'i3' }

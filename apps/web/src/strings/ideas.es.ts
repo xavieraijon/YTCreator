@@ -15,7 +15,7 @@ export const ideasEs = {
     instructions: '¿Quieres pedirle algo concreto a la IA?',
     instructionsHelp: 'Por ejemplo: «más cortas» o «para gente que empieza». Puedes dejarlo vacío.',
     allRepeated:
-      'La IA solo propuso ideas que ya tenías, así que no hay ninguna nueva. Prueba a pedir otras con alguna indicación.',
+      'La IA solo propuso ideas que ya tenías, así que no hay ninguna nueva. La petición cuenta en tu consumo igualmente. Prueba a pedir otras con una indicación distinta.',
   },
   batch: {
     region: 'Ideas propuestas',
@@ -41,7 +41,7 @@ export const ideasEs = {
     anglesAgain: 'Proponer otras variantes',
     anglesAgainNamed: 'Proponer otras variantes de «{titulo}»',
     anglesAllRepeated:
-      'La IA solo propuso variantes que ya tenías o que ya habías visto. Prueba a pedir otras con alguna indicación.',
+      'La IA solo propuso variantes que repetían ideas anteriores, así que no hay ninguna nueva. La petición cuenta en tu consumo igualmente. Prueba otra vez con una indicación distinta.',
     discardNamed: 'No me interesa «{titulo}»',
   },
   card: {
@@ -83,6 +83,9 @@ export const ideasEs = {
         'Ya hay {n} vídeos casi iguales, pero se ven: solo merece la pena con un enfoque claramente distinto.',
       llenandose: 'Hay {n} vídeos casi iguales y {r} son recientes: se está llenando, hace falta un enfoque propio.',
       pocos_con_publico: 'Solo hay {n} vídeos casi iguales y el tema tiene público: hay hueco.',
+      pocos_con_publico_cero: 'No hay vídeos casi iguales y el tema tiene público: hay hueco.',
+      pocos_sin_publico_cero:
+        'No hay vídeos casi iguales, pero tampoco se ve público para el tema: puede ser muy de nicho.',
       pocos_sin_publico:
         'Solo hay {n} vídeos casi iguales, pero tampoco se ve público para el tema: puede ser muy de nicho.',
       sin_racha_con_publico:
@@ -121,8 +124,8 @@ export const ideasEs = {
       no_encontrado: 'YouTube no ha encontrado nada con las búsquedas de esta idea.',
       sin_datos: 'YouTube no ha devuelto datos suficientes para medir esta idea.',
     } as Partial<Record<YouTubeFailureCode, string>>,
-    skipped: 'Hay ideas sin búsquedas: esas no se medirán.',
-    skippedOne: 'Hay una idea sin búsquedas: esa no se medirá.',
+    skipped: 'Hay ideas sin búsquedas: esas no se medirán aquí. Puedes medirlas con su título desde su tarjeta.',
+    skippedOne: 'Hay una idea sin búsquedas: esa no se medirá aquí. Puedes medirla con su título desde su tarjeta.',
     measured: '«{titulo}»: {semaforo}.',
     failed: '«{titulo}»: no se ha podido medir.',
     named: '{accion} «{titulo}»',
@@ -151,6 +154,7 @@ export const ideasEs = {
     done: 'Marcar como hecha',
     archive: 'Archivar',
     recover: 'Recuperar',
+    undone: 'Volver al banco',
     chosen: '«{titulo}» está en «Próximos vídeos», en la posición {n}.',
     removed: '«{titulo}» ha vuelto al banco.',
     madeDone: '«{titulo}» está marcada como hecha.',

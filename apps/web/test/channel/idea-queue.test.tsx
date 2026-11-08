@@ -127,8 +127,10 @@ describe('the queue and the order (US4)', () => {
     expect(html).toContain(named(ideasEs.moves.done, 'Pan de centeno'))
     expect(html).toContain(named(ideasEs.moves.archive, 'Pan de centeno'))
     expect(html).not.toContain(named(ideasEs.moves.choose, 'Pan de molde'))
-    // A done idea can only be archived.
+    // A done idea goes back to the bank (a mistake is undone) or is archived.
     expect(html).not.toContain(named(ideasEs.moves.done, 'Pan hecho'))
+    expect(html).not.toContain(named(ideasEs.moves.choose, 'Pan hecho'))
+    expect(html).toContain(named(ideasEs.moves.undone, 'Pan hecho'))
     expect(html).toContain(named(ideasEs.moves.archive, 'Pan hecho'))
   })
 
@@ -166,5 +168,31 @@ describe('the filters, the archive and the downloads (US4)', () => {
     const html = show()
     expect(html).toContain(ideasEs.download.document)
     expect(html).toContain(ideasEs.download.data)
+  })
+})
+
+describe('the older profile (T062, edge case of the spec)', () => {
+  it('an idea proposed with an older version of the profile says so on its card; the others do not', () => {
+    const older = idea('o', 'Pan antiguo', { origin: 'ia', fromOlderProfile: true })
+    const html = show(bank({ ideas: [older, idea('n', 'Pan nuevo', { origin: 'ia' })], queue: [] }))
+    expect(html.match(new RegExp(ideasEs.measure.olderProfile, 'g'))).toHaveLength(1)
+    const card = html.slice(html.indexOf('Pan antiguo'), html.indexOf('Pan nuevo'))
+    expect(card).toContain(ideasEs.measure.olderProfile)
+  })
+})
+
+describe('what the novice audit asked for (004)', () => {
+  it('with no similar video, the sentence says there are none instead of «Solo hay 0»', async () => {
+    const { reasonText } = await import('../../src/screens/channel/ideas/IdeaMeasure.tsx')
+    const none = {
+      ...measure('frio'),
+      reason: 'pocos_sin_publico' as const,
+      figures: { ...measure('frio').figures!, similar: 0 },
+    }
+    expect(reasonText(none, 90)).toBe(ideasEs.measure.reason.pocos_sin_publico_cero)
+    expect(reasonText({ ...none, reason: 'pocos_con_publico' }, 90)).toBe(ideasEs.measure.reason.pocos_con_publico_cero)
+    expect(
+      reasonText({ ...none, reason: 'pocos_sin_publico', figures: { ...none.figures, similar: 2 } }, 90),
+    ).toContain('Solo hay 2')
   })
 })

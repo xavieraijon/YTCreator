@@ -18,7 +18,9 @@ fnm exec --using=24 -- pnpm test
 fnm exec --using=24 -- pnpm test:e2e
 ```
 
-Lo esperado es que todo termine con código 0. `apps/web/e2e/ideas.spec.ts` recorre US1 a US4 con axe en claro y oscuro.
+Lo esperado es que todo termine con código 0. Los e2e del banco recorren este quickstart (los tres primeros, con axe en claro y oscuro):
+`ideas.spec.ts` (US1), `ideas-measure.spec.ts` (US2 y US3), `ideas-queue.spec.ts` (US4) e `ideas-quickstart.spec.ts`
+(lo que no recorren los otros: la tanda con repetidas, la medida sin lector y el filtro por semáforo).
 
 ## 2. Llenar el banco (US1)
 

@@ -101,7 +101,7 @@ export function IdeaQueue({ ideas, busy, onMove, onRemove }: IdeaQueueProps) {
 export type IdeaMove = 'elegida' | 'banco' | 'hecha' | 'archivada'
 
 // The moves of an idea on its card (data-model.md, «Estados»): choose it, take it out of the queue, mark it as
-// done or archive it. A done idea can only be archived.
+// done or archive it. A done idea can go back to the bank or be archived.
 export function IdeaMoves({
   idea,
   busy,
@@ -115,6 +115,7 @@ export function IdeaMoves({
     ...(idea.status === 'banco' ? [{ status: 'elegida' as const, label: ideasEs.moves.choose }] : []),
     ...(idea.status === 'elegida' ? [{ status: 'banco' as const, label: text.remove }] : []),
     ...(idea.status !== 'hecha' ? [{ status: 'hecha' as const, label: ideasEs.moves.done }] : []),
+    ...(idea.status === 'hecha' ? [{ status: 'banco' as const, label: ideasEs.moves.undone }] : []),
     { status: 'archivada', label: ideasEs.moves.archive },
   ]
   return (

@@ -578,3 +578,112 @@ Informes de la Puerta A (`/puerta-a`), uno por fase o historia.
 - Revertir el commit `feat(004): US4 …`. No hay migraciones: el orden, la cola y los estados ya existían en la
   migración 0005.
 - Queda Polish (T062–T067) y la auditoría de novato.
+
+## Polish: recorrido del quickstart (T064)
+
+Fecha: 2026-11-07. Con la IA y YouTube falsos, cada paso del [quickstart](../quickstart.md) se recorre en un e2e con
+servidor propio y carpeta temporal:
+
+| Paso | Dónde se recorre | Resultado |
+|---|---|---|
+| 1. Controles | `pnpm lint`, `typecheck`, `test`, `test:e2e` | Código 0 (vuelta final de la US4) |
+| 2. Llenar el banco: tanda, quedarse 2, una propia «Short» | `ideas.spec.ts` | Pasa |
+| 2.6. Tanda con `ideas_repetidas`: «La IA repitió 2 ideas…» | `ideas-quickstart.spec.ts` | Pasa |
+| 3. Los cuatro semáforos, el fallo, la oportunidad, «Medir todas» con la pestaña cerrada, «Preparar la medida» | `ideas-measure.spec.ts` | Pasa |
+| 3. «Medir con el título» | `ideas-quickstart.spec.ts` | Pasa |
+| 3. `pan sin lector`: «Sin medir», «Ir a Ajustes» y «¿Tiene hueco?» | `ideas-quickstart.spec.ts` | Pasa |
+| 4. Otro enfoque | `ideas-measure.spec.ts` | Pasa |
+| 5.1, 5.3 a 5.6. Teclado, elegir dos, archivar y recuperar, recargar, descargar | `ideas-queue.spec.ts` | Pasa |
+| 5.2. Filtrar por «Hay hueco» | `ideas-quickstart.spec.ts` | Pasa |
+
+T062: el aviso «Propuesta con una versión anterior de tu perfil» tiene su test de servidor (`ideas-base.test.ts`) y
+de pantalla (`idea-queue.test.tsx`, «the older profile»). T063: el glosario (con los dos `export.ts`) y
+`secrets-leak.spec.ts` pasan sin cambios.
+
+## Puerta A: Polish (T067)
+
+Fecha: 2026-11-08. **Resultado: pasada.**
+
+### 1. Resumen
+
+- Cierra el Polish: recorrido del quickstart, auditoría de novato en dos rondas y arreglos de lo que encontró.
+- La auditoría pasa con 0 graves y 2 medios abiertos. La revisión independiente no encontró graves.
+- Queda P1 (un caso de la 002), que el creador debe resolver antes de cerrar la feature. No afecta a esta fase.
+
+### 2. Requisitos
+
+| Requisito | Estado | Evidencia | Fecha |
+|---|---|---|---|
+| T062 aviso de versión anterior del perfil | Cumplido | `ideas-base.test.ts`, `idea-queue.test.tsx` | 2026-11-07 |
+| T063 glosario y fuga de secretos | Cumplido | `glossary.test.ts`, `secrets-leak.spec.ts` | 2026-11-08 |
+| T064 recorrido del quickstart | Cumplido | Tabla de abajo, con `ideas-quickstart.spec.ts` | 2026-11-08 |
+| T065 auditoría de novato (0 graves, ≤3 medios) | Cumplido | [novice-audit.md](../novice-audit.md): 0 graves, 2 medios abiertos | 2026-11-08 |
+| T066 estado en `CLAUDE.md`; `README.md` | Cumplido | `CLAUDE.md`; el README no describe funciones por feature y no cambia | 2026-11-08 |
+
+### 3. Cómo se comprobó
+
+Con los proveedores falsos, código de salida leído directamente de cada comando, sobre la versión final:
+
+| Comando | Resultado |
+|---|---|
+| `pnpm typecheck` | 0 |
+| `pnpm lint` | 0 |
+| `pnpm test` | 0: 1706 pasados, 2 omitidos |
+| `pnpm test:e2e` | 0: 97 del catálogo y 39 de la aplicación |
+| `playwright test e2e/ideas-quickstart.spec.ts --repeat-each=15` | 0: 15 de 15 |
+
+### 4. Controles obligatorios
+
+- **Pasados:** lint, typecheck, test, test:e2e, glosario, `secrets-leak`, axe (en los e2e del banco, con `audit`), los fallos
+  de IA de los tests existentes y el recorrido del quickstart.
+- **Fallidos:** ninguno en la versión final.
+- **No ejecutados:** `test:installer`, porque el diff no toca el instalador ni el empaquetado. IA real y YouTube real, porque
+  costarían dinero o cupo sin aprobación.
+
+### 5. Hallazgos de revisión
+
+Confirmados y corregidos:
+
+- «Proponer otras variantes» no hacía nada al editar la idea o con una medida que ya no ofrece enfoques: ahora solo sale si la
+  tarjeta puede abrir la petición (decisión 67).
+- «Medir con el título» no avisaba de las unidades de la Data API (decisión 69).
+- La fila del quickstart daba «Medir con el título» por recorrido en e2e sin estarlo: ahora lo recorre `ideas-quickstart.spec.ts`.
+- El riesgo de la decisión 67 era medio, no bajo.
+- Los dos medios aplazados no tenían decisión escrita (decisión 68).
+- Menores: la tabla partida de `idea-measure.md`, la decisión 58 y `ui-screens.md` sin «Volver al banco», un comentario antiguo,
+  el recuento de menores, y los tests que faltaban (`hecha → banco` por HTTP, quitar filtros al guardar, `pocos_con_publico_cero`).
+- El fallo intermitente de `ideas-quickstart.spec.ts`: era del test. El aviso también se repite en la región de anuncios un
+  instante después, y el localizador podía encontrar dos elementos. Ahora busca dentro de la región de avisos.
+
+Descartado, con justificación:
+
+- El aviso de «Medir todas» promete una opción que no existe si el título queda vacío al convertirlo en búsqueda (una idea
+  titulada «OR»). Es muy raro y la tarjeta sigue ofreciendo «Preparar la medida».
+
+Abiertos:
+
+- El caso de variantes repetidas se prueba en la pantalla cambiando la respuesta del servidor. El camino real con 0 borradores
+  solo se vio en la auditoría de novato.
+- P1, en la sección 7.
+
+### 6. Desviaciones
+
+Ninguna frente a la spec. De más: los avisos y el foco de las decisiones 64 a 67, que salen de la auditoría.
+
+### 7. Decisiones
+
+- Del agente: 64 a 69. Las 64 a 68 son de riesgo medio; la 69, bajo.
+- Pendientes del creador: P1 (002, «Lo haré más tarde» y luego conectar desde Ajustes). Es de riesgo no alto y no afecta a esta
+  fase, pero la constitución pide resolverlo antes de cerrar la feature.
+
+### 8. Impacto en la constitución
+
+- **I (accesible):** el foco va a la petición al abrirla.
+- **III (coste visible):** los avisos dicen que la petición cuenta en el consumo, y «Medir con el título» avisa de sus unidades.
+- **IX (novato):** auditoría pasada en la ronda 2.
+- **XI (autonomía demostrada):** este informe, con el fallo intermitente diagnosticado.
+
+### 9. Cómo revertir y qué queda
+
+- Revertir el commit `feat(004): Polish …`. No hay migraciones.
+- Queda: resolver P1, el PR si el creador lo pide, y los medios y menores para la pasada de interfaz con modo Design.

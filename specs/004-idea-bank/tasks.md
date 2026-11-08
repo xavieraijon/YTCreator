@@ -261,12 +261,12 @@ separado.
 
 ## Phase 7: Polish & Cross-Cutting
 
-- [ ] T062 [P] Aviso «Propuesta con una versión anterior de tu perfil» (`fromOlderProfile`), con su test de servidor y de pantalla
-- [ ] T063 [P] Revisar que los textos nuevos pasan el glosario y el test de fuga de secretos (`secrets-leak.spec.ts`) sin cambios
-- [ ] T064 Recorrer el [quickstart](./quickstart.md) entero con IA y YouTube falsos y guardar el resultado en `checklists/validation.md`
-- [ ] T065 Auditoría de novato del banco con el agente `usuario-novato`, en `specs/004-idea-bank/novice-audit.md`. Los menores visuales van a la pasada del modo Design; los que bloquean se corrigen aquí
-- [ ] T066 Actualizar `CLAUDE.md` (estado de la 004) y `README.md` si cambia algo de cara al creador
-- [ ] T067 [A] Puerta A de Polish: ejecutar `/puerta-a 004 Polish`
+- [X] T062 [P] Aviso «Propuesta con una versión anterior de tu perfil» (`fromOlderProfile`), con su test de servidor y de pantalla
+- [X] T063 [P] Revisar que los textos nuevos pasan el glosario y el test de fuga de secretos (`secrets-leak.spec.ts`) sin cambios
+- [X] T064 Recorrer el [quickstart](./quickstart.md) entero con IA y YouTube falsos y guardar el resultado en `checklists/validation.md`
+- [x] T065 Auditoría de novato del banco con el agente `usuario-novato`, en `specs/004-idea-bank/novice-audit.md`. Los menores visuales van a la pasada del modo Design; los que bloquean se corrigen aquí
+- [x] T066 Actualizar `CLAUDE.md` (estado de la 004) y `README.md` si cambia algo de cara al creador
+- [x] T067 [A] Puerta A de Polish: ejecutar `/puerta-a 004 Polish`
 
 ---
 

@@ -62,7 +62,7 @@ Cada tanda que propone la IA (uso `ideas`) o cada lote de variantes (uso `otro_e
 ```text
 banco ──elegir──→ elegida (entra al final de la cola)
 elegida ──quitar de la cola──→ banco
-banco | elegida ──marcar hecha──→ hecha
+banco | elegida ──marcar hecha──→ hecha ──volver al banco──→ banco
 cualquiera ──archivar──→ archivada ──recuperar──→ banco
 ```
 

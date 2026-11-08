@@ -31,7 +31,7 @@ aspecto se revisa en la pasada final con el modo Design: aquí cuenta que funcio
   - el `Semaphore` con su frase, o «Sin medir»;
   - el `DataSource` con la fuente, la fecha y el sello de supuesto;
   - las acciones «¿Tiene hueco?» o «Volver a medir», «Cambiar algo», «Elegir para guion», «Marcar como hecha»,
-    «Archivar», «Subir» y «Bajar»;
+    «Volver al banco» (en una idea hecha, decisión 65), «Archivar», «Subir» y «Bajar»;
   - «Ver los vídeos parecidos», plegado (`Disclosure`): título, canal, visitas y fecha de cada uno, y la oportunidad
     en inglés con sus vídeos si la hay;
   - «Buscar otro enfoque», solo con `quemado` o `competido` de la versión actual de la idea; al pulsarlo salen las

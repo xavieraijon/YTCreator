@@ -82,16 +82,25 @@ describe('the order of the bank and the queue (US4)', () => {
     expect((await bankOf(t, channelId)).ideas.map((idea) => idea.id)).toEqual([ids[2], ids[1], ids[0]])
   })
 
+  it('a done idea goes back to the bank, outside the queue and at its place in the list', async () => {
+    const t = makeTestApp({ fakeAi: 'ok' })
+    const { channelId, ids } = await bankWith(t, ['A', 'B'])
+    await move(t, ids[0]!, 'elegida')
+    await move(t, ids[0]!, 'hecha')
+    expect((await move(t, ids[0]!, 'banco')).body).toMatchObject({ status: 'banco', queuePosition: null })
+    const bank = await bankOf(t, channelId)
+    expect(bank.queue).toEqual([])
+    expect(bank.ideas.map((idea) => idea.id)).toEqual(ids)
+  })
+
   it('refuses a move the states do not have', async () => {
     const t = makeTestApp({ fakeAi: 'ok' })
     const { ids } = await bankWith(t, ['A'])
     await move(t, ids[0]!, 'hecha')
-    for (const to of ['banco', 'elegida']) {
-      expect(await move(t, ids[0]!, to)).toMatchObject({
-        status: 400,
-        body: { error: { fields: { status: 'no_valido' } } },
-      })
-    }
+    expect(await move(t, ids[0]!, 'elegida')).toMatchObject({
+      status: 400,
+      body: { error: { fields: { status: 'no_valido' } } },
+    })
     await move(t, ids[0]!, 'archivada')
     expect((await move(t, ids[0]!, 'elegida')).status).toBe(400)
   })

@@ -22,7 +22,7 @@ import { AiAction } from '../Proposal.tsx'
 import { IdeaBatch } from './IdeaBatch.tsx'
 import { IdeaCard } from './IdeaCard.tsx'
 import { IdeaEditor, type PrepareMeasure } from './IdeaEditor.tsx'
-import { IdeaMeasure, isMeasurable, number, unitsOf } from './IdeaMeasure.tsx'
+import { IdeaMeasure, isMeasurable, number, offersAngles, unitsOf } from './IdeaMeasure.tsx'
 import {
   type Direction,
   type IdeaMove,
@@ -273,6 +273,13 @@ function ReadyBank({
 }: IdeaBankContentProps & { state: Extract<IdeaBankState, { kind: 'ready' }> }) {
   const [instructions, setInstructions] = useState('')
   const [filters, setFilters] = useState(NO_FILTERS)
+  // A new idea of the creator's is always seen: saving it takes the filters off (novice audit 004).
+  const savedKey = useRef(formKey)
+  useEffect(() => {
+    if (savedKey.current === formKey) return
+    savedKey.current = formKey
+    setFilters(NO_FILTERS)
+  }, [formKey])
   const { bank, pillars, defaultFormat, niche } = state
   const empty = bank.ideas.length === 0
   // The idea being changed, or with angles waiting, stays in sight whatever the filters say.
@@ -282,6 +289,18 @@ function ReadyBank({
   const shownIds = shown.map((idea) => idea.id)
   const queue = bank.queue.flatMap((id) => bank.ideas.find((idea) => idea.id === id) ?? [])
   const titleOf = (id: string | null) => bank.ideas.find((idea) => idea.id === id)?.title ?? null
+  // «Proponer otras variantes» only where the card can open the request (novice audit 004): not while the idea is
+  // being changed, nor when its current measure no longer offers another angle (entry 51).
+  const canAskAngles = (ideaId: string) => {
+    const idea = bank.ideas.find((candidate) => candidate.id === ideaId)
+    return (
+      !!idea &&
+      editing !== ideaId &&
+      idea.status !== 'archivada' &&
+      !idea.measuredOlderRevision &&
+      offersAngles(idea.measure)
+    )
+  }
   // The angles wait by the idea they came from, one set per idea; with that idea out of the bank, under the list.
   const anglesOf = (sourceIdeaId: string | null, sourceTitle: string | null) =>
     bank.pendingAngles
@@ -298,7 +317,9 @@ function ReadyBank({
           deciding={deciding}
           onDecide={(keep, discard) => onDecideAngles(batch.id, keep, discard)}
           // «Proponer otras variantes» opens the request in the card, with its instructions and its cost.
-          {...(sourceIdeaId !== null && measure.angles ? { onAgain: () => measure.angles!.onOpen(sourceIdeaId) } : {})}
+          {...(sourceIdeaId !== null && measure.angles && canAskAngles(sourceIdeaId)
+            ? { onAgain: () => measure.angles!.onOpen(sourceIdeaId) }
+            : {})}
         />
       ))
   // With ideas to measure, measuring is the main action; with the bank empty, proposing (contracts/ui-screens.md).
@@ -470,6 +491,7 @@ export function IdeaBank() {
   const [anglesFailure, setAnglesFailure] = useState<AiRunFailure | null>(null)
   const [anglesBusy, setAnglesBusy] = useState(false)
   const [anglesTurn, setAnglesTurn] = useState(0)
+  const [anglesOpened, setAnglesOpened] = useState(0)
   // US4: the archive, a move on its way and what it said.
   const [archived, setArchived] = useState<IdeaView[]>([])
   const [ordering, setOrdering] = useState(false)
@@ -802,6 +824,10 @@ export function IdeaBank() {
     }
   }, [channelId, anglesFor, anglesTurn])
   useEffect(() => setAnglesFailure(null), [anglesFor])
+  // The request may open far from the button pressed: the cursor goes to it, and the page with it (novice audit 004).
+  useEffect(() => {
+    if (anglesOpened > 0) document.querySelector<HTMLElement>('[data-angles-request]')?.focus()
+  }, [anglesOpened])
 
   const askAngles = async (instructions?: string) => {
     if (!anglesFor || !anglesEstimate) return
@@ -818,7 +844,12 @@ export function IdeaBank() {
         setAnglesTurn((turn) => turn + 1)
         return
       }
-      if (outcome.candidates.length === 0) toast({ title: ideasEs.batch.anglesAllRepeated, tone: 'warning' })
+      if (outcome.candidates.length === 0) {
+        // Nothing new: the request stays open with what was written, and needs a new estimate.
+        toast({ title: ideasEs.batch.anglesAllRepeated, tone: 'warning' })
+        setAnglesTurn((turn) => turn + 1)
+        return
+      }
       setAnglesFor(null)
       await reload()
     } catch (caught) {
@@ -962,7 +993,9 @@ export function IdeaBank() {
               busy: anglesBusy,
               // One request of angles at a time: another card opens once this one has its answer.
               onOpen: (ideaId) => {
-                if (!anglesBusy) setAnglesFor(ideaId)
+                if (anglesBusy) return
+                setAnglesFor(ideaId)
+                setAnglesOpened((opened) => opened + 1)
               },
               onRun: (instructions) => void askAngles(instructions),
             },

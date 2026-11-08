@@ -60,7 +60,9 @@ test('measures the bank: four semaphores, a failure, an opportunity, coming back
   await expect(card(page, 'Hueco').getByText('Sin medir')).toBeVisible()
   // Before measuring, how many (FR-007c): the idea without searches is left out, and said.
   await expect(page.getByText('Se medirán 6 ideas.')).toBeVisible()
-  await expect(page.getByText('Hay una idea sin búsquedas: esa no se medirá.')).toBeVisible()
+  await expect(
+    page.getByText('Hay una idea sin búsquedas: esa no se medirá aquí. Puedes medirla con su título desde su tarjeta.'),
+  ).toBeVisible()
   await audit(page)
 
   // «Medir todas», and the tab closed as soon as the server has it: the measure goes on there.
@@ -129,4 +131,5 @@ test('measures the bank: four semaphores, a failure, an opportunity, coming back
   // «Proponer otras variantes» goes back to the request in the card, with its instructions and its cost.
   await after.getByRole('button', { name: 'Proponer otras variantes de «Quemada»' }).click()
   await expect(card(back, 'Quemada').getByRole('button', { name: /^Buscar otro enfoque · / })).toBeVisible()
+  await expect(card(back, 'Quemada').getByRole('textbox')).toBeFocused()
 })

@@ -56,6 +56,8 @@ La pantalla traduce `verdict` y `reason` con las cifras ([ui-screens](./ui-scree
 | `sin_racha_con_publico` | hueco | «Hay {n} vídeos casi iguales, pero pocos son recientes ({r}), y el tema tiene público: hay sitio.» (decisión 46) |
 | `sin_racha_sin_publico` | frio | «Hay {n} vídeos casi iguales, pocos son recientes ({r}), y no se ve mucho público.» |
 
+Con {n} = 0, las dos frases `pocos_*` empiezan «No hay vídeos casi iguales…» en vez de «Solo hay 0…» (auditoría de novato, decisión 64).
+
 Junto a todos, el sello del supuesto: «Los límites de este semáforo son un supuesto nuestro, sin un estudio que los
 respalde.» La oportunidad dice: «En inglés este tema tiene vídeos con {audienceViews} visitas o más y en castellano
 casi nadie lo cuenta: puede ser una oportunidad.» (el umbral sale de `thresholds.json`, decisión 45)

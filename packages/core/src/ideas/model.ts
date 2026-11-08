@@ -36,7 +36,8 @@ export type CandidateDecision = (typeof CANDIDATE_DECISIONS)[number]
 const MOVES: Record<IdeaStatus, readonly IdeaStatus[]> = {
   banco: ['elegida', 'hecha', 'archivada'],
   elegida: ['banco', 'hecha', 'archivada'],
-  hecha: ['archivada'],
+  // «Volver al banco»: marking it as done by mistake is undone (novice audit 004).
+  hecha: ['banco', 'archivada'],
   archivada: ['banco'],
 }
 export const canMoveIdea = (from: IdeaStatus, to: IdeaStatus) => from === to || MOVES[from].includes(to)

@@ -29,7 +29,11 @@ const day = (date: string) => new Intl.DateTimeFormat('es-ES', { dateStyle: 'med
 // The sentence of the semaphore, with the figures in it (contracts/idea-measure.md, «Textos del semáforo»).
 export function reasonText(measure: IdeaMeasureView, recentDays: number): string {
   const figures = measure.figures!
-  return format(text.reason[measure.reason!], {
+  // «Solo hay 0 vídeos» reads wrong: with none, the sentence says there are none (novice audit 004).
+  const none =
+    figures.similar === 0 && (measure.reason === 'pocos_con_publico' || measure.reason === 'pocos_sin_publico')
+  const reason = none ? (`${measure.reason}_cero` as const) : measure.reason!
+  return format(text.reason[reason as keyof typeof text.reason], {
     n: number(figures.similar),
     r: number(figures.recent),
     d: number(recentDays),
@@ -170,6 +174,7 @@ export function IdeaMeasure({
               <>
                 <p className={styles.why}>{text.anglesWhy}</p>
                 <TextArea
+                  data-angles-request
                   label={text.anglesInstructions}
                   description={text.anglesInstructionsHelp}
                   optional
@@ -261,6 +266,9 @@ export function IdeaMeasure({
           )}
           {canUseTitle && (
             <>
+              {units && (
+                <p className={styles.why}>{format(text.unitsOne, { unidades: number(unitsOf(idea, units)) })}</p>
+              )}
               <div className={styles.actions}>
                 <Button
                   variant="ghost"
