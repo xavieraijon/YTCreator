@@ -27,7 +27,16 @@ const claim = (blockId: string, status: Claim['status'] = 'pendiente'): Claim =>
 const words = (n: number) => Array.from({ length: n }, () => 'hola').join(' ')
 // 60 words a minute: a word is a second, so the sums are easy to read.
 const review = (fields: Partial<ReviewInput>) =>
-  reviewScript({ format: 'largo', targetSeconds: 10, wordsPerMinute: 60, blocks: [], claims: [], rules, ...fields })
+  reviewScript({
+    format: 'largo',
+    targetSeconds: 10,
+    wordsPerMinute: 60,
+    blocks: [],
+    claims: [],
+    rules,
+    shortMaxSeconds: 20,
+    ...fields,
+  })
 
 describe('reviewScript', () => {
   const fine = [block('a', words(3), 'gancho'), block('b', words(7))]
@@ -100,6 +109,24 @@ describe('reviewScript', () => {
       claims: [claim('b'), { ...claim('b'), id: 'other' }, claim('a', 'confirmada')],
     })
     expect(notices).toEqual([{ rule: 'por_comprobar', blockId: 'b', count: 2 }])
+  })
+
+  it('says how much a Short has over the maximum it is given, and nothing else about its length', () => {
+    const long = Array.from({ length: 3 }, () => `${words(9)}.`).join(' ')
+    const notices = review({
+      format: 'short',
+      targetSeconds: 10,
+      shortMaxSeconds: 20,
+      blocks: [block('a', `${words(9)}.`), block('b', long)],
+    })
+    expect(notices.filter((one) => one.rule === 'duracion')).toEqual([])
+    expect(notices).toContainEqual({ rule: 'short_largo', blockId: 'b', seconds: 36, limit: 20, excess: 16 })
+  })
+
+  it('does not apply the maximum of a Short to a long video', () => {
+    const long = Array.from({ length: 4 }, () => `${words(9)}.`).join(' ')
+    const notices = review({ targetSeconds: 36, shortMaxSeconds: 20, blocks: [block('a', long)] })
+    expect(notices.filter((one) => one.rule === 'short_largo')).toEqual([])
   })
 
   it('ends a sentence at a line break and after a closing quote', () => {

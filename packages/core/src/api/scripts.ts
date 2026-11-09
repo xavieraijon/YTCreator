@@ -83,7 +83,11 @@ export const scriptViewSchema = z.object({
   // Kept after it ends: on coming back the screen still has to say that it failed.
   job: scriptJobSchema.nullable(),
   webResearch: z.boolean(),
-  limits: z.object({ minSeconds: z.number().int(), maxSeconds: z.number().int() }),
+  limits: z.object({
+    minSeconds: z.number().int(),
+    maxSeconds: z.number().int(),
+    maxReviewedAt: z.string().nullable(),
+  }),
   voice: scriptSettingsViewSchema,
 })
 export type ScriptView = z.infer<typeof scriptViewSchema>

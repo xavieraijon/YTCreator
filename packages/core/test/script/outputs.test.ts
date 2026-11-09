@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { blockOutput, draftOutputFor, outlineOutput } from '../../src/script/outputs.ts'
+import {
+  blockOutput,
+  draftOutputFor,
+  outlineOutput,
+  shortDraftOutput,
+  shortDraftOutputFor,
+} from '../../src/script/outputs.ts'
 
 const block = (type: string) => ({
   type,
@@ -77,5 +83,28 @@ describe('the script the AI writes', () => {
       true,
     )
     expect(blockOutput.safeParse({ text: '', visual: '', claims: [] }).success).toBe(false)
+  })
+})
+
+describe('guion_short', () => {
+  const part = (type: string, text = 'Algo que decir.') => ({ type, text, visual: '' })
+  const valid = { blocks: [part('gancho'), part('desarrollo'), part('cierre')], claims: [] }
+
+  it('takes a hook, a development and a closing, in that order', () => {
+    expect(shortDraftOutput.safeParse(valid).success).toBe(true)
+  })
+
+  it('rejects another order, a part too many or one too few', () => {
+    const { blocks } = valid
+    expect(shortDraftOutput.safeParse({ ...valid, blocks: [blocks[1], blocks[0], blocks[2]] }).success).toBe(false)
+    expect(shortDraftOutput.safeParse({ ...valid, blocks: [...blocks, part('cierre')] }).success).toBe(false)
+    expect(shortDraftOutput.safeParse({ ...valid, blocks: blocks.slice(0, 2) }).success).toBe(false)
+  })
+
+  it('rejects one that lasts more than the maximum it is given', () => {
+    const long = { ...valid, blocks: [part('gancho'), part('desarrollo', 'palabra '.repeat(70)), part('cierre')] }
+    expect(shortDraftOutputFor(180, 60).safeParse(valid).success).toBe(true)
+    expect(shortDraftOutputFor(60, 60).safeParse(long).success).toBe(false)
+    expect(shortDraftOutputFor(180, 60).safeParse(long).success).toBe(true)
   })
 })

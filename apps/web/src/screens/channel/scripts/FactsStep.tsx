@@ -17,10 +17,11 @@ export interface FactsStepProps {
   readonly ai: ScriptAi
   readonly onChange: (script: ScriptView) => void
   readonly onError: (cause: unknown) => void
+  readonly onToDraft: () => void
 }
 
 // Duration and notes: what the AI starts from (contracts/ui-screens.md, «Hechos»).
-export function FactsStep({ script, ai, onChange, onError }: FactsStepProps) {
+export function FactsStep({ script, ai, onChange, onError, onToDraft }: FactsStepProps) {
   // A long video is thought of in minutes and a Short in seconds.
   const unit = script.format === 'largo' ? 60 : 1
   const [duration, setDuration] = useState(String(Math.round(script.targetSeconds / unit)))
@@ -28,7 +29,11 @@ export function FactsStep({ script, ai, onChange, onError }: FactsStepProps) {
   const [saved, setSaved] = useState(false)
   const [conflict, setConflict] = useState(false)
   const [mine, setMine] = useState<string | null>(null)
-  const price = useEstimate(script, 'escaleta', script.format === 'largo')
+  const isShort = script.format === 'short'
+  const writeUse = isShort ? 'guion_short' : 'escaleta'
+  // Once a Short is written, asking for another is done from its script, where an approval is protected.
+  const canWrite = !isShort || script.draft === null
+  const price = useEstimate(script, writeUse, canWrite)
   const { estimate } = price
 
   // Untouched, the duration stays as it was saved: what is shown is rounded.
@@ -102,7 +107,7 @@ export function FactsStep({ script, ai, onChange, onError }: FactsStepProps) {
 
   const propose = async () => {
     // Saved first, so the price is the one of what is on the screen.
-    if (await save()) await ai.run('escaleta', price)
+    if (await save()) await ai.run(writeUse, price)
   }
 
   const words = Math.round((seconds / 60) * script.voice.wordsPerMinute)
@@ -179,20 +184,29 @@ export function FactsStep({ script, ai, onChange, onError }: FactsStepProps) {
       {notes.trim() === '' && (script.facts?.content.facts.length ?? 0) === 0 && (
         <p className={styles.notice}>{text.noNotes}</p>
       )}
-      {script.format === 'largo' && (
+      {canWrite ? (
         <>
-          <p className={styles.why}>{text.outlineIntro}</p>
+          <p className={styles.why}>{isShort ? text.shortIntro : text.outlineIntro}</p>
           {price.error !== null && (
             <ErrorMessage live title={errorText(price.error)} action={{ label: es.app.retry, onClick: price.retry }} />
           )}
           <AiAction
-            label={text.proposeOutline}
+            label={isShort ? text.writeShort : text.proposeOutline}
             estimate={estimate}
-            failure={ai.failureFor('escaleta')}
-            busy={ai.working === 'escaleta'}
+            failure={ai.failureFor(writeUse)}
+            busy={ai.working === writeUse}
             disabled={!valid || ai.working !== null}
             onRun={() => void propose()}
           />
+        </>
+      ) : (
+        <>
+          <p className={styles.why}>{text.shortIntro}</p>
+          <div className={styles.actions}>
+            <Button variant="primary" onClick={onToDraft}>
+              {scriptEs.outline.toDraft}
+            </Button>
+          </div>
         </>
       )}
     </>

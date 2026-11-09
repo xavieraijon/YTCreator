@@ -258,6 +258,10 @@ export function ideaRoutes(deps: IdeaRoutesDeps) {
       if (status && !canMoveIdea(idea.status, status)) {
         throw new ApiError({ code: 'validacion', fields: { status: 'no_valido' } })
       }
+      // Its script was made for this format (data-model.md): a Short has no outline and a long video needs one.
+      if (fields.format && fields.format !== idea.format && deps.scriptOf?.(idea.id)) {
+        throw new ApiError({ code: 'validacion', fields: { format: 'no_valido' } })
+      }
       const edited = Object.keys(fields).length > 0 ? ideas.edit(idea.id, fields) : idea
       return { changed: status ? ideas.setStatus(idea.id, status) : edited, profileVersion }
     })

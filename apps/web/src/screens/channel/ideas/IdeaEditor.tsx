@@ -95,10 +95,15 @@ export function IdeaEditor({
       />
       <RadioGroup
         label={text.format}
-        options={IDEA_FORMATS.map((value) => ({ value, label: ideasEs.format[value] }))}
+        options={IDEA_FORMATS.map((value) => ({
+          value,
+          label: ideasEs.format[value],
+          disabled: Boolean(idea?.script) && value !== idea?.format,
+        }))}
         value={format}
         onValueChange={(value) => setFormat(value as IdeaFormat)}
       />
+      {idea?.script && <p className={styles.notice}>{text.formatLocked}</p>}
       <TextArea
         label={text.hook}
         description={text.hookHelp}

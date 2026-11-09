@@ -1,4 +1,4 @@
-import { type ReviewNotice, reviewScript } from '@ytcreator/core'
+import { type DraftBlock, type ReviewNotice, reviewScript } from '@ytcreator/core'
 import type { ScriptReviewView, ScriptView } from '@ytcreator/core/api'
 import { Button, Card, DataSource, Dialog, ErrorMessage, format } from '@ytcreator/ui'
 import { useEffect, useRef, useState } from 'react'
@@ -30,6 +30,12 @@ export function noticeText(notice: ReviewNotice): string {
       return format(text.notices.duracion, { dura: clock(notice.seconds), objetivo: clock(notice.target) })
     case 'gancho_largo':
       return format(text.notices.gancho_largo, { dura: clock(notice.seconds), limite: clock(notice.limit) })
+    case 'short_largo':
+      return format(text.notices.short_largo, {
+        dura: clock(notice.seconds),
+        limite: clock(notice.limit),
+        sobra: clock(notice.excess),
+      })
     case 'muletilla':
       return format(text.notices.muletilla, { texto: notice.text })
     case 'frase_larga':
@@ -41,8 +47,12 @@ export function noticeText(notice: ReviewNotice): string {
   }
 }
 
+const nameOf = (block: DraftBlock | undefined) =>
+  block?.title || (block ? scriptEs.outline.types[block.type] : scriptEs.outline.untitled)
+
 // The duration is of the whole script: its block is only where to start.
 function whereText(notice: ReviewNotice, titulo: string): string {
+  if (notice.rule === 'short_largo') return format(text.startLongest, { titulo })
   if (notice.rule !== 'duracion') return format(text.inBlock, { titulo })
   return format(notice.seconds > notice.target ? text.startLongest : text.startShortest, { titulo })
 }
@@ -93,9 +103,10 @@ export function ReviewStep({ script, onChange, onError, onToBlock, onToDraft, bu
         blocks,
         claims,
         rules,
+        shortMaxSeconds: script.limits.maxSeconds,
       })
     : []
-  const titleOf = (blockId: string) => blocks.find((block) => block.id === blockId)?.title || scriptEs.outline.untitled
+  const titleOf = (blockId: string) => nameOf(blocks.find((block) => block.id === blockId))
 
   const approve = async () => {
     setSaving(true)
@@ -162,6 +173,9 @@ export function ReviewStep({ script, onChange, onError, onToBlock, onToDraft, bu
           </ul>
         ))}
       {rules !== null && <DataSource kind="conocimiento" label={rules.basis.label} date={rules.basis.date} />}
+      {notices.some((notice) => notice.rule === 'short_largo') && script.limits.maxReviewedAt && (
+        <DataSource kind="conocimiento" label={text.shortsBasis} date={script.limits.maxReviewedAt} />
+      )}
       {approved ? (
         <p role="status" tabIndex={-1} ref={approvedNote}>
           {script.draftApprovedPending

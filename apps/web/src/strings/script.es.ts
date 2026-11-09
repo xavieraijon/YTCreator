@@ -25,6 +25,7 @@ export const scriptEs = {
   uses: {
     escaleta: 'Proponiendo la escaleta…',
     guion: 'Escribiendo el guion…',
+    guion_short: 'Escribiendo el guion del Short…',
     bloque_guion: 'Escribiendo de nuevo este bloque…',
   },
   screen: {
@@ -63,6 +64,8 @@ export const scriptEs = {
     keepMine: 'Guardar lo mío encima',
     yourText: 'Lo que habías escrito',
     saved: 'Guardado',
+    shortIntro: 'En un Short, los primeros segundos deciden si alguien se queda o pasa al siguiente.',
+    writeShort: 'Escribir el guion',
     outlineIntro:
       'La escaleta es el esquema de tu vídeo: qué cuentas y en qué orden. La estructura decide si la gente se queda.',
     proposeOutline: 'Proponer escaleta',
@@ -71,7 +74,7 @@ export const scriptEs = {
     why: 'La estructura decide si la gente se queda. Cambiar el orden aquí cuesta un minuto.',
     none: 'Todavía no hay escaleta. Vuelve a Hechos para pedirla.',
     toFacts: 'Ir a Hechos',
-    types: { gancho: 'Gancho', contexto: 'Contexto', acto: 'Acto', cierre: 'Cierre' },
+    types: { gancho: 'Gancho', contexto: 'Contexto', acto: 'Acto', cierre: 'Cierre', desarrollo: 'Desarrollo' },
     clock: { seconds: '{s} s', minutes: '{min} min', both: '{min} min {s} s' },
     untitled: 'Sin título',
     purpose: 'Para qué está: {texto}',
@@ -159,6 +162,7 @@ export const scriptEs = {
     toBlockNamed: 'Ir al bloque «{titulo}»',
     notices: {
       duracion: 'Dura unos {dura} y querías {objetivo}.',
+      short_largo: 'Dura unos {dura} y el máximo de un Short es {limite}. Sobran {sobra}.',
       gancho_largo: 'El gancho dura unos {dura}. Conviene que no pase de {limite}.',
       muletilla: 'Suena a texto de IA: «{texto}».',
       frase_larga: 'Esta frase tiene {palabras} palabras y cuesta decirla de un tirón: «{texto}»',
@@ -171,6 +175,7 @@ export const scriptEs = {
       other: 'Guion aprobado, sabiendo que quedaban {n} por comprobar.',
     },
     changedElsewhere: 'Las marcas han cambiado en otra pestaña. Mira cómo quedan y vuelve a aprobar.',
+    shortsBasis: 'Máximo de un Short, según el paquete de datos de YTCreator',
     startLongest: 'Por dónde empezar: «{titulo}», el bloque más largo.',
     startShortest: 'Por dónde empezar: «{titulo}», el bloque más corto.',
     emptyBlock: 'Hay un bloque sin texto. Escríbelo antes de aprobar.',

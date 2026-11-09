@@ -191,6 +191,7 @@ export const ideasEs = {
     editTitle: 'Cambiar la idea',
     title: 'Título',
     titleHelp: 'Una frase que diga de qué va el vídeo.',
+    formatLocked: 'Esta idea ya tiene guion, y está escrito para este formato: por eso no se puede cambiar.',
     format: 'Formato',
     hook: 'Gancho',
     hookHelp: 'Por qué alguien querría verlo.',

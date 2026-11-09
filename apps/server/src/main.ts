@@ -372,6 +372,7 @@ export async function startServer({
     scripts: scriptsRepo,
     versions: scriptVersions,
     shortMaxSeconds: market.shorts.data.maxDurationSeconds,
+    shortsReviewedAt: market.shorts.reviewedAt,
     webResearch: () => false,
     aiRun: channel.aiRun,
     promptFor: channelPrompt,

@@ -275,6 +275,19 @@ function normal(
         claims: [{ outlineBlockId: blocks[0]!.id, text: 'Esta parte sale del guion', factId: null }],
       }
     }
+    case 'guion_short':
+      return {
+        blocks: [
+          { type: 'gancho', text: 'Mira lo que pasa aquí.', visual: 'Tú, muy cerca de la cámara.' },
+          {
+            type: 'desarrollo',
+            text: 'Esta parte sale del guion, y la cuentas en voz alta sin trabarte.',
+            visual: 'El plano del detalle.',
+          },
+          { type: 'cierre', text: 'Sigue viendo y te lo enseño entero.', visual: 'Tú, señalando abajo.' },
+        ],
+        claims: [{ type: 'desarrollo', text: 'Esta parte sale del guion', factId: null }],
+      }
     case 'bloque_guion':
       return {
         text: 'Este bloque está escrito de nuevo. Lo agradecen dos millones de personas.',
@@ -333,7 +346,8 @@ function invent(use: ChannelUse, output: Record<string, unknown>): Record<string
       const [first, ...rest] = output.blocks as { purpose: string }[]
       return { blocks: [{ ...first, purpose: add(first!.purpose).slice(0, 300) }, ...rest] }
     }
-    case 'guion': {
+    case 'guion':
+    case 'guion_short': {
       const [first, ...rest] = output.blocks as { text: string }[]
       return { ...output, blocks: [{ ...first, text: add(first!.text) }, ...rest] }
     }

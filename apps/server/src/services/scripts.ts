@@ -6,6 +6,8 @@ import {
   defaultTargetSeconds,
   detectClaims,
   draftOutputFor,
+  shortDraftOutputFor,
+  type ShortDraftOutput,
   durationSeconds,
   replaceFragment,
   withoutFragment,
@@ -65,6 +67,8 @@ export interface ScriptServiceDeps {
   versions: ScriptVersionsRepo
   // `maxDurationSeconds` of shorts.json: `core` does not depend on the knowledge package.
   shortMaxSeconds: number
+  // When shorts.json was reviewed: the maximum is shown with its date (principle V).
+  shortsReviewedAt: string
   // Whether the active connection can search the web (R3).
   webResearch: () => boolean
   aiRun: AiRunService
@@ -193,6 +197,7 @@ export function createScriptService(deps: ScriptServiceDeps) {
       limits: {
         minSeconds: script.format === 'largo' ? SCRIPT_LIMITS.longSeconds.min : SCRIPT_LIMITS.shortSeconds.min,
         maxSeconds: script.format === 'largo' ? SCRIPT_LIMITS.longSeconds.max : shortMaxSeconds,
+        maxReviewedAt: script.format === 'largo' ? null : deps.shortsReviewedAt,
       },
       voice: voiceOf(script.channelId),
     }
@@ -343,7 +348,18 @@ export function createScriptService(deps: ScriptServiceDeps) {
             .get(found.script.id, 'escaleta', draft.outlineVersion)
             ?.content.blocks.find((one) => one.id === block.id)
     const { wordsPerMinute } = voiceOf(found.script.channelId)
-    const seconds = planned?.seconds || durationSeconds(block.text, wordsPerMinute)
+    // A Short has no outline: the part fills what the other two leave of the duration it was asked to last.
+    const others = durationSeconds(
+      blocks
+        .filter((one) => one.id !== block.id)
+        .map((one) => one.text)
+        .join(' '),
+      wordsPerMinute,
+    )
+    const room = found.script.targetSeconds - others
+    const shortSeconds = room > 0 ? room : Math.round(found.script.targetSeconds / blocks.length)
+    const seconds =
+      found.script.format === 'short' ? shortSeconds : planned?.seconds || durationSeconds(block.text, wordsPerMinute)
     return {
       draft,
       index,
@@ -375,7 +391,59 @@ export function createScriptService(deps: ScriptServiceDeps) {
       const prompt = deps.promptFor(use)
       return { promptId: prompt.id, promptVersion: prompt.version }
     }
-    if (script.format === 'short') throw new ApiError({ code: 'validacion', fields: { use: 'no_valido' } })
+    // A Short has no outline, and a long video is written from one.
+    const wrongShape = script.format === 'short' ? use === 'escaleta' || use === 'guion' : use === 'guion_short'
+    if (wrongShape) throw new ApiError({ code: 'validacion', fields: { use: 'no_valido' } })
+
+    if (use === 'guion_short') {
+      const { wordsPerMinute } = voiceOf(script.channelId)
+      const previous = versions.latest(script.id, 'guion')
+      return {
+        input: {
+          idea: ideaInput(idea),
+          profile: profileInput(profile),
+          voice: voiceInput(script.channelId),
+          notes: script.notes,
+          facts: factsInput(script.id),
+          targetSeconds: script.targetSeconds,
+          wordsPerMinute,
+          craft: deps.knowledge.craft.data,
+          angle: null,
+        },
+        outputTokens: expectedOutputTokens(script.targetSeconds, wordsPerMinute, 3),
+        schema: shortDraftOutputFor(shortMaxSeconds, wordsPerMinute),
+        keep: (value: unknown, usageId: string | null, instructions: string | null) => {
+          const output = value as ShortDraftOutput
+          // The same three blocks when it is asked for again, so versions can be compared.
+          const blocks = output.blocks.map((block, index) => ({
+            id: previous?.content.blocks[index]?.id ?? randomUUID(),
+            type: block.type,
+            title: '',
+            text: block.text,
+            visual: block.visual,
+          }))
+          const idOf = (type: string) => blocks.find((block) => block.type === type)!.id
+          const claims = claimsFor(
+            found,
+            blocks,
+            output.claims.map((claim) => ({ blockId: idOf(claim.type), text: claim.text, factId: claim.factId })),
+          )
+          addVersion(
+            found,
+            'guion',
+            'ia',
+            { blocks, claims },
+            {
+              factsVersion: versions.latestNumber(script.id, 'hechos'),
+              outlineVersion: null,
+              instructions,
+              usageId,
+              ...promptMeta(),
+            },
+          )
+        },
+      }
+    }
 
     if (use === 'guion') {
       const outline = approvedOutline(script)

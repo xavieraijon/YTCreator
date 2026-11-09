@@ -91,7 +91,7 @@ export function ScriptScreen({ id }: { readonly id: string }) {
       // A failure stays where it can be retried, and the step opens with what it has to show.
       void load().then(() => {
         if (ok && op === 'escaleta') setStep('escaleta')
-        if (ok && op === 'guion') setStep('guion')
+        if (ok && (op === 'guion' || op === 'guion_short')) setStep('guion')
       })
     },
     [load],
@@ -165,7 +165,9 @@ export function ScriptScreen({ id }: { readonly id: string }) {
       )}
       {ai.working && <AiWorking variant="panel" label={scriptEs.uses[ai.working as ScriptUse]} />}
       <ScriptWarnings script={script} ai={ai} onStep={setStep} />
-      {step === 'hechos' && <FactsStep script={script} ai={ai} onChange={onChange} onError={setError} />}
+      {step === 'hechos' && (
+        <FactsStep script={script} ai={ai} onChange={onChange} onError={setError} onToDraft={() => setStep('guion')} />
+      )}
       {step === 'escaleta' && (
         <OutlineStep
           script={script}

@@ -36,7 +36,7 @@ principal, que cambia según el estado.
 - `DataSource`: «La app comprueba que el enlace abre, no que diga lo que se afirma.»
 - Acciones: «Investigar el tema · {coste}», «Añadir un hecho o una fuente», «Quitar», «Cambiar».
 - Sin internet en la conexión: una frase que lo explica, sin botón de investigar.
-- **Principal**: «Proponer escaleta · {coste}» (largo) o «Escribir el guion · {coste}» (Short).
+- **Principal**: «Proponer escaleta · {coste}» (largo) o «Escribir el guion · {coste}» (Short; ya escrito, «Ir al guion», decisión 28).
 
 ### Escaleta
 

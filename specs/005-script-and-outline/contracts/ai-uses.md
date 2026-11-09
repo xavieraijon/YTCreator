@@ -47,7 +47,8 @@ En Claude Code, esfuerzo `medium`.
 
 **`guion_short`**
 - Entrada: como `guion`, sin `outline`, con `angle` si sale de un vídeo largo.
-- Salida: `{blocks: {type: gancho|desarrollo|cierre, text, visual}[], claims}`, exactamente tres, en ese orden.
+- Salida: `{blocks: {type: gancho|desarrollo|cierre, text, visual}[], claims: {type, text, factId}[]}`, exactamente tres, en
+  ese orden y sin pasar del máximo de `shorts.json` al ritmo del canal.
 
 **`bloque_guion`**
 - Entrada: `block`, `previousText`, `nextText`, `voice`, `notes`, `facts`, `targetSeconds` del bloque, `instructions`.

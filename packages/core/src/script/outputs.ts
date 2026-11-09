@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { durationSeconds } from './duration.ts'
 import { OUTLINE_BLOCK_TYPES, SCRIPT_LIMITS } from './model.ts'
 
 // What the AI has to answer for each use of the script (specs/005-script-and-outline/contracts/ai-uses.md).
@@ -73,6 +74,31 @@ export const blockOutput = z.object({
 })
 export type BlockOutput = z.infer<typeof blockOutput>
 
-export const SCRIPT_OUTPUTS = { escaleta: outlineOutput, guion: draftOutput, bloque_guion: blockOutput } as const
+const SHORT_PARTS = ['gancho', 'desarrollo', 'cierre'] as const
+
+// Three parts, in this order, or it is not the script of a Short (ai-uses.md).
+export const shortDraftOutput = z
+  .object({
+    blocks: z.array(z.object({ type: z.enum(SHORT_PARTS), text: spoken, visual })).length(3),
+    claims: z.array(z.object({ type: z.enum(SHORT_PARTS), text: claimText, factId })),
+  })
+  .refine(({ blocks }) => blocks.every((block, index) => block.type === SHORT_PARTS[index]), {
+    message: 'tramos_distintos',
+  })
+export type ShortDraftOutput = z.infer<typeof shortDraftOutput>
+
+// The most a Short can last comes from whoever asks: `core` does not read the knowledge package.
+export const shortDraftOutputFor = (maxSeconds: number, wordsPerMinute: number) =>
+  shortDraftOutput.refine(
+    ({ blocks }) => durationSeconds(blocks.map((block) => block.text).join(' '), wordsPerMinute) <= maxSeconds,
+    { message: 'demasiado_largo' },
+  )
+
+export const SCRIPT_OUTPUTS = {
+  escaleta: outlineOutput,
+  guion: draftOutput,
+  guion_short: shortDraftOutput,
+  bloque_guion: blockOutput,
+} as const
 export type ScriptUse = keyof typeof SCRIPT_OUTPUTS
 export const SCRIPT_USES = Object.keys(SCRIPT_OUTPUTS) as [ScriptUse, ...ScriptUse[]]

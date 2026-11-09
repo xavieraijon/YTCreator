@@ -103,6 +103,7 @@ export function channelInput(
     case 'busquedas_idea':
     case 'escaleta':
     case 'guion':
+    case 'guion_short':
     case 'bloque_guion':
       return {}
   }

@@ -149,12 +149,12 @@ separado.
 
 **Independent Test**: Con proveedor falso, una idea Short genera el guion sin escaleta, con tres tramos dentro del máximo, y se aprueba.
 
-- [ ] T055 [P] [US4] Tests de la salida `guion_short` (exactamente `gancho`, `desarrollo` y `cierre`, en ese orden) en `packages/core/test/script/outputs.test.ts`, y del aviso de exceso en `packages/core/test/script/review.test.ts`, con el máximo recibido como parámetro
-- [ ] T056 [US4] Implementar la salida y dar de alta el uso `guion_short` según las convenciones, con su prompt, y el exceso en `packages/core/src/script/review.ts`
-- [ ] T057 [P] [US4] Test de rutas en `apps/server/test/http/scripts-short.test.ts`: generar sin escaleta, rechazar `use=escaleta`, y editar, regenerar un tramo y aprobar como en un vídeo largo
-- [ ] T058 [US4] Implementar el recorrido Short en `apps/server/src/services/scripts.ts`, y en `ScriptScreen.tsx` el `Stepper` de tres pasos, la frase de por qué importan los primeros segundos, la duración por defecto de 45 s y «Pedir otro guion», con el máximo de `shorts.json` pasado a `core`
-- [ ] T059 [US4] e2e en `apps/web/e2e/scripts.spec.ts` (US4), con axe en claro y oscuro a 375 y 1280 px
-- [ ] T060 [A] [US4] Puerta A de US4: ejecutar `/puerta-a 005 US4`
+- [X] T055 [P] [US4] Tests de la salida `guion_short` (exactamente `gancho`, `desarrollo` y `cierre`, en ese orden) en `packages/core/test/script/outputs.test.ts`, y del aviso de exceso en `packages/core/test/script/review.test.ts`, con el máximo recibido como parámetro
+- [X] T056 [US4] Implementar la salida y dar de alta el uso `guion_short` según las convenciones, con su prompt, y el exceso en `packages/core/src/script/review.ts`
+- [X] T057 [P] [US4] Test de rutas en `apps/server/test/http/scripts-short.test.ts`: generar sin escaleta, rechazar `use=escaleta`, y editar, regenerar un tramo y aprobar como en un vídeo largo
+- [X] T058 [US4] Implementar el recorrido Short en `apps/server/src/services/scripts.ts`, y en `ScriptScreen.tsx` el `Stepper` de tres pasos, la frase de por qué importan los primeros segundos, la duración por defecto de 45 s y «Pedir otro guion», con el máximo de `shorts.json` pasado a `core`
+- [X] T059 [US4] e2e en `apps/web/e2e/scripts.spec.ts` (US4), con axe en claro y oscuro a 375 y 1280 px
+- [X] T060 [A] [US4] Puerta A de US4: ejecutar `/puerta-a 005 US4`
 
 ---
 

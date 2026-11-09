@@ -31,6 +31,7 @@ const CHANNEL_USES = {
   // The script (005, contracts/ai-uses.md).
   escaleta: { model: SONNET, timeoutMs: 120_000, maxOutputTokens: 5000 },
   guion: { model: SONNET, timeoutMs: 420_000, maxOutputTokens: 22_000 },
+  guion_short: { model: SONNET, timeoutMs: 90_000, maxOutputTokens: 2000 },
   bloque_guion: { model: SONNET, timeoutMs: 90_000, maxOutputTokens: 3000 },
 } satisfies Record<Exclude<AiUse, 'comprobacion'>, AiProfile>
 
@@ -53,6 +54,7 @@ export const PROFILES: Record<ProviderId, Record<AiUse, AiProfile>> = {
     busquedas_idea: withEffort('low', CHANNEL_USES.busquedas_idea),
     escaleta: withEffort('medium', CHANNEL_USES.escaleta),
     guion: withEffort('medium', CHANNEL_USES.guion),
+    guion_short: withEffort('medium', CHANNEL_USES.guion_short),
     bloque_guion: withEffort('medium', CHANNEL_USES.bloque_guion),
   },
   anthropic: { comprobacion: { model: HAIKU, timeoutMs: 30_000, maxOutputTokens: 16 }, ...CHANNEL_USES },

@@ -45,7 +45,7 @@ const script = (fields: Partial<ScriptView> = {}): ScriptView =>
     warnings: [],
     job: null,
     webResearch: false,
-    limits: { minSeconds: 60, maxSeconds: 3600 },
+    limits: { minSeconds: 60, maxSeconds: 3600, maxReviewedAt: null },
     voice: { wordsPerMinute: 150 },
     ...fields,
   }) as unknown as ScriptView
@@ -62,7 +62,15 @@ const outline = (view: ScriptView, state: ScriptAi) =>
     />,
   )
 const facts = (view: ScriptView) =>
-  renderToStaticMarkup(<FactsStep script={view} ai={ai()} onChange={() => undefined} onError={() => undefined} />)
+  renderToStaticMarkup(
+    <FactsStep
+      script={view}
+      ai={ai()}
+      onChange={() => undefined}
+      onError={() => undefined}
+      onToDraft={() => undefined}
+    />,
+  )
 
 describe('the outline step', () => {
   it('shows a failed request instead of hiding it in the closed section', () => {

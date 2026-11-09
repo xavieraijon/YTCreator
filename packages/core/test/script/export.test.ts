@@ -118,6 +118,17 @@ describe('the document of a script', () => {
     expect(written).toContain('# Uno dos\n')
   })
 
+  it('takes a Short, with no outline and its parts by name', () => {
+    const blocks = [{ id: 'b', type: 'desarrollo' as const, title: '', text: 'Lo que se dice.', visual: '' }]
+    const short = scriptMarkdown({
+      ...input,
+      scripts: [{ ...item, format: 'short', outline: null, draft: { blocks, claims: [] } }],
+    })
+    expect(short).toContain('Formato: Short')
+    expect(short).not.toContain('## Escaleta')
+    expect(short).toContain('### Desarrollo')
+  })
+
   it('says so when no script has anything in it', () => {
     expect(scriptMarkdown({ ...input, scripts: [] })).toBe('Todavía no hay ningún guion con contenido.\n')
   })

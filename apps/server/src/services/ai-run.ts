@@ -68,6 +68,7 @@ const CLAIM_FIELDS: Partial<Record<ChannelUse, readonly string[]>> = {
   // In a script a figure without a source gets marked, not trimmed (R9).
   escaleta: [],
   guion: [],
+  guion_short: [],
   bloque_guion: [],
 }
 

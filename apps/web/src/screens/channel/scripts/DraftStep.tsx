@@ -230,8 +230,10 @@ export function DraftStep({
   const openEdit = useRef<DraftBlock | null>(null)
   const focusCounter = useRef(false)
   const refocus = useRef<string | null>(null)
-  const canRewrite = script.outline !== null && script.outlineApprovedVersion === script.outline.version
-  const price = useEstimate(script, 'guion', canRewrite)
+  const rewriteUse = script.format === 'short' ? 'guion_short' : 'guion'
+  const canRewrite =
+    script.format === 'short' || (script.outline !== null && script.outlineApprovedVersion === script.outline.version)
+  const price = useEstimate(script, rewriteUse, canRewrite)
   const draft = script.draft
 
   useEffect(() => {
@@ -268,7 +270,7 @@ export function DraftStep({
   const total = durationSeconds(blocks.map((block) => block.text).join(' '), wordsPerMinute)
   const busy = saving || ai.working !== null
   const locked = busy || editing !== null
-  const again = ai.failureFor('guion')
+  const again = ai.failureFor(rewriteUse)
   const blockFailure = ai.failureFor('bloque_guion')
   const isApproved = script.status === 'guion_aprobado'
 
@@ -360,7 +362,7 @@ export function DraftStep({
         {blocks.map((block) => (
           <Card as="li" key={block.id}>
             <h2 tabIndex={-1} data-block-heading={block.id}>
-              {block.title || scriptEs.outline.untitled}
+              {block.title || scriptEs.outline.types[block.type]}
             </h2>
             {editing === block.id ? (
               <BlockEditor
@@ -406,7 +408,10 @@ export function DraftStep({
                     variant="secondary"
                     size="sm"
                     data-block-action={`${block.id}:change`}
-                    aria-label={format(text.named, { accion: text.change, titulo: block.title })}
+                    aria-label={format(text.named, {
+                      accion: text.change,
+                      titulo: block.title || scriptEs.outline.types[block.type],
+                    })}
                     aria-disabled={locked || undefined}
                     onClick={() => !locked && guard(() => setEditing(block.id))}
                   >
@@ -416,7 +421,10 @@ export function DraftStep({
                     variant="secondary"
                     size="sm"
                     data-block-action={`${block.id}:again`}
-                    aria-label={format(text.named, { accion: text.blockAgain, titulo: block.title })}
+                    aria-label={format(text.named, {
+                      accion: text.blockAgain,
+                      titulo: block.title || scriptEs.outline.types[block.type],
+                    })}
                     aria-disabled={busy || undefined}
                     aria-expanded={asking === block.id}
                     onClick={() => !busy && setAsking(asking === block.id ? null : block.id)}
@@ -470,9 +478,9 @@ export function DraftStep({
               primary={false}
               estimate={price.estimate}
               failure={again}
-              busy={ai.working === 'guion'}
+              busy={ai.working === rewriteUse}
               disabled={locked}
-              onRun={() => guard(() => void ai.run('guion', price, instructions))}
+              onRun={() => guard(() => void ai.run(rewriteUse, price, instructions))}
             />
           </>
         ) : (

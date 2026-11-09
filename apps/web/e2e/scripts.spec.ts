@@ -312,3 +312,52 @@ test('reviewing for free, approving knowing what is left, downloading and reopen
   await page.getByRole('button', { name: 'Revisar el guion' }).click()
   await expect(page.getByRole('button', { name: 'Aprobar el guion' })).toBeVisible()
 })
+
+test('a Short goes straight to its three parts and warns how much is over (US4)', async ({ page, context }) => {
+  test.setTimeout(120_000)
+  await blockExternal(context)
+  const channelId = ((await api(server, 'GET', '/api/channels/current'))['channel'] as { id: string }).id
+  const { idea } = (await api(server, 'POST', `/api/channels/${channelId}/ideas`, {
+    title: 'Pan en un minuto',
+    format: 'short',
+  })) as { idea: { id: string; revision: number } }
+  await api(server, 'PATCH', `/api/ideas/${idea.id}`, { revision: idea.revision, status: 'elegida' })
+
+  await page.goto(`${server.baseURL}/canal/ideas`)
+  await page.getByRole('button', { name: 'Preparar el guion de «Pan en un minuto»' }).click()
+  await expect(heading(page, 'Pan en un minuto')).toBeVisible()
+  await expect(page.getByText('En un Short, los primeros segundos deciden', { exact: false })).toBeVisible()
+  await expect(page.getByLabel(/en segundos/)).toHaveValue('45')
+  const steps = page.getByRole('navigation', { name: 'Pasos de este guion' })
+  await expect(steps.getByRole('button', { name: 'Escaleta' })).toHaveCount(0)
+  await audit(page)
+
+  const write = page.getByRole('button', { name: /^Escribir el guion/ })
+  await expect(write).toContainText('·')
+  await write.click()
+  await expect(page.getByRole('heading', { level: 2, name: 'Gancho' })).toBeVisible({ timeout: 15_000 })
+  await expect(page.getByRole('heading', { level: 2, name: 'Desarrollo' })).toBeVisible()
+  await expect(page.getByRole('heading', { level: 2, name: 'Cierre' })).toBeVisible()
+  await expect(steps.getByRole('button', { name: 'Escaleta' })).toHaveCount(0)
+  await expect(page.getByLabel('En qué paso va este guion')).not.toContainText('Escaleta')
+  await audit(page)
+
+  // Another one, as in a long video.
+  await page.getByText('Quiero otro guion').click()
+  const asked = page.waitForResponse(/\/generate$/)
+  await page.getByRole('button', { name: /^Pedir otro guion/ }).click()
+  await asked
+  await expect(page.getByRole('button', { name: 'Cambiar «Desarrollo»' })).toBeEnabled({ timeout: 15_000 })
+
+  await page.getByRole('button', { name: 'Cambiar «Desarrollo»' }).click()
+  await page.getByLabel('Lo que se dice').fill('Ir poco a poco. '.repeat(130))
+  await page.getByRole('button', { name: 'Guardar' }).click()
+  await page.getByRole('button', { name: 'Revisar el guion' }).click()
+  await expect(page.getByText(/el máximo de un Short es .* Sobran/)).toBeVisible()
+  await audit(page)
+
+  await page.getByRole('button', { name: 'Aprobar el guion' }).click()
+  await expect(page.getByText('Guion aprobado.')).toBeVisible()
+  await page.reload()
+  await expect(page.getByText('Guion aprobado.')).toBeVisible()
+})

@@ -161,7 +161,7 @@ function draftSection(draft: DraftContent, wordsPerMinute: number): string[] {
         ]
       : []),
     ...draft.blocks.flatMap((block) => [
-      `### ${oneLine(block.title) || 'Sin título'}`,
+      `### ${oneLine(block.title) || BLOCK_TYPE[block.type]}`,
       '',
       safe(
         splitMarks(

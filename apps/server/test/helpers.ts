@@ -232,6 +232,7 @@ export function makeTestApp({
     scripts: scriptsRepo,
     versions: scriptVersions,
     shortMaxSeconds: market.shorts.data.maxDurationSeconds,
+    shortsReviewedAt: market.shorts.reviewedAt,
     webResearch: () => false,
     aiRun: aiRun,
     promptFor: promptFor,

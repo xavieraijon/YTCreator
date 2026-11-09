@@ -14,6 +14,13 @@ export interface ScriptReviewRules {
 export type ReviewNotice =
   | { readonly rule: 'duracion'; readonly blockId: string; readonly seconds: number; readonly target: number }
   | { readonly rule: 'gancho_largo'; readonly blockId: string; readonly seconds: number; readonly limit: number }
+  | {
+      readonly rule: 'short_largo'
+      readonly blockId: string
+      readonly seconds: number
+      readonly limit: number
+      readonly excess: number
+    }
   | { readonly rule: 'muletilla'; readonly blockId: string; readonly text: string }
   | { readonly rule: 'frase_larga'; readonly blockId: string; readonly text: string; readonly words: number }
   | { readonly rule: 'por_comprobar'; readonly blockId: string; readonly count: number }
@@ -25,6 +32,8 @@ export interface ReviewInput {
   readonly blocks: readonly DraftBlock[]
   readonly claims: readonly Claim[]
   readonly rules: ScriptReviewRules
+  /** The most a Short can last, from whoever asks: `core` does not read the knowledge package. */
+  readonly shortMaxSeconds: number
 }
 
 // A full stop inside «1.200» has no space after it, so it does not end a sentence.
@@ -43,14 +52,18 @@ export function reviewScript({
   blocks,
   claims,
   rules,
+  shortMaxSeconds,
 }: ReviewInput): ReviewNotice[] {
   const notices: ReviewNotice[] = []
   const secondsOf = (block: DraftBlock) => durationSeconds(block.text, wordsPerMinute)
 
   const total = durationSeconds(blocks.map((block) => block.text).join(' '), wordsPerMinute)
-  if (blocks.length > 0 && Math.abs(total - targetSeconds) > targetSeconds * rules.durationTolerance) {
-    // Where it can be fixed: the longest block if it runs over, the shortest if it falls short.
-    const sorted = [...blocks].sort((a, b) => secondsOf(a) - secondsOf(b))
+  // Where it can be fixed: the longest block if it runs over, the shortest if it falls short.
+  const sorted = [...blocks].sort((a, b) => secondsOf(a) - secondsOf(b))
+  if (format === 'short' && total > shortMaxSeconds) {
+    const excess = total - shortMaxSeconds
+    notices.push({ rule: 'short_largo', blockId: sorted.at(-1)!.id, seconds: total, limit: shortMaxSeconds, excess })
+  } else if (blocks.length > 0 && Math.abs(total - targetSeconds) > targetSeconds * rules.durationTolerance) {
     const block = total > targetSeconds ? sorted.at(-1)! : sorted[0]!
     notices.push({ rule: 'duracion', blockId: block.id, seconds: total, target: targetSeconds })
   }

@@ -249,6 +249,7 @@ export const es = {
       busquedas_idea: 'Preparar la medida de una idea',
       escaleta: 'Proponer la escaleta de un vídeo',
       guion: 'Escribir el guion de un vídeo',
+      guion_short: 'Escribir el guion de un Short',
       bloque_guion: 'Escribir de nuevo un bloque del guion',
     } satisfies Record<AiUse, string>,
     failed: 'No salió bien',

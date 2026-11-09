@@ -26,10 +26,12 @@ export function ScriptWarnings({
 }) {
   const { verdict, verdictAt } = script.idea
   const risky = verdict !== null && RISKY.includes(verdict)
-  const redoUse = script.draft ? ('guion' as const) : ('escaleta' as const)
+  const isShort = script.format === 'short'
+  const draftUse = isShort ? ('guion_short' as const) : ('guion' as const)
+  const redoUse = script.draft ? draftUse : ('escaleta' as const)
   const outlineApproved = script.outline !== null && script.outlineApprovedVersion === script.outline.version
   const moved = script.warnings.some((warning) => warning !== 'origen_cambiado')
-  const canRedo = moved && script.format === 'largo' && (script.draft ? outlineApproved : script.outline !== null)
+  const canRedo = moved && (isShort ? script.draft !== null : script.draft ? outlineApproved : script.outline !== null)
   const price = useEstimate(script, redoUse, canRedo)
 
   if (script.warnings.length === 0 && !risky) return null

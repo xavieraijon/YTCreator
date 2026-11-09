@@ -261,3 +261,63 @@ supuesto y fecha), VI (accesibilidad), VII (datos legibles fuera de la app), XI 
 ### 9. Cómo revertir
 
 `git revert` del commit de esta historia. No hay migraciones. Queda: US4 en adelante.
+
+## US4 (T055–T060), Puerta A del 2026-11-09
+
+### 1. Resumen
+
+Una idea Short va directa al guion, sin escaleta, en tres tramos dentro del máximo de `shorts.json`, con aviso de cuánto sobra
+si se edita de más. Se edita, se pide otra vez, se revisa, se aprueba y se descarga como un vídeo largo.
+
+### 2. Requisitos
+
+| Requisito | Estado | Evidencia | Fecha |
+|---|---|---|---|
+| AS1 sin escaleta y por qué importan los primeros segundos | Cumplido | `scripts.spec.ts`, `scripts-short.test.ts` | 2026-11-09 |
+| AS2 tres tramos dentro del máximo | Cumplido con IA falsa | `outputs.test.ts`, `scripts-short.test.ts` (el esquema de la llamada rechaza el exceso) | 2026-11-09 |
+| AS3 cuánto sobra | Cumplido | `review.test.ts`, `scripts.spec.ts` | 2026-11-09 |
+| AS4 / FR-018 igual que un vídeo largo | Parcial | Editar, otro guion, un tramo, revisar, aprobar y descargar probados; volver a una versión llega en US5 | 2026-11-09 |
+| 45 s por defecto, sin duplicar cifras | Cumplido | `scripts-short.test.ts`, `scripts.spec.ts`; máximo leído de `shorts.json` | 2026-11-09 |
+
+### 3. Cómo se comprobó
+
+Tras las correcciones: `lint` 0, `typecheck` 0, `test` en verde (código 0). `test:e2e` web: 42 de 43 antes del último ajuste de
+nombres accesibles; después, `scripts.spec` 4 de 4. Recorrido con los proveedores falsos.
+
+### 4. Controles
+
+- Pasados: lint, typecheck, test, glosario, `secrets-leak`, axe claro y oscuro a 375 y 1280 px con reduced-motion (Hechos,
+  guion y revisión de un Short).
+- Tipos de fallo de IA: `guion_short` usa el mismo camino que `escaleta`, probado en `scripts-outline.test.ts`; sin prueba propia.
+- No ejecutados: `test:installer` (no se toca el instalador); IA real (P1), incluido si cada proveedor acepta el esquema de tres
+  tramos exactos. Las correcciones han pasado los controles, pero no una segunda vuelta de revisores.
+
+### 5. Hallazgos
+
+Corregidos (medios): el prompt no declaraba `instructions` ni separaba datos de instrucciones; títulos de tramo en el servidor
+y fuera de los catálogos; el máximo se enseñaba con la fuente de otro paquete; el tramo regenerado pedía su duración actual,
+o cero; cambiar el formato de una idea con guion dejaba la pantalla equivocada; decisiones sin registrar. Corregidos (menores):
+comprobación de `guion_short` en un vídeo largo, del máximo por la ruta y de la descarga de un Short; reglas repetidas de
+`craft.json` en el prompt; la frase de los primeros segundos desaparecía con el guion escrito; aserción del `Stepper`.
+
+Descartados: ninguno.
+
+Abiertos (menores): un guion que se pasa falla con el mensaje genérico de salida no entendida; los 5 s del gancho de `review.json`
+no llegan a la IA, así que un Short recién escrito puede salir con ese aviso.
+
+### 6. Desviaciones
+
+Entradas 25 a 29 de `decisions.md`; `contracts/ai-uses.md` y `ui-screens.md` alineados.
+
+### 7. Decisiones
+
+Agente: 25 a 29 (medio). Pendientes del creador: P1 y P2; no bloquean esta historia.
+
+### 8. Constitución
+
+I (por qué en lenguaje llano), II (fecha y origen del máximo, marcas), III (coste en el botón), V (sin duplicar `shorts.json`),
+VI (accesibilidad), XI (este informe).
+
+### 9. Cómo revertir
+
+`git revert` del commit de esta historia. No hay migraciones. Queda: US5 en adelante.
