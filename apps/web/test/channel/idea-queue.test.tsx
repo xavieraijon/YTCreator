@@ -3,6 +3,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import { IdeaBankContent, type OrderControls } from '../../src/screens/channel/ideas/IdeaBank.tsx'
 import { filterIdeas, NO_FILTERS } from '../../src/screens/channel/ideas/IdeaShelf.tsx'
+import { scriptEs } from '../../src/strings/script.es.ts'
 import { ideasEs } from '../../src/strings/ideas.es.ts'
 
 // US4: the queue, the order, the filters, the archive and the downloads (contracts/ui-screens.md).
@@ -34,6 +35,7 @@ const measure = (verdict: IdeaMeasureView['verdict']): IdeaMeasureView => ({
 })
 const idea = (id: string, title: string, fields: Partial<IdeaView> = {}): IdeaView => ({
   id,
+  script: null,
   origin: 'creador',
   batchId: null,
   sourceIdeaId: null,
@@ -104,13 +106,13 @@ describe('the queue and the order (US4)', () => {
       expect(queue).toContain(named(action, 'Pan de pita'))
     }
     expect(queue).toContain('1. Pan de pita')
-    expect(queue).toContain(ideasEs.queue.note)
+    expect(queue).toContain(scriptEs.queue.prepare)
   })
 
   it('without chosen ideas, it says how to choose one, and there is no note', () => {
     const html = show(bank({ ideas: [idea('c', 'Pan de centeno')], queue: [] }))
     expect(html).toContain(ideasEs.queue.empty)
-    expect(html).not.toContain(ideasEs.queue.note)
+    expect(html).not.toContain(scriptEs.queue.prepare)
   })
 
   it('the order buttons are named after the idea; at an edge they say they are not available', () => {

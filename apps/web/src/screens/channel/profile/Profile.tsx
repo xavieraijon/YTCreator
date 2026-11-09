@@ -39,6 +39,7 @@ import { useJob } from '../../../shell/useJob.ts'
 import { channelEs } from '../../../strings/channel.es.ts'
 import { es } from '../../../strings/es.ts'
 import { ideasEs } from '../../../strings/ideas.es.ts'
+import { scriptEs } from '../../../strings/script.es.ts'
 import {
   youtubeFailureActionsEs,
   youtubeFailuresEs,
@@ -288,9 +289,14 @@ export function ProfileView({
 
       <div className={styles.option}>
         <p className={styles.why}>{text.nextStep}</p>
-        <Button variant="primary" onClick={() => navigate({ page: 'ideaBank' })}>
-          {ideasEs.bank.open}
-        </Button>
+        <div className={styles.actions}>
+          <Button variant="primary" onClick={() => navigate({ page: 'ideaBank' })}>
+            {ideasEs.bank.open}
+          </Button>
+          <Button variant="secondary" onClick={() => navigate({ page: 'scriptList' })}>
+            {scriptEs.list.channelLink}
+          </Button>
+        </div>
       </div>
     </>
   )

@@ -12,5 +12,7 @@ export const AI_USES = [
   'ideas',
   'otro_enfoque',
   'busquedas_idea',
+  // The script (005).
+  'escaleta',
 ] as const
 export type AiUse = (typeof AI_USES)[number]

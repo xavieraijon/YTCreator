@@ -247,6 +247,7 @@ export const es = {
       ideas: 'Proponer ideas de vídeo',
       otro_enfoque: 'Buscar otro enfoque',
       busquedas_idea: 'Preparar la medida de una idea',
+      escaleta: 'Proponer la escaleta de un vídeo',
     } satisfies Record<AiUse, string>,
     failed: 'No salió bien',
     knowledge: 'Información que conviene revisar',

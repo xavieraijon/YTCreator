@@ -65,6 +65,8 @@ const CLAIM_FIELDS: Partial<Record<ChannelUse, readonly string[]>> = {
   ideas: ['hook'],
   otro_enfoque: ['hook', 'why'],
   busquedas_idea: [],
+  // In a script a figure without a source gets marked, not trimmed (R9).
+  escaleta: [],
 }
 
 // One request can become up to four calls: an answer that does not validate is always asked for again by the adapter
@@ -131,7 +133,25 @@ export function createAiRunService(deps: AiRunDeps) {
     for (const [id, saved] of estimates) if (isEstimateExpired(saved.createdAt, now())) estimates.delete(id)
   }
 
+  // An estimate spent or for something else is refused; work in the background asks this before it starts.
+  const estimateOf = (estimateId: string, use: ChannelUse, journeyId?: string): Saved => {
+    const saved = estimates.get(estimateId)
+    if (
+      !saved ||
+      saved.use !== use ||
+      (journeyId !== undefined && saved.journeyId !== journeyId) ||
+      isEstimateExpired(saved.createdAt, now())
+    ) {
+      throw new ApiError({ code: 'validacion', fields: { estimateId: 'no_valido' } })
+    }
+    return saved
+  }
+
   return {
+    assertEstimate(estimateId: string, use: ChannelUse, journeyId?: string): void {
+      estimateOf(estimateId, use, journeyId)
+    },
+
     estimate({
       journeyId,
       use,
@@ -147,7 +167,13 @@ export function createAiRunService(deps: AiRunDeps) {
       const ai = activeOrThrow()
       const profile = profileOf(ai, use)
       const call = callCents(ai, profile.model, profile.maxOutputTokens, use, input)
-      const expected = callCents(ai, profile.model, Math.min(outputTokens ?? profile.maxOutputTokens, profile.maxOutputTokens), use, input)
+      const expected = callCents(
+        ai,
+        profile.model,
+        Math.min(outputTokens ?? profile.maxOutputTokens, profile.maxOutputTokens),
+        use,
+        input,
+      )
       const withInstructions = callCents(ai, profile.model, profile.maxOutputTokens, use, {
         ...input,
         instructions: MAX_INSTRUCTIONS,
@@ -187,15 +213,7 @@ export function createAiRunService(deps: AiRunDeps) {
       /** A stricter schema than the use's own, such as one that knows the pillars of the profile (004, ai-uses.md). */
       schema?: { safeParse(value: unknown): { success: boolean } }
     }): Promise<RunResult<U>> {
-      const saved = estimates.get(estimateId)
-      if (
-        !saved ||
-        saved.use !== use ||
-        (journeyId !== undefined && saved.journeyId !== journeyId) ||
-        isEstimateExpired(saved.createdAt, now())
-      ) {
-        throw new ApiError({ code: 'validacion', fields: { estimateId: 'no_valido' } })
-      }
+      const saved = estimateOf(estimateId, use, journeyId)
       estimates.delete(estimateId)
 
       const ai = activeOrThrow()

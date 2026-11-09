@@ -145,7 +145,6 @@ export const ideasEs = {
     title: 'Próximos vídeos',
     why: 'Las ideas que has elegido para hacer, en el orden en que quieres hacerlas.',
     empty: 'Todavía no has elegido ninguna. Pulsa «Elegir para guion» en la idea que quieras hacer.',
-    note: 'El guion de la primera llegará en la próxima versión.',
     remove: 'Quitar de la cola',
     place: '{n}. {titulo}',
   },

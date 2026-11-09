@@ -1,12 +1,28 @@
+import { randomUUID } from 'node:crypto'
 import {
   channelProfileSchema,
   DEFAULT_SCRIPT_SETTINGS,
+  defaultTargetSeconds,
+  SCRIPT_LIMITS,
   scriptStatus,
   scriptWarnings,
+  type ChannelProfile,
+  type ContentOf,
   type Idea,
+  type OutlineContent,
   type ScriptKind,
+  type ScriptUse,
+  type VersionOrigin,
 } from '@ytcreator/core'
-import type { ScriptSettingsView, ScriptSummary, ScriptVersionMeta, ScriptView } from '@ytcreator/core/api'
+import type {
+  OutlineSaveBody,
+  ScriptGenerateBody,
+  ScriptSettingsView,
+  ScriptSummary,
+  ScriptVersionMeta,
+  ScriptView,
+} from '@ytcreator/core/api'
+import type { ScriptKnowledge } from '@ytcreator/knowledge'
 import type { DatabaseSync } from 'node:sqlite'
 import type { ChannelsRepo } from '../db/repos/channels.ts'
 import type { IdeaMeasuresRepo } from '../db/repos/idea-measures.ts'
@@ -16,9 +32,10 @@ import type { JourneysRepo } from '../db/repos/journeys.ts'
 import type { ProfilesRepo } from '../db/repos/profiles.ts'
 import type { Script, ScriptsRepo } from '../db/repos/scripts.ts'
 import type { ScriptVersion, ScriptVersionsRepo } from '../db/repos/script-versions.ts'
+import type { AiRunService, PromptRef } from './ai-run.ts'
+import { profileInput } from './ideas.ts'
 import type { JobsService } from './jobs.ts'
 import { ApiError } from '../http/errors.ts'
-import { SCRIPT_LIMITS, defaultTargetSeconds } from '@ytcreator/core'
 
 export interface ScriptServiceDeps {
   db: DatabaseSync
@@ -35,7 +52,9 @@ export interface ScriptServiceDeps {
   shortMaxSeconds: number
   // Whether the active connection can search the web (R3).
   webResearch: () => boolean
-  now?: () => Date
+  aiRun: AiRunService
+  promptFor: (use: ScriptUse) => PromptRef
+  knowledge: ScriptKnowledge
 }
 
 const LIVE = 'en_curso'
@@ -55,7 +74,7 @@ const withContent = <K extends ScriptKind>(version: ScriptVersion<K> | null) =>
 
 // What every route of the script needs: reading it, and the rules on what it may do now.
 export function createScriptService(deps: ScriptServiceDeps) {
-  const { channels, profiles, ideas, measures, jobsRepo, scripts, versions, shortMaxSeconds } = deps
+  const { channels, profiles, journeys, ideas, measures, jobsRepo, scripts, versions, shortMaxSeconds, aiRun } = deps
 
   const withProfile = (channelId: string) => {
     const channel = channels.get(channelId)
@@ -130,6 +149,7 @@ export function createScriptService(deps: ScriptServiceDeps) {
       },
       facts: withContent(facts),
       outline: withContent(outline),
+      outlineFromAi: outline !== null && versions.list(script.id, 'escaleta').some((one) => one.origin === 'ia'),
       draft: withContent(draft),
       outlineApprovedVersion: script.outlineApprovedVersion,
       draftApprovedVersion: script.draftApprovedVersion,
@@ -189,7 +209,158 @@ export function createScriptService(deps: ScriptServiceDeps) {
     return { view: view(script, idea, profileVersion), created: true }
   }
 
-  return { withProfile, find, jobOf, assertIdle, statusOf, voiceOf, view, summaries, openForIdea, shortMaxSeconds }
+  // The spending is written down on the channel's journey, as in the idea bank.
+  const journeyOf = (channelId: string) => {
+    const journey = journeys.getLast(channelId)
+    if (!journey) throw new ApiError({ code: 'no_encontrado' })
+    return journey.id
+  }
+
+  type Found = ReturnType<typeof find>
+
+  const addVersion = <K extends ScriptKind>(
+    { script, idea, profileVersion }: Found,
+    kind: K,
+    origin: VersionOrigin,
+    content: ContentOf<K>,
+    extra: {
+      factsVersion?: number | null
+      outlineVersion?: number | null
+      instructions?: string | null
+      promptId?: string
+      promptVersion?: number
+      usageId?: string | null
+      restoredFrom?: number
+    } = {},
+  ) => {
+    const version = versions.add({
+      scriptId: script.id,
+      kind,
+      origin,
+      content,
+      ideaRevision: idea.revision,
+      profileVersion,
+      ...extra,
+    })
+    scripts.touch(script.id)
+    return version
+  }
+
+  const assertBase = (latest: number | null, baseVersion: number) => {
+    if ((latest ?? 0) !== baseVersion) throw new ApiError({ code: 'version_cambiada' })
+  }
+
+  // The facts as the AI reads them: what is known, how sure it is and where it comes from.
+  const factsInput = (scriptId: string) => {
+    const facts = versions.latest(scriptId, 'hechos')
+    return (facts?.content.facts ?? []).map((fact) => ({
+      id: fact.id,
+      text: fact.text,
+      label: fact.label,
+      sources: fact.sources.map((source) => source.title || source.reference || source.url),
+    }))
+  }
+
+  const ideaInput = (idea: Idea) => ({ title: idea.title, hook: idea.hook, query: idea.query, format: idea.format })
+
+  const outlineInput = ({ script, idea, profile }: { script: Script; idea: Idea; profile: ChannelProfile }) => ({
+    idea: ideaInput(idea),
+    profile: profileInput(profile),
+    notes: script.notes,
+    facts: factsInput(script.id),
+    targetSeconds: script.targetSeconds,
+    wordsPerMinute: voiceOf(script.channelId).wordsPerMinute,
+    craft: deps.knowledge.craft.data,
+    previous: versions.latest(script.id, 'escaleta')?.content ?? null,
+  })
+
+  // What each use asks for and what it does with the answer.
+  const requestFor = (found: Found, use: ScriptUse) => {
+    if (found.script.format === 'short') throw new ApiError({ code: 'validacion', fields: { use: 'no_valido' } })
+    return {
+      input: outlineInput(found),
+      outputTokens: undefined,
+      keep: (value: unknown, usageId: string | null, instructions: string | null) => {
+        const { blocks } = value as { blocks: Omit<OutlineContent['blocks'][number], 'id'>[] }
+        const prompt = deps.promptFor(use)
+        addVersion(
+          found,
+          'escaleta',
+          'ia',
+          { blocks: blocks.map((block) => ({ ...block, id: randomUUID() })) },
+          {
+            factsVersion: versions.latestNumber(found.script.id, 'hechos'),
+            instructions,
+            promptId: prompt.id,
+            promptVersion: prompt.version,
+            usageId,
+          },
+        )
+      },
+    }
+  }
+
+  const estimate = (id: string, use: ScriptUse) => {
+    const found = find(id)
+    const { input, outputTokens } = requestFor(found, use)
+    return aiRun.estimate({ journeyId: journeyOf(found.script.channelId), use, input, outputTokens })
+  }
+
+  // Runs in the background: the creator can close the tab and find the result on coming back (R12).
+  const generate = (id: string, { use, estimateId, instructions }: ScriptGenerateBody) => {
+    const found = find(id)
+    assertIdle(found.script)
+    const journeyId = journeyOf(found.script.channelId)
+    aiRun.assertEstimate(estimateId, use, journeyId)
+    const { input, keep } = requestFor(found, use)
+    const job = deps.jobs.start({ journeyId: null, channelId: found.script.channelId, kind: 'ia' }, async () => {
+      const result = await aiRun.run({ estimateId, journeyId, use, input, instructions })
+      if (!result.ok) return { failure: result.failure }
+      keep(result.value, result.usageId, instructions ?? null)
+      return undefined
+    })
+    scripts.setJob(found.script.id, job.id, use)
+    return job.id
+  }
+
+  const saveOutline = (id: string, { baseVersion, content }: OutlineSaveBody) => {
+    const found = find(id)
+    assertIdle(found.script)
+    if (found.script.format === 'short') throw new ApiError({ code: 'validacion', fields: { outline: 'no_valido' } })
+    const latest = versions.latest(found.script.id, 'escaleta')
+    assertBase(latest?.version ?? null, baseVersion)
+    addVersion(found, 'escaleta', 'edicion', content, { factsVersion: latest?.factsVersion ?? null })
+    return view(scripts.get(id)!, found.idea, found.profileVersion)
+  }
+
+  const approveOutline = (id: string, version: number) => {
+    const found = find(id)
+    assertIdle(found.script)
+    const latest = versions.latest(found.script.id, 'escaleta')
+    if (!latest || latest.version !== version) throw new ApiError({ code: 'version_cambiada' })
+    if (latest.content.blocks.some((block) => block.title.trim() === '')) {
+      throw new ApiError({ code: 'validacion', fields: { blocks: 'no_valido' } })
+    }
+    return view(scripts.approveOutline(id, version), found.idea, found.profileVersion)
+  }
+
+  return {
+    withProfile,
+    find,
+    assertIdle,
+    view,
+    summaries,
+    openForIdea,
+    shortMaxSeconds,
+    estimate,
+    generate,
+    saveOutline,
+    approveOutline,
+    ideaScript(ideaId: string): { id: string; status: ReturnType<typeof statusOf> } | null {
+      const script = scripts.getByIdea(ideaId)
+      return script ? { id: script.id, status: statusOf(script) } : null
+    },
+  }
 }
 
 export type ScriptService = ReturnType<typeof createScriptService>

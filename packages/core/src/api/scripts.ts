@@ -9,6 +9,7 @@ import {
   VOICE_ADDRESSES,
   VOICE_REGISTERS,
 } from '../script/model.ts'
+import { SCRIPT_USES } from '../script/outputs.ts'
 import { SCRIPT_STATUSES, SCRIPT_WARNINGS } from '../script/status.ts'
 
 // The script routes (specs/005-script-and-outline/contracts/http-api.md).
@@ -69,6 +70,8 @@ export const scriptViewSchema = z.object({
   }),
   facts: versionOf(factsContentSchema),
   outline: versionOf(outlineContentSchema),
+  // An edit keeps what the AI proposed: it stays marked as its opinion.
+  outlineFromAi: z.boolean(),
   draft: versionOf(draftContentSchema),
   outlineApprovedVersion: count.nullable(),
   draftApprovedVersion: count.nullable(),
@@ -102,3 +105,21 @@ export const scriptPatchBodySchema = z
   })
   .refine((body) => body.targetSeconds !== undefined || body.notes !== undefined)
 export type ScriptPatchBody = z.infer<typeof scriptPatchBodySchema>
+
+// `baseVersion` is the version this edit started from, 0 if there was none (R18).
+const baseVersion = count
+export const outlineSaveBodySchema = z.object({ baseVersion, content: outlineContentSchema })
+export type OutlineSaveBody = z.infer<typeof outlineSaveBodySchema>
+
+export const approveOutlineBodySchema = z.object({ version: z.number().int().positive() })
+
+export const scriptEstimateBodySchema = z.object({ use: z.enum(SCRIPT_USES), blockId: id.optional() })
+export type ScriptEstimateBody = z.infer<typeof scriptEstimateBodySchema>
+
+export const scriptGenerateBodySchema = z.object({
+  use: z.enum(SCRIPT_USES),
+  estimateId: id,
+  instructions: z.string().trim().max(SCRIPT_LIMITS.instructions).optional(),
+  blockId: id.optional(),
+})
+export type ScriptGenerateBody = z.infer<typeof scriptGenerateBodySchema>

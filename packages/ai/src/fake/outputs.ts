@@ -94,6 +94,29 @@ const IDEA_TITLES: readonly (readonly [string, string, string, string])[] = [
   ['Legumbres que no parecen de abuela', 'legumbres recetas modernas', 'recetas de legumbres', 'modern legume recipes'],
 ]
 
+// Fits the duration asked for, so the total shown is right.
+function outline(input: Record<string, unknown>) {
+  const seconds = Math.max(Math.round(Number(input.targetSeconds ?? 600) / 5), 1)
+  const block = (type: string, title: string, purpose: string) => ({
+    type,
+    title,
+    purpose,
+    question: type === 'acto' ? '¿Qué pasa si lo haces al revés?' : null,
+    reward: type === 'acto' ? 'Un truco que puedes usar hoy.' : null,
+    bridge: type === 'cierre' ? null : 'Y aquí viene lo que nadie cuenta.',
+    seconds,
+  })
+  return {
+    blocks: [
+      block('gancho', 'El error que comete casi todo el mundo', 'Que quien llega se quede a ver el resto.'),
+      block('contexto', 'Por qué pasa esto', 'Que se entienda de qué va el vídeo.'),
+      block('acto', 'Lo que hay que cambiar primero', 'Dar la primera solución.'),
+      block('acto', 'El paso que marca la diferencia', 'Dar lo que no se encuentra en otro sitio.'),
+      block('cierre', 'Qué hacer mañana', 'Que la persona sepa cómo seguir.'),
+    ],
+  }
+}
+
 function ideaDrafts(input: Record<string, unknown>, attempt: number, mode: FakeOutputMode) {
   const pillars = pillarsOf(input)
   const shorts = onlyShorts(input)
@@ -238,6 +261,8 @@ function normal(
     }
     case 'busquedas_idea':
       return { query: 'cena rapida con sobras', broadQuery: 'cenas rapidas', queryEn: 'quick dinner with leftovers' }
+    case 'escaleta':
+      return outline(input)
   }
 }
 
@@ -286,6 +311,10 @@ function invent(use: ChannelUse, output: Record<string, unknown>): Record<string
     }
     case 'busquedas_idea':
       return { ...output, broadQuery: 'cenas con 250.000 visitas' }
+    case 'escaleta': {
+      const [first, ...rest] = output.blocks as { purpose: string }[]
+      return { blocks: [{ ...first, purpose: add(first!.purpose).slice(0, 300) }, ...rest] }
+    }
   }
 }
 

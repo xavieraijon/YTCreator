@@ -1,3 +1,4 @@
+import { SCRIPT_OUTPUTS } from '../script/outputs.ts'
 import { z } from 'zod'
 import { AUDIENCE_REGIONS } from './model.ts'
 import { RPM_CATEGORIES } from './monetization.ts'
@@ -117,6 +118,8 @@ export const CHANNEL_OUTPUTS = {
   perfil_parte: profilePartOutput,
   // The idea bank (004) hangs from the channel too: the same run service, estimate and figure validator.
   ...IDEA_OUTPUTS,
+  // The script (005) as well.
+  ...SCRIPT_OUTPUTS,
 } as const
 export type ChannelUse = keyof typeof CHANNEL_OUTPUTS
 export type ChannelOutput<U extends ChannelUse> = z.infer<(typeof CHANNEL_OUTPUTS)[U]>

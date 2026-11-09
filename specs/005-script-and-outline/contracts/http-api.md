@@ -31,9 +31,9 @@ R18), `sin_aprobar` (409, falta aprobar el paso anterior), `sin_internet` (409, 
 
 | Método y ruta | Cuerpo | Respuesta |
 |---|---|---|
-| `PUT /scripts/:id/facts` | `{baseVersion, content}` | versión nueva, con los enlaces nuevos comprobados |
-| `PUT /scripts/:id/outline` | `{baseVersion, content}` | versión nueva |
-| `PUT /scripts/:id/draft` | `{baseVersion, content}` | versión nueva |
+| `PUT /scripts/:id/facts` | `{baseVersion, content}` | `ScriptView` con la versión nueva y los enlaces nuevos comprobados |
+| `PUT /scripts/:id/outline` | `{baseVersion, content}` | `ScriptView` con la versión nueva |
+| `PUT /scripts/:id/draft` | `{baseVersion, content}` | `ScriptView` con la versión nueva |
 | `POST /scripts/:id/claims/:claimId` | `{baseVersion, action, text?}` | `confirmar` y `no_es_dato` dan una versión `marcas` (R10); `corregir`, `quitar_del_guion` y `aceptar_propuesta`, una versión `edicion` |
 | `GET /scripts/:id/versions?kind=` | | lista: versión, origen, fecha |
 | `GET /scripts/:id/versions/:kind/:version` | | versión completa y bloques cambiados frente a la actual |

@@ -1,6 +1,12 @@
 import type { IdeaView } from '@ytcreator/core/api'
-import { Button, Card, format } from '@ytcreator/ui'
+import { Button, Card, ErrorMessage, format } from '@ytcreator/ui'
+import { useState } from 'react'
+import { scriptsApi } from '../../../api/client.ts'
+import { navigate } from '../../../router.ts'
+import { errorText } from '../../../shell/errorText.ts'
+import { es } from '../../../strings/es.ts'
 import { ideasEs } from '../../../strings/ideas.es.ts'
+import { scriptEs } from '../../../strings/script.es.ts'
 import styles from '../channel.module.css'
 
 const text = ideasEs.queue
@@ -56,6 +62,19 @@ export interface IdeaQueueProps {
 
 // «Próximos vídeos»: the chosen ideas in the order the creator wants to make them (US4).
 export function IdeaQueue({ ideas, busy, onMove, onRemove }: IdeaQueueProps) {
+  const [failed, setFailed] = useState<{ idea: IdeaView; cause: unknown } | null>(null)
+
+  // The script is created the first time it is opened, so opening costs nothing (data-model.md).
+  const openScript = async (idea: IdeaView) => {
+    setFailed(null)
+    try {
+      const script = idea.script ?? (await scriptsApi.open(idea.id))
+      navigate({ page: 'script', id: script.id })
+    } catch (cause) {
+      setFailed({ idea, cause })
+    }
+  }
+
   return (
     <section aria-labelledby="idea-queue-title">
       <h2 id="idea-queue-title">{text.title}</h2>
@@ -70,6 +89,17 @@ export function IdeaQueue({ ideas, busy, onMove, onRemove }: IdeaQueueProps) {
                 {/* The number is written: the cards do not show the one of the list (AS3, which goes next). */}
                 <h3>{format(text.place, { n: String(index + 1), titulo: idea.title })}</h3>
                 <div className={styles.actions}>
+                  <Button
+                    variant={index === 0 ? 'primary' : 'secondary'}
+                    size="sm"
+                    aria-label={format(scriptEs.queue.named, {
+                      accion: idea.script ? scriptEs.queue.resume : scriptEs.queue.prepare,
+                      titulo: idea.title,
+                    })}
+                    onClick={() => void openScript(idea)}
+                  >
+                    {idea.script ? scriptEs.queue.resume : scriptEs.queue.prepare}
+                  </Button>
                   <OrderButtons
                     list="queue"
                     idea={idea}
@@ -91,7 +121,13 @@ export function IdeaQueue({ ideas, busy, onMove, onRemove }: IdeaQueueProps) {
               </Card>
             ))}
           </ol>
-          <p className={styles.notice}>{text.note}</p>
+          {failed && (
+            <ErrorMessage
+              live
+              title={errorText(failed.cause)}
+              action={{ label: es.app.retry, onClick: () => void openScript(failed.idea) }}
+            />
+          )}
         </>
       )}
     </section>

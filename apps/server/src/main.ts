@@ -373,7 +373,9 @@ export async function startServer({
     versions: scriptVersions,
     shortMaxSeconds: market.shorts.data.maxDurationSeconds,
     webResearch: () => false,
-    now,
+    aiRun: channel.aiRun,
+    promptFor: channelPrompt,
+    knowledge: scriptKnowledge,
   })
   app = createApp({
     port,
@@ -401,6 +403,7 @@ export async function startServer({
       jobs: jobsRepo,
       staleDays: market.thresholds.data.ideas.staleDays,
       measure: ideaMeasure,
+      scriptOf: (ideaId: string) => scriptService.ideaScript(ideaId),
       youtube,
       dataApiUnits: market.thresholds.data.dataApi,
       measureBasis: {

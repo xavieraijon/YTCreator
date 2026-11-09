@@ -1,5 +1,11 @@
 import { targetSecondsSchema } from '@ytcreator/core'
-import { scriptPatchBodySchema } from '@ytcreator/core/api'
+import {
+  approveOutlineBodySchema,
+  outlineSaveBodySchema,
+  scriptEstimateBodySchema,
+  scriptGenerateBodySchema,
+  scriptPatchBodySchema,
+} from '@ytcreator/core/api'
 import { Hono } from 'hono'
 import type { ScriptsRepo } from '../../db/repos/scripts.ts'
 import type { ScriptService } from '../../services/scripts.ts'
@@ -42,6 +48,26 @@ export function scriptRoutes({ service, scripts }: ScriptRoutesDeps) {
     }
     const changed = scripts.update(script.id, { targetSeconds: seconds, notes: body.notes ?? script.notes })
     return c.json(service.view(changed, idea, profileVersion))
+  })
+
+  routes.post('/scripts/:id/estimate', async (c) => {
+    const { use } = await parseBody(c, scriptEstimateBodySchema)
+    return c.json(service.estimate(c.req.param('id'), use))
+  })
+
+  routes.post('/scripts/:id/generate', async (c) => {
+    const body = await parseBody(c, scriptGenerateBodySchema)
+    return c.json({ jobId: service.generate(c.req.param('id'), body) }, 202)
+  })
+
+  routes.put('/scripts/:id/outline', async (c) => {
+    const body = await parseBody(c, outlineSaveBodySchema)
+    return c.json(service.saveOutline(c.req.param('id'), body))
+  })
+
+  routes.post('/scripts/:id/outline/approve', async (c) => {
+    const { version } = await parseBody(c, approveOutlineBodySchema)
+    return c.json(service.approveOutline(c.req.param('id'), version))
   })
 
   return routes

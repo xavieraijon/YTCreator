@@ -37,6 +37,7 @@ const measure = (verdict: IdeaMeasureView['verdict']): IdeaMeasureView => ({
 })
 const idea = (fields: Partial<IdeaView> = {}): IdeaView => ({
   id: 'i1',
+  script: null,
   origin: 'creador',
   batchId: null,
   sourceIdeaId: null,

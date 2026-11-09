@@ -18,6 +18,9 @@ import {
   scriptSummarySchema,
   scriptViewSchema,
   type IdeaPatchBody,
+  type OutlineSaveBody,
+  type ScriptEstimateBody,
+  type ScriptGenerateBody,
   type ScriptPatchBody,
   type NewIdeaBody,
   type JobEvent,
@@ -288,11 +291,17 @@ const scriptPath = (id: string) => `/api/scripts/${encodeURIComponent(id)}`
 export const scriptsApi = {
   list: (channelId: string, options?: RequestOptions) =>
     apiClient.get(`${channelPath(channelId)}/scripts`, scriptSummarySchema.array(), options),
-  open: (ideaId: string) =>
-    apiClient.post(`/api/ideas/${encodeURIComponent(ideaId)}/script`, {}, scriptViewSchema),
+  open: (ideaId: string) => apiClient.post(`/api/ideas/${encodeURIComponent(ideaId)}/script`, {}, scriptViewSchema),
   get: (id: string, options?: RequestOptions) => apiClient.get(scriptPath(id), scriptViewSchema, options),
-  change: (id: string, body: ScriptPatchBody) =>
-    apiClient.patch(scriptPath(id), body, scriptViewSchema),
+  change: (id: string, body: ScriptPatchBody) => apiClient.patch(scriptPath(id), body, scriptViewSchema),
+  estimate: (id: string, body: ScriptEstimateBody, options?: RequestOptions) =>
+    apiClient.post(`${scriptPath(id)}/estimate`, body, estimateSchema, options),
+  generate: (id: string, body: ScriptGenerateBody) =>
+    apiClient.post(`${scriptPath(id)}/generate`, body, jobStartedSchema),
+  saveOutline: (id: string, body: OutlineSaveBody) =>
+    apiClient.put(`${scriptPath(id)}/outline`, body, scriptViewSchema),
+  approveOutline: (id: string, version: number) =>
+    apiClient.post(`${scriptPath(id)}/outline/approve`, { version }, scriptViewSchema),
 }
 
 export const usageApi = {

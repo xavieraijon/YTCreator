@@ -103,7 +103,8 @@ export function createScriptsRepo(db: DatabaseSync, now: () => Date = () => new 
     `UPDATE script SET draft_approved_version = ?, draft_approved_at = ?, draft_approved_pending = ?, updated_at = ?
      WHERE id = ?`,
   )
-  const updateJob = db.prepare('UPDATE script SET job_id = ?, job_op = ?, updated_at = ? WHERE id = ?')
+  // Asking for something is not a change: a failed attempt must not move «último cambio» or trip the other tab.
+  const updateJob = db.prepare('UPDATE script SET job_id = ?, job_op = ? WHERE id = ?')
   const updateAngles = db.prepare('UPDATE script SET short_angles = ?, updated_at = ? WHERE id = ?')
   const updateTouched = db.prepare('UPDATE script SET updated_at = ? WHERE id = ?')
   const selectSettings = db.prepare('SELECT * FROM channel_script_settings WHERE channel_id = ?')
@@ -169,7 +170,7 @@ export function createScriptsRepo(db: DatabaseSync, now: () => Date = () => new 
     },
 
     setJob(id: string, jobId: string, op: string): void {
-      updateJob.run(jobId, op, at(), id)
+      updateJob.run(jobId, op, id)
     },
 
     setShortAngles(id: string, angles: unknown): Script {

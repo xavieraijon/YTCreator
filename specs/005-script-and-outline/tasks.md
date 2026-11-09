@@ -88,16 +88,16 @@ separado.
 
 **Independent Test**: Con proveedor falso, apuntes, coste, escaleta, mover un bloque con el teclado, editar otro, aprobar y seguir aprobada al recargar.
 
-- [ ] T024 [P] [US1] Test de la salida `escaleta` en `packages/core/test/script/outputs.test.ts`: primer bloque `gancho`, último `cierre`, un `contexto`, al menos dos `acto`
-- [ ] T025 [US1] Implementar la salida en `packages/core/src/script/outputs.ts` y dar de alta el uso `escaleta` según las convenciones, con su prompt en `packages/knowledge/prompts/escaleta/v1.md`, que use el conocimiento de `craft.json`
-- [ ] T026 [P] [US1] Test de rutas en `apps/server/test/http/scripts-outline.test.ts`: `POST /scripts/:id/estimate` y `POST /scripts/:id/generate` con `use=escaleta` (202 y `jobId`), versión nueva con `id` de bloque asignado por el servidor, `en_curso` con un trabajo vivo, contenido anterior intacto si la IA falla, `PUT /scripts/:id/outline` con `baseVersion` (`version_cambiada` si no coincide), aprobar, no aprobar sin bloques o con uno sin título, y editar lo aprobado vuelve a borrador
-- [ ] T027 [US1] Implementar en `apps/server/src/services/scripts.ts` el trabajo de generación (`background_job` con `kind='ia'`, `channel_id`, `script.job_id` y `job_op`) y en `apps/server/src/http/routes/scripts.ts` las rutas de T026, con la salida esperada de R11 y el gasto en el `journey` del canal, como en la 004
-- [ ] T028 [P] [US1] Textos de la cola, la lista y los pasos Hechos y Escaleta en `apps/web/src/strings/script.es.ts`, incluida la explicación de «escaleta»
-- [ ] T029 [US1] En `apps/web/src/screens/channel/ideas/IdeaQueue.tsx` y `apps/web/src/strings/ideas.es.ts` quitar la nota de que el guion llegará después, actualizar la comprobación de esa nota en `apps/web/e2e/ideas-queue.spec.ts:89` y añadir «Preparar el guion» (principal en la primera) y «Seguir con el guion». Añadir el enlace «Mis guiones» en la pantalla del canal, y `script` en `IdeaView` (`packages/core/src/api/ideas.ts` y `apps/server/src/services/ideas.ts`) sin romper los tests de la 004
-- [ ] T030 [US1] Implementar el paso Hechos sin investigación (duración y apuntes) en `apps/web/src/screens/channel/scripts/FactsStep.tsx`
-- [ ] T031 [US1] Implementar el paso Escaleta en `apps/web/src/screens/channel/scripts/OutlineStep.tsx`: bloques, «Subir» y «Bajar», editar, añadir, quitar, duración total, pedir otra con indicaciones, aprobar, coste antes de cada petición y `AiWorking` al volver
-- [ ] T032 [US1] e2e en `apps/web/e2e/scripts.spec.ts` (US1), con teclado, recarga y axe en claro y oscuro a 375 y 1280 px
-- [ ] T033 [A] [US1] Puerta A de US1: ejecutar `/puerta-a 005 US1`
+- [X] T024 [P] [US1] Test de la salida `escaleta` en `packages/core/test/script/outputs.test.ts`: primer bloque `gancho`, último `cierre`, un `contexto`, al menos dos `acto`
+- [X] T025 [US1] Implementar la salida en `packages/core/src/script/outputs.ts` y dar de alta el uso `escaleta` según las convenciones, con su prompt en `packages/knowledge/prompts/escaleta/v1.md`, que use el conocimiento de `craft.json`
+- [X] T026 [P] [US1] Test de rutas en `apps/server/test/http/scripts-outline.test.ts`: `POST /scripts/:id/estimate` y `POST /scripts/:id/generate` con `use=escaleta` (202 y `jobId`), versión nueva con `id` de bloque asignado por el servidor, `en_curso` con un trabajo vivo, contenido anterior intacto si la IA falla, `PUT /scripts/:id/outline` con `baseVersion` (`version_cambiada` si no coincide), aprobar, no aprobar sin bloques o con uno sin título, y editar lo aprobado vuelve a borrador
+- [X] T027 [US1] Implementar en `apps/server/src/services/scripts.ts` el trabajo de generación (`background_job` con `kind='ia'`, `channel_id`, `script.job_id` y `job_op`) y en `apps/server/src/http/routes/scripts.ts` las rutas de T026, con la salida esperada de R11 y el gasto en el `journey` del canal, como en la 004
+- [X] T028 [P] [US1] Textos de la cola, la lista y los pasos Hechos y Escaleta en `apps/web/src/strings/script.es.ts`, incluida la explicación de «escaleta»
+- [X] T029 [US1] En `apps/web/src/screens/channel/ideas/IdeaQueue.tsx` y `apps/web/src/strings/ideas.es.ts` quitar la nota de que el guion llegará después, actualizar la comprobación de esa nota en `apps/web/e2e/ideas-queue.spec.ts:89` y añadir «Preparar el guion» (principal en la primera) y «Seguir con el guion». Añadir el enlace «Mis guiones» en la pantalla del canal, y `script` en `IdeaView` (`packages/core/src/api/ideas.ts` y `apps/server/src/services/ideas.ts`) sin romper los tests de la 004
+- [X] T030 [US1] Implementar el paso Hechos sin investigación (duración y apuntes) en `apps/web/src/screens/channel/scripts/FactsStep.tsx`
+- [X] T031 [US1] Implementar el paso Escaleta en `apps/web/src/screens/channel/scripts/OutlineStep.tsx`: bloques, «Subir» y «Bajar», editar, añadir, quitar, duración total, pedir otra con indicaciones, aprobar, coste antes de cada petición y `AiWorking` al volver
+- [X] T032 [US1] e2e en `apps/web/e2e/scripts.spec.ts` (US1), con teclado, recarga y axe en claro y oscuro a 375 y 1280 px
+- [X] T033 [A] [US1] Puerta A de US1: ejecutar `/puerta-a 005 US1`
 
 **Checkpoint**: MVP de estructura.
 

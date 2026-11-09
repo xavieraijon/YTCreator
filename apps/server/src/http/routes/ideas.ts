@@ -12,6 +12,7 @@ import {
   type Idea,
   ideaMeasureUnits,
   ideasOutputFor,
+  type ScriptStatus,
   type YouTubeSource,
 } from '@ytcreator/core'
 import {
@@ -57,6 +58,8 @@ export interface IdeaRoutesDeps {
   // `ideas.staleDays` of thresholds.json (FR-010).
   staleDays: number
   measure: IdeaMeasureService
+  // Its script, for the queue (005); the bank works without it.
+  scriptOf?: (ideaId: string) => { id: string; status: ScriptStatus } | null
   youtube: { effectiveSource(): YouTubeSource }
   // The prices of the Data API in thresholds.json (`dataApi`), for the units of «Medir todas» (R2).
   dataApiUnits: { searchUnits: number; otherUnits: number }
@@ -92,7 +95,12 @@ export function ideaRoutes(deps: IdeaRoutesDeps) {
     return { idea, ...withProfile(idea.channelId) }
   }
 
-  const contextOf = (profileVersion: number) => ({ profileVersion, staleDays: deps.staleDays, now: now() })
+  const contextOf = (profileVersion: number) => ({
+    profileVersion,
+    staleDays: deps.staleDays,
+    now: now(),
+    scriptOf: deps.scriptOf,
+  })
   const viewOf = (idea: Idea, profileVersion: number) =>
     ideaView(idea, measures.latest(idea.id), contextOf(profileVersion))
   const viewsOf = (channelId: string, profileVersion: number, list: readonly Idea[]) => {

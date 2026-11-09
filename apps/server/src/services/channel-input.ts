@@ -101,6 +101,7 @@ export function channelInput(
     case 'ideas':
     case 'otro_enfoque':
     case 'busquedas_idea':
+    case 'escaleta':
       return {}
   }
 }

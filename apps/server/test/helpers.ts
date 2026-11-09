@@ -3,7 +3,14 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { createRegistry } from '@ytcreator/ai'
 import type { Pricing } from '@ytcreator/core'
-import { conceptKnowledge, knowledgeFiles, loadMarket, STALE_AFTER_DAYS, warningKnowledge } from '@ytcreator/knowledge'
+import {
+  conceptKnowledge,
+  knowledgeFiles,
+  loadMarket,
+  loadScriptKnowledge,
+  STALE_AFTER_DAYS,
+  warningKnowledge,
+} from '@ytcreator/knowledge'
 import { createFakeKeyCheck, createFakeYouTube } from '@ytcreator/youtube'
 import { afterEach } from 'vitest'
 import { migrate, MIGRATIONS } from '../src/db/migrate.ts'
@@ -200,6 +207,7 @@ export function makeTestApp({
       logger,
       now,
     }),
+    scriptOf: (ideaId: string) => scriptService.ideaScript(ideaId),
     youtube: ideaYouTube,
     dataApiUnits: market.thresholds.data.dataApi,
     measureBasis: {
@@ -209,6 +217,7 @@ export function makeTestApp({
     },
     now,
   }
+  const scriptKnowledge = loadScriptKnowledge()
   const scriptsRepo = createScriptsRepo(db, now)
   const scriptVersions = createScriptVersionsRepo(db, now)
   const scriptService = createScriptService({
@@ -224,7 +233,9 @@ export function makeTestApp({
     versions: scriptVersions,
     shortMaxSeconds: market.shorts.data.maxDurationSeconds,
     webResearch: () => false,
-    now,
+    aiRun: aiRun,
+    promptFor: promptFor,
+    knowledge: scriptKnowledge,
   })
   const script = { service: scriptService, scripts: scriptsRepo }
   const version = '0.1.0'

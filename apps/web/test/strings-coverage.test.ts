@@ -67,7 +67,7 @@ describe('strings coverage (FR-027, SC-007)', () => {
   })
 
   it('no text is empty or has a malformed placeholder', () => {
-    const all = flattenStrings({ es, failuresEs, channelEs, youtubeFailuresEs, youtubeFailureActionsEs })
+    const all = flattenStrings({ es, failuresEs, channelEs, youtubeFailuresEs, youtubeFailureActionsEs, scriptEs })
     expect(all.filter(({ value }) => value.trim() === '')).toEqual([])
     expect(all.filter(({ value }) => /\{(?!\w+\})|(?<!\{\w*)\}/.test(value))).toEqual([])
   })

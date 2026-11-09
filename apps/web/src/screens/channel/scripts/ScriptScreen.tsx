@@ -1,13 +1,17 @@
+import type { ScriptUse } from '@ytcreator/core'
 import type { ScriptView } from '@ytcreator/core/api'
-import { Button, ErrorMessage, Stepper } from '@ytcreator/ui'
+import { AiWorking, Button, ErrorMessage, Stepper } from '@ytcreator/ui'
 import { useCallback, useEffect, useState } from 'react'
-import { scriptsApi } from '../../../api/client.ts'
+import { ApiClientError, scriptsApi } from '../../../api/client.ts'
 import { navigate } from '../../../router.ts'
 import { errorText } from '../../../shell/errorText.ts'
 import { Screen } from '../../../shell/Screen.tsx'
 import { es } from '../../../strings/es.ts'
 import { scriptEs } from '../../../strings/script.es.ts'
 import styles from '../channel.module.css'
+import { FactsStep } from './FactsStep.tsx'
+import { OutlineStep } from './OutlineStep.tsx'
+import { useScriptAi } from './useScriptAi.ts'
 
 const text = scriptEs.screen
 
@@ -32,20 +36,40 @@ export function stepFor(script: ScriptView): ScriptStep {
   }
 }
 
+// A step opens once there is something in it.
+export function isReachable(script: ScriptView, step: ScriptStep): boolean {
+  switch (step) {
+    case 'hechos':
+      return true
+    case 'escaleta':
+      return script.outline !== null
+    case 'guion':
+      return false
+    case 'revisar':
+      return false
+  }
+}
+
+const isConflict = (error: unknown) => error instanceof ApiClientError && error.body?.code === 'version_cambiada'
+
 export function ScriptScreen({ id }: { readonly id: string }) {
   const [script, setScript] = useState<ScriptView | null>(null)
   const [step, setStep] = useState<ScriptStep | null>(null)
   const [error, setError] = useState<unknown>(null)
+  const [loadFailed, setLoadFailed] = useState(false)
 
   const load = useCallback(
     async (signal?: AbortSignal) => {
-      setError(null)
       try {
         const loaded = await scriptsApi.get(id, { signal })
         setScript(loaded)
         setStep((current) => current ?? stepFor(loaded))
+        setLoadFailed(false)
+        setError(null)
       } catch (cause) {
-        if (!signal?.aborted) setError(cause)
+        if (signal?.aborted) return
+        setError(cause)
+        setLoadFailed(true)
       }
     },
     [id],
@@ -57,17 +81,34 @@ export function ScriptScreen({ id }: { readonly id: string }) {
     return () => controller.abort()
   }, [load])
 
-  if (error !== null) {
-    return (
-      <Screen title={scriptEs.list.title}>
-        <ErrorMessage live title={errorText(error)} action={{ label: es.app.retry, onClick: () => void load() }} />
-      </Screen>
-    )
-  }
+  const onFinished = useCallback(
+    (op: string, ok: boolean) => {
+      // A failure stays where it can be retried, and the step opens with what it has to show.
+      void load().then(() => {
+        if (ok && op === 'escaleta') setStep('escaleta')
+      })
+    },
+    [load],
+  )
+  const ai = useScriptAi(script, onFinished, setError)
+  const { dismiss } = ai
+  const onChange = useCallback(
+    (changed: ScriptView) => {
+      setScript(changed)
+      setError(null)
+      dismiss()
+    },
+    [dismiss],
+  )
+
   if (!script || !step) {
     return (
       <Screen title={scriptEs.list.title}>
-        <p role="status">{text.loading}</p>
+        {loadFailed ? (
+          <ErrorMessage live title={errorText(error)} action={{ label: es.app.retry, onClick: () => void load() }} />
+        ) : (
+          <p role="status">{text.loading}</p>
+        )}
       </Screen>
     )
   }
@@ -78,12 +119,54 @@ export function ScriptScreen({ id }: { readonly id: string }) {
       title={script.idea.title}
       before={
         <Stepper
-          steps={steps.map((id) => ({ id, label: text.steps[id] }))}
+          steps={steps.map((one) => ({ id: one, label: text.steps[one] }))}
           current={steps.indexOf(step) + 1}
           aria-label={text.progress}
         />
       }
     >
+      <nav aria-label={text.navigation} className={styles.actions}>
+        {steps
+          .filter((one) => isReachable(script, one))
+          .map((one) => (
+            <Button
+              key={one}
+              variant="ghost"
+              size="sm"
+              aria-current={one === step ? 'step' : undefined}
+              onClick={() => setStep(one)}
+            >
+              {text.steps[one]}
+            </Button>
+          ))}
+      </nav>
+      {error !== null && (
+        <ErrorMessage
+          live
+          title={errorText(error)}
+          description={isConflict(error) ? text.reloadNote : undefined}
+          action={{ label: text.reload, onClick: () => void load() }}
+        />
+      )}
+      {ai.priceChanged && (
+        <p role="status" className={styles.notice}>
+          {text.priceChanged}
+        </p>
+      )}
+      {ai.otherFailure && (
+        <ErrorMessage live title={text.jobFailed} action={{ label: text.understood, onClick: ai.dismiss }} />
+      )}
+      {ai.working && <AiWorking variant="panel" label={scriptEs.uses[ai.working as ScriptUse]} />}
+      {step === 'hechos' && <FactsStep script={script} ai={ai} onChange={onChange} onError={setError} />}
+      {step === 'escaleta' && (
+        <OutlineStep
+          script={script}
+          ai={ai}
+          onChange={onChange}
+          onError={setError}
+          onToFacts={() => setStep('hechos')}
+        />
+      )}
       <div className={styles.actions}>
         <Button variant="ghost" onClick={() => navigate({ page: 'scriptList' })}>
           {text.backToList}
