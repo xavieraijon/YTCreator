@@ -21,6 +21,12 @@ export interface DraftStepProps {
   readonly onChange: (script: ScriptView) => void
   readonly onError: (cause: unknown) => void
   readonly onToOutline: () => void
+  readonly onToReview: () => void
+  /** The block a notice of the review points at: it takes the focus. */
+  readonly targetBlock: string | null
+  readonly onTargetReached: () => void
+  /** A block is open: leaving the step would lose what is being written. */
+  readonly onEditing: (editing: boolean) => void
 }
 
 function BlockEditor({
@@ -203,7 +209,17 @@ function ClaimDialog({
 }
 
 // What the creator is going to say, block by block (contracts/ui-screens.md).
-export function DraftStep({ script, ai, onChange, onError, onToOutline }: DraftStepProps) {
+export function DraftStep({
+  script,
+  ai,
+  onChange,
+  onError,
+  onToOutline,
+  onToReview,
+  targetBlock,
+  onTargetReached,
+  onEditing,
+}: DraftStepProps) {
   const [editing, setEditing] = useState<string | null>(null)
   const [asking, setAsking] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
@@ -223,6 +239,18 @@ export function DraftStep({ script, ai, onChange, onError, onToOutline }: DraftS
     document.querySelector<HTMLElement>(`[data-block-action="${refocus.current}"]`)?.focus()
     refocus.current = null
   }, [draft?.version, editing, asking])
+
+  const isEditing = editing !== null
+  useEffect(() => {
+    onEditing(isEditing)
+    return () => onEditing(false)
+  }, [isEditing, onEditing])
+
+  useEffect(() => {
+    if (!targetBlock) return
+    document.querySelector<HTMLElement>(`[data-block-heading="${CSS.escape(targetBlock)}"]`)?.focus()
+    onTargetReached()
+  }, [targetBlock, onTargetReached])
 
   // After the dialog has gone: until then the page is inert, and it hands the focus back to a mark that no longer exists.
   useEffect(() => {
@@ -331,7 +359,9 @@ export function DraftStep({ script, ai, onChange, onError, onToOutline }: DraftS
       <ol className={styles.options}>
         {blocks.map((block) => (
           <Card as="li" key={block.id}>
-            <h2>{block.title || scriptEs.outline.untitled}</h2>
+            <h2 tabIndex={-1} data-block-heading={block.id}>
+              {block.title || scriptEs.outline.untitled}
+            </h2>
             {editing === block.id ? (
               <BlockEditor
                 block={block}
@@ -415,6 +445,11 @@ export function DraftStep({ script, ai, onChange, onError, onToOutline }: DraftS
       </ol>
       <p>{format(text.total, { total: clock(total), objetivo: clock(script.targetSeconds) })}</p>
       {editing !== null && <p className={styles.notice}>{scriptEs.outline.finishEditing}</p>}
+      <div className={styles.actions}>
+        <Button variant="primary" disabled={locked} onClick={onToReview}>
+          {text.review}
+        </Button>
+      </div>
       {price.error !== null && (
         <ErrorMessage live title={errorText(price.error)} action={{ label: es.app.retry, onClick: price.retry }} />
       )}

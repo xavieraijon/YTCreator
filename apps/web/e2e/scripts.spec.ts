@@ -250,3 +250,65 @@ test('from the approved outline to a script edited by hand and block by block (U
   await expect(back.getByText('Voz del canal: de usted y cercano.')).toBeVisible()
   await expect(paragraphOf(back, /Por qué pasa esto/)).toHaveText(written)
 })
+
+test('reviewing for free, approving knowing what is left, downloading and reopening (US3)', async ({
+  page,
+  context,
+}) => {
+  await blockExternal(context)
+  await toScript(page)
+  await page.getByRole('button', { name: 'Cambiar «El error que comete casi todo el mundo»' }).click()
+  // Added to what the AI wrote, so its marks stay.
+  const said = page.getByLabel('Lo que se dice')
+  await said.fill(`${'Ir poco a poco. '.repeat(30)}Cabe destacar que esto va muy en serio. ${await said.inputValue()}`)
+  await page.getByRole('button', { name: 'Guardar' }).click()
+  await expect(paragraphOf(page, /El error que comete/)).toContainText('Cabe destacar')
+  await page.getByRole('button', { name: 'Revisar el guion' }).click()
+
+  await expect(page.getByText('Lo que se ve aquí se arregla gratis antes de grabar.')).toBeVisible()
+  await expect(page.getByText('Suena a texto de IA: «cabe destacar».')).toBeVisible()
+  await expect(page.getByText(/Dura unos .* y querías 10 min\./)).toBeVisible()
+  await expect(page.getByText(/^El gancho dura unos/)).toBeVisible()
+  await audit(page)
+
+  // A notice leads to its block.
+  const notice = page.getByRole('listitem').filter({ hasText: 'Suena a texto de IA' })
+  await notice.getByRole('button', { name: 'Ir al bloque «El error que comete casi todo el mundo»' }).click()
+  await expect(page.getByRole('heading', { level: 2, name: /El error que comete/ })).toBeFocused()
+  await page.getByRole('button', { name: 'Revisar el guion' }).click()
+
+  // With marks left, the creator decides.
+  await expect(page.getByText(/por comprobar\.$/).first()).toBeVisible()
+  await page.getByRole('button', { name: 'Aprobar el guion' }).click()
+  const dialog = page.getByRole('dialog')
+  await expect(dialog.getByRole('heading', { name: /sin comprobar/ })).toBeVisible()
+  await audit(page)
+  await dialog.getByRole('button', { name: 'Aprobar igualmente' }).click()
+  await expect(page.getByText(/Guion aprobado, sabiendo que quedaba/)).toBeVisible()
+  await page.reload()
+  await expect(page.getByText(/Guion aprobado, sabiendo que quedaba/)).toBeVisible()
+
+  const downloaded = page.waitForEvent('download')
+  await page.getByRole('button', { name: 'Descargar como documento' }).click()
+  expect((await downloaded).suggestedFilename()).toBe('guion-pan-sin-amasar.md')
+
+  // In the queue it says so, and the idea is still there.
+  await page.goto(`${server.baseURL}/canal/ideas`)
+  await expect(page.getByText('Guion listo')).toBeVisible()
+  await page.getByRole('button', { name: 'Ver el guion de «Pan sin amasar»' }).click()
+
+  // Changing it says first that it will stop being approved.
+  await page.getByRole('button', { name: 'Guion', exact: true }).click()
+  await page.getByRole('button', { name: 'Cambiar «Por qué pasa esto»' }).click()
+  const warning = page.getByRole('dialog')
+  await expect(warning.getByRole('heading', { name: 'Si lo cambias, dejará de estar aprobado' })).toBeVisible()
+  await warning.getByRole('button', { name: 'Cambiarlo' }).click()
+  // While a block is open, leaving the step would lose what is being written.
+  await expect(
+    page.getByRole('navigation', { name: 'Pasos de este guion' }).getByRole('button', { name: 'Revisar' }),
+  ).toBeDisabled()
+  await page.getByLabel('Lo que se dice').fill('Ahora lo cambio y deja de estar aprobado.')
+  await page.getByRole('button', { name: 'Guardar' }).click()
+  await page.getByRole('button', { name: 'Revisar el guion' }).click()
+  await expect(page.getByRole('button', { name: 'Aprobar el guion' })).toBeVisible()
+})

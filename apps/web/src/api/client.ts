@@ -18,6 +18,8 @@ import {
   scriptSummarySchema,
   scriptSettingsViewSchema,
   scriptViewSchema,
+  scriptReviewViewSchema,
+  type ApproveDraftBody,
   type ClaimActionBody,
   type DraftSaveBody,
   type ScriptSettingsBody,
@@ -306,6 +308,13 @@ export const scriptsApi = {
     apiClient.put(`${scriptPath(id)}/outline`, body, scriptViewSchema),
   approveOutline: (id: string, version: number) =>
     apiClient.post(`${scriptPath(id)}/outline/approve`, { version }, scriptViewSchema),
+  review: (id: string, options?: RequestOptions) =>
+    apiClient.get(`${scriptPath(id)}/review`, scriptReviewViewSchema, options),
+  approveDraft: (id: string, body: ApproveDraftBody) =>
+    apiClient.post(`${scriptPath(id)}/draft/approve`, body, scriptViewSchema),
+  download: (id: string, format: 'md' | 'json') => apiClient.file(`${scriptPath(id)}/export?format=${format}`),
+  downloadAll: (channelId: string, format: 'md' | 'json') =>
+    apiClient.file(`${channelPath(channelId)}/scripts/export?format=${format}`),
   saveDraft: (id: string, body: DraftSaveBody) => apiClient.put(`${scriptPath(id)}/draft`, body, scriptViewSchema),
   actOnClaim: (id: string, claimId: string, body: ClaimActionBody) =>
     apiClient.post(`${scriptPath(id)}/claims/${encodeURIComponent(claimId)}`, body, scriptViewSchema),

@@ -131,15 +131,15 @@ separado.
 
 **Independent Test**: Un guion grabado con muletillas, gancho largo y una afirmación pendiente muestra los tres avisos, se aprueba y se descarga.
 
-- [ ] T046 [P] [US3] Test en `packages/core/test/script/review.test.ts` de las cinco reglas (duración frente al objetivo, gancho largo, muletillas, frases de más de 25 palabras y afirmaciones pendientes), de cada aviso con su `blockId`, y de que 4.500 palabras se revisan en menos de 1 s (SC-006)
-- [ ] T047 [US3] Implementar `packages/core/src/script/review.ts` para que pase T046
-- [ ] T048 [P] [US3] Test en `packages/core/test/script/export.test.ts`: Markdown y JSON con escaleta, guion, notas, marcas y fuentes, y varios guiones en un fichero
-- [ ] T049 [US3] Implementar `packages/core/src/script/export.ts` para que pase T048
-- [ ] T050 [P] [US3] Test de rutas en `apps/server/test/http/scripts-approve.test.ts`: `GET /scripts/:id/review`; aprobar con y sin pendientes, 409 si `acknowledgedPending` no coincide; `draft_approved_pending` guardado; editar vuelve a borrador; aprobar no cambia el estado de la idea; y las dos descargas
-- [ ] T051 [US3] Implementar las rutas de T050 en `apps/server/src/http/routes/scripts.ts`
-- [ ] T052 [US3] Implementar el paso Revisar en `apps/web/src/screens/channel/scripts/ReviewStep.tsx` con sus textos, el `Dialog` de pendientes, «Descargar» y «Descargar todos» en la lista, y «Guion listo» en `IdeaQueue.tsx`
-- [ ] T053 [US3] e2e en `apps/web/e2e/scripts.spec.ts` (US3), con axe en claro y oscuro a 375 y 1280 px
-- [ ] T054 [A] [US3] Puerta A de US3: ejecutar `/puerta-a 005 US3`
+- [X] T046 [P] [US3] Test en `packages/core/test/script/review.test.ts` de las cinco reglas (duración frente al objetivo, gancho largo, muletillas, frases de más de 25 palabras y afirmaciones pendientes), de cada aviso con su `blockId`, y de que 4.500 palabras se revisan en menos de 1 s (SC-006)
+- [X] T047 [US3] Implementar `packages/core/src/script/review.ts` para que pase T046
+- [X] T048 [P] [US3] Test en `packages/core/test/script/export.test.ts`: Markdown y JSON con escaleta, guion, notas, marcas y fuentes, y varios guiones en un fichero
+- [X] T049 [US3] Implementar `packages/core/src/script/export.ts` para que pase T048
+- [X] T050 [P] [US3] Test de rutas en `apps/server/test/http/scripts-approve.test.ts`: `GET /scripts/:id/review`; aprobar con y sin pendientes, 409 si `acknowledgedPending` no coincide; `draft_approved_pending` guardado; editar vuelve a borrador; aprobar no cambia el estado de la idea; y las dos descargas
+- [X] T051 [US3] Implementar las rutas de T050 en `apps/server/src/http/routes/scripts.ts`
+- [X] T052 [US3] Implementar el paso Revisar en `apps/web/src/screens/channel/scripts/ReviewStep.tsx` con sus textos, el `Dialog` de pendientes, «Descargar» y «Descargar todos» en la lista, y «Guion listo» en `IdeaQueue.tsx`
+- [X] T053 [US3] e2e en `apps/web/e2e/scripts.spec.ts` (US3), con axe en claro y oscuro a 375 y 1280 px
+- [X] T054 [A] [US3] Puerta A de US3: ejecutar `/puerta-a 005 US3`
 
 ---
 

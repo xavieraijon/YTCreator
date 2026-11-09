@@ -197,3 +197,67 @@ escritura), VI (tokens y accesibilidad), XI (este informe).
 ### 9. Cómo revertir
 
 `git revert` del commit de esta historia. No hay migraciones. Queda: US3 en adelante.
+
+## US3 (T046–T054), Puerta A del 2026-11-09
+
+### 1. Resumen
+
+Revisión gratuita con cinco reglas, aprobación sabiendo lo que queda por comprobar, vuelta a borrador al cambiar un guion
+aprobado y descargas en `.md` y `.json`, de uno o de todos. La cola dice «Guion listo». Revisar, aprobar y descargar no
+llaman a la IA.
+
+### 2. Requisitos
+
+| Requisito | Estado | Evidencia | Fecha |
+|---|---|---|---|
+| FR-013 / SC-006 revisión sin IA | Cumplido | `review.test.ts` (4.500 palabras en menos de 1 s), `scripts-approve.test.ts` (sin consumo) | 2026-11-09 |
+| FR-015 motivo e «Ir al bloque» | Cumplido | `scripts.spec.ts`; decisión 24 para la duración total | 2026-11-09 |
+| FR-016 aprobar con pendientes | Cumplido | `scripts-approve.test.ts` (409 si no coincide), `scripts.spec.ts` (diálogo, recarga) | 2026-11-09 |
+| FR-017 cambiar un guion aprobado | Cumplido | `scripts.spec.ts` (diálogo y vuelta a borrador), `scripts-approve.test.ts` | 2026-11-09 |
+| FR-021 / AS4 descargas | Cumplido | `export.test.ts`, `scripts-approve.test.ts`, `scripts.spec.ts`; decisión 23 | 2026-11-09 |
+| «Guion listo» en la cola y estado de la idea | Cumplido | `scripts.spec.ts`; `scripts-approve.test.ts` (hecha y vuelta al banco) | 2026-11-09 |
+
+### 3. Cómo se comprobó
+
+Tras las correcciones: `lint` 0, `typecheck` 0, `test` en verde (código 0). `test:e2e` de la web: 42 de 42 antes de los
+últimos ajustes de tipos y pruebas; después, `scripts.spec` 3 de 3. Recorrido con los proveedores falsos.
+
+### 4. Controles
+
+- Pasados: lint, typecheck, test, glosario, `secrets-leak`, axe claro y oscuro a 375 y 1280 px con reduced-motion (revisión y
+  diálogo de pendientes), teclado y foco.
+- Tipos de fallo de IA: no aplica, esta historia no llama a la IA.
+- No ejecutados: `test:installer` (no se toca el instalador); IA real (P1). Las correcciones han pasado los controles, pero
+  no una segunda vuelta de revisores.
+
+### 5. Hallazgos
+
+Corregidos (medios): la descarga decía «Aprobado» de un guion que volvió a borrador; cambiar de paso con un bloque abierto
+perdía lo escrito; el Markdown no señalaba enlaces sin comprobar, versiones contradictorias ni comprobaciones; el aviso de
+duración parecía de un solo bloque; decisiones de descarga sin registrar. Corregidos (menores): singular de «por comprobar»;
+foco y anuncio al aprobar; aprobar con un trabajo en curso; conflicto de marcas entre pestañas; fichero en blanco en
+«Descargar todos»; un fallo de descarga borraba la lista; `#` y `---` del creador en el documento; fechas en UTC; frases
+tras `.»` o salto de línea; `CSS.escape`; el supuesto duplicado respecto al paquete; `gancho_largo` y «hecha» sin prueba.
+
+Descartados: ninguno.
+
+Abiertos (menores): las abreviaturas («Sr.», «EE. UU.») parten la frase en el aviso de frase larga, que nunca bloquea;
+`saveFile.ts` repite el patrón de `IdeaBank.tsx`; la navegación desde los avisos de `ScriptWarnings` y el editor de la
+escaleta no tienen el freno de edición abierta.
+
+### 6. Desviaciones
+
+Entradas 23 y 24 de `decisions.md`. `contracts/ui-screens.md` alineado con US3, escenario 4 (descarga sin aprobar).
+
+### 7. Decisiones
+
+Agente: 23 y 24 (medio). Pendientes del creador: P1 y P2; no bloquean esta historia.
+
+### 8. Constitución
+
+I (motivo en lenguaje llano), II (estado real en lo descargado, dudas señaladas), III (sin gasto), V (reglas versionadas con
+supuesto y fecha), VI (accesibilidad), VII (datos legibles fuera de la app), XI (este informe).
+
+### 9. Cómo revertir
+
+`git revert` del commit de esta historia. No hay migraciones. Queda: US4 en adelante.

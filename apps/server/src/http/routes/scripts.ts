@@ -1,8 +1,10 @@
-import { targetSecondsSchema } from '@ytcreator/core'
+import { scriptFileName, scriptJson, scriptMarkdown, scriptsFileName, targetSecondsSchema } from '@ytcreator/core'
 import {
+  approveDraftBodySchema,
   approveOutlineBodySchema,
   claimActionBodySchema,
   draftSaveBodySchema,
+  exportQuerySchema,
   outlineSaveBodySchema,
   scriptEstimateBodySchema,
   scriptGenerateBodySchema,
@@ -11,6 +13,8 @@ import {
 } from '@ytcreator/core/api'
 import { Hono } from 'hono'
 import type { ScriptsRepo } from '../../db/repos/scripts.ts'
+import type { Context } from 'hono'
+import type { ScriptExportInput } from '@ytcreator/core'
 import type { ScriptService } from '../../services/scripts.ts'
 import { ApiError } from '../errors.ts'
 import { parseBody } from '../validate.ts'
@@ -24,9 +28,49 @@ export interface ScriptRoutesDeps {
 export function scriptRoutes({ service, scripts }: ScriptRoutesDeps) {
   const routes = new Hono()
 
+  const exportFormat = (c: Context) => {
+    const query = exportQuerySchema.safeParse({ format: c.req.query('format') })
+    if (!query.success) throw new ApiError({ code: 'validacion', fields: { format: 'no_valido' } })
+    return query.data.format
+  }
+
+  const file = (c: Context, format: 'md' | 'json', input: ScriptExportInput, name: string) =>
+    c.body(format === 'md' ? scriptMarkdown(input) : `${JSON.stringify(scriptJson(input), null, 2)}\n`, 200, {
+      'Content-Type': format === 'md' ? 'text/markdown; charset=utf-8' : 'application/json; charset=utf-8',
+      'Content-Disposition': `attachment; filename="${name}"`,
+    })
+
+  const exported = (channel: { id: string; displayName: string | null }, items: ScriptExportInput['scripts']) => ({
+    exportedAt: new Date().toISOString(),
+    channel: { id: channel.id, displayName: channel.displayName },
+    scripts: items,
+  })
+
   routes.get('/channels/:id/scripts', (c) => {
     const { channel } = service.withProfile(c.req.param('id'))
     return c.json(service.summaries(channel.id))
+  })
+
+  routes.get('/channels/:id/scripts/export', (c) => {
+    const format = exportFormat(c)
+    const { channel, items } = service.exportAll(c.req.param('id'))
+    return file(c, format, exported(channel, items), scriptsFileName(channel.displayName, format))
+  })
+
+  routes.get('/scripts/:id/export', (c) => {
+    const format = exportFormat(c)
+    const { channel, item } = service.exportOne(c.req.param('id'))
+    return file(c, format, exported(channel, [item]), scriptFileName(item.title, format))
+  })
+
+  routes.get('/scripts/:id/review', (c) => {
+    service.find(c.req.param('id'))
+    return c.json({ rules: service.reviewRules() })
+  })
+
+  routes.post('/scripts/:id/draft/approve', async (c) => {
+    const { version, acknowledgedPending } = await parseBody(c, approveDraftBodySchema)
+    return c.json(service.approveDraft(c.req.param('id'), version, acknowledgedPending))
   })
 
   routes.get('/channels/:id/script-settings', (c) => c.json(service.settings(c.req.param('id'))))

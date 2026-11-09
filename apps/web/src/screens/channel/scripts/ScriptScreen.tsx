@@ -12,6 +12,7 @@ import styles from '../channel.module.css'
 import { DraftStep } from './DraftStep.tsx'
 import { FactsStep } from './FactsStep.tsx'
 import { OutlineStep } from './OutlineStep.tsx'
+import { ReviewStep } from './ReviewStep.tsx'
 import { ScriptWarnings } from './ScriptWarnings.tsx'
 import { useScriptAi } from './useScriptAi.ts'
 
@@ -48,7 +49,7 @@ export function isReachable(script: ScriptView, step: ScriptStep): boolean {
     case 'guion':
       return script.draft !== null
     case 'revisar':
-      return false
+      return script.draft !== null
   }
 }
 
@@ -59,6 +60,8 @@ export function ScriptScreen({ id }: { readonly id: string }) {
   const [step, setStep] = useState<ScriptStep | null>(null)
   const [error, setError] = useState<unknown>(null)
   const [loadFailed, setLoadFailed] = useState(false)
+  const [targetBlock, setTargetBlock] = useState<string | null>(null)
+  const [editingDraft, setEditingDraft] = useState(false)
 
   const load = useCallback(
     async (signal?: AbortSignal) => {
@@ -137,6 +140,7 @@ export function ScriptScreen({ id }: { readonly id: string }) {
               variant="ghost"
               size="sm"
               aria-current={one === step ? 'step' : undefined}
+              disabled={editingDraft && one !== step}
               onClick={() => setStep(one)}
             >
               {text.steps[one]}
@@ -179,6 +183,23 @@ export function ScriptScreen({ id }: { readonly id: string }) {
           onChange={onChange}
           onError={setError}
           onToOutline={() => setStep('escaleta')}
+          onToReview={() => setStep('revisar')}
+          targetBlock={targetBlock}
+          onTargetReached={() => setTargetBlock(null)}
+          onEditing={setEditingDraft}
+        />
+      )}
+      {step === 'revisar' && (
+        <ReviewStep
+          script={script}
+          onChange={onChange}
+          onError={setError}
+          busy={ai.working !== null}
+          onToBlock={(blockId) => {
+            setTargetBlock(blockId)
+            setStep('guion')
+          }}
+          onToDraft={() => setStep('guion')}
         />
       )}
       <div className={styles.actions}>

@@ -22,6 +22,7 @@ import {
   type DraftOutput,
   type Idea,
   type OutlineContent,
+  type ScriptExportItem,
   type ScriptKind,
   type ScriptUse,
   type VersionOrigin,
@@ -614,6 +615,56 @@ export function createScriptService(deps: ScriptServiceDeps) {
     return view(scripts.get(id)!, found.idea, found.profileVersion)
   }
 
+  const approveDraft = (id: string, version: number, acknowledgedPending: number) => {
+    const found = find(id)
+    assertIdle(found.script)
+    const latest = versions.latest(found.script.id, 'guion')
+    if (!latest || latest.version !== version) throw new ApiError({ code: 'version_cambiada' })
+    if (latest.content.blocks.some((block) => block.text.trim() === '')) {
+      throw new ApiError({ code: 'validacion', fields: { blocks: 'no_valido' } })
+    }
+    // The creator approved knowing how many were left: that number has to be the real one (FR-016).
+    const pending = latest.content.claims.filter((claim) => claim.status === 'pendiente').length
+    if (pending !== acknowledgedPending)
+      throw new ApiError({ code: 'conflicto', fields: { acknowledgedPending: 'no_valido' } })
+    return view(scripts.approveDraft(id, version, pending), found.idea, found.profileVersion)
+  }
+
+  const exportItem = (script: Script): ScriptExportItem => {
+    const idea = ideas.get(script.ideaId)
+    // The columns keep the last approval; what counts is whether the latest text is the one approved.
+    const approved = statusOf(script) === 'guion_aprobado'
+    return {
+      title: idea?.title ?? '',
+      hook: idea?.hook ?? '',
+      format: script.format,
+      status: statusOf(script),
+      targetSeconds: script.targetSeconds,
+      wordsPerMinute: voiceOf(script.channelId).wordsPerMinute,
+      notes: script.notes,
+      facts: versions.latest(script.id, 'hechos')?.content ?? null,
+      outline: versions.latest(script.id, 'escaleta')?.content ?? null,
+      draft: versions.latest(script.id, 'guion')?.content ?? null,
+      approvedAt: approved ? script.draftApprovedAt : null,
+      approvedPending: approved ? script.draftApprovedPending : null,
+    }
+  }
+
+  const exportOne = (id: string) => {
+    const { script, channel } = find(id)
+    return { channel, item: exportItem(script) }
+  }
+
+  // Only what has something in it: an idea opened and left does not make an empty chapter.
+  const exportAll = (channelId: string) => {
+    const { channel } = withProfile(channelId)
+    const items = scripts.listByChannel(channel.id).map(exportItem)
+    return {
+      channel,
+      items: items.filter((item) => item.notes.trim() !== '' || item.facts || item.outline || item.draft),
+    }
+  }
+
   const settings = (channelId: string) => voiceOf(withProfile(channelId).channel.id)
 
   const saveSettings = (channelId: string, body: Parameters<ScriptsRepo['saveSettings']>[1]) => {
@@ -623,6 +674,10 @@ export function createScriptService(deps: ScriptServiceDeps) {
   }
 
   return {
+    approveDraft,
+    exportOne,
+    exportAll,
+    reviewRules: () => deps.knowledge.review.data,
     saveDraft,
     actOnClaim,
     settings,

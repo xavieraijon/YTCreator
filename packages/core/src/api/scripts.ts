@@ -128,6 +128,24 @@ export type ClaimActionBody = z.infer<typeof claimActionBodySchema>
 export const scriptSettingsBodySchema = scriptSettingsSchema
 export type ScriptSettingsBody = z.infer<typeof scriptSettingsBodySchema>
 
+export const approveDraftBodySchema = z.object({
+  version: z.number().int().positive(),
+  acknowledgedPending: z.number().int().nonnegative(),
+})
+export type ApproveDraftBody = z.infer<typeof approveDraftBodySchema>
+
+export const scriptReviewViewSchema = z.object({
+  rules: z.object({
+    basis: z.object({ label: z.string(), date: z.string() }),
+    maxSentenceWords: z.number().int().positive(),
+    hookMaxSeconds: z.object({ largo: z.number().positive(), short: z.number().positive() }),
+    durationTolerance: z.number().nonnegative(),
+    fillers: z.array(z.string()),
+  }),
+})
+
+export type ScriptReviewView = z.infer<typeof scriptReviewViewSchema>
+
 export const approveOutlineBodySchema = z.object({ version: z.number().int().positive() })
 
 export const scriptEstimateBodySchema = z.object({ use: z.enum(SCRIPT_USES), blockId: id.optional() })

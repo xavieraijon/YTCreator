@@ -66,7 +66,8 @@ principal, que cambia según el estado.
 - Lista de avisos: motivo y «Ir al bloque».
 - **Principal**: «Aprobar el guion». Con pendientes, `Dialog`: «Quedan {n} afirmaciones sin comprobar», con «Revisarlas» y
   «Aprobar igualmente».
-- Aprobado: «Descargar» (`.md` y `.json`) y, en un vídeo largo, «Sacar un Short · {coste}».
+- Con guion, aprobado o no (US3, escenario 4): «Descargar» (`.md` y `.json`).
+- Aprobado: en un vídeo largo, «Sacar un Short · {coste}».
 - Enfoques del Short: 2 o 3 `Card` con gancho, momento del guion, y «Elegir este». Al elegir, se abre el guion del Short
   con «Escribir el guion · {coste}» como acción principal.
 

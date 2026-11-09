@@ -9,6 +9,7 @@ import { Screen } from '../../../shell/Screen.tsx'
 import { es } from '../../../strings/es.ts'
 import { scriptEs } from '../../../strings/script.es.ts'
 import styles from '../channel.module.css'
+import { saveFile } from './saveFile.ts'
 
 const text = scriptEs.list
 const dateOf = (iso: string) => new Date(iso).toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })
@@ -19,7 +20,7 @@ export function ScriptList() {
   const [error, setError] = useState<unknown>(null)
 
   const load = useCallback(async (signal?: AbortSignal) => {
-    setError(null)
+    setDownloadFailed(null)
     try {
       const current = await channelApi.current({ signal })
       if (!current.channel || !current.profile) {
@@ -31,6 +32,20 @@ export function ScriptList() {
       if (!signal?.aborted) setError(cause)
     }
   }, [])
+
+  const [downloadFailed, setDownloadFailed] = useState<{ cause: unknown; kind: 'md' | 'json' } | null>(null)
+
+  const downloadAll = async (kind: 'md' | 'json') => {
+    setError(null)
+    try {
+      const current = await channelApi.current()
+      if (!current.channel) return
+      const { blob, name } = await scriptsApi.downloadAll(current.channel.id, kind)
+      saveFile(blob, name)
+    } catch (cause) {
+      setDownloadFailed({ cause, kind })
+    }
+  }
 
   useEffect(() => {
     const controller = new AbortController()
@@ -75,7 +90,24 @@ export function ScriptList() {
           ))}
         </ul>
       )}
+      {downloadFailed !== null && (
+        <ErrorMessage
+          live
+          title={errorText(downloadFailed.cause)}
+          action={{ label: es.app.retry, onClick: () => void downloadAll(downloadFailed.kind) }}
+        />
+      )}
       <div className={styles.actions}>
+        {scripts !== null && scripts.length > 0 && (
+          <>
+            <Button variant="secondary" onClick={() => void downloadAll('md')}>
+              {text.downloadAll}
+            </Button>
+            <Button variant="secondary" onClick={() => void downloadAll('json')}>
+              {text.downloadAllData}
+            </Button>
+          </>
+        )}
         <Button variant="secondary" onClick={() => navigate({ page: 'scriptVoice' })}>
           {scriptEs.voice.link}
         </Button>
