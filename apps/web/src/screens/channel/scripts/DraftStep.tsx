@@ -1,0 +1,484 @@
+import { durationSeconds, SCRIPT_LIMITS, splitMarks, type Claim, type DraftBlock } from '@ytcreator/core'
+import type { ScriptView } from '@ytcreator/core/api'
+import { Button, Card, DataSource, Dialog, Disclosure, ErrorMessage, format, TextArea, TextField } from '@ytcreator/ui'
+import { type MutableRefObject, useEffect, useRef, useState } from 'react'
+import { scriptsApi } from '../../../api/client.ts'
+import { navigate } from '../../../router.ts'
+import { errorText } from '../../../shell/errorText.ts'
+import { channelEs } from '../../../strings/channel.es.ts'
+import { es } from '../../../strings/es.ts'
+import { scriptEs } from '../../../strings/script.es.ts'
+import styles from '../channel.module.css'
+import { AiAction } from '../Proposal.tsx'
+import { clock } from './OutlineStep.tsx'
+import { type ScriptAi, useEstimate } from './useScriptAi.ts'
+
+const text = scriptEs.draft
+
+export interface DraftStepProps {
+  readonly script: ScriptView
+  readonly ai: ScriptAi
+  readonly onChange: (script: ScriptView) => void
+  readonly onError: (cause: unknown) => void
+  readonly onToOutline: () => void
+}
+
+function BlockEditor({
+  block,
+  busy,
+  wordsPerMinute,
+  onSave,
+  onCancel,
+  current,
+}: {
+  readonly block: DraftBlock
+  readonly busy: boolean
+  readonly wordsPerMinute: number
+  readonly onSave: (block: DraftBlock) => void
+  readonly onCancel: () => void
+  readonly current: MutableRefObject<DraftBlock | null>
+}) {
+  const [spoken, setSpoken] = useState(block.text)
+  const [visual, setVisual] = useState(block.visual)
+  useEffect(() => {
+    current.current = { ...block, text: spoken, visual }
+  })
+  const form = useRef<HTMLFormElement>(null)
+  useEffect(() => form.current?.querySelector('textarea')?.focus(), [])
+  return (
+    <form
+      ref={form}
+      className={styles.options}
+      onSubmit={(event) => {
+        event.preventDefault()
+        onSave({ ...block, text: spoken, visual })
+      }}
+    >
+      <TextArea
+        label={text.spoken}
+        description={format(text.duration, { tiempo: clock(durationSeconds(spoken, wordsPerMinute)) })}
+        value={spoken}
+        rows={8}
+        autoResize
+        maxLength={SCRIPT_LIMITS.blockText}
+        onChange={(event) => setSpoken(event.target.value)}
+      />
+      <TextField
+        label={text.visual}
+        value={visual}
+        maxLength={SCRIPT_LIMITS.visual}
+        onChange={(event) => setVisual(event.target.value)}
+      />
+      <div className={styles.actions}>
+        <Button type="submit" variant="primary" loading={busy}>
+          {text.save}
+        </Button>
+        <Button variant="secondary" disabled={busy} onClick={onCancel}>
+          {text.cancel}
+        </Button>
+      </div>
+    </form>
+  )
+}
+
+function BlockAgain({
+  script,
+  block,
+  ai,
+  disabled,
+  guard,
+  saveOpenEdit,
+  onClose,
+}: {
+  readonly script: ScriptView
+  readonly block: DraftBlock
+  readonly ai: ScriptAi
+  readonly disabled: boolean
+  readonly guard: (action: () => void) => void
+  readonly saveOpenEdit: () => Promise<boolean>
+  readonly onClose: () => void
+}) {
+  // Priced only when asked for: one estimate per block would be as many requests as blocks on every change.
+  const price = useEstimate(script, 'bloque_guion', true, block.id)
+  const [instructions, setInstructions] = useState('')
+  const field = useRef<HTMLDivElement>(null)
+  useEffect(() => field.current?.querySelector('textarea')?.focus(), [])
+  return (
+    <div ref={field} className={styles.options}>
+      <TextArea
+        label={text.blockInstructions}
+        description={text.instructionsHelp}
+        optional
+        value={instructions}
+        maxLength={SCRIPT_LIMITS.instructions}
+        disabled={disabled}
+        onChange={(event) => setInstructions(event.target.value)}
+      />
+      {price.error !== null && (
+        <ErrorMessage live title={errorText(price.error)} action={{ label: es.app.retry, onClick: price.retry }} />
+      )}
+      <AiAction
+        label={text.blockAgain}
+        primary={false}
+        estimate={price.estimate}
+        busy={ai.working === 'bloque_guion'}
+        disabled={disabled}
+        onRun={() =>
+          guard(() => {
+            // What is being written in another block is saved first (spec, «Edición sin guardar al pedir un bloque»).
+            void saveOpenEdit().then((ok) => {
+              if (ok) void ai.run('bloque_guion', price, instructions, block.id)
+            })
+          })
+        }
+      />
+      <div className={styles.actions}>
+        <Button variant="ghost" onClick={onClose}>
+          {text.cancel}
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+function ClaimDialog({
+  claim,
+  busy,
+  onAct,
+  onClose,
+}: {
+  readonly claim: Claim
+  readonly busy: boolean
+  readonly onAct: (action: 'confirmar' | 'corregir' | 'no_es_dato' | 'quitar_del_guion', fixed?: string) => void
+  readonly onClose: () => void
+}) {
+  const [correcting, setCorrecting] = useState(false)
+  const [fixed, setFixed] = useState(claim.text)
+  const usable = fixed.trim() !== '' && fixed.trim() !== claim.text
+  return (
+    <Dialog
+      open
+      onOpenChange={(open) => !open && onClose()}
+      title={format(text.claimTitle, { texto: claim.text })}
+      description={`${text.claimReason[claim.reason]} ${text.claimRemoveNote}`}
+    >
+      {correcting ? (
+        <form
+          className={styles.options}
+          onSubmit={(event) => {
+            event.preventDefault()
+            if (usable) onAct('corregir', fixed.trim())
+          }}
+        >
+          <TextField
+            label={text.claimFix}
+            value={fixed}
+            maxLength={SCRIPT_LIMITS.claimText}
+            onChange={(event) => setFixed(event.target.value)}
+          />
+          <div className={styles.actions}>
+            <Button type="submit" variant="primary" loading={busy} disabled={!usable}>
+              {text.save}
+            </Button>
+          </div>
+        </form>
+      ) : (
+        <div className={styles.actions}>
+          <Button variant="primary" loading={busy} onClick={() => onAct('confirmar')}>
+            {text.claimConfirm}
+          </Button>
+          <Button variant="secondary" disabled={busy} onClick={() => setCorrecting(true)}>
+            {text.claimCorrect}
+          </Button>
+          <Button variant="secondary" disabled={busy} onClick={() => onAct('no_es_dato')}>
+            {text.claimNotData}
+          </Button>
+          <Button variant="secondary" disabled={busy} onClick={() => onAct('quitar_del_guion')}>
+            {text.claimRemove}
+          </Button>
+        </div>
+      )}
+    </Dialog>
+  )
+}
+
+// What the creator is going to say, block by block (contracts/ui-screens.md).
+export function DraftStep({ script, ai, onChange, onError, onToOutline }: DraftStepProps) {
+  const [editing, setEditing] = useState<string | null>(null)
+  const [asking, setAsking] = useState<string | null>(null)
+  const [saving, setSaving] = useState(false)
+  const [openClaim, setOpenClaim] = useState<string | null>(null)
+  const [instructions, setInstructions] = useState('')
+  const [pending, setPending] = useState<(() => void) | null>(null)
+  const counter = useRef<HTMLParagraphElement>(null)
+  const openEdit = useRef<DraftBlock | null>(null)
+  const focusCounter = useRef(false)
+  const refocus = useRef<string | null>(null)
+  const canRewrite = script.outline !== null && script.outlineApprovedVersion === script.outline.version
+  const price = useEstimate(script, 'guion', canRewrite)
+  const draft = script.draft
+
+  useEffect(() => {
+    if (!refocus.current) return
+    document.querySelector<HTMLElement>(`[data-block-action="${refocus.current}"]`)?.focus()
+    refocus.current = null
+  }, [draft?.version, editing, asking])
+
+  // After the dialog has gone: until then the page is inert, and it hands the focus back to a mark that no longer exists.
+  useEffect(() => {
+    if (openClaim !== null || !focusCounter.current) return
+    focusCounter.current = false
+    counter.current?.focus()
+  }, [openClaim])
+
+  if (!draft) return <p className={styles.notice}>{text.none}</p>
+
+  const { blocks, claims } = draft.content
+  const { wordsPerMinute } = script.voice
+  const pendingClaims = claims.filter((claim) => claim.status === 'pendiente')
+  const claim = claims.find((one) => one.id === openClaim) ?? null
+  const total = durationSeconds(blocks.map((block) => block.text).join(' '), wordsPerMinute)
+  const busy = saving || ai.working !== null
+  const locked = busy || editing !== null
+  const again = ai.failureFor('guion')
+  const blockFailure = ai.failureFor('bloque_guion')
+  const isApproved = script.status === 'guion_aprobado'
+
+  // An approved script stops being approved when it changes: it says so once, before the first change (FR-017).
+  const guard = (action: () => void) => {
+    if (isApproved) setPending(() => action)
+    else action()
+  }
+
+  const save = async (block: DraftBlock) => {
+    setSaving(true)
+    try {
+      const changed = await scriptsApi.saveDraft(script.id, {
+        baseVersion: draft.version,
+        content: { claims, blocks: blocks.map((one) => (one.id === block.id ? block : one)) },
+      })
+      refocus.current = `${block.id}:change`
+      setEditing(null)
+      onChange(changed)
+      return true
+    } catch (cause) {
+      onError(cause)
+      return false
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const saveOpenEdit = async () => (editing !== null && openEdit.current ? save(openEdit.current) : true)
+
+  const act = async (action: 'confirmar' | 'corregir' | 'no_es_dato' | 'quitar_del_guion', fixed?: string) => {
+    if (!claim) return
+    setSaving(true)
+    try {
+      const changed = await scriptsApi.actOnClaim(script.id, claim.id, {
+        baseVersion: draft.version,
+        action,
+        ...(fixed ? { text: fixed } : {}),
+      })
+      // The mark that opened it is gone: the count that just went down is the next thing to read.
+      focusCounter.current = true
+      setOpenClaim(null)
+      onChange(changed)
+    } catch (cause) {
+      setOpenClaim(null)
+      onError(cause)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <>
+      <p className={styles.why}>{text.why}</p>
+      <p className={styles.notice}>
+        {format(script.voice.isDefault ? text.voiceDefault : text.voiceCurrent, {
+          trato: text.address[script.voice.address],
+          registro: text.register[script.voice.register],
+        })}{' '}
+        <Button
+          variant="ghost"
+          size="sm"
+          aria-disabled={locked || undefined}
+          onClick={() => !locked && navigate({ page: 'scriptVoice' })}
+        >
+          {text.changeVoice}
+        </Button>
+      </p>
+      <DataSource kind="ia" />
+      <p ref={counter} tabIndex={-1} role="status">
+        {pendingClaims.length === 0
+          ? text.noClaims
+          : format(pendingClaims.length === 1 ? text.claimsCount.one : text.claimsCount.other, {
+              n: pendingClaims.length,
+            })}
+      </p>
+      {blockFailure && (
+        <ErrorMessage
+          live
+          title={channelEs.aiFailure[blockFailure]}
+          action={
+            blockFailure === 'limite_de_gasto'
+              ? { label: text.toLimits, onClick: () => navigate({ page: 'aiSettings' }) }
+              : { label: text.understood, onClick: ai.dismiss }
+          }
+        />
+      )}
+      <ol className={styles.options}>
+        {blocks.map((block) => (
+          <Card as="li" key={block.id}>
+            <h2>{block.title || scriptEs.outline.untitled}</h2>
+            {editing === block.id ? (
+              <BlockEditor
+                block={block}
+                busy={saving}
+                wordsPerMinute={wordsPerMinute}
+                current={openEdit}
+                onSave={(changed) => void save(changed)}
+                onCancel={() => {
+                  refocus.current = `${block.id}:change`
+                  setEditing(null)
+                }}
+              />
+            ) : (
+              <>
+                <p>
+                  {splitMarks(
+                    block.text,
+                    claims.filter((one) => one.blockId === block.id),
+                  ).map((part, index) =>
+                    part.claimId ? (
+                      <button
+                        key={index}
+                        type="button"
+                        className={styles.claim}
+                        aria-label={format(text.claimName, { texto: part.text })}
+                        aria-disabled={busy || undefined}
+                        onClick={() => !busy && part.claimId && guard(() => setOpenClaim(part.claimId ?? null))}
+                      >
+                        <mark>{part.text}</mark>
+                      </button>
+                    ) : (
+                      part.text
+                    ),
+                  )}
+                </p>
+                {block.visual !== '' && <p className={styles.notice}>{format(text.seen, { texto: block.visual })}</p>}
+                <p className={styles.notice}>
+                  {format(text.duration, { tiempo: clock(durationSeconds(block.text, wordsPerMinute)) })}
+                </p>
+                <div className={styles.actions}>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    data-block-action={`${block.id}:change`}
+                    aria-label={format(text.named, { accion: text.change, titulo: block.title })}
+                    aria-disabled={locked || undefined}
+                    onClick={() => !locked && guard(() => setEditing(block.id))}
+                  >
+                    {text.change}
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    data-block-action={`${block.id}:again`}
+                    aria-label={format(text.named, { accion: text.blockAgain, titulo: block.title })}
+                    aria-disabled={busy || undefined}
+                    aria-expanded={asking === block.id}
+                    onClick={() => !busy && setAsking(asking === block.id ? null : block.id)}
+                  >
+                    {text.blockAgain}
+                  </Button>
+                </div>
+                {asking === block.id && (
+                  <BlockAgain
+                    script={script}
+                    block={block}
+                    ai={ai}
+                    disabled={busy}
+                    guard={guard}
+                    saveOpenEdit={saveOpenEdit}
+                    onClose={() => {
+                      refocus.current = `${block.id}:again`
+                      setAsking(null)
+                    }}
+                  />
+                )}
+              </>
+            )}
+          </Card>
+        ))}
+      </ol>
+      <p>{format(text.total, { total: clock(total), objetivo: clock(script.targetSeconds) })}</p>
+      {editing !== null && <p className={styles.notice}>{scriptEs.outline.finishEditing}</p>}
+      {price.error !== null && (
+        <ErrorMessage live title={errorText(price.error)} action={{ label: es.app.retry, onClick: price.retry }} />
+      )}
+      <Disclosure key={again ? 'failed' : 'idle'} summary={text.againSection} defaultOpen={again !== null}>
+        {canRewrite ? (
+          <>
+            <TextArea
+              label={text.instructions}
+              description={text.instructionsHelp}
+              optional
+              value={instructions}
+              maxLength={SCRIPT_LIMITS.instructions}
+              disabled={locked}
+              onChange={(event) => setInstructions(event.target.value)}
+            />
+            <AiAction
+              label={text.again}
+              primary={false}
+              estimate={price.estimate}
+              failure={again}
+              busy={ai.working === 'guion'}
+              disabled={locked}
+              onRun={() => guard(() => void ai.run('guion', price, instructions))}
+            />
+          </>
+        ) : (
+          <>
+            <p className={styles.notice}>{text.approveOutlineFirst}</p>
+            <Button variant="secondary" onClick={onToOutline}>
+              {text.toOutline}
+            </Button>
+          </>
+        )}
+      </Disclosure>
+      <Dialog
+        open={pending !== null}
+        onOpenChange={(open) => !open && setPending(null)}
+        title={text.unapproveTitle}
+        description={text.unapproveBody}
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setPending(null)}>
+              {text.cancel}
+            </Button>
+            <Button
+              variant="primary"
+              onClick={() => {
+                pending?.()
+                setPending(null)
+              }}
+            >
+              {text.unapproveConfirm}
+            </Button>
+          </>
+        }
+      />
+      {claim && !pending && (
+        <ClaimDialog
+          claim={claim}
+          busy={saving}
+          onAct={(action, fixed) => void act(action, fixed)}
+          onClose={() => setOpenClaim(null)}
+        />
+      )}
+    </>
+  )
+}

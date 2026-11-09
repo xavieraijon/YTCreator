@@ -9,8 +9,10 @@ import { Screen } from '../../../shell/Screen.tsx'
 import { es } from '../../../strings/es.ts'
 import { scriptEs } from '../../../strings/script.es.ts'
 import styles from '../channel.module.css'
+import { DraftStep } from './DraftStep.tsx'
 import { FactsStep } from './FactsStep.tsx'
 import { OutlineStep } from './OutlineStep.tsx'
+import { ScriptWarnings } from './ScriptWarnings.tsx'
 import { useScriptAi } from './useScriptAi.ts'
 
 const text = scriptEs.screen
@@ -44,7 +46,7 @@ export function isReachable(script: ScriptView, step: ScriptStep): boolean {
     case 'escaleta':
       return script.outline !== null
     case 'guion':
-      return false
+      return script.draft !== null
     case 'revisar':
       return false
   }
@@ -86,6 +88,7 @@ export function ScriptScreen({ id }: { readonly id: string }) {
       // A failure stays where it can be retried, and the step opens with what it has to show.
       void load().then(() => {
         if (ok && op === 'escaleta') setStep('escaleta')
+        if (ok && op === 'guion') setStep('guion')
       })
     },
     [load],
@@ -157,6 +160,7 @@ export function ScriptScreen({ id }: { readonly id: string }) {
         <ErrorMessage live title={text.jobFailed} action={{ label: text.understood, onClick: ai.dismiss }} />
       )}
       {ai.working && <AiWorking variant="panel" label={scriptEs.uses[ai.working as ScriptUse]} />}
+      <ScriptWarnings script={script} ai={ai} onStep={setStep} />
       {step === 'hechos' && <FactsStep script={script} ai={ai} onChange={onChange} onError={setError} />}
       {step === 'escaleta' && (
         <OutlineStep
@@ -165,6 +169,16 @@ export function ScriptScreen({ id }: { readonly id: string }) {
           onChange={onChange}
           onError={setError}
           onToFacts={() => setStep('hechos')}
+          onToDraft={() => setStep('guion')}
+        />
+      )}
+      {step === 'guion' && (
+        <DraftStep
+          script={script}
+          ai={ai}
+          onChange={onChange}
+          onError={setError}
+          onToOutline={() => setStep('escaleta')}
         />
       )}
       <div className={styles.actions}>

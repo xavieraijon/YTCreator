@@ -119,9 +119,10 @@ export interface OutlineStepProps {
   readonly onChange: (script: ScriptView) => void
   readonly onError: (cause: unknown) => void
   readonly onToFacts: () => void
+  readonly onToDraft: () => void
 }
 
-export function OutlineStep({ script, ai, onChange, onError, onToFacts }: OutlineStepProps) {
+export function OutlineStep({ script, ai, onChange, onError, onToFacts, onToDraft }: OutlineStepProps) {
   const [editing, setEditing] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [instructions, setInstructions] = useState('')
@@ -130,6 +131,8 @@ export function OutlineStep({ script, ai, onChange, onError, onToFacts }: Outlin
   const outline = script.outline
   const price = useEstimate(script, 'escaleta')
   const { estimate } = price
+  const isApproved = script.outline !== null && script.outlineApprovedVersion === script.outline.version
+  const writePrice = useEstimate(script, 'guion', isApproved && script.format === 'largo' && !script.draft)
 
   useEffect(() => {
     if (!refocus.current) return
@@ -297,7 +300,33 @@ export function OutlineStep({ script, ai, onChange, onError, onToFacts }: Outlin
         </Button>
       </div>
       {approved ? (
-        <p className={styles.notice}>{text.approved}</p>
+        <>
+          <p className={styles.notice}>{text.approved}</p>
+          {writePrice.error !== null && (
+            <ErrorMessage
+              live
+              title={errorText(writePrice.error)}
+              action={{ label: es.app.retry, onClick: writePrice.retry }}
+            />
+          )}
+          {script.draft && (
+            <div className={styles.actions}>
+              <Button variant="primary" onClick={onToDraft}>
+                {text.toDraft}
+              </Button>
+            </div>
+          )}
+          {!script.draft && (
+            <AiAction
+              label={text.writeDraft}
+              estimate={writePrice.estimate}
+              failure={ai.failureFor('guion')}
+              busy={ai.working === 'guion'}
+              disabled={locked}
+              onRun={() => void ai.run('guion', writePrice)}
+            />
+          )}
+        </>
       ) : (
         <>
           {!allTitled && <p className={styles.notice}>{text.needsTitle}</p>}

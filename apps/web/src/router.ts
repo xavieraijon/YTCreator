@@ -16,6 +16,7 @@ export type Route =
   | { readonly page: 'ideaBank' }
   | { readonly page: 'scriptList' }
   | { readonly page: 'script'; readonly id: string }
+  | { readonly page: 'scriptVoice' }
   | { readonly page: 'channelStep'; readonly kind: ChannelOrigin; readonly step: JourneyStep }
   | { readonly page: 'settings' }
   | { readonly page: 'aiSettings' }
@@ -49,6 +50,7 @@ export function parseRoute(pathname: string): Route {
     if (!second) return { page: 'channelStart' }
     if (second === 'ideas' && !third) return { page: 'ideaBank' }
     if (second === 'guiones' && !third) return { page: 'scriptList' }
+    if (second === 'guiones' && third === 'voz' && !fourth) return { page: 'scriptVoice' }
     if (second === 'guiones' && third && !fourth) return { page: 'script', id: third }
     const kind = KIND_BY_SEGMENT[second]
     if (kind && third && !fourth && isJourneyStep(kind, third)) return { page: 'channelStep', kind, step: third }
@@ -85,6 +87,8 @@ export function href(route: Target): string {
       return '/canal/ideas'
     case 'scriptList':
       return '/canal/guiones'
+    case 'scriptVoice':
+      return '/canal/guiones/voz'
     case 'script':
       return `/canal/guiones/${encodeURIComponent(route.id)}`
     case 'channelStep':

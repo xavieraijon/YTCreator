@@ -16,7 +16,11 @@ import {
   measureEstimateSchema,
   newIdeaResultSchema,
   scriptSummarySchema,
+  scriptSettingsViewSchema,
   scriptViewSchema,
+  type ClaimActionBody,
+  type DraftSaveBody,
+  type ScriptSettingsBody,
   type IdeaPatchBody,
   type OutlineSaveBody,
   type ScriptEstimateBody,
@@ -302,6 +306,13 @@ export const scriptsApi = {
     apiClient.put(`${scriptPath(id)}/outline`, body, scriptViewSchema),
   approveOutline: (id: string, version: number) =>
     apiClient.post(`${scriptPath(id)}/outline/approve`, { version }, scriptViewSchema),
+  saveDraft: (id: string, body: DraftSaveBody) => apiClient.put(`${scriptPath(id)}/draft`, body, scriptViewSchema),
+  actOnClaim: (id: string, claimId: string, body: ClaimActionBody) =>
+    apiClient.post(`${scriptPath(id)}/claims/${encodeURIComponent(claimId)}`, body, scriptViewSchema),
+  settings: (channelId: string, options?: RequestOptions) =>
+    apiClient.get(`${channelPath(channelId)}/script-settings`, scriptSettingsViewSchema, options),
+  saveSettings: (channelId: string, body: ScriptSettingsBody) =>
+    apiClient.put(`${channelPath(channelId)}/script-settings`, body, scriptSettingsViewSchema),
 }
 
 export const usageApi = {

@@ -1,10 +1,13 @@
 import { targetSecondsSchema } from '@ytcreator/core'
 import {
   approveOutlineBodySchema,
+  claimActionBodySchema,
+  draftSaveBodySchema,
   outlineSaveBodySchema,
   scriptEstimateBodySchema,
   scriptGenerateBodySchema,
   scriptPatchBodySchema,
+  scriptSettingsBodySchema,
 } from '@ytcreator/core/api'
 import { Hono } from 'hono'
 import type { ScriptsRepo } from '../../db/repos/scripts.ts'
@@ -24,6 +27,13 @@ export function scriptRoutes({ service, scripts }: ScriptRoutesDeps) {
   routes.get('/channels/:id/scripts', (c) => {
     const { channel } = service.withProfile(c.req.param('id'))
     return c.json(service.summaries(channel.id))
+  })
+
+  routes.get('/channels/:id/script-settings', (c) => c.json(service.settings(c.req.param('id'))))
+
+  routes.put('/channels/:id/script-settings', async (c) => {
+    const body = await parseBody(c, scriptSettingsBodySchema)
+    return c.json(service.saveSettings(c.req.param('id'), body))
   })
 
   routes.post('/ideas/:id/script', (c) => {
@@ -51,8 +61,8 @@ export function scriptRoutes({ service, scripts }: ScriptRoutesDeps) {
   })
 
   routes.post('/scripts/:id/estimate', async (c) => {
-    const { use } = await parseBody(c, scriptEstimateBodySchema)
-    return c.json(service.estimate(c.req.param('id'), use))
+    const { use, blockId } = await parseBody(c, scriptEstimateBodySchema)
+    return c.json(service.estimate(c.req.param('id'), use, blockId))
   })
 
   routes.post('/scripts/:id/generate', async (c) => {
@@ -68,6 +78,16 @@ export function scriptRoutes({ service, scripts }: ScriptRoutesDeps) {
   routes.post('/scripts/:id/outline/approve', async (c) => {
     const { version } = await parseBody(c, approveOutlineBodySchema)
     return c.json(service.approveOutline(c.req.param('id'), version))
+  })
+
+  routes.put('/scripts/:id/draft', async (c) => {
+    const body = await parseBody(c, draftSaveBodySchema)
+    return c.json(service.saveDraft(c.req.param('id'), body))
+  })
+
+  routes.post('/scripts/:id/claims/:claimId', async (c) => {
+    const body = await parseBody(c, claimActionBodySchema)
+    return c.json(service.actOnClaim(c.req.param('id'), c.req.param('claimId'), body))
   })
 
   return routes

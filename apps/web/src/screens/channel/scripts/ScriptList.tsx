@@ -76,6 +76,9 @@ export function ScriptList() {
         </ul>
       )}
       <div className={styles.actions}>
+        <Button variant="secondary" onClick={() => navigate({ page: 'scriptVoice' })}>
+          {scriptEs.voice.link}
+        </Button>
         <Button variant="ghost" onClick={() => navigate({ page: 'channelStart' })}>
           {text.backToChannel}
         </Button>

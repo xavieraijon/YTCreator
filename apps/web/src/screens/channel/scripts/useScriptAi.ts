@@ -16,7 +16,7 @@ export interface ScriptEstimate {
   readonly fresh: () => Promise<EstimateView | null>
 }
 
-export function useEstimate(script: ScriptView, use: ScriptUse, enabled = true): ScriptEstimate {
+export function useEstimate(script: ScriptView, use: ScriptUse, enabled = true, blockId?: string): ScriptEstimate {
   const [estimate, setEstimate] = useState<EstimateView | null>(null)
   const [error, setError] = useState<unknown>(null)
   const [attempt, setAttempt] = useState(0)
@@ -25,7 +25,7 @@ export function useEstimate(script: ScriptView, use: ScriptUse, enabled = true):
     if (!enabled) return undefined
     const controller = new AbortController()
     scriptsApi
-      .estimate(id, { use }, { signal: controller.signal })
+      .estimate(id, { use, ...(blockId ? { blockId } : {}) }, { signal: controller.signal })
       .then((got) => {
         setEstimate(got)
         setError(null)
@@ -34,11 +34,11 @@ export function useEstimate(script: ScriptView, use: ScriptUse, enabled = true):
         if (!controller.signal.aborted) setError(cause)
       })
     return () => controller.abort()
-  }, [id, updatedAt, use, enabled, attempt])
+  }, [id, updatedAt, use, enabled, blockId, attempt])
 
   const fresh = useCallback(async () => {
     try {
-      const got = await scriptsApi.estimate(id, { use })
+      const got = await scriptsApi.estimate(id, { use, ...(blockId ? { blockId } : {}) })
       setEstimate(got)
       setError(null)
       return got
@@ -46,7 +46,7 @@ export function useEstimate(script: ScriptView, use: ScriptUse, enabled = true):
       setError(cause)
       return null
     }
-  }, [id, use])
+  }, [id, use, blockId])
 
   return { estimate: enabled ? estimate : null, error, retry: () => setAttempt((n) => n + 1), fresh }
 }
@@ -55,7 +55,7 @@ export interface ScriptAi {
   /** What the AI is doing now, if anything. */
   readonly working: string | null
   /** Says yes only with the price on the button: if it moved, the button shows the new one and nothing is spent. */
-  readonly run: (use: ScriptUse, price: ScriptEstimate, instructions?: string) => Promise<void>
+  readonly run: (use: ScriptUse, price: ScriptEstimate, instructions?: string, blockId?: string) => Promise<void>
   readonly priceChanged: boolean
   /** Hides what the last job left: something else has been done since. */
   readonly dismiss: () => void
@@ -94,7 +94,7 @@ export function useScriptAi(
   }, [watch, op, onFinished])
 
   const run = useCallback(
-    async (use: ScriptUse, price: ScriptEstimate, instructions?: string) => {
+    async (use: ScriptUse, price: ScriptEstimate, instructions?: string, blockId?: string) => {
       if (!script) return
       const shown = price.estimate?.cents
       setPriceChanged(false)
@@ -109,6 +109,7 @@ export function useScriptAi(
           use,
           estimateId: estimate.estimateId,
           ...(instructions?.trim() ? { instructions: instructions.trim() } : {}),
+          ...(blockId ? { blockId } : {}),
         })
         setOp(use)
         setJobId(started)

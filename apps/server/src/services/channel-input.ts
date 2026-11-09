@@ -102,6 +102,8 @@ export function channelInput(
     case 'otro_enfoque':
     case 'busquedas_idea':
     case 'escaleta':
+    case 'guion':
+    case 'bloque_guion':
       return {}
   }
 }

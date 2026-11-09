@@ -263,6 +263,24 @@ function normal(
       return { query: 'cena rapida con sobras', broadQuery: 'cenas rapidas', queryEn: 'quick dinner with leftovers' }
     case 'escaleta':
       return outline(input)
+    case 'guion': {
+      const outlined = input.outline as { blocks: { id: string; title: string }[] } | undefined
+      const blocks = outlined?.blocks ?? [{ id: 'bloque', title: 'Este bloque' }]
+      return {
+        blocks: blocks.map((block) => ({
+          outlineBlockId: block.id,
+          text: `Esto es lo que dirías en ${block.title.toLocaleLowerCase('es')}. Esta parte sale del guion, para que la leas en voz alta sin trabarte.`,
+          visual: 'Tú, hablando a cámara.',
+        })),
+        claims: [{ outlineBlockId: blocks[0]!.id, text: 'Esta parte sale del guion', factId: null }],
+      }
+    }
+    case 'bloque_guion':
+      return {
+        text: 'Este bloque está escrito de nuevo. Lo agradecen dos millones de personas.',
+        visual: 'Un plano más cerca.',
+        claims: [],
+      }
   }
 }
 
@@ -315,6 +333,12 @@ function invent(use: ChannelUse, output: Record<string, unknown>): Record<string
       const [first, ...rest] = output.blocks as { purpose: string }[]
       return { blocks: [{ ...first, purpose: add(first!.purpose).slice(0, 300) }, ...rest] }
     }
+    case 'guion': {
+      const [first, ...rest] = output.blocks as { text: string }[]
+      return { ...output, blocks: [{ ...first, text: add(first!.text) }, ...rest] }
+    }
+    case 'bloque_guion':
+      return { ...output, text: add(output.text as string) }
   }
 }
 

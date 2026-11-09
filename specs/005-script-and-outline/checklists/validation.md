@@ -128,3 +128,72 @@ I (error con qué pasó y salida), II (dato frente a opinión), III (coste antes
 ### 9. Cómo revertir
 
 `git revert` del commit de esta historia. No hay migraciones. Queda: US2 en adelante, y AS5 en T043.
+
+## US2 (T034–T045), Puerta A del 2026-11-09
+
+### 1. Resumen
+
+De la escaleta aprobada sale un guion por bloques con la voz del canal, marcas «por comprobar», edición a mano y regeneración
+de un bloque sin tocar el resto. Los revisores dieron dos graves, los dos en las marcas (cifras perdidas y acciones que
+tocaban otras palabras), ya corregidos. Sin graves ni medios abiertos; la acción «Revisar el guion» llega con US3.
+
+### 2. Requisitos
+
+| Requisito | Estado | Evidencia | Fecha |
+|---|---|---|---|
+| AS1 guion con los bloques de la escaleta y coste antes | Cumplido | `scripts-draft.test.ts`, `scripts.spec.ts` | 2026-11-09 |
+| AS2 editar crea versión sin IA y recalcula | Cumplido | `scripts-draft.test.ts`, `scripts.spec.ts` | 2026-11-09 |
+| AS3 / SC-004 un bloque, el resto idéntico | Cumplido | `scripts-draft.test.ts` (comparación de cada bloque) | 2026-11-09 |
+| AS4 / SC-003 marcas | Cumplido con casos grabados | `claims.test.ts`; los nombres al inicio de frase dependen de la IA (R9) | 2026-11-09 |
+| AS5 acciones sobre una marca | Cumplido | `scripts-draft.test.ts`, las cinco acciones | 2026-11-09 |
+| AS6 cerrar la pestaña | Cumplido | `scripts.spec.ts` | 2026-11-09 |
+| AS7 voz por defecto y voz nueva | Cumplido | `script-settings.test.ts`, `scripts-draft.test.ts`, `scripts.spec.ts` | 2026-11-09 |
+| FR-017 aviso en guion aprobado | Parcial | Implementado; aprobar llega en US3 y su recorrido se prueba allí | 2026-11-09 |
+| Avisos con acción y coste | Cumplido | `ScriptWarnings.tsx`; el coste de rehacer sale en el propio aviso | 2026-11-09 |
+| AS5 de US1 «Escribir el guion · {coste}» | Cumplido | `scripts.spec.ts` | 2026-11-09 |
+
+### 3. Cómo se comprobó
+
+Tras las correcciones: `lint` 0, `typecheck` 0, `test` 1.908 pasados y 2 omitidos (código 0), `test:e2e` de la web 41 de 41
+(código 0). Recorrido real con los proveedores falsos en `scripts.spec.ts`.
+
+### 4. Controles
+
+- Pasados: lint, typecheck, test, test:e2e web, glosario, `secrets-leak`, axe claro y oscuro a 375 y 1280 px con
+  reduced-motion (guion, diálogo de marca y voz), teclado y foco.
+- Tipos de fallo de IA: los cinco se prueban con `escaleta` en `scripts-outline.test.ts`; `guion` y `bloque_guion` usan el
+  mismo camino y no tienen prueba propia de cada fallo.
+- No ejecutados: `test:installer` (no se toca el instalador); IA real (P1). Las correcciones han pasado todos los controles,
+  pero no una segunda vuelta de revisores.
+
+### 5. Hallazgos
+
+Corregidos: cifra contenida en otra sin marca (grave); corregir, quitar y pintar marcas dentro de otras palabras (grave);
+«Quitar del guion» borraba la frase y no el fragmento; lo declarado por la IA se marcaba aunque estuviera en los apuntes;
+avisos de idea y perfil que desaparecían al tocar algo; los avisos no ofrecían rehacer con coste; semáforo sin origen ni
+fecha; lo escrito no se guardaba antes de pedir un bloque; bloque regenerado con una escaleta sin aprobar; reintento de la
+voz que borraba lo escrito; foco tras cerrar una marca; `<mark>` sin tokens; plural del contador; marcas pulsables con un
+trabajo en curso; guardar sin cambios creaba versión; `actOnClaim` admitía marcas ya resueltas; tests de T038 y de
+`aceptar_propuesta`.
+
+Descartados: ninguno.
+
+Abiertos (menores): una estimación no queda atada a su bloque (solo por API; el presupuesto se vuelve a comprobar); salir por
+los pasos con una edición abierta la descarta; la voz no avisa si otra pestaña guardó antes.
+
+### 6. Desviaciones
+
+Entradas 21 y 22 de `decisions.md`. `verdictAt` en la vista de la idea.
+
+### 7. Decisiones
+
+Agente: 21 (bajo) y 22 (medio). Pendientes del creador: P1 y P2; no bloquean esta historia.
+
+### 8. Constitución
+
+II (dato frente a opinión, versiones), III (coste en cada petición), IV (esquema atado a la escaleta), V (marcas, reglas de
+escritura), VI (tokens y accesibilidad), XI (este informe).
+
+### 9. Cómo revertir
+
+`git revert` del commit de esta historia. No hay migraciones. Queda: US3 en adelante.

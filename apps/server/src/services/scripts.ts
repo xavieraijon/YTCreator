@@ -1,13 +1,25 @@
 import { randomUUID } from 'node:crypto'
 import {
   channelProfileSchema,
+  blockOutput,
   DEFAULT_SCRIPT_SETTINGS,
   defaultTargetSeconds,
+  detectClaims,
+  draftOutputFor,
+  durationSeconds,
+  replaceFragment,
+  withoutFragment,
+  expectedOutputTokens,
   SCRIPT_LIMITS,
   scriptStatus,
   scriptWarnings,
+  settleOrphans,
+  type BlockOutput,
   type ChannelProfile,
+  type Claim,
   type ContentOf,
+  type DraftContent,
+  type DraftOutput,
   type Idea,
   type OutlineContent,
   type ScriptKind,
@@ -15,6 +27,8 @@ import {
   type VersionOrigin,
 } from '@ytcreator/core'
 import type {
+  ClaimActionBody,
+  DraftSaveBody,
   OutlineSaveBody,
   ScriptGenerateBody,
   ScriptSettingsView,
@@ -116,7 +130,7 @@ export function createScriptService(deps: ScriptServiceDeps) {
 
   const verdictOf = (idea: Idea) => {
     const latest = measures.latest(idea.id)
-    return latest?.status === 'medida' && latest.ideaRevision === idea.revision ? latest.verdict : null
+    return latest?.status === 'medida' && latest.ideaRevision === idea.revision ? latest : null
   }
 
   const view = (script: Script, idea: Idea, profileVersion: number): ScriptView => {
@@ -145,7 +159,8 @@ export function createScriptService(deps: ScriptServiceDeps) {
         notes: idea.notes,
         status: idea.status,
         revision: idea.revision,
-        verdict: verdictOf(idea),
+        verdict: verdictOf(idea)?.verdict ?? null,
+        verdictAt: verdictOf(idea)?.measuredAt ?? null,
       },
       facts: withContent(facts),
       outline: withContent(outline),
@@ -231,16 +246,19 @@ export function createScriptService(deps: ScriptServiceDeps) {
       promptVersion?: number
       usageId?: string | null
       restoredFrom?: number
+      // What is copied from an earlier version keeps saying what it was written with (data-model.md, «Avisos»).
+      writtenWith?: { ideaRevision: number; profileVersion: number }
     } = {},
   ) => {
+    const { writtenWith: earlier, ...rest } = extra
     const version = versions.add({
       scriptId: script.id,
       kind,
       origin,
       content,
-      ideaRevision: idea.revision,
-      profileVersion,
-      ...extra,
+      ideaRevision: earlier?.ideaRevision ?? idea.revision,
+      profileVersion: earlier?.profileVersion ?? profileVersion,
+      ...rest,
     })
     scripts.touch(script.id)
     return version
@@ -274,47 +292,212 @@ export function createScriptService(deps: ScriptServiceDeps) {
     previous: versions.latest(script.id, 'escaleta')?.content ?? null,
   })
 
+  const writtenWith = ({ ideaRevision, profileVersion }: ScriptVersion<'guion'>) => ({ ideaRevision, profileVersion })
+
+  const voiceInput = (channelId: string) => {
+    const { address, register, sample } = voiceOf(channelId)
+    return { address, register, sample }
+  }
+
+  // What the creator has said: nothing in it gets marked (R9).
+  const knownOf = ({ script, idea }: { script: Script; idea: Idea }) => [
+    script.notes,
+    idea.title,
+    idea.hook,
+    idea.query ?? '',
+    idea.notes,
+  ]
+
+  const claimsFor = (
+    found: Found,
+    blocks: readonly { id: string; text: string }[],
+    aiClaims: readonly { blockId: string; text: string; factId: string | null }[],
+  ) =>
+    detectClaims({
+      blocks,
+      known: knownOf(found),
+      facts: versions.latest(found.script.id, 'hechos')?.content.facts ?? [],
+      aiClaims,
+      newId: randomUUID,
+    })
+
+  // A script is written from the outline as it was approved, never from one still being changed (data-model.md).
+  const approvedOutline = (script: Script) => {
+    const outline = versions.latest(script.id, 'escaleta')
+    if (!outline || outline.version !== script.outlineApprovedVersion) throw new ApiError({ code: 'sin_aprobar' })
+    return outline
+  }
+
+  const blockRequest = (found: Found, blockId: string | undefined) => {
+    const draft = versions.latest(found.script.id, 'guion')
+    const index = draft?.content.blocks.findIndex((one) => one.id === blockId) ?? -1
+    if (!draft || index === -1) throw new ApiError({ code: 'no_encontrado' })
+    const { blocks } = draft.content
+    const block = blocks[index]!
+    // The outline this script was written from: one being changed has not been approved by anybody.
+    const planned =
+      draft.outlineVersion === null
+        ? undefined
+        : versions
+            .get(found.script.id, 'escaleta', draft.outlineVersion)
+            ?.content.blocks.find((one) => one.id === block.id)
+    const { wordsPerMinute } = voiceOf(found.script.channelId)
+    const seconds = planned?.seconds || durationSeconds(block.text, wordsPerMinute)
+    return {
+      draft,
+      index,
+      seconds,
+      input: {
+        block: {
+          type: block.type,
+          title: block.title,
+          purpose: planned?.purpose ?? '',
+          text: block.text,
+          visual: block.visual,
+        },
+        previousText: blocks[index - 1]?.text ?? null,
+        nextText: blocks[index + 1]?.text ?? null,
+        voice: voiceInput(found.script.channelId),
+        notes: found.script.notes,
+        facts: factsInput(found.script.id),
+        targetSeconds: seconds,
+        wordsPerMinute,
+      },
+      outputTokens: expectedOutputTokens(seconds, wordsPerMinute, 1),
+    }
+  }
+
   // What each use asks for and what it does with the answer.
-  const requestFor = (found: Found, use: ScriptUse) => {
-    if (found.script.format === 'short') throw new ApiError({ code: 'validacion', fields: { use: 'no_valido' } })
+  const requestFor = (found: Found, use: ScriptUse, blockId?: string) => {
+    const { script, idea, profile } = found
+    const promptMeta = () => {
+      const prompt = deps.promptFor(use)
+      return { promptId: prompt.id, promptVersion: prompt.version }
+    }
+    if (script.format === 'short') throw new ApiError({ code: 'validacion', fields: { use: 'no_valido' } })
+
+    if (use === 'guion') {
+      const outline = approvedOutline(script)
+      const { wordsPerMinute } = voiceOf(script.channelId)
+      return {
+        input: {
+          outline: outline.content,
+          idea: ideaInput(idea),
+          profile: profileInput(profile),
+          voice: voiceInput(script.channelId),
+          notes: script.notes,
+          facts: factsInput(script.id),
+          targetSeconds: script.targetSeconds,
+          wordsPerMinute,
+          craft: deps.knowledge.craft.data,
+        },
+        outputTokens: expectedOutputTokens(script.targetSeconds, wordsPerMinute, outline.content.blocks.length),
+        schema: draftOutputFor(outline.content.blocks.map((block) => block.id)),
+        keep: (value: unknown, usageId: string | null, instructions: string | null) => {
+          const output = value as DraftOutput
+          const blocks = outline.content.blocks.map((block, index) => ({
+            id: block.id,
+            type: block.type,
+            title: block.title,
+            text: output.blocks[index]!.text,
+            visual: output.blocks[index]!.visual,
+          }))
+          const claims = claimsFor(
+            found,
+            blocks,
+            output.claims.map((claim) => ({ blockId: claim.outlineBlockId, text: claim.text, factId: claim.factId })),
+          )
+          addVersion(
+            found,
+            'guion',
+            'ia',
+            { blocks, claims },
+            {
+              factsVersion: versions.latestNumber(script.id, 'hechos'),
+              outlineVersion: outline.version,
+              instructions,
+              usageId,
+              ...promptMeta(),
+            },
+          )
+        },
+      }
+    }
+
+    if (use === 'bloque_guion') {
+      const { draft, index, input, outputTokens } = blockRequest(found, blockId)
+      return {
+        input,
+        outputTokens,
+        schema: blockOutput,
+        keep: (value: unknown, usageId: string | null, instructions: string | null) => {
+          const output = value as BlockOutput
+          const target = draft.content.blocks[index]!
+          // Only this block is touched: the others are copied as they are, with their edits (SC-004).
+          const blocks = draft.content.blocks.map((block) =>
+            block.id === target.id ? { ...block, text: output.text, visual: output.visual } : block,
+          )
+          const fresh = claimsFor(
+            found,
+            [{ id: target.id, text: output.text }],
+            output.claims.map((claim) => ({ blockId: target.id, text: claim.text, factId: claim.factId })),
+          )
+          const claims = [...draft.content.claims.filter((claim) => claim.blockId !== target.id), ...fresh]
+          addVersion(
+            found,
+            'guion',
+            'bloque_ia',
+            { blocks, claims },
+            {
+              factsVersion: draft.factsVersion,
+              outlineVersion: draft.outlineVersion,
+              writtenWith: writtenWith(draft),
+              instructions,
+              usageId,
+              ...promptMeta(),
+            },
+          )
+        },
+      }
+    }
+
     return {
       input: outlineInput(found),
       outputTokens: undefined,
+      schema: undefined,
       keep: (value: unknown, usageId: string | null, instructions: string | null) => {
         const { blocks } = value as { blocks: Omit<OutlineContent['blocks'][number], 'id'>[] }
-        const prompt = deps.promptFor(use)
         addVersion(
           found,
           'escaleta',
           'ia',
           { blocks: blocks.map((block) => ({ ...block, id: randomUUID() })) },
           {
-            factsVersion: versions.latestNumber(found.script.id, 'hechos'),
+            factsVersion: versions.latestNumber(script.id, 'hechos'),
             instructions,
-            promptId: prompt.id,
-            promptVersion: prompt.version,
             usageId,
+            ...promptMeta(),
           },
         )
       },
     }
   }
 
-  const estimate = (id: string, use: ScriptUse) => {
+  const estimate = (id: string, use: ScriptUse, blockId?: string) => {
     const found = find(id)
-    const { input, outputTokens } = requestFor(found, use)
+    const { input, outputTokens } = requestFor(found, use, blockId)
     return aiRun.estimate({ journeyId: journeyOf(found.script.channelId), use, input, outputTokens })
   }
 
   // Runs in the background: the creator can close the tab and find the result on coming back (R12).
-  const generate = (id: string, { use, estimateId, instructions }: ScriptGenerateBody) => {
+  const generate = (id: string, { use, estimateId, instructions, blockId }: ScriptGenerateBody) => {
     const found = find(id)
     assertIdle(found.script)
     const journeyId = journeyOf(found.script.channelId)
     aiRun.assertEstimate(estimateId, use, journeyId)
-    const { input, keep } = requestFor(found, use)
+    const { input, keep, schema } = requestFor(found, use, blockId)
     const job = deps.jobs.start({ journeyId: null, channelId: found.script.channelId, kind: 'ia' }, async () => {
-      const result = await aiRun.run({ estimateId, journeyId, use, input, instructions })
+      const result = await aiRun.run({ estimateId, journeyId, use, input, instructions, ...(schema ? { schema } : {}) })
       if (!result.ok) return { failure: result.failure }
       keep(result.value, result.usageId, instructions ?? null)
       return undefined
@@ -344,7 +527,106 @@ export function createScriptService(deps: ScriptServiceDeps) {
     return view(scripts.approveOutline(id, version), found.idea, found.profileVersion)
   }
 
+  const currentDraft = (found: Found, baseVersion: number) => {
+    assertIdle(found.script)
+    const latest = versions.latest(found.script.id, 'guion')
+    assertBase(latest?.version ?? null, baseVersion)
+    if (!latest) throw new ApiError({ code: 'no_encontrado' })
+    return latest
+  }
+
+  const editDraft = (found: Found, latest: ScriptVersion<'guion'>, content: DraftContent) =>
+    addVersion(found, 'guion', 'edicion', content, {
+      factsVersion: latest.factsVersion,
+      outlineVersion: latest.outlineVersion,
+      writtenWith: writtenWith(latest),
+    })
+
+  // The creator changes what is said and seen; the blocks and the marks are the server's (R9: their text is not marked).
+  const saveDraft = (id: string, { baseVersion, content }: DraftSaveBody) => {
+    const found = find(id)
+    const latest = currentDraft(found, baseVersion)
+    const sameBlocks =
+      content.blocks.length === latest.content.blocks.length &&
+      content.blocks.every((block, index) => block.id === latest.content.blocks[index]!.id)
+    if (!sameBlocks) throw new ApiError({ code: 'validacion', fields: { blocks: 'no_valido' } })
+    const blocks = latest.content.blocks.map((block, index) => ({
+      ...block,
+      text: content.blocks[index]!.text,
+      visual: content.blocks[index]!.visual,
+    }))
+    // Saving what was already there is not a change: it must not take an approved script back to draft.
+    if (JSON.stringify(blocks) !== JSON.stringify(latest.content.blocks)) {
+      editDraft(found, latest, { blocks, claims: settleOrphans(latest.content.claims, blocks) })
+    }
+    return view(scripts.get(id)!, found.idea, found.profileVersion)
+  }
+
+  const actOnClaim = (id: string, claimId: string, { baseVersion, action, text }: ClaimActionBody) => {
+    const found = find(id)
+    const latest = currentDraft(found, baseVersion)
+    const claim = latest.content.claims.find((one) => one.id === claimId)
+    if (!claim) throw new ApiError({ code: 'no_encontrado' })
+    if (claim.status !== 'pendiente') throw new ApiError({ code: 'conflicto', fields: { claim: 'no_valido' } })
+    const withClaim = (changed: Partial<Claim>) =>
+      latest.content.claims.map((one) => (one.id === claimId ? { ...one, ...changed } : one))
+
+    if (action === 'confirmar' || action === 'no_es_dato') {
+      const content = {
+        blocks: latest.content.blocks,
+        claims: withClaim({ status: action === 'confirmar' ? ('confirmada' as const) : ('sin_marca' as const) }),
+      }
+      // Forty marks are one line of the history (R10), unless that line is what was approved.
+      if (latest.origin === 'marcas' && found.script.draftApprovedVersion !== latest.version) {
+        versions.updateMarks(found.script.id, content)
+        scripts.touch(found.script.id)
+      } else {
+        addVersion(found, 'guion', 'marcas', content, {
+          factsVersion: latest.factsVersion,
+          outlineVersion: latest.outlineVersion,
+          writtenWith: writtenWith(latest),
+        })
+      }
+      return view(scripts.get(id)!, found.idea, found.profileVersion)
+    }
+
+    const rewrite = (change: (text: string) => string) =>
+      latest.content.blocks.map((block) =>
+        block.id === claim.blockId ? { ...block, text: change(block.text) } : block,
+      )
+    const proposal = claim.check?.proposal
+    let blocks: DraftContent['blocks']
+    let changed: Partial<Claim>
+    if (action === 'corregir') {
+      if (!text) throw new ApiError({ code: 'validacion', fields: { text: 'no_valido' } })
+      blocks = rewrite((one) => replaceFragment(one, claim.text, text))
+      changed = { status: 'corregida', text }
+    } else if (action === 'aceptar_propuesta') {
+      if (!proposal) throw new ApiError({ code: 'validacion', fields: { action: 'no_valido' } })
+      blocks = rewrite((one) => replaceFragment(one, claim.text, proposal))
+      changed = { status: 'corregida', text: proposal }
+    } else {
+      blocks = rewrite((one) => withoutFragment(one, claim.text))
+      changed = { status: 'quitada' }
+    }
+    // What changes the text is never grouped: each one stays in the history (R10, principle II).
+    editDraft(found, latest, { blocks, claims: settleOrphans(withClaim(changed), blocks) })
+    return view(scripts.get(id)!, found.idea, found.profileVersion)
+  }
+
+  const settings = (channelId: string) => voiceOf(withProfile(channelId).channel.id)
+
+  const saveSettings = (channelId: string, body: Parameters<ScriptsRepo['saveSettings']>[1]) => {
+    const { channel } = withProfile(channelId)
+    scripts.saveSettings(channel.id, body)
+    return voiceOf(channel.id)
+  }
+
   return {
+    saveDraft,
+    actOnClaim,
+    settings,
+    saveSettings,
     withProfile,
     find,
     assertIdle,

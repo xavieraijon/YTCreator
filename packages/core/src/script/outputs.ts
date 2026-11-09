@@ -39,6 +39,40 @@ export const outlineOutput = z
   )
 export type OutlineOutput = z.infer<typeof outlineOutput>
 
-export const SCRIPT_OUTPUTS = { escaleta: outlineOutput } as const
+const claimText = z.string().trim().min(1).max(SCRIPT_LIMITS.claimText)
+const factId = z.string().min(1).nullable()
+const spoken = z.string().trim().min(1).max(SCRIPT_LIMITS.blockText)
+const visual = z.string().trim().max(SCRIPT_LIMITS.visual)
+
+export const draftOutput = z.object({
+  blocks: z
+    .array(z.object({ outlineBlockId: z.string().min(1), text: spoken, visual }))
+    .min(1)
+    .max(SCRIPT_LIMITS.outlineBlocks),
+  claims: z.array(z.object({ outlineBlockId: z.string().min(1), text: claimText, factId })),
+})
+export type DraftOutput = z.infer<typeof draftOutput>
+
+// The same blocks of the outline, in its order, or it is not the script of that outline (ai-uses.md).
+export const draftOutputFor = (outlineBlockIds: readonly string[]) =>
+  draftOutput
+    .refine(
+      ({ blocks }) =>
+        blocks.length === outlineBlockIds.length &&
+        blocks.every((block, index) => block.outlineBlockId === outlineBlockIds[index]),
+      { message: 'bloques_distintos' },
+    )
+    .refine(({ claims }) => claims.every((claim) => outlineBlockIds.includes(claim.outlineBlockId)), {
+      message: 'marca_sin_bloque',
+    })
+
+export const blockOutput = z.object({
+  text: spoken,
+  visual,
+  claims: z.array(z.object({ text: claimText, factId })),
+})
+export type BlockOutput = z.infer<typeof blockOutput>
+
+export const SCRIPT_OUTPUTS = { escaleta: outlineOutput, guion: draftOutput, bloque_guion: blockOutput } as const
 export type ScriptUse = keyof typeof SCRIPT_OUTPUTS
 export const SCRIPT_USES = Object.keys(SCRIPT_OUTPUTS) as [ScriptUse, ...ScriptUse[]]

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { outlineOutput } from '../../src/script/outputs.ts'
+import { blockOutput, draftOutputFor, outlineOutput } from '../../src/script/outputs.ts'
 
 const block = (type: string) => ({
   type,
@@ -49,5 +49,33 @@ describe('output of escaleta (ai-uses.md)', () => {
     const { blocks } = complete
     expect(outlineOutput.safeParse({ blocks: [{ ...blocks[0], title: ' ' }, ...blocks.slice(1)] }).success).toBe(false)
     expect(outlineOutput.safeParse({ blocks: [{ ...blocks[0], seconds: 0 }, ...blocks.slice(1)] }).success).toBe(false)
+  })
+})
+
+describe('the script the AI writes', () => {
+  const block = (id: string) => ({ outlineBlockId: id, text: 'Lo que se dice.', visual: 'Tú.' })
+  const schema = draftOutputFor(['a', 'b'])
+
+  it('has the same blocks of the outline, in its order', () => {
+    expect(schema.safeParse({ blocks: [block('a'), block('b')], claims: [] }).success).toBe(true)
+    expect(schema.safeParse({ blocks: [block('b'), block('a')], claims: [] }).success).toBe(false)
+    expect(schema.safeParse({ blocks: [block('a')], claims: [] }).success).toBe(false)
+    expect(schema.safeParse({ blocks: [block('a'), block('c')], claims: [] }).success).toBe(false)
+  })
+
+  it('does not point a claim at a block that is not there', () => {
+    const claims = [{ outlineBlockId: 'z', text: 'x', factId: null }]
+    expect(schema.safeParse({ blocks: [block('a'), block('b')], claims }).success).toBe(false)
+  })
+
+  it('refuses a block with nothing to say', () => {
+    expect(schema.safeParse({ blocks: [{ ...block('a'), text: ' ' }, block('b')], claims: [] }).success).toBe(false)
+  })
+
+  it('asks a single block for its text and its claims', () => {
+    expect(blockOutput.safeParse({ text: 'Hola.', visual: '', claims: [{ text: 'x', factId: null }] }).success).toBe(
+      true,
+    )
+    expect(blockOutput.safeParse({ text: '', visual: '', claims: [] }).success).toBe(false)
   })
 })

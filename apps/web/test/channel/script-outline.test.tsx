@@ -58,6 +58,7 @@ const outline = (view: ScriptView, state: ScriptAi) =>
       onChange={() => undefined}
       onError={() => undefined}
       onToFacts={() => undefined}
+      onToDraft={() => undefined}
     />,
   )
 const facts = (view: ScriptView) =>

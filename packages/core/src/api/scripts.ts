@@ -5,6 +5,7 @@ import {
   factsContentSchema,
   outlineContentSchema,
   SCRIPT_LIMITS,
+  scriptSettingsSchema,
   VERSION_ORIGINS,
   VOICE_ADDRESSES,
   VOICE_REGISTERS,
@@ -67,6 +68,7 @@ export const scriptViewSchema = z.object({
     status: z.enum(IDEA_STATUSES),
     revision: z.number().int(),
     verdict: z.enum(IDEA_VERDICTS).nullable(),
+    verdictAt: z.string().nullable(),
   }),
   facts: versionOf(factsContentSchema),
   outline: versionOf(outlineContentSchema),
@@ -110,6 +112,21 @@ export type ScriptPatchBody = z.infer<typeof scriptPatchBodySchema>
 const baseVersion = count
 export const outlineSaveBodySchema = z.object({ baseVersion, content: outlineContentSchema })
 export type OutlineSaveBody = z.infer<typeof outlineSaveBodySchema>
+
+export const draftSaveBodySchema = z.object({ baseVersion, content: draftContentSchema })
+export type DraftSaveBody = z.infer<typeof draftSaveBodySchema>
+
+export const CLAIM_ACTIONS = ['confirmar', 'corregir', 'no_es_dato', 'quitar_del_guion', 'aceptar_propuesta'] as const
+export type ClaimAction = (typeof CLAIM_ACTIONS)[number]
+export const claimActionBodySchema = z.object({
+  baseVersion,
+  action: z.enum(CLAIM_ACTIONS),
+  text: z.string().trim().min(1).max(SCRIPT_LIMITS.claimText).optional(),
+})
+export type ClaimActionBody = z.infer<typeof claimActionBodySchema>
+
+export const scriptSettingsBodySchema = scriptSettingsSchema
+export type ScriptSettingsBody = z.infer<typeof scriptSettingsBodySchema>
 
 export const approveOutlineBodySchema = z.object({ version: z.number().int().positive() })
 

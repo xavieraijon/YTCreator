@@ -135,3 +135,118 @@ test('from a chosen idea to an approved outline, with the keyboard, surviving a 
   await page.goto(`${server.baseURL}/canal/ideas`)
   await expect(page.getByRole('button', { name: 'Seguir con el guion de «Pan sin amasar»' })).toBeVisible()
 })
+
+const toScript = async (page: Page) => {
+  await page.goto(`${server.baseURL}/canal/guiones`)
+  await page.getByRole('button', { name: 'Abrir el guion de «Pan sin amasar»' }).click()
+}
+const paragraphOf = (page: Page, title: RegExp) =>
+  page
+    .getByRole('main')
+    .getByRole('listitem')
+    .filter({ has: page.getByRole('heading', { level: 2, name: title }) })
+    .locator('p')
+    .first()
+
+test('from the approved outline to a script edited by hand and block by block (US2)', async ({ page, context }) => {
+  await blockExternal(context)
+  await toScript(page)
+
+  // Approved, the next thing to do is on screen, with its price.
+  const write = page.getByRole('button', { name: /^Escribir el guion/ })
+  await expect(write).toBeEnabled()
+  await expect(write).toContainText('·')
+  await write.click()
+  await expect(page.getByText('Esto es lo que vas a decir.')).toBeVisible()
+  await expect(page.getByText('Voz del canal: de tú y cercano, por defecto.')).toBeVisible()
+  await expect(page.getByText('Opinión de la IA')).toBeVisible()
+  await audit(page)
+
+  // A mark is a button, and what is done with it brings the count down.
+  const counter = page.getByText(/por comprobar$/)
+  await expect(counter).toBeVisible()
+  const count = await counter.innerText()
+  const mark = page.getByRole('button', { name: 'Por comprobar: Esta parte sale del guion' })
+  await mark.focus()
+  await page.keyboard.press('Enter')
+  const dialog = page.getByRole('dialog')
+  await expect(dialog).toBeVisible()
+  await audit(page)
+  await dialog.getByRole('button', { name: 'Es correcto' }).click()
+  await expect(dialog).toBeHidden()
+  await expect(page.getByRole('status').filter({ hasText: 'por comprobar' })).not.toHaveText(count)
+  await expect(mark).toHaveCount(0)
+  await expect(page.getByRole('status').filter({ hasText: 'por comprobar' })).toBeFocused()
+
+  // Edit by hand: nothing is spent, the time changes.
+  await page.getByRole('button', { name: 'Cambiar «Por qué pasa esto»' }).click()
+  const spoken = page.getByLabel('Lo que se dice')
+  await expect(spoken).toBeFocused()
+  await spoken.fill('Lo cuento yo con mis palabras y sin prisa ninguna.')
+  await page.getByRole('button', { name: 'Guardar' }).click()
+  await expect(paragraphOf(page, /Por qué pasa esto/)).toHaveText('Lo cuento yo con mis palabras y sin prisa ninguna.')
+  await expect(page.getByRole('button', { name: 'Cambiar «Por qué pasa esto»' })).toBeFocused()
+
+  // Ask for one block: only that one changes.
+  const before = await paragraphOf(page, /Por qué pasa esto/).innerText()
+  await page.getByRole('button', { name: 'Pedir de nuevo este bloque «Lo que hay que cambiar primero»' }).click()
+  await page.getByLabel('Qué quieres que cambie en este bloque').fill('Más corto')
+  const again = page.getByRole('button', { name: /^Pedir de nuevo este bloque ·/ })
+  await expect(again).toBeEnabled()
+  await again.click()
+  await expect(paragraphOf(page, /Lo que hay que cambiar primero/)).toContainText('escrito de nuevo')
+  await expect(paragraphOf(page, /Por qué pasa esto/)).toHaveText(before)
+  await expect(page.getByRole('button', { name: 'Por comprobar: dos millones' })).toBeVisible()
+
+  // Asking for a block with another one open saves what was being written first.
+  await page.getByRole('button', { name: 'Cambiar «Por qué pasa esto»' }).click()
+  await page.getByLabel('Lo que se dice').fill('Esto no se pierde.')
+  await page
+    .getByRole('button', { name: 'Pedir de nuevo este bloque «El error que comete casi todo el mundo»' })
+    .click()
+  const first = page.getByRole('button', { name: /^Pedir de nuevo este bloque ·/ })
+  await expect(first).toBeEnabled()
+  await first.click()
+  await expect(paragraphOf(page, /Por qué pasa esto/)).toHaveText('Esto no se pierde.')
+  await expect(paragraphOf(page, /El error que comete/)).toContainText('escrito de nuevo')
+
+  // Two tabs: the one that is late is told, and keeps what it wrote.
+  const other = await context.newPage()
+  await toScript(other)
+  await other.getByRole('button', { name: 'Guion', exact: true }).click()
+  await other.getByRole('button', { name: 'Cambiar «Por qué pasa esto»' }).click()
+  await page.getByRole('button', { name: 'Cambiar «Qué hacer esta noche»' }).click()
+  await page.getByLabel('Lo que se dice').fill('Esto va primero.')
+  await page.getByRole('button', { name: 'Guardar' }).click()
+  await expect(paragraphOf(page, /Qué hacer esta noche/)).toHaveText('Esto va primero.')
+  await other.getByLabel('Lo que se dice').fill('Esto llega tarde.')
+  await other.getByRole('button', { name: 'Guardar' }).click()
+  await expect(other.getByLabel('Lo que se dice')).toHaveValue('Esto llega tarde.')
+  await expect(other.getByRole('alert').first()).toBeVisible()
+  await other.close()
+
+  // Closing the tab does not stop it: the result is there on coming back.
+  await page.reload()
+  await page.getByRole('button', { name: 'Guion', exact: true }).click()
+  await page.getByText('Quiero otro guion').click()
+  const started = page.waitForResponse((response) => response.url().endsWith('/generate'))
+  await page.getByRole('button', { name: /^Pedir otro guion/ }).click()
+  await started
+  await page.close()
+  const back = await context.newPage()
+  await toScript(back)
+  await back.getByRole('button', { name: 'Guion', exact: true }).click()
+  await expect(paragraphOf(back, /Por qué pasa esto/)).toContainText('Esto es lo que dirías', { timeout: 15_000 })
+
+  // The voice: what is written stays, and it says what it uses now.
+  const written = await paragraphOf(back, /Por qué pasa esto/).innerText()
+  await back.getByRole('button', { name: 'Cambiar la voz' }).click()
+  await expect(back.getByRole('heading', { name: 'Voz del canal', level: 1 })).toBeVisible()
+  await audit(back)
+  await back.getByRole('radio', { name: 'de usted' }).check()
+  await back.getByRole('button', { name: 'Guardar' }).click()
+  await expect(back.getByText('Guardado', { exact: true })).toBeVisible()
+  await toScript(back)
+  await expect(back.getByText('Voz del canal: de usted y cercano.')).toBeVisible()
+  await expect(paragraphOf(back, /Por qué pasa esto/)).toHaveText(written)
+})

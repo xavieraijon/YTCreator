@@ -67,6 +67,8 @@ const CLAIM_FIELDS: Partial<Record<ChannelUse, readonly string[]>> = {
   busquedas_idea: [],
   // In a script a figure without a source gets marked, not trimmed (R9).
   escaleta: [],
+  guion: [],
+  bloque_guion: [],
 }
 
 // One request can become up to four calls: an answer that does not validate is always asked for again by the adapter
