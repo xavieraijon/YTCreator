@@ -30,7 +30,7 @@ Spec-Driven Development with GitHub Spec Kit (`/speckit-*`).
   P3, P6 and P17 closed and merged on 2026-11-06 (PR #4, entries 148 to 152; P1 has no source, only marked as an
   assumption). P2, P4, P5, P8, P9 and P19 closed and merged on 2026-11-07 (PR #5, entries 153 to 158). Open:
   P36 (change the money category from the profile; not blocking). Reports in `specs/003-channel-and-niche/checklists/validation.md`.
-- 004 `idea-bank`: US1–US4 and Polish done on branch `004-idea-bank` (not merged yet). Novice audit passed in round 2
+- 004 `idea-bank`: **complete and merged into `main`** (PR #6, 2026-11-09). Novice audit passed in round 2
   (`specs/004-idea-bank/novice-audit.md`); its open mediums (home does not lead to the bank, queue without semaphore) and
   minors go to the UI pass with Design mode. Real AI and real YouTube not tested. No open items in its `decisions.md`; P1 moved to `specs/002-onboarding/decisions.md` (for a task after v1). Report in `specs/004-idea-bank/checklists/validation.md`.
 - Provider subscriptions beyond Claude are a later feature, not part of 002. First one planned: Gemini
