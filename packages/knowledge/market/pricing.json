@@ -1,6 +1,6 @@
 {
-  "version": 1,
-  "reviewedAt": "2026-11-01",
+  "version": 2,
+  "reviewedAt": "2026-11-09",
   "source": [
     { "label": "Precios de Claude", "url": "https://claude.com/pricing" },
     {
@@ -16,6 +16,19 @@
       "claude-opus-5-5": { "input": 4, "output": 20 }
     },
     "usdToEur": { "rate": 0.86, "date": "2026-11-01" },
-    "charsPerToken": 3.5
+    "charsPerToken": 3.5,
+    "webSearchUsdPer1000": 10,
+    "webInputTokensPerSearch": {
+      "value": 5000,
+      "label": "Supuesto de YTCreator: lo que ocupa de media lo que devuelve una búsqueda. Sin fuente.",
+      "assumption": true,
+      "date": "2026-11-09"
+    },
+    "webInputTokensPerFetch": {
+      "value": 8000,
+      "label": "Supuesto de YTCreator: una página leída hasta el máximo que se le pide. Sin fuente.",
+      "assumption": true,
+      "date": "2026-11-09"
+    }
   }
 }

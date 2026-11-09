@@ -11,6 +11,7 @@ import { scriptEs } from '../../../strings/script.es.ts'
 import styles from '../channel.module.css'
 import { AiAction } from '../Proposal.tsx'
 import { clock } from './OutlineStep.tsx'
+import { SourceLine } from './FactsList.tsx'
 import { type ScriptAi, useEstimate } from './useScriptAi.ts'
 
 const text = scriptEs.draft
@@ -147,6 +148,8 @@ function BlockAgain({
   )
 }
 
+type ClaimAction = 'confirmar' | 'corregir' | 'no_es_dato' | 'quitar_del_guion' | 'aceptar_propuesta'
+
 function ClaimDialog({
   claim,
   busy,
@@ -155,7 +158,7 @@ function ClaimDialog({
 }: {
   readonly claim: Claim
   readonly busy: boolean
-  readonly onAct: (action: 'confirmar' | 'corregir' | 'no_es_dato' | 'quitar_del_guion', fixed?: string) => void
+  readonly onAct: (action: ClaimAction, fixed?: string) => void
   readonly onClose: () => void
 }) {
   const [correcting, setCorrecting] = useState(false)
@@ -168,6 +171,29 @@ function ClaimDialog({
       title={format(text.claimTitle, { texto: claim.text })}
       description={`${text.claimReason[claim.reason]} ${text.claimRemoveNote}`}
     >
+      {claim.check && (
+        <>
+          <p>{format(text.verdictLabel, { texto: text.verdicts[claim.check.verdict] })}</p>
+          <DataSource kind="ia" />
+          {claim.check.sources.length > 0 && (
+            <ul>
+              {claim.check.sources.map((source) => (
+                <SourceLine key={source.id} source={source} />
+              ))}
+            </ul>
+          )}
+          {claim.check.proposal && (
+            <>
+              <p>{format(text.proposalLabel, { texto: claim.check.proposal })}</p>
+              <div className={styles.actions}>
+                <Button variant="primary" loading={busy} onClick={() => onAct('aceptar_propuesta')}>
+                  {text.useProposal}
+                </Button>
+              </div>
+            </>
+          )}
+        </>
+      )}
       {correcting ? (
         <form
           className={styles.options}
@@ -190,7 +216,11 @@ function ClaimDialog({
         </form>
       ) : (
         <div className={styles.actions}>
-          <Button variant="primary" loading={busy} onClick={() => onAct('confirmar')}>
+          <Button
+            variant={claim.check?.proposal ? 'secondary' : 'primary'}
+            loading={busy}
+            onClick={() => onAct('confirmar')}
+          >
             {text.claimConfirm}
           </Button>
           <Button variant="secondary" disabled={busy} onClick={() => setCorrecting(true)}>
@@ -234,6 +264,8 @@ export function DraftStep({
   const canRewrite =
     script.format === 'short' || (script.outline !== null && script.outlineApprovedVersion === script.outline.version)
   const price = useEstimate(script, rewriteUse, canRewrite)
+  const unchecked = script.draft?.content.claims.filter((claim) => claim.status === 'pendiente').length ?? 0
+  const checkPrice = useEstimate(script, 'comprobar_guion', script.webResearch && unchecked > 0)
   const draft = script.draft
 
   useEffect(() => {
@@ -301,7 +333,7 @@ export function DraftStep({
 
   const saveOpenEdit = async () => (editing !== null && openEdit.current ? save(openEdit.current) : true)
 
-  const act = async (action: 'confirmar' | 'corregir' | 'no_es_dato' | 'quitar_del_guion', fixed?: string) => {
+  const act = async (action: ClaimAction, fixed?: string) => {
     if (!claim) return
     setSaving(true)
     try {
@@ -347,6 +379,36 @@ export function DraftStep({
               n: pendingClaims.length,
             })}
       </p>
+      {script.webResearch && pendingClaims.length > 0 && (
+        <>
+          <p className={styles.why}>{text.checkIntro}</p>
+          {checkPrice.error !== null && (
+            <ErrorMessage
+              live
+              title={errorText(checkPrice.error)}
+              action={{ label: es.app.retry, onClick: checkPrice.retry }}
+            />
+          )}
+          <AiAction
+            label={text.check}
+            primary={false}
+            estimate={checkPrice.estimate}
+            failure={ai.failureFor('comprobar_guion')}
+            busy={ai.working === 'comprobar_guion'}
+            disabled={locked}
+            onRun={() =>
+              guard(() => {
+                void saveOpenEdit().then((ok) => {
+                  if (ok) void ai.run('comprobar_guion', checkPrice)
+                })
+              })
+            }
+          />
+          {checkPrice.estimate && !checkPrice.estimate.included && (
+            <p className={styles.notice}>{format(text.checkCost, { n: String(checkPrice.estimate.searches ?? 0) })}</p>
+          )}
+        </>
+      )}
       {blockFailure && (
         <ErrorMessage
           live

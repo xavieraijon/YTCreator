@@ -25,6 +25,8 @@ export type BaseCase =
   | 'output_valid'
   | 'output_invalid_then_valid'
   | 'output_invalid_twice'
+  | 'web_unsupported'
+  | 'web_valid'
 
 // The channel uses of the 003: valid output, invalid twice and an invented figure (contracts/ai-uses.md, «Pruebas»).
 export const CHANNEL_USES = Object.keys(CHANNEL_OUTPUTS) as ChannelUse[]
@@ -61,6 +63,8 @@ export type ContractFactory = (stub: ContractCase, deps: ProviderDeps) => Contra
 export const CONTRACT_SCHEMA = z.object({ palabra: z.literal('listo') })
 export const VALID_OUTPUT = { palabra: 'listo' }
 export const INVALID_OUTPUT = { palabra: 42 }
+// Only ever written in the text of an answer, never as a result of a search.
+export const NEVER_SEEN_URL = 'https://nunca-vista.example/nada'
 
 const FAILURE_CASES: Record<string, { stub: ContractCase; kind: string; reasons: string[] }> = {
   C2: { stub: 'invalid_credential', kind: 'sin_sesion', reasons: ['clave_no_valida', 'sesion_caducada'] },
@@ -219,6 +223,42 @@ export function runProviderContract(name: string, factory: ContractFactory, opti
         },
       )
     }
+
+    const webRequest = {
+      use: 'comprobacion' as const,
+      prompt: COMPROBACION,
+      schema: CONTRACT_SCHEMA,
+      web: { maxSearches: 2, maxFetches: 2 },
+    }
+
+    caseIt('web_unsupported', 'W1 sin la capacidad y con `web` → no_disponible, sin llamar a nadie', async () => {
+      const { deps } = capturingDeps()
+      const subject = await factory('web_unsupported', deps)
+      expect(subject.provider.capabilities.webResearch).toBe(false)
+      expect(await subject.provider.generate(webRequest)).toMatchObject({
+        ok: false,
+        failure: { kind: 'no_disponible' },
+      })
+      expect(subject.calls()).toBe(0)
+    })
+
+    caseIt('web_valid', 'W2 con `web` la salida valida y las búsquedas constan cuando se cobran', async () => {
+      const { deps } = capturingDeps()
+      const subject = await factory('web_valid', deps)
+      expect(subject.provider.capabilities.webResearch).toBe(true)
+      const result = await subject.provider.generate(webRequest)
+      expect(result).toMatchObject({ ok: true, value: VALID_OUTPUT })
+      if (!result.ok || subject.provider.billing !== 'por_uso') return
+      expect(result.usage.webSearches).toBeGreaterThan(0)
+    })
+
+    caseIt('web_valid', 'W3 `seenUrls`, si llega, no incluye direcciones que no vio', async () => {
+      const { deps } = capturingDeps()
+      const subject = await factory('web_valid', deps)
+      const result = await subject.provider.generate(webRequest)
+      expect(result.ok).toBe(true)
+      if (result.ok) expect(result.seenUrls ?? []).not.toContain(NEVER_SEEN_URL)
+    })
 
     caseIt('valid_credential', 'C13 la credencial no aparece al serializar el proveedor', async () => {
       const { deps, lines } = capturingDeps()

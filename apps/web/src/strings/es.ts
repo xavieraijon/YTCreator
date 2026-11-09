@@ -251,6 +251,8 @@ export const es = {
       guion: 'Escribir el guion de un vídeo',
       guion_short: 'Escribir el guion de un Short',
       bloque_guion: 'Escribir de nuevo un bloque del guion',
+      investigacion: 'Investigar un tema en internet',
+      comprobar_guion: 'Comprobar el guion en internet',
     } satisfies Record<AiUse, string>,
     failed: 'No salió bien',
     knowledge: 'Información que conviene revisar',

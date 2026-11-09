@@ -116,6 +116,9 @@ export type ScriptPatchBody = z.infer<typeof scriptPatchBodySchema>
 
 // `baseVersion` is the version this edit started from, 0 if there was none (R18).
 const baseVersion = count
+export const factsSaveBodySchema = z.object({ baseVersion, content: factsContentSchema })
+export type FactsSaveBody = z.infer<typeof factsSaveBodySchema>
+
 export const outlineSaveBodySchema = z.object({ baseVersion, content: outlineContentSchema })
 export type OutlineSaveBody = z.infer<typeof outlineSaveBodySchema>
 

@@ -1,4 +1,4 @@
-import type { AiUse } from '@ytcreator/core'
+import type { AiUse, AiWebLimits } from '@ytcreator/core'
 
 export type ProviderId = 'claude-code' | 'anthropic' | 'fake'
 
@@ -7,6 +7,7 @@ export interface AiProfile {
   timeoutMs: number
   maxOutputTokens: number
   effort?: 'low' | 'medium' | 'high'
+  web?: AiWebLimits // the uses that look things up on the internet (005, ai-uses.md)
 }
 
 const HAIKU = 'claude-haiku-5-5'
@@ -14,6 +15,9 @@ const SONNET = 'claude-sonnet-5-5'
 
 const short = (maxOutputTokens: number): AiProfile => ({ model: HAIKU, timeoutMs: 60_000, maxOutputTokens })
 const long = (maxOutputTokens: number): AiProfile => ({ model: SONNET, timeoutMs: 120_000, maxOutputTokens })
+
+// What the estimate counts (R6, decision 37): six readings, so that researching fits in the proposed limit per operation.
+const WEB_LIMITS: AiWebLimits = { maxSearches: 8, maxFetches: 6, maxResultTokens: 88_000 }
 
 const CHANNEL_USES = {
   preguntas: short(1024),
@@ -33,6 +37,8 @@ const CHANNEL_USES = {
   guion: { model: SONNET, timeoutMs: 420_000, maxOutputTokens: 22_000 },
   guion_short: { model: SONNET, timeoutMs: 90_000, maxOutputTokens: 2000 },
   bloque_guion: { model: SONNET, timeoutMs: 90_000, maxOutputTokens: 3000 },
+  investigacion: { model: SONNET, timeoutMs: 300_000, maxOutputTokens: 8000, web: WEB_LIMITS },
+  comprobar_guion: { model: SONNET, timeoutMs: 300_000, maxOutputTokens: 8000, web: WEB_LIMITS },
 } satisfies Record<Exclude<AiUse, 'comprobacion'>, AiProfile>
 
 const withEffort = (effort: AiProfile['effort'], profile: AiProfile): AiProfile => ({ ...profile, effort })
@@ -56,6 +62,8 @@ export const PROFILES: Record<ProviderId, Record<AiUse, AiProfile>> = {
     guion: withEffort('medium', CHANNEL_USES.guion),
     guion_short: withEffort('medium', CHANNEL_USES.guion_short),
     bloque_guion: withEffort('medium', CHANNEL_USES.bloque_guion),
+    investigacion: withEffort('medium', CHANNEL_USES.investigacion),
+    comprobar_guion: withEffort('medium', CHANNEL_USES.comprobar_guion),
   },
   anthropic: { comprobacion: { model: HAIKU, timeoutMs: 30_000, maxOutputTokens: 16 }, ...CHANNEL_USES },
   // Longer than the 5 s after which the web offers «Cancelar», so `lento` can show it (e2e failures.spec.ts).

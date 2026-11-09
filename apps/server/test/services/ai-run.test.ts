@@ -12,6 +12,9 @@ const PRICING: Pricing = {
   models: { 'claude-haiku-5-5': { input: 0.1, output: 0.5 }, 'claude-sonnet-5-5': { input: 2, output: 10 } },
   usdToEur: 0.86,
   charsPerToken: 3.5,
+  webSearchUsdPer1000: 10,
+  webInputTokensPerSearch: 5000,
+  webInputTokensPerFetch: 8000,
 }
 
 const PROMPT = { id: 'preguntas', version: 1, text: 'Haz preguntas.' }
@@ -22,6 +25,7 @@ function stubAi(answers: AiResult<unknown>[], billing: Billing = 'por_uso') {
   const calls: AiRequest<unknown>[] = []
   const ai: ActiveAi = {
     providerId: 'anthropic',
+    webResearch: false,
     billing,
     async generate<T>(req: AiRequest<T>): Promise<AiResult<T>> {
       calls.push(req as AiRequest<unknown>)

@@ -383,3 +383,73 @@ II (se puede volver a cualquier versión; marcas también en el historial), III 
 ### 9. Cómo revertir
 
 `git revert` del commit de esta historia. No hay migraciones. Queda: US6 en adelante.
+
+## US6 (T068–T085), Puerta A del 2026-11-09
+
+### 1. Resumen
+
+La IA investiga el tema en internet y comprueba las afirmaciones del guion. La app decide sola la etiqueta de cada hecho según
+los enlaces que abren y sus dominios. El creador añade hechos y fuentes propias. Sin capacidad de buscar, la pantalla lo dice y se
+puede seguir. **La búsqueda real no se ha ejecutado** (T087, pendiente de P1): todo lo de abajo se ha probado con el proveedor falso.
+
+### 2. Requisitos
+
+| Requisito | Estado | Evidencia | Fecha |
+|---|---|---|---|
+| FR-004c etiqueta por enlaces y dominios | Cumplido (falso) | `facts.test.ts`, `scripts-facts.test.ts` | 2026-11-09 |
+| FR-004d lista propia | Cumplido | `scripts-facts.test.ts`, `scripts.spec.ts` | 2026-11-09 |
+| Caso límite: sin resultados | Cumplido | `scripts-facts.test.ts`, `scripts.spec.ts` (`sin_resultados`) | 2026-11-09 |
+| Caso límite: fuentes que se contradicen | Cumplido | `facts.test.ts` | 2026-11-09 |
+| R4 dos pasos y repetir solo el formato | Cumplido (falso) | `anthropic-web.test.ts`, `claude-web-retry.test.ts` | 2026-11-09 |
+| R6 cabe en el límite propuesto | Cumplido (con precios de `pricing.json`) | `web-budget.test.ts` | 2026-11-09 |
+| R7 enlaces sin red privada | Cumplido | `link-check.test.ts` | 2026-11-09 |
+| SC-002, SC-011 | **No ejecutado** | requieren búsqueda real (P1) | |
+
+### 3. Cómo se comprobó
+
+Tras las correcciones: `lint` 0, `typecheck` 0, `test` 2207 pasados y 4 omitidos, `test:e2e` web 47 de 47.
+
+### 4. Controles
+
+- Pasados: lint, typecheck, test, test:e2e web, glosario, `secrets-leak`, axe claro y oscuro a 375 y 1280 px, teclado, reduced-motion.
+- Tipos de fallo de IA: batería de contrato, W1 a W3 incluidos.
+- No ejecutados: `test:installer` (no se toca); búsqueda real, `max_uses` y `--json-schema` con herramientas web (P1). Las
+  correcciones han pasado los controles, pero no una segunda vuelta de revisores.
+
+### 5. Hallazgos
+
+Corregidos (graves): faltaban los tests de T080; con los límites propuestos investigar por la API nunca arrancaba (10 lecturas
+frente a las 6 de R6; ahora 6, decisión 37).
+
+Corregidos (medios): quitar fuentes podía subir la etiqueta; las referencias escritas creaban versiones vacías; una investigación
+sin resultados vaciaba lo anterior y no decía nada; fuentes contradictorias sin etiqueta propia; reenvíos de `pause_turn` sin tope de
+lecturas ni de tokens; propuesta sin respaldo que quitaba la marca; aceptar una propuesta rompía la frase; las fuentes del creador en
+un hecho de la IA se perdían al reinvestigar; faltaba `DataSource` de opinión; dos prompts en el código; Claude Code repetía la búsqueda
+al salir inválido; plazo único en todos los usos de la API; enlaces sin `ExternalLink`; conflicto de pestañas sin salida.
+
+Corregidos (menores): texto de exportación, enlace con referencia, `alternatives` a los usos que escriben, veredicto por cada
+afirmación, tope global de 60 s, `factSources` en el guardado, rangos reservados, solo lectura sin búsqueda, barrera anti-falsos del
+release.
+
+Abiertos (menores): `max_tokens` en el primer paso sigue con lo leído; `pricing.json` da una fecha global para el precio de búsqueda;
+sin red, un enlace nuevo queda `no_abre`; `slice` puede descartar hechos si la lista ya está llena; dominio y lista miran la dirección
+inicial, no la final tras redirigir.
+
+Abiertos (medios, para el creador): decisión 38 y P3.
+
+### 6. Desviaciones
+
+Decisiones 33 a 40; `contracts/ai-uses.md` (6 lecturas), `contracts/ui-screens.md` y `research.md` (R5, R6) alineados.
+
+### 7. Decisiones
+
+Agente: 32 a 40 (medio). Pendientes del creador: P1, P2 y P3; no bloquean esta historia.
+
+### 8. Constitución
+
+II (nada se publica; la lista del creador se conserva), III (coste antes de gastar, nunca más de lo presupuestado), IV (salida validada),
+V (conocimiento versionado, prompts con lock), VI (accesibilidad), IX (sin jerga), XI (este informe).
+
+### 9. Cómo revertir
+
+`git revert` del commit de esta historia. La migración de `web_searches` solo añade una columna. Queda: T087, US7 y Polish.

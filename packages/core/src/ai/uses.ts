@@ -17,5 +17,7 @@ export const AI_USES = [
   'guion',
   'guion_short',
   'bloque_guion',
+  'investigacion',
+  'comprobar_guion',
 ] as const
 export type AiUse = (typeof AI_USES)[number]

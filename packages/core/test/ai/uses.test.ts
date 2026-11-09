@@ -64,6 +64,8 @@ describe('AI uses of the 003', () => {
         'guion',
         'guion_short',
         'bloque_guion',
+        'investigacion',
+        'comprobar_guion',
       ].sort(),
     )
   })

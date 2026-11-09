@@ -408,3 +408,150 @@ test('every version stays, and going back to one adds another (US5)', async ({ p
   await dialog.getByRole('button', { name: 'Volver a esta versión' }).click()
   await expect(page.getByRole('button', { name: 'Aprobar el guion' })).toBeVisible()
 })
+
+const newScript = async (target: TestServer, page: Page, title: string) => {
+  const channelId = ((await api(target, 'GET', '/api/channels/current'))['channel'] as { id: string }).id
+  const { idea } = (await api(target, 'POST', `/api/channels/${channelId}/ideas`, { title, format: 'largo' })) as {
+    idea: { id: string; revision: number }
+  }
+  await api(target, 'PATCH', `/api/ideas/${idea.id}`, { revision: idea.revision, status: 'elegida' })
+  await page.goto(`${target.baseURL}/canal/ideas`)
+  await page.getByRole('button', { name: `Preparar el guion de «${title}»` }).click()
+  await expect(heading(page, title)).toBeVisible()
+}
+
+const toDraft = async (page: Page) => {
+  await page.getByRole('button', { name: /^Proponer escaleta/ }).click()
+  await page.getByRole('button', { name: 'Aprobar la escaleta' }).click()
+  await page.getByRole('button', { name: /^Escribir el guion/ }).click()
+  await expect(page.getByRole('button', { name: 'Revisar el guion' })).toBeVisible()
+}
+
+test('facts with their links, a list of your own and a script checked on the internet (US6)', async ({
+  page,
+  context,
+}) => {
+  test.setTimeout(180_000)
+  await blockExternal(context)
+  await newScript(server, page, 'Masa madre')
+  await expect(page.getByText('Si pides investigar, tus apuntes se usan para buscar.', { exact: false })).toBeVisible()
+  await expect(page.getByText('Todavía no hay hechos.', { exact: false })).toBeVisible()
+  await audit(page)
+
+  const research = page.getByRole('button', { name: /^Investigar el tema/ })
+  await expect(research).toContainText('·')
+  await research.click()
+
+  // The link that does not open is pointed out and does not count.
+  const facts = page
+    .getByRole('main')
+    .getByRole('listitem')
+    .filter({ has: page.getByText(/^(Comprobado|Una sola fuente|Leyenda)/) })
+  await expect(facts).toHaveCount(3)
+  await expect(facts.nth(0)).toContainText('Comprobado')
+  await expect(facts.nth(1)).toContainText('Una sola fuente')
+  await expect(facts.nth(1)).toContainText('Este enlace no abre: no cuenta.')
+  await expect(facts.nth(1)).toContainText('No se pudo comprobar si abre: no cuenta.')
+  await expect(facts.nth(1)).toContainText('consultado el')
+  await expect(facts.nth(2)).toContainText('Leyenda o sin confirmar')
+  await expect(facts.nth(2)).toContainText('Otra versión: Otra versión la sitúa en un molino.')
+  await expect(facts.nth(2)).toContainText('Sin ningún enlace que lo respalde.')
+  await expect(page.getByText('La app comprueba que el enlace abre, no que diga lo que se afirma.')).toBeVisible()
+  await audit(page)
+
+  // Yours say they are yours, and a bad address is explained before saving.
+  await page.getByRole('button', { name: 'Añadir un hecho o una fuente' }).click()
+  const dialog = page.getByRole('dialog')
+  await audit(page)
+  await dialog.getByLabel('Qué has averiguado').fill('Mi abuela la alimentaba cada mañana.')
+  await dialog.getByLabel('Enlace (opcional)').fill('eso no es una dirección')
+  await expect(dialog.getByText('Tiene que ser una dirección web completa', { exact: false })).toBeVisible()
+  await expect(dialog.getByRole('button', { name: 'Guardar' })).toBeDisabled()
+  await dialog.getByLabel('Enlace (opcional)').fill('')
+  await dialog.getByLabel('O de dónde lo sacas', { exact: false }).fill('Lo que me contó mi abuela')
+  await dialog.getByRole('button', { name: 'Guardar' }).click()
+  await expect(dialog).toBeHidden()
+  const mine = page.getByRole('listitem').filter({ hasText: 'Mi abuela la alimentaba' })
+  await expect(mine).toContainText('Lo aportas tú')
+  await expect(mine).toContainText('Lo que me contó mi abuela')
+
+  // Taking one out, with the keyboard, leaves the focus on the list.
+  const remove = page.getByRole('button', { name: 'Quitar: Esta receta nació en un convento.' })
+  await remove.focus()
+  await page.keyboard.press('Enter')
+  await expect(page.getByRole('heading', { name: 'Hechos y fuentes' })).toBeFocused()
+  await expect(page.getByText('Esta receta nació en un convento.')).toBeHidden()
+
+  await page.reload()
+  await expect(mine).toContainText('Lo aportas tú')
+  await expect(facts).toHaveCount(2)
+
+  await toDraft(page)
+  const check = page.getByRole('button', { name: /^Comprobar con internet/ })
+  await expect(check).toContainText('·')
+  await audit(page)
+  const body = page.getByRole('main')
+  const before = await body.locator('mark').first().innerText()
+  await check.click()
+  await expect(page.getByRole('button', { name: `Por comprobar: ${before}` }).first()).toBeVisible()
+  await expect(check).toBeEnabled()
+
+  // Nothing has changed: the verdict waits for a decision.
+  await page
+    .getByRole('button', { name: `Por comprobar: ${before}` })
+    .first()
+    .click()
+  const verdict = page.getByRole('dialog')
+  await expect(verdict.getByText('Resultado de la comprobación: Hay que matizarlo')).toBeVisible()
+  await expect(verdict.getByRole('link', { name: 'Guía de fermentación' })).toBeVisible()
+  await expect(verdict.getByText('Una redacción posible: «Una redacción con más cuidado»')).toBeVisible()
+  await audit(page)
+  await verdict.getByRole('button', { name: 'Usar esta redacción' }).click()
+  await expect(verdict).toBeHidden()
+  await expect(body.getByText('Una redacción con más cuidado').first()).toBeVisible()
+})
+
+test('a search that finds nothing reliable says so and changes nothing (US6)', async ({ page, context }) => {
+  test.setTimeout(120_000)
+  await blockExternal(context)
+  const other = await startServer({ port: 4462, scenario: 'sin_resultados' })
+  try {
+    await page.goto(other.baseURL)
+    await toConnect(page, 'Usar mi suscripción de Claude')
+    await connectAccount(page)
+    await expect(page.getByText('Cuenta 1 · Funciona')).toBeVisible()
+    await page.getByRole('button', { name: 'Continuar' }).click()
+    await expect(heading(page, 'Todo listo')).toBeVisible()
+    await profileByApi(other)
+    await newScript(other, page, 'Sin resultados')
+    await page.getByRole('button', { name: /^Investigar el tema/ }).click()
+    await expect(page.getByText('No se ha encontrado nada fiable sobre este tema.', { exact: false })).toBeVisible()
+    await audit(page)
+  } finally {
+    await other.stop()
+  }
+})
+
+test('a connection that cannot search says so and lets you go on (US6)', async ({ page, context }) => {
+  test.setTimeout(120_000)
+  await blockExternal(context)
+  const other = await startServer({ port: 4461, scenario: 'sin_web' })
+  try {
+    await page.goto(other.baseURL)
+    await toConnect(page, 'Usar mi suscripción de Claude')
+    await connectAccount(page)
+    await expect(page.getByText('Cuenta 1 · Funciona')).toBeVisible()
+    await page.getByRole('button', { name: 'Continuar' }).click()
+    await expect(heading(page, 'Todo listo')).toBeVisible()
+    await profileByApi(other)
+    await newScript(other, page, 'Sin internet')
+    await expect(page.getByText('Tu conexión de IA no puede buscar en internet.', { exact: false })).toBeVisible()
+    await expect(page.getByRole('button', { name: /^Investigar el tema/ })).toHaveCount(0)
+    await expect(page.getByText('tus apuntes se usan para buscar', { exact: false })).toHaveCount(0)
+    await audit(page)
+    await toDraft(page)
+    await expect(page.getByRole('button', { name: /^Comprobar con internet/ })).toHaveCount(0)
+  } finally {
+    await other.stop()
+  }
+})

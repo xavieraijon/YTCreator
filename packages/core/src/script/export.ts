@@ -60,7 +60,7 @@ const STATUS: Record<ScriptStatus, string> = {
 const FACT_LABEL = {
   comprobado: 'comprobado',
   una_fuente: 'una sola fuente',
-  sin_confirmar: 'sin confirmar',
+  sin_confirmar: 'leyenda o sin confirmar',
   del_creador: 'lo aporta el creador',
 } as const
 const BLOCK_TYPE = {

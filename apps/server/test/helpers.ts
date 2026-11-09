@@ -1,7 +1,7 @@
 import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { createRegistry } from '@ytcreator/ai'
+import { createFakeLinkCheck, createRegistry } from '@ytcreator/ai'
 import type { Pricing } from '@ytcreator/core'
 import {
   conceptKnowledge,
@@ -61,6 +61,9 @@ const PRICING: Pricing = {
   },
   usdToEur: 0.9,
   charsPerToken: 3.5,
+  webSearchUsdPer1000: 10,
+  webInputTokensPerSearch: 5000,
+  webInputTokensPerFetch: 8000,
 }
 
 export const TEST_PORT = 4310
@@ -220,6 +223,7 @@ export function makeTestApp({
   const scriptKnowledge = loadScriptKnowledge()
   const scriptsRepo = createScriptsRepo(db, now)
   const scriptVersions = createScriptVersionsRepo(db, now)
+  const links = createFakeLinkCheck()
   const scriptService = createScriptService({
     db,
     channels: channel.channels,
@@ -233,7 +237,9 @@ export function makeTestApp({
     versions: scriptVersions,
     shortMaxSeconds: market.shorts.data.maxDurationSeconds,
     shortsReviewedAt: market.shorts.reviewedAt,
-    webResearch: () => false,
+    webResearch: () => ai.activeAi()?.webResearch ?? false,
+    links,
+    now,
     aiRun: aiRun,
     promptFor: promptFor,
     knowledge: scriptKnowledge,
@@ -324,6 +330,7 @@ export function makeTestApp({
     script,
     scripts: scriptsRepo,
     scriptVersions,
+    links,
     measures: channel.measures,
     channelProposals: channel.proposals,
     research,

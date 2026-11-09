@@ -22,6 +22,7 @@ export interface ProviderDescriptor {
   id: string
   connectionKind: ConnectionKind
   billing: Billing
+  webResearch: boolean // known without a credential, so the app can say it before spending anything
   label: string // text key, not the text
   create(credentials: Secret, deps: ProviderDeps): AiProvider
   login?: SubscriptionLogin // subscriptions only

@@ -17,12 +17,12 @@ salida Zod en `packages/core/src/script/outputs.ts` y perfil por proveedor.
 
 | Uso | Modelo | Tiempo | Salida máx. | Internet |
 |---|---|---|---|---|
-| `investigacion` | Sonnet 5.5 | 300 s | 8.000 | 8 búsquedas, 10 lecturas |
+| `investigacion` | Sonnet 5.5 | 300 s | 8.000 | 8 búsquedas, 6 lecturas |
 | `escaleta` | Sonnet 5.5 | 120 s | 5.000 | no |
 | `guion` | Sonnet 5.5 | 420 s | 22.000 | no |
 | `guion_short` | Sonnet 5.5 | 90 s | 2.000 | no |
 | `bloque_guion` | Sonnet 5.5 | 90 s | 3.000 | no |
-| `comprobar_guion` | Sonnet 5.5 | 300 s | 8.000 | 8 búsquedas, 10 lecturas |
+| `comprobar_guion` | Sonnet 5.5 | 300 s | 8.000 | 8 búsquedas, 6 lecturas |
 | `enfoques_short` | Sonnet 5.5 | 60 s | 1.500 | no |
 
 En Claude Code, esfuerzo `medium`.

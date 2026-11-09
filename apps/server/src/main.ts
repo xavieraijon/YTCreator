@@ -3,7 +3,7 @@ import { mkdirSync } from 'node:fs'
 import type { Server } from 'node:http'
 import type { AddressInfo } from 'node:net'
 import { createAdaptorServer } from '@hono/node-server'
-import { claudeVersion, createRegistry, resolveClaudeBin } from '@ytcreator/ai'
+import { claudeVersion, createFakeLinkCheck, createRegistry, resolveClaudeBin } from '@ytcreator/ai'
 import { type ChannelUse, type Pricing } from '@ytcreator/core'
 import { join } from 'node:path'
 import {
@@ -32,6 +32,7 @@ import { createIdeaMeasure } from './services/idea-measure.ts'
 import { createIdeasRepo } from './db/repos/ideas.ts'
 import { createScriptVersionsRepo } from './db/repos/script-versions.ts'
 import { createScriptsRepo } from './db/repos/scripts.ts'
+import { createLinkCheck } from './services/link-check.ts'
 import { createJourneysRepo } from './db/repos/journeys.ts'
 import { createLimitsRepo } from './db/repos/limits.ts'
 import { createMeasuresRepo } from './db/repos/measures.ts'
@@ -198,6 +199,9 @@ export async function startServer({
     models: market.pricing.data.models,
     usdToEur: market.pricing.data.usdToEur.rate,
     charsPerToken: market.pricing.data.charsPerToken,
+    webSearchUsdPer1000: market.pricing.data.webSearchUsdPer1000,
+    webInputTokensPerSearch: market.pricing.data.webInputTokensPerSearch.value,
+    webInputTokensPerFetch: market.pricing.data.webInputTokensPerFetch.value,
   }
   const jobsRepo = createJobsRepo(db, now)
   const jobs = createJobsService({ jobs: jobsRepo, logger })
@@ -373,7 +377,9 @@ export async function startServer({
     versions: scriptVersions,
     shortMaxSeconds: market.shorts.data.maxDurationSeconds,
     shortsReviewedAt: market.shorts.reviewedAt,
-    webResearch: () => false,
+    webResearch: () => ai.activeAi()?.webResearch ?? false,
+    links: __YTC_ALLOW_FAKE_AI__ && fake ? createFakeLinkCheck() : createLinkCheck({ logger }),
+    now,
     aiRun: channel.aiRun,
     promptFor: channelPrompt,
     knowledge: scriptKnowledge,

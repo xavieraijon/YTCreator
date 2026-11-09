@@ -15,7 +15,7 @@ import {
 import { resolveProfile } from '../profiles.ts'
 import { addUsage } from '../usage.ts'
 import { buildPrompt } from '../prompt.ts'
-import { fakeChannelOutput } from './outputs.ts'
+import { FAKE_SEEN_URLS, fakeChannelOutput } from './outputs.ts'
 import type { FakeOutcome, FakeScenario } from './scenarios.ts'
 
 // Recognisable fake credentials, so the leak test (SC-006) can look for them.
@@ -24,6 +24,7 @@ const ACCEPTED = /^(sk-ant-api03-FAKE|sk-ant-oat-FAKE)/
 const ACCOUNT_NUMBER = /^sk-ant-oat-FAKE-(\d+)-/
 
 const INVALID_KEY: AiFailure = { kind: 'sin_sesion', reason: 'clave_no_valida' }
+const NO_WEB: AiFailure = { kind: 'no_disponible', reason: 'servicio_caido' }
 const TIMED_OUT: AiFailure = { kind: 'tiempo_agotado', reason: 'respuesta_lenta' }
 // `limite_de_gasto`: one call this big spends more than any daily limit, so the next one is blocked.
 const HUGE_USAGE = { inputTokens: 2_000_000, outputTokens: 200_000 }
@@ -66,6 +67,7 @@ export function createFakeProvider(
   options: FakeProviderOptions = {},
 ): AiProvider {
   const profile = resolveProfile('fake', 'comprobacion', { aiTimeoutSeconds: deps.aiTimeoutSeconds })
+  const webResearch = scenario.output !== 'sin_web'
 
   // What a call answers without a transport: the canned output of a channel use, or `listo`.
   function answer(request?: AiRequest<unknown>, attempt = 1): AiResult<unknown> {
@@ -118,7 +120,7 @@ export function createFakeProvider(
 
   return {
     id: 'fake',
-    capabilities: { text: true, structured: true, streaming: false, vision: false },
+    capabilities: { text: true, structured: true, streaming: false, vision: false, webResearch },
     billing: options.billing ?? 'suscripcion',
 
     async check(signal) {
@@ -129,9 +131,11 @@ export function createFakeProvider(
     },
 
     async generate<T>(request: AiRequest<T>): Promise<AiResult<T>> {
+      if (request.web && !webResearch) return { ok: false, failure: NO_WEB }
+      const found = request.web ? { seenUrls: FAKE_SEEN_URLS } : {}
       // A structured output that does not validate is asked for once more (principle IV).
       const prompt = buildPrompt(request.prompt.text, request.input)
-      let usage: AiUsage = {}
+      let usage: AiUsage = request.web ? { webSearches: Math.min(2, request.web.maxSearches) } : {}
       for (let attempt = 1; attempt <= 2; attempt++) {
         const result = await call('generate', request.signal, prompt, request as AiRequest<unknown>, attempt)
         if (!result.ok) {
@@ -139,9 +143,9 @@ export function createFakeProvider(
           return { ...result, ...(attempt > 1 ? { usage } : {}) }
         }
         usage = addUsage(usage, result.usage)
-        if (!request.schema) return { ...result, usage } as AiResult<T>
+        if (!request.schema) return { ...result, usage, ...found } as AiResult<T>
         const parsed = request.schema.safeParse(result.value)
-        if (parsed.success) return { ok: true, value: parsed.data, usage }
+        if (parsed.success) return { ok: true, value: parsed.data, usage, ...found }
         deps.logger.warn('ai.output_invalid', { provider: 'fake', attempt, issues: parsed.error.issues.length })
       }
       return { ok: false, failure: UNKNOWN_FAILURE, invalidOutput: true, usage }

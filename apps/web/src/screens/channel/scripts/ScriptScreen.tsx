@@ -1,7 +1,7 @@
 import type { ScriptUse } from '@ytcreator/core'
 import type { ScriptView } from '@ytcreator/core/api'
 import { AiWorking, Button, ErrorMessage, Stepper } from '@ytcreator/ui'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { ApiClientError, scriptsApi } from '../../../api/client.ts'
 import { navigate } from '../../../router.ts'
 import { errorText } from '../../../shell/errorText.ts'
@@ -65,6 +65,9 @@ export function ScriptScreen({ id }: { readonly id: string }) {
   const [loadFailed, setLoadFailed] = useState(false)
   const [targetBlock, setTargetBlock] = useState<string | null>(null)
   const [editingBlock, setEditingBlock] = useState(false)
+  const [nothingFound, setNothingFound] = useState(false)
+  const shown = useRef(script)
+  shown.current = script
 
   const load = useCallback(
     async (signal?: AbortSignal) => {
@@ -74,10 +77,12 @@ export function ScriptScreen({ id }: { readonly id: string }) {
         setStep((current) => current ?? stepFor(loaded))
         setLoadFailed(false)
         setError(null)
+        return loaded
       } catch (cause) {
-        if (signal?.aborted) return
+        if (signal?.aborted) return undefined
         setError(cause)
         setLoadFailed(true)
+        return undefined
       }
     },
     [id],
@@ -92,7 +97,12 @@ export function ScriptScreen({ id }: { readonly id: string }) {
   const onFinished = useCallback(
     (op: string, ok: boolean) => {
       // A failure stays where it can be retried, and the step opens with what it has to show.
-      void load().then(() => {
+      const factsBefore = shown.current?.facts?.version ?? 0
+      void load().then((loaded) => {
+        // A search that found nothing reliable leaves the list as it was, and that has to be said (spec, Edge Cases).
+        setNothingFound(
+          ok && op === 'investigacion' && loaded !== undefined && (loaded.facts?.version ?? 0) === factsBefore,
+        )
         if (ok && op === 'escaleta') setStep('escaleta')
         if (ok && (op === 'guion' || op === 'guion_short')) setStep('guion')
       })
@@ -105,6 +115,7 @@ export function ScriptScreen({ id }: { readonly id: string }) {
     (changed: ScriptView) => {
       setScript(changed)
       setError(null)
+      setNothingFound(false)
       dismiss()
     },
     [dismiss],
@@ -169,7 +180,14 @@ export function ScriptScreen({ id }: { readonly id: string }) {
       {ai.working && <AiWorking variant="panel" label={scriptEs.uses[ai.working as ScriptUse]} />}
       <ScriptWarnings script={script} ai={ai} onStep={setStep} />
       {step === 'hechos' && (
-        <FactsStep script={script} ai={ai} onChange={onChange} onError={setError} onToDraft={() => setStep('guion')} />
+        <FactsStep
+          script={script}
+          ai={ai}
+          nothingFound={nothingFound}
+          onChange={onChange}
+          onError={setError}
+          onToDraft={() => setStep('guion')}
+        />
       )}
       {step === 'escaleta' && (
         <OutlineStep

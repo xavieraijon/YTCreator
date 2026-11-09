@@ -5,6 +5,7 @@ import {
   claimActionBodySchema,
   draftSaveBodySchema,
   exportQuerySchema,
+  factsSaveBodySchema,
   outlineSaveBodySchema,
   restoreBodySchema,
   scriptVersionParamsSchema,
@@ -138,6 +139,11 @@ export function scriptRoutes({ service, scripts }: ScriptRoutesDeps) {
   routes.post('/scripts/:id/generate', async (c) => {
     const body = await parseBody(c, scriptGenerateBodySchema)
     return c.json({ jobId: service.generate(c.req.param('id'), body) }, 202)
+  })
+
+  routes.put('/scripts/:id/facts', async (c) => {
+    const body = await parseBody(c, factsSaveBodySchema)
+    return c.json(await service.saveFacts(c.req.param('id'), body))
   })
 
   routes.put('/scripts/:id/outline', async (c) => {

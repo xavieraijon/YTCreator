@@ -1,7 +1,12 @@
 import { randomUUID } from 'node:crypto'
 import {
   channelProfileSchema,
+  backingDomains,
   blockOutput,
+  checkOutputFor,
+  factLabel,
+  seenSources,
+  scriptSourceSchema,
   DEFAULT_SCRIPT_SETTINGS,
   defaultTargetSeconds,
   detectClaims,
@@ -20,6 +25,11 @@ import {
   scriptWarnings,
   settleOrphans,
   type BlockOutput,
+  type CheckOutput,
+  type Fact,
+  type LinkState,
+  type ResearchOutput,
+  type ScriptSource,
   type ChannelProfile,
   type Claim,
   type ContentOf,
@@ -35,6 +45,7 @@ import {
 import type {
   ClaimActionBody,
   DraftSaveBody,
+  FactsSaveBody,
   OutlineSaveBody,
   ScriptGenerateBody,
   ScriptSettingsView,
@@ -53,6 +64,7 @@ import type { ProfilesRepo } from '../db/repos/profiles.ts'
 import type { Script, ScriptsRepo } from '../db/repos/scripts.ts'
 import type { ScriptVersion, ScriptVersionsRepo } from '../db/repos/script-versions.ts'
 import type { AiRunService, PromptRef } from './ai-run.ts'
+import type { LinkCheck } from './link-check.ts'
 import { profileInput } from './ideas.ts'
 import type { JobsService } from './jobs.ts'
 import { ApiError } from '../http/errors.ts'
@@ -74,6 +86,8 @@ export interface ScriptServiceDeps {
   shortsReviewedAt: string
   // Whether the active connection can search the web (R3).
   webResearch: () => boolean
+  links: Pick<LinkCheck, 'checkAll'>
+  now: () => Date
   aiRun: AiRunService
   promptFor: (use: ScriptUse) => PromptRef
   knowledge: ScriptKnowledge
@@ -285,6 +299,7 @@ export function createScriptService(deps: ScriptServiceDeps) {
       text: fact.text,
       label: fact.label,
       sources: fact.sources.map((source) => source.title || source.reference || source.url),
+      alternatives: fact.alternatives,
     }))
   }
 
@@ -387,6 +402,41 @@ export function createScriptService(deps: ScriptServiceDeps) {
     }
   }
 
+  const assertCanSearch = () => {
+    if (!deps.webResearch()) throw new ApiError({ code: 'sin_internet' })
+  }
+
+  const unreliable = () => deps.knowledge.sources.data.unreliableDomains
+
+  // What the AI cites, as the app can vouch for it: nothing it never saw, and every link tried (R7, R8).
+  const checkedSources = async (raw: readonly { url: string; title: string }[][], seenUrls?: readonly string[]) => {
+    const usable = raw.map((sources) =>
+      seenSources(sources, seenUrls).filter(
+        ({ url, title }) =>
+          scriptSourceSchema.safeParse({
+            id: 'x',
+            url,
+            reference: null,
+            title,
+            accessedAt: 'x',
+            link: null,
+          }).success,
+      ),
+    )
+    const states = await deps.links.checkAll(usable.flat().map(({ url }) => url))
+    const accessedAt = deps.now().toISOString()
+    return usable.map((sources) =>
+      sources.map(({ url, title }): ScriptSource => ({
+        id: randomUUID(),
+        url,
+        reference: null,
+        title,
+        accessedAt,
+        link: states.get(url) ?? 'sin_comprobar',
+      })),
+    )
+  }
+
   // What each use asks for and what it does with the answer.
   const requestFor = (found: Found, use: ScriptUse, blockId?: string) => {
     const { script, idea, profile } = found
@@ -397,6 +447,117 @@ export function createScriptService(deps: ScriptServiceDeps) {
     // A Short has no outline, and a long video is written from one.
     const wrongShape = script.format === 'short' ? use === 'escaleta' || use === 'guion' : use === 'guion_short'
     if (wrongShape) throw new ApiError({ code: 'validacion', fields: { use: 'no_valido' } })
+
+    // Only the idea and the notes leave for a search: never the profile, nor anything else of the channel (R20).
+    if (use === 'investigacion') {
+      assertCanSearch()
+      return {
+        input: {
+          idea: { title: idea.title, hook: idea.hook, query: idea.query, queryEn: idea.queryEn },
+          notes: script.notes,
+          language: found.channel.language,
+          reliable: deps.knowledge.sources.data.reliable,
+        },
+        outputTokens: undefined,
+        schema: undefined,
+        keep: async (value: unknown, usageId: string | null, instructions: string | null, seenUrls?: string[]) => {
+          const output = value as ResearchOutput
+          // Nothing reliable found: the list stays as it was, and the screen says so (spec, Edge Cases).
+          if (output.facts.length === 0) return
+          const checked = await checkedSources(
+            output.facts.map((fact) => fact.sources),
+            seenUrls,
+          )
+          const researched = output.facts.map((fact, index): Fact => {
+            const sources = checked[index]!
+            return {
+              id: randomUUID(),
+              text: fact.text,
+              label: factLabel(
+                { proposed: fact.label, origin: 'ia', sources, alternatives: fact.alternatives },
+                unreliable(),
+              ),
+              origin: 'ia',
+              sources,
+              alternatives: fact.alternatives,
+            }
+          })
+          // What the creator added stays; what the AI found last time is in the history (data-model.md).
+          const own = (versions.latest(script.id, 'hechos')?.content.facts ?? []).filter(
+            (fact) => fact.origin === 'creador',
+          )
+          addVersion(
+            found,
+            'hechos',
+            'ia',
+            { facts: [...own, ...researched].slice(0, SCRIPT_LIMITS.facts) },
+            { instructions, usageId, ...promptMeta() },
+          )
+        },
+      }
+    }
+
+    if (use === 'comprobar_guion') {
+      assertCanSearch()
+      const draft = versions.latest(script.id, 'guion')
+      if (!draft) throw new ApiError({ code: 'no_encontrado' })
+      const pending = draft.content.claims.filter((claim) => claim.status === 'pendiente')
+      if (pending.length === 0) throw new ApiError({ code: 'validacion', fields: { use: 'no_valido' } })
+      return {
+        input: {
+          claims: pending.map((claim) => ({
+            id: claim.id,
+            text: claim.text,
+            context: draft.content.blocks.find((block) => block.id === claim.blockId)?.text ?? '',
+          })),
+          facts: factsInput(script.id),
+          language: found.channel.language,
+          reliable: deps.knowledge.sources.data.reliable,
+        },
+        outputTokens: undefined,
+        schema: checkOutputFor(pending.map((claim) => claim.id)),
+        keep: async (value: unknown, usageId: string | null, _: string | null, seenUrls?: string[]) => {
+          const { checks } = value as CheckOutput
+          const checked = await checkedSources(
+            checks.map((check) => check.sources),
+            seenUrls,
+          )
+          const checkedAt = deps.now().toISOString()
+          const byClaim = new Map(checks.map((check, index) => [check.claimId, { check, sources: checked[index]! }]))
+          // The text does not change here: only accepting a proposal does (FR-004c, US6 AS5).
+          const claims = draft.content.claims.map((claim) => {
+            const entry = byClaim.get(claim.id)
+            if (!entry || claim.status !== 'pendiente') return claim
+            const { check, sources } = entry
+            // A verdict with no link that opens behind it is only an opinion of the AI.
+            const backed = backingDomains(sources, unreliable()) > 0
+            return {
+              ...claim,
+              check: {
+                verdict: backed ? check.verdict : ('sin_fuente' as const),
+                sources,
+                // A wording nothing backs is not offered: the mark stays pending (decision 35).
+                proposal: backed ? check.proposal : null,
+                checkedAt,
+              },
+            }
+          })
+          addVersion(
+            found,
+            'guion',
+            'comprobacion',
+            { blocks: draft.content.blocks, claims },
+            {
+              factsVersion: draft.factsVersion,
+              outlineVersion: draft.outlineVersion,
+              writtenWith: writtenWith(draft),
+              usageId,
+              ...promptMeta(),
+            },
+          )
+        },
+      }
+    }
 
     if (use === 'guion_short') {
       const { wordsPerMinute } = voiceOf(script.channelId)
@@ -578,11 +739,74 @@ export function createScriptService(deps: ScriptServiceDeps) {
     const job = deps.jobs.start({ journeyId: null, channelId: found.script.channelId, kind: 'ia' }, async () => {
       const result = await aiRun.run({ estimateId, journeyId, use, input, instructions, ...(schema ? { schema } : {}) })
       if (!result.ok) return { failure: result.failure }
-      keep(result.value, result.usageId, instructions ?? null)
+      await keep(result.value, result.usageId, instructions ?? null, result.seenUrls)
       return undefined
     })
     scripts.setJob(found.script.id, job.id, use)
     return job.id
+  }
+
+  // The creator's list: what is theirs says so, and a label is never taken from what the page sends (FR-004d, R8).
+  const saveFacts = async (id: string, { baseVersion, content }: FactsSaveBody) => {
+    const found = find(id)
+    assertIdle(found.script)
+    const latest = versions.latest(found.script.id, 'hechos')
+    assertBase(latest?.version ?? null, baseVersion)
+    const ids = content.facts.map((fact) => fact.id)
+    if (new Set(ids).size !== ids.length) throw new ApiError({ code: 'validacion', fields: { facts: 'no_valido' } })
+
+    const previous = new Map((latest?.content.facts ?? []).map((fact) => [fact.id, fact]))
+    const known = new Map(
+      (latest?.content.facts ?? []).flatMap((fact) => fact.sources.flatMap((one) => (one.url ? [[one.url, one]] : []))),
+    ) as Map<string, ScriptSource>
+    const fresh = content.facts.flatMap((fact) =>
+      fact.sources.flatMap((one) => (one.url !== null && !known.has(one.url) ? [one.url] : [])),
+    )
+    const states: Map<string, LinkState> = fresh.length > 0 ? await deps.links.checkAll(fresh) : new Map()
+    // The links took a moment: nothing may have been saved on top in the meantime.
+    assertIdle(scripts.get(id)!)
+    assertBase(versions.latestNumber(found.script.id, 'hechos'), baseVersion)
+    const accessedAt = deps.now().toISOString()
+
+    const facts = content.facts.map((fact): Fact => {
+      const before = previous.get(fact.id)
+      const sources = fact.sources.map((one): ScriptSource => {
+        const seen =
+          one.url === null
+            ? before?.sources.find((other) => other.url === null && other.reference === one.reference)
+            : (before?.sources.find(({ url }) => url === one.url) ?? known.get(one.url))
+        if (seen) return { ...seen, title: one.title }
+        return {
+          ...one,
+          accessedAt,
+          link: one.url === null ? null : (states.get(one.url) ?? 'sin_comprobar'),
+        }
+      })
+      // A sentence of the AI that the creator rewrites or backs with a source of their own, or a new one, is theirs:
+      // it says so, and it survives another search (decision 34).
+      const added = sources.some(
+        (one) =>
+          !before?.sources.some((other) =>
+            one.url === null ? other.url === null && other.reference === one.reference : other.url === one.url,
+          ),
+      )
+      if (!before || before.origin === 'creador' || before.text !== fact.text || added) {
+        return { ...fact, sources, origin: 'creador', label: 'del_creador' }
+      }
+      // Taking sources away can only lower what the AI said about it.
+      const { alternatives } = before
+      const sameSources =
+        JSON.stringify(sources.map((one) => one.url)) === JSON.stringify(before.sources.map((one) => one.url))
+      const label = sameSources
+        ? before.label
+        : factLabel({ proposed: before.label, origin: 'ia', sources, alternatives }, unreliable())
+      return { ...fact, sources, origin: 'ia', label, alternatives }
+    })
+
+    if (JSON.stringify(facts) !== JSON.stringify(latest?.content.facts ?? [])) {
+      addVersion(found, 'hechos', 'edicion', { facts })
+    }
+    return view(scripts.get(id)!, found.idea, found.profileVersion)
   }
 
   const saveOutline = (id: string, { baseVersion, content }: OutlineSaveBody) => {
@@ -815,6 +1039,7 @@ export function createScriptService(deps: ScriptServiceDeps) {
     shortMaxSeconds,
     estimate,
     generate,
+    saveFacts,
     saveOutline,
     approveOutline,
     ideaScript(ideaId: string): { id: string; status: ReturnType<typeof statusOf> } | null {

@@ -15,6 +15,7 @@ export interface NewUsage {
   costCents: number
   pricingVersion: number
   outcome: UsageOutcome
+  webSearches?: number
 }
 
 export interface Usage extends Required<NewUsage> {
@@ -35,6 +36,7 @@ interface Row {
   pricing_version: number
   outcome: UsageOutcome
   created_at: string
+  web_searches: number
 }
 
 const fromRow = (row: Row): Usage => ({
@@ -49,6 +51,7 @@ const fromRow = (row: Row): Usage => ({
   costCents: row.cost_cents,
   pricingVersion: row.pricing_version,
   outcome: row.outcome,
+  webSearches: row.web_searches,
   createdAt: row.created_at,
 })
 
@@ -61,8 +64,8 @@ export function createUsageRepo(db: DatabaseSync, now: () => Date = () => new Da
   const selectAll = db.prepare('SELECT * FROM ai_usage ORDER BY created_at DESC, rowid DESC LIMIT ?')
   const insert = db.prepare(
     `INSERT INTO ai_usage (id, journey_id, use, provider_id, model, input_tokens, output_tokens, estimated_cents,
-       cost_cents, pricing_version, outcome, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       cost_cents, pricing_version, outcome, created_at, web_searches)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   )
   const sumSince = db.prepare('SELECT COALESCE(SUM(cost_cents), 0) AS cents FROM ai_usage WHERE created_at >= ?')
   const selectBetween = db.prepare(
@@ -92,6 +95,7 @@ export function createUsageRepo(db: DatabaseSync, now: () => Date = () => new Da
         usage.pricingVersion,
         usage.outcome,
         now().toISOString(),
+        usage.webSearches ?? 0,
       )
       return get(id)!
     },

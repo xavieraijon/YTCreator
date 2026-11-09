@@ -12,7 +12,7 @@ import {
   type Secret,
   type AiUsage,
 } from '@ytcreator/core'
-import { COMPROBACION } from '@ytcreator/knowledge'
+import { COMPROBACION, WEB_LIMITS_NOTE, WEB_STRUCTURE_STEP } from '@ytcreator/knowledge'
 import { z } from 'zod'
 import { resolveProfile, type AiProfile } from '../profiles.ts'
 import { addUsage } from '../usage.ts'
@@ -67,10 +67,11 @@ export function createClaudeCodeProvider(
     jsonSchema: unknown,
     signal?: AbortSignal,
     use: AiProfile = profile,
+    web = false,
   ): Promise<ClaudeOutcome> {
     try {
       const { configDir, cwd } = folders()
-      const command = buildClaudeCommand(use, { token: credentials, configDir }, { jsonSchema }, env)
+      const command = buildClaudeCommand(use, { token: credentials, configDir }, { jsonSchema, web }, env)
       const timeout = AbortSignal.timeout(use.timeoutMs)
       const run = await runClaude(bin, command.args, {
         env: command.env,
@@ -101,7 +102,7 @@ export function createClaudeCodeProvider(
 
   return {
     id: 'claude-code',
-    capabilities: { text: true, structured: true, streaming: false, vision: false },
+    capabilities: { text: true, structured: true, streaming: false, vision: false, webResearch: true },
     billing: 'suscripcion',
 
     // Free for the creator (R12): the version, then a one-word call that counts against the plan, not money.
@@ -118,12 +119,23 @@ export function createClaudeCodeProvider(
 
     async generate<T>(request: AiRequest<T>): Promise<AiResult<T>> {
       const jsonSchema = request.schema ? z.toJSONSchema(request.schema) : undefined
-      const prompt = buildPrompt(request.prompt.text, request.input)
+      // The CLI has no limit of its own: it goes in the instruction, and a subscription pays nothing per search (R5).
+      const limits = request.web
+        ? WEB_LIMITS_NOTE.replace('{busquedas}', String(request.web.maxSearches)).replace(
+            '{lecturas}',
+            String(request.web.maxFetches),
+          )
+        : null
+      let prompt = buildPrompt(limits ? `${request.prompt.text}\n\n${limits}` : request.prompt.text, request.input)
       const useProfile = resolveProfile('claude-code', request.use, { aiTimeoutSeconds: deps.aiTimeoutSeconds })
       // A structured output that does not validate is asked for once more (principle IV).
       let usage: AiUsage = {}
+      let searching = request.web !== undefined
+      // The time of the use covers both tries when there is a search (contracts/ai-uses.md).
+      const deadline = Date.now() + useProfile.timeoutMs
       for (let attempt = 1; attempt <= 2; attempt++) {
-        const outcome = await call(prompt, jsonSchema, request.signal, useProfile)
+        const use = request.web ? { ...useProfile, timeoutMs: Math.max(1, deadline - Date.now()) } : useProfile
+        const outcome = await call(prompt, jsonSchema, request.signal, use, searching)
         if (!outcome.ok) {
           logResult('generate', outcome)
           // Only the attempt before it consumed anything: a failure gives no count.
@@ -134,6 +146,14 @@ export function createClaudeCodeProvider(
         const parsed = request.schema.safeParse(outcome.structured)
         if (parsed.success) return { ok: true, value: parsed.data, usage }
         deps.logger.warn('ai.output_invalid', { provider: 'claude-code', attempt, issues: parsed.error.issues.length })
+        // Only the step that gives the format is repeated: what it found goes back, and it does not search again (R4).
+        if (searching) {
+          searching = false
+          prompt = buildPrompt(`${request.prompt.text}\n\n${WEB_STRUCTURE_STEP}`, {
+            ...request.input,
+            informe_web: outcome.text || JSON.stringify(outcome.structured ?? null),
+          })
+        }
       }
       return { ok: false, failure: UNKNOWN_FAILURE, invalidOutput: true, usage }
     },

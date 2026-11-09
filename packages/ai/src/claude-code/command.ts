@@ -26,6 +26,7 @@ export interface ClaudeCommand {
 
 export interface ClaudeRequest {
   jsonSchema?: unknown
+  web?: boolean
 }
 
 export function cleanEnv(base: Env, extra: Record<string, string> = {}): Record<string, string> {
@@ -53,9 +54,11 @@ export function buildClaudeCommand(
 ): ClaudeCommand {
   const args = ['-p', '--output-format', 'json', '--model', profile.model]
   if (profile.effort) args.push('--effort', profile.effort)
+  // Neither of these two runs commands or reads files. WebFetch does open addresses from this machine, and nothing here
+  // can filter them as the link check does (decision 38, P3).
+  if (request.web) args.push('--tools', 'WebSearch,WebFetch', '--allowedTools', 'WebSearch', 'WebFetch')
+  else args.push('--tools', '')
   args.push(
-    '--tools',
-    '',
     '--strict-mcp-config',
     '--setting-sources',
     '',

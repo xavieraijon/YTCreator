@@ -105,6 +105,8 @@ export function channelInput(
     case 'guion':
     case 'guion_short':
     case 'bloque_guion':
+    case 'investigacion':
+    case 'comprobar_guion':
       return {}
   }
 }

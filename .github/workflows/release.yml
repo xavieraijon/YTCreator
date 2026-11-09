@@ -43,7 +43,7 @@ jobs:
       # The fake provider (its tokens, its login page, the variable that switches it on) must not be in the bundle.
       - name: No fake provider
         run: |
-          if grep -n -E 'sk-ant-oat-FAKE|inicio-de-sesion-falso|YTCREATOR_FAKE_AI|createFakeProvider|createFakeLogin' \
+          if grep -n -E 'sk-ant-oat-FAKE|inicio-de-sesion-falso|YTCREATOR_FAKE_AI|createFakeProvider|createFakeLogin|createFakeLinkCheck|fuente-uno\.example' \
             apps/server/dist/server.mjs; then
             echo "server.mjs still contains the fake AI provider" >&2
             exit 1

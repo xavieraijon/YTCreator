@@ -10,6 +10,21 @@ export type FakeOutputMode =
   // The idea bank (004, contracts/ai-uses.md, «Proveedor falso»).
   | 'ideas_repetidas'
   | 'pilar_invalido'
+  // The script (005): the connection cannot search the internet.
+  | 'sin_web'
+  // ...or it searches and finds nothing reliable.
+  | 'sin_resultados'
+
+// Reserved names (RFC 2606): nothing here can ever reach a real site. `createFakeLinkCheck` answers for them.
+export const FAKE_LINKS = {
+  first: 'https://fuente-uno.example/masa-madre',
+  second: 'https://fuente-dos.example/fermentar',
+  broken: 'https://enlace-roto.example/pagina',
+  blocked: 'https://bloquea-robots.example/pagina',
+  invented: 'https://inventada.example/nada',
+} as const
+// What the provider really saw: all of them but the invented one.
+export const FAKE_SEEN_URLS: string[] = [FAKE_LINKS.first, FAKE_LINKS.second, FAKE_LINKS.broken, FAKE_LINKS.blocked]
 
 export const INVENTED_SENTENCE = 'Este tema mueve 250.000 visitas al mes.'
 export const INVENTED_VIDEO_ID = 'video-inventado'
@@ -288,6 +303,58 @@ function normal(
         ],
         claims: [{ type: 'desarrollo', text: 'Esta parte sale del guion', factId: null }],
       }
+    case 'investigacion':
+      if (mode === 'sin_resultados') return { facts: [] }
+      return {
+        facts: [
+          {
+            text: 'La masa madre fermenta mejor en un sitio templado.',
+            label: 'comprobado',
+            sources: [
+              { url: FAKE_LINKS.first, title: 'Guía de fermentación' },
+              { url: FAKE_LINKS.second, title: 'Manual de panadería' },
+            ],
+            alternatives: null,
+          },
+          {
+            text: 'El pan de antes aguantaba toda la semana.',
+            label: 'comprobado',
+            sources: [
+              { url: FAKE_LINKS.first, title: 'Guía de fermentación' },
+              { url: FAKE_LINKS.broken, title: 'Página que ya no existe' },
+              { url: FAKE_LINKS.blocked, title: 'Página que no deja entrar' },
+            ],
+            alternatives: null,
+          },
+          {
+            text: 'Esta receta nació en un convento.',
+            label: 'comprobado',
+            sources: [{ url: FAKE_LINKS.invented, title: 'Enlace inventado' }],
+            alternatives: 'Otra versión la sitúa en un molino.',
+          },
+        ],
+      }
+    case 'comprobar_guion': {
+      const claims = Array.isArray(input.claims) ? (input.claims as { id: string; text: string }[]) : []
+      const backed = [
+        { url: FAKE_LINKS.first, title: 'Guía de fermentación' },
+        { url: FAKE_LINKS.second, title: 'Manual de panadería' },
+      ]
+      return {
+        checks: claims.map((claim, index) =>
+          index === 0
+            ? { claimId: claim.id, verdict: 'matizar', sources: backed, proposal: 'Una redacción con más cuidado' }
+            : index === 1
+              ? { claimId: claim.id, verdict: 'correcto', sources: backed, proposal: null }
+              : {
+                  claimId: claim.id,
+                  verdict: 'correcto',
+                  sources: [{ url: FAKE_LINKS.broken, title: 'Página que ya no existe' }],
+                  proposal: null,
+                },
+        ),
+      }
+    }
     case 'bloque_guion':
       return {
         text: 'Este bloque está escrito de nuevo. Lo agradecen dos millones de personas.',
@@ -353,6 +420,12 @@ function invent(use: ChannelUse, output: Record<string, unknown>): Record<string
     }
     case 'bloque_guion':
       return { ...output, text: add(output.text as string) }
+    case 'investigacion': {
+      const [first, ...rest] = output.facts as { text: string }[]
+      return { facts: [{ ...first, text: add(first!.text) }, ...rest] }
+    }
+    case 'comprobar_guion':
+      return { checks: [{ claimId: 'marca', verdict: 'sin_fuente', sources: [], proposal: add('Otra redacción.') }] }
   }
 }
 

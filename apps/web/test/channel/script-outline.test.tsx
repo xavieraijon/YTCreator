@@ -65,6 +65,7 @@ const outline = (view: ScriptView, state: ScriptAi) =>
 const facts = (view: ScriptView) =>
   renderToStaticMarkup(
     <FactsStep
+      nothingFound={false}
       script={view}
       ai={ai()}
       onChange={() => undefined}

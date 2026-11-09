@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import {
   blockOutput,
+  checkOutputFor,
   draftOutputFor,
   outlineOutput,
+  researchOutput,
   shortDraftOutput,
   shortDraftOutputFor,
 } from '../../src/script/outputs.ts'
@@ -106,5 +108,20 @@ describe('guion_short', () => {
     expect(shortDraftOutputFor(180, 60).safeParse(valid).success).toBe(true)
     expect(shortDraftOutputFor(60, 60).safeParse(long).success).toBe(false)
     expect(shortDraftOutputFor(180, 60).safeParse(long).success).toBe(true)
+  })
+})
+
+describe('the outputs that come from the internet (T080)', () => {
+  it('takes an empty research: better nothing than something invented', () => {
+    expect(researchOutput.safeParse({ facts: [] }).success).toBe(true)
+  })
+
+  it('only takes a check of the marks that were asked about', () => {
+    const check = (claimId: string) => ({
+      checks: [{ claimId, verdict: 'correcto', sources: [{ url: 'https://a.org/1', title: 'A' }], proposal: null }],
+    })
+    const schema = checkOutputFor(['marca-1', 'marca-2'])
+    expect(schema.safeParse(check('marca-2')).success).toBe(true)
+    expect(schema.safeParse(check('otra')).success).toBe(false)
   })
 })

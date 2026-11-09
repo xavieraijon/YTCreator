@@ -8,6 +8,7 @@ import { es } from '../../../strings/es.ts'
 import { scriptEs } from '../../../strings/script.es.ts'
 import styles from '../channel.module.css'
 import { AiAction } from '../Proposal.tsx'
+import { FactsList } from './FactsList.tsx'
 import { type ScriptAi, useEstimate } from './useScriptAi.ts'
 
 const text = scriptEs.facts
@@ -15,13 +16,14 @@ const text = scriptEs.facts
 export interface FactsStepProps {
   readonly script: ScriptView
   readonly ai: ScriptAi
+  readonly nothingFound: boolean
   readonly onChange: (script: ScriptView) => void
   readonly onError: (cause: unknown) => void
   readonly onToDraft: () => void
 }
 
 // Duration and notes: what the AI starts from (contracts/ui-screens.md, «Hechos»).
-export function FactsStep({ script, ai, onChange, onError, onToDraft }: FactsStepProps) {
+export function FactsStep({ script, ai, nothingFound, onChange, onError, onToDraft }: FactsStepProps) {
   // A long video is thought of in minutes and a Short in seconds.
   const unit = script.format === 'largo' ? 60 : 1
   const [duration, setDuration] = useState(String(Math.round(script.targetSeconds / unit)))
@@ -35,6 +37,7 @@ export function FactsStep({ script, ai, onChange, onError, onToDraft }: FactsSte
   const canWrite = !isShort || script.draft === null
   const price = useEstimate(script, writeUse, canWrite)
   const { estimate } = price
+  const researchPrice = useEstimate(script, 'investigacion', script.webResearch)
 
   // Untouched, the duration stays as it was saved: what is shown is rounded.
   const seconds =
@@ -110,6 +113,11 @@ export function FactsStep({ script, ai, onChange, onError, onToDraft }: FactsSte
     if (await save()) await ai.run(writeUse, price)
   }
 
+  const research = async () => {
+    // Saved first: the notes are what it searches with.
+    if (await save()) await ai.run('investigacion', researchPrice)
+  }
+
   const words = Math.round((seconds / 60) * script.voice.wordsPerMinute)
   return (
     <>
@@ -150,10 +158,10 @@ export function FactsStep({ script, ai, onChange, onError, onToDraft }: FactsSte
       />
       <TextArea
         label={text.notes}
-        description={format(text.notesHelp, {
+        description={`${format(text.notesHelp, {
           n: notes.length.toLocaleString('es-ES'),
           max: SCRIPT_LIMITS.notes.toLocaleString('es-ES'),
-        })}
+        })}${script.webResearch ? ` ${text.notesSearch}` : ''}`}
         value={notes}
         rows={8}
         autoResize
@@ -181,6 +189,36 @@ export function FactsStep({ script, ai, onChange, onError, onToDraft }: FactsSte
         </>
       )}
       {mine !== null && <TextArea label={text.yourText} value={mine} rows={6} readOnly />}
+      {script.webResearch ? (
+        <>
+          <p className={styles.why}>{text.researchIntro}</p>
+          {researchPrice.error !== null && (
+            <ErrorMessage
+              live
+              title={errorText(researchPrice.error)}
+              action={{ label: es.app.retry, onClick: researchPrice.retry }}
+            />
+          )}
+          <AiAction
+            label={text.research}
+            primary={false}
+            estimate={researchPrice.estimate}
+            failure={ai.failureFor('investigacion')}
+            busy={ai.working === 'investigacion'}
+            disabled={!valid || ai.working !== null}
+            onRun={() => void research()}
+          />
+          {researchPrice.estimate && !researchPrice.estimate.included && (
+            <p className={styles.notice}>
+              {format(text.researchCost, { n: String(researchPrice.estimate.searches ?? 0) })}
+            </p>
+          )}
+        </>
+      ) : (
+        <p className={styles.notice}>{text.noWeb}</p>
+      )}
+      <p role="status">{nothingFound ? text.researchEmpty : ''}</p>
+      <FactsList script={script} locked={ai.working !== null} onChange={onChange} />
       {notes.trim() === '' && (script.facts?.content.facts.length ?? 0) === 0 && (
         <p className={styles.notice}>{text.noNotes}</p>
       )}

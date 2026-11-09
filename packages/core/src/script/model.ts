@@ -5,12 +5,21 @@ import type { IdeaFormat } from '../ideas/model.ts'
 export const SCRIPT_KINDS = ['hechos', 'escaleta', 'guion'] as const
 export type ScriptKind = (typeof SCRIPT_KINDS)[number]
 
-export const VERSION_ORIGINS = ['ia', 'edicion', 'bloque_ia', 'recuperada', 'comprobacion', 'marcas', 'heredada'] as const
+export const VERSION_ORIGINS = [
+  'ia',
+  'edicion',
+  'bloque_ia',
+  'recuperada',
+  'comprobacion',
+  'marcas',
+  'heredada',
+] as const
 export type VersionOrigin = (typeof VERSION_ORIGINS)[number]
 
 export const FACT_LABELS = ['comprobado', 'una_fuente', 'sin_confirmar', 'del_creador'] as const
 export type FactLabel = (typeof FACT_LABELS)[number]
 export const FACT_ORIGINS = ['ia', 'creador'] as const
+export type FactOrigin = (typeof FACT_ORIGINS)[number]
 export const LINK_STATES = ['abre', 'no_abre', 'sin_comprobar'] as const
 export type LinkState = (typeof LINK_STATES)[number]
 
@@ -41,6 +50,8 @@ export const SCRIPT_LIMITS = {
   facts: 60,
   factText: 600,
   sourceTitle: 300,
+  sourceUrl: 2048,
+  factSources: 8,
   reference: 500,
   outlineBlocks: 30,
   blockTitle: 120,
@@ -59,7 +70,10 @@ const uniqueIds = (blocks: readonly { id: string }[]) => new Set(blocks.map((blo
 export const scriptSourceSchema = z
   .object({
     id,
-    url: z.url({ protocol: /^https?$/ }).nullable(),
+    url: z
+      .url({ protocol: /^https?$/ })
+      .max(SCRIPT_LIMITS.sourceUrl)
+      .nullable(),
     reference: z.string().max(SCRIPT_LIMITS.reference).nullable(),
     title: z.string().max(SCRIPT_LIMITS.sourceTitle),
     accessedAt: z.string().min(1),
@@ -76,7 +90,7 @@ export const factSchema = z
     text: z.string().max(SCRIPT_LIMITS.factText),
     label: z.enum(FACT_LABELS),
     origin: z.enum(FACT_ORIGINS),
-    sources: z.array(scriptSourceSchema),
+    sources: z.array(scriptSourceSchema).max(SCRIPT_LIMITS.factSources),
     alternatives: z.string().max(SCRIPT_LIMITS.factText).nullable(),
   })
   .refine((fact) => fact.text.trim() !== '' || (fact.origin === 'creador' && fact.sources.length > 0), {
@@ -104,7 +118,7 @@ export type OutlineBlock = z.infer<typeof outlineBlockSchema>
 
 export const outlineContentSchema = z
   .object({
-  blocks: z.array(outlineBlockSchema).min(1).max(SCRIPT_LIMITS.outlineBlocks),
+    blocks: z.array(outlineBlockSchema).min(1).max(SCRIPT_LIMITS.outlineBlocks),
   })
   .refine(({ blocks }) => uniqueIds(blocks), { message: 'bloque_repetido' })
 export type OutlineContent = z.infer<typeof outlineContentSchema>
@@ -139,8 +153,8 @@ export type Claim = z.infer<typeof claimSchema>
 
 export const draftContentSchema = z
   .object({
-  blocks: z.array(draftBlockSchema).min(1).max(SCRIPT_LIMITS.outlineBlocks),
-  claims: z.array(claimSchema),
+    blocks: z.array(draftBlockSchema).min(1).max(SCRIPT_LIMITS.outlineBlocks),
+    claims: z.array(claimSchema),
   })
   .refine(({ blocks }) => uniqueIds(blocks), { message: 'bloque_repetido' })
   .refine(({ blocks, claims }) => claims.every((claim) => blocks.some((block) => block.id === claim.blockId)), {

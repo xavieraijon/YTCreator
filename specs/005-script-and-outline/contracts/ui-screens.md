@@ -33,7 +33,9 @@ principal, que cambia según el estado.
 - `TextField` de duración, con su valor por defecto y lo que equivale en palabras.
 - `TextArea` «Tus apuntes», con aviso: «Si pides investigar, tus apuntes se usan para buscar.»
 - Lista de hechos: texto, etiqueta (`Badge`), enlaces con la fecha, y si un enlace no abre o no se pudo comprobar.
-- `DataSource`: «La app comprueba que el enlace abre, no que diga lo que se afirma.»
+- Aviso de texto: «La app comprueba que el enlace abre, no que diga lo que se afirma.» (decisión 36). Cada hecho de la
+  IA, y cada veredicto y propuesta al comprobar, llevan `DataSource` «Opinión de la IA».
+- Si la investigación no encuentra nada fiable, una frase lo dice y la lista se queda como estaba.
 - Acciones: «Investigar el tema · {coste}», «Añadir un hecho o una fuente», «Quitar», «Cambiar».
 - Sin internet en la conexión: una frase que lo explica, sin botón de investigar.
 - **Principal**: «Proponer escaleta · {coste}» (largo) o «Escribir el guion · {coste}» (Short; ya escrito, «Ir al guion», decisión 28).

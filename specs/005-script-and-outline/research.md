@@ -56,8 +56,8 @@ Cada entrada dice qué se decide, por qué y qué se descartó. Lo que cruza var
 - **Decisión**: `buildClaudeCommand` pasa `--tools WebSearch,WebFetch` y `--allowedTools WebSearch WebFetch` solo si la
   petición lleva `web`; en el resto de usos sigue `--tools ''`. El resto de banderas de aislamiento no cambia: entorno
   limpio, carpeta vacía, sin MCP y sin ajustes. Sigue con `--json-schema`.
-- **Motivo**: esas dos herramientas no ejecutan órdenes ni leen ficheros, de modo que un texto malicioso de una página
-  no puede tocar la máquina.
+- **Motivo**: esas dos herramientas no ejecutan órdenes ni leen ficheros. `WebFetch` sí abre direcciones desde el
+  equipo, y aquí no se le puede poner el filtro de R7 (decisión 38, P3).
 - **Límite**: la CLI no tiene `max_uses`. El límite va en la instrucción, y como la suscripción no cobra por búsqueda no
   hay riesgo de gasto.
 - **Sin `seenUrls`**: la salida JSON no da los resultados de la búsqueda, y queda solo la comprobación de enlaces (R7).
@@ -73,6 +73,7 @@ Cada entrada dice qué se decide, por qué y qué se descartó. Lo que cruza var
   informa el proveedor.
 - **Límite**: las lecturas tienen tope (`max_content_tokens`), pero lo que devuelve una búsqueda no. Ese tramo es una
   estimación, y la pantalla lo dice (SC-005).
+- **Tope real**: 8 búsquedas y 6 lecturas (decisión 37), para que quepa en el límite propuesto por operación.
 - **Orden de magnitud** (8 búsquedas, 6 lecturas, Sonnet 5.5): unos 0,30 €. Si no cabe en el límite por operación, el
   botón se apaga (Edge Case).
 - **Suscripción**: 0 €, como el resto de usos.

@@ -32,6 +32,8 @@ const OUTPUT_MODES: readonly string[] = [
   'limite_de_gasto',
   'ideas_repetidas',
   'pilar_invalido',
+  'sin_web',
+  'sin_resultados',
 ]
 
 function isFailureKind(kind: string): kind is FailureKind {

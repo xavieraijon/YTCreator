@@ -365,6 +365,8 @@ export const estimateSchema = z.object({
   blockedBy: z.enum(['por_operacion', 'diario', 'mensual']).nullable(),
   // The most it can cost if the AI has to repeat itself (P17); 0 when included.
   maxCents: cents,
+  // The most it will search on the internet, when the use does (005).
+  searches: z.number().int().nonnegative().optional(),
   pricingVersion: z.number().int().positive(),
 })
 export type EstimateView = z.infer<typeof estimateSchema>

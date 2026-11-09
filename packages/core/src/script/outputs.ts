@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { durationSeconds } from './duration.ts'
-import { OUTLINE_BLOCK_TYPES, SCRIPT_LIMITS } from './model.ts'
+import { CLAIM_VERDICTS, OUTLINE_BLOCK_TYPES, SCRIPT_LIMITS } from './model.ts'
 
 // What the AI has to answer for each use of the script (specs/005-script-and-outline/contracts/ai-uses.md).
 const hint = z.string().trim().max(SCRIPT_LIMITS.blockHint).nullable()
@@ -94,11 +94,54 @@ export const shortDraftOutputFor = (maxSeconds: number, wordsPerMinute: number) 
     { message: 'demasiado_largo' },
   )
 
+// An address is checked by the server: one that does not parse costs that source, not the whole paid research.
+const webSource = z.object({
+  url: z.string().trim().min(1).max(SCRIPT_LIMITS.sourceUrl),
+  title: z.string().trim().min(1).max(SCRIPT_LIMITS.sourceTitle),
+})
+
+export const RESEARCH_MAX_FACTS = 40
+
+// An empty list is a valid answer: nothing reliable was found (ai-uses.md).
+export const researchOutput = z.object({
+  facts: z
+    .array(
+      z.object({
+        text: z.string().trim().min(1).max(SCRIPT_LIMITS.factText),
+        label: z.enum(['comprobado', 'una_fuente', 'sin_confirmar']),
+        sources: z.array(webSource).max(SCRIPT_LIMITS.factSources),
+        alternatives: z.string().trim().max(SCRIPT_LIMITS.factText).nullable(),
+      }),
+    )
+    .max(RESEARCH_MAX_FACTS),
+})
+export type ResearchOutput = z.infer<typeof researchOutput>
+
+export const checkOutput = z.object({
+  checks: z.array(
+    z.object({
+      claimId: z.string().min(1),
+      verdict: z.enum(CLAIM_VERDICTS),
+      sources: z.array(webSource).max(SCRIPT_LIMITS.factSources),
+      proposal: claimText.nullable(),
+    }),
+  ),
+})
+export type CheckOutput = z.infer<typeof checkOutput>
+
+// Only the claims that were asked about (ai-uses.md).
+export const checkOutputFor = (claimIds: readonly string[]) =>
+  checkOutput.refine(({ checks }) => checks.every((check) => claimIds.includes(check.claimId)), {
+    message: 'marca_desconocida',
+  })
+
 export const SCRIPT_OUTPUTS = {
   escaleta: outlineOutput,
   guion: draftOutput,
   guion_short: shortDraftOutput,
   bloque_guion: blockOutput,
+  investigacion: researchOutput,
+  comprobar_guion: checkOutput,
 } as const
 export type ScriptUse = keyof typeof SCRIPT_OUTPUTS
 export const SCRIPT_USES = Object.keys(SCRIPT_OUTPUTS) as [ScriptUse, ...ScriptUse[]]
