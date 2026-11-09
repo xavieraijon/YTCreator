@@ -171,7 +171,12 @@ export const jobSchema = z.object({
   journeyId: z.string().nullable(),
   kind: z.enum(JOB_KINDS),
   status: z.enum(JOB_STATUSES),
-  progress: z.object({ done: count, total: count }),
+  progress: z.object({
+    done: count,
+    total: count,
+    ideaIds: z.array(z.string()).optional(),
+    skipped: count.optional(),
+  }),
   failure: z.string().nullable(),
   startedAt: z.string(),
   finishedAt: z.string().nullable(),
@@ -345,8 +350,9 @@ export const journeyStepBodySchema = z.object({
 })
 
 const CHANNEL_USES = Object.keys(CHANNEL_OUTPUTS) as [ChannelUse, ...ChannelUse[]]
-// `perfil_parte` is asked for from the profile, not from a journey.
-const JOURNEY_USES = CHANNEL_USES.filter((use) => use !== 'perfil_parte') as [ChannelUse, ...ChannelUse[]]
+// `perfil_parte` is asked for from the profile, and the idea uses from the idea bank, not from a journey.
+const NOT_JOURNEY: readonly string[] = ['perfil_parte', 'ideas', 'otro_enfoque', 'busquedas_idea']
+const JOURNEY_USES = CHANNEL_USES.filter((use) => !NOT_JOURNEY.includes(use)) as [ChannelUse, ...ChannelUse[]]
 
 // POST /api/journeys/:id/estimate
 export const estimateBodySchema = z.object({ use: z.enum(JOURNEY_USES), proposalId: id.optional() })

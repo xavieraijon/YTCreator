@@ -150,9 +150,13 @@ export function createYouTubeService(deps: YouTubeServiceDeps): YouTubeData & {
     },
     effectiveSource: () => picked().source,
 
-    search: (query, { limit, signal, withoutDates }) =>
-      call('search', `${limit}:${withoutDates ? 'sin-fechas:' : ''}${normalize(query)}`, CACHE_TTL_MS, (a) =>
-        a.search(query, { limit, ...(signal ? { signal } : {}), ...(withoutDates ? { withoutDates } : {}) }),
+    search: (query, { limit, signal, withoutDates, fresh }) =>
+      call(
+        'search',
+        `${limit}:${withoutDates ? 'sin-fechas:' : ''}${normalize(query)}`,
+        CACHE_TTL_MS,
+        (a) => a.search(query, { limit, ...(signal ? { signal } : {}), ...(withoutDates ? { withoutDates } : {}) }),
+        { fresh: fresh === true },
       ),
 
     getChannel: (ref, signal) => call('channel', ref.channelId, CACHE_TTL_MS, (a) => a.getChannel(ref, signal)),

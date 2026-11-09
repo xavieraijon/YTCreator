@@ -6,6 +6,7 @@ import { reloadAi } from './ai/useAiOverview.ts'
 import { reloadOnboarding, useOnboarding, useOnboardingSync } from './onboarding/useOnboarding.ts'
 import { href, navigate, onboardingRedirect, type Route, usePathname, useRoute } from './router.ts'
 import { ChannelStep } from './screens/channel/ChannelStep.tsx'
+import { IdeaBank } from './screens/channel/ideas/IdeaBank.tsx'
 import { Start } from './screens/channel/start/Start.tsx'
 import { ConnectAi } from './screens/connect-later/ConnectAi.tsx'
 import { Home } from './screens/home/Home.tsx'
@@ -57,6 +58,8 @@ function Page({ route, state }: { route: Route; state: OnboardingState | null })
       return <Home />
     case 'channelStart':
       return <Start />
+    case 'ideaBank':
+      return <IdeaBank />
     case 'channelStep':
       return <ChannelStep key={href(route)} kind={route.kind} step={route.step} />
     case 'settings':

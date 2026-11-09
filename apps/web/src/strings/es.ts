@@ -244,6 +244,9 @@ export const es = {
       lectura_canal: 'Leer tu canal',
       posicionamiento: 'Proponer el enfoque',
       perfil_parte: 'Reescribir una parte del perfil',
+      ideas: 'Proponer ideas de vídeo',
+      otro_enfoque: 'Buscar otro enfoque',
+      busquedas_idea: 'Preparar la medida de una idea',
     } satisfies Record<AiUse, string>,
     failed: 'No salió bien',
     knowledge: 'Información que conviene revisar',
@@ -355,6 +358,9 @@ export const es = {
     mayor_que_diario: 'No puede ser mayor que el límite por día.',
     mayor_que_mensual: 'No puede ser mayor que el límite por mes.',
     demasiado_alto: 'Es demasiado alto.',
+    sin_perfil: 'Primero termina el perfil de tu canal.',
+    sin_medida_quemada:
+      'Solo se busca otro enfoque para una idea medida que ya está muy contada o con mucha competencia.',
   } satisfies Record<FieldCode, string>,
 }
 

@@ -68,10 +68,10 @@ export function createFakeProvider(
   const profile = resolveProfile('fake', 'comprobacion', { aiTimeoutSeconds: deps.aiTimeoutSeconds })
 
   // What a call answers without a transport: the canned output of a channel use, or `listo`.
-  function answer(request?: AiRequest<unknown>): AiResult<unknown> {
+  function answer(request?: AiRequest<unknown>, attempt = 1): AiResult<unknown> {
     if (!request || !isChannelUse(request.use))
       return { ok: true, value: 'listo', usage: { inputTokens: 1, outputTokens: 1 } }
-    const value = fakeChannelOutput(request.use, request.input ?? {}, scenario.output)
+    const value = fakeChannelOutput(request.use, request.input ?? {}, scenario.output, attempt)
     const usage = scenario.output === 'limite_de_gasto' ? HUGE_USAGE : { inputTokens: 1, outputTokens: 1 }
     return { ok: true, value, usage }
   }
@@ -82,6 +82,7 @@ export function createFakeProvider(
     signal?: AbortSignal,
     prompt?: string,
     request?: AiRequest<unknown>,
+    attempt = 1,
   ): Promise<AiResult<unknown>> {
     const credential = credentials.reveal()
     if (!ACCEPTED.test(credential)) return { ok: false, failure: INVALID_KEY }
@@ -98,7 +99,7 @@ export function createFakeProvider(
           await wait(profile.timeoutMs, signal)
           return { ok: false, failure: TIMED_OUT }
         case 'ok': {
-          if (!options.transport) return answer(request)
+          if (!options.transport) return answer(request, attempt)
           const value = await options.transport(operation, prompt)
           return { ok: true, value, usage: { inputTokens: 1, outputTokens: 1 } }
         }
@@ -132,7 +133,7 @@ export function createFakeProvider(
       const prompt = buildPrompt(request.prompt.text, request.input)
       let usage: AiUsage = {}
       for (let attempt = 1; attempt <= 2; attempt++) {
-        const result = await call('generate', request.signal, prompt, request as AiRequest<unknown>)
+        const result = await call('generate', request.signal, prompt, request as AiRequest<unknown>, attempt)
         if (!result.ok) {
           logResult('generate', result)
           return { ...result, ...(attempt > 1 ? { usage } : {}) }

@@ -14,7 +14,7 @@ export const channelEs = {
     resume: 'Seguir donde lo dejaste',
     resumeWhy: 'Todo lo que aprobaste sigue guardado.',
     readyTitle: 'Tu canal está listo',
-    nextStep: 'Lo siguiente será llenar tu banco de ideas. Llega muy pronto.',
+    nextStep: 'Lo siguiente es llenar tu banco de ideas de vídeo.',
     nameMissing: 'Te falta elegir el nombre',
     nameMissingWhy: 'Tu canal ya sirve así, pero sin nombre no podrás publicar.',
     // Novice audit 003, M6 (entry 137): one channel in this version (FR-028).
@@ -453,7 +453,7 @@ export const channelEs = {
       'Hemos preparado tu perfil. Si el navegador no te pregunta dónde guardarlo, estará en «Descargas». Ábrelo con el Bloc de notas, TextEdit o Word.',
     downloadedData:
       'Hemos preparado los datos de tu perfil. Si el navegador no te pregunta dónde guardarlos, estarán en «Descargas».',
-    nextStep: 'Lo siguiente será llenar tu banco de ideas. Llega muy pronto.',
+    nextStep: 'Lo siguiente es llenar tu banco de ideas de vídeo.',
     saved: 'Cambios guardados. Es la versión {version}.',
     unsaved: 'Tienes cambios sin guardar en tu perfil. Si sales ahora, se pierden. ¿Salir igualmente?',
     promiseByCreator: 'Escrita por ti',

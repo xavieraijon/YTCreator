@@ -2,6 +2,7 @@ import { z } from 'zod'
 import { YOUTUBE_FAILURES } from '../youtube/failures.ts'
 import { aiFailureSchema } from './ai.ts'
 import { journeySchema } from './channel.ts'
+import { ideaSchema } from './ideas.ts'
 import { onboardingStateSchema } from './onboarding.ts'
 
 export const API_ERROR_CODES = [
@@ -26,6 +27,9 @@ export const FIELD_CODES = [
   'mayor_que_diario',
   'mayor_que_mensual',
   'demasiado_alto',
+  // The idea bank (004): a channel without a profile, and «Buscar otro enfoque» for an idea that is not burned.
+  'sin_perfil',
+  'sin_medida_quemada',
 ] as const
 export type FieldCode = (typeof FIELD_CODES)[number]
 
@@ -36,8 +40,10 @@ export const apiErrorSchema = z.object({
     guard: z.enum(GUARDS).optional(),
     failure: aiFailureSchema.optional(),
     youtubeFailure: z.enum(YOUTUBE_FAILURES).optional(),
-    // A stale `revision`: what the server has now (the wizard's state or the journey).
-    current: z.union([onboardingStateSchema, journeySchema]).optional(),
+    // A stale `revision`: what the server has now (the wizard's state, the journey or the idea).
+    current: z.union([onboardingStateSchema, journeySchema, ideaSchema]).optional(),
+    // The job already running, for a 409 of «Medir todas» (004).
+    jobId: z.string().optional(),
   }),
 })
 export type ApiErrorBody = z.infer<typeof apiErrorSchema>

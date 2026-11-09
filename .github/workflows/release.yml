@@ -52,7 +52,7 @@ jobs:
       # Nor the fake YouTube: its switch, its adapters and its made-up channels (P6).
       - name: No fake YouTube
         run: |
-          if grep -n -E 'YTCREATOR_FAKE_YOUTUBE|createFakeYouTube|createFakeKeyCheck|makeChannel|cocinacorta30|Cocina Corta' \
+          if grep -n -E 'YTCREATOR_FAKE_YOUTUBE|createFakeYouTube|createFakeKeyCheck|makeChannel|cocinacorta30|Cocina Corta|IDEA_SCENARIOS|Otro tema distinto|English video' \
             apps/server/dist/server.mjs; then
             echo "server.mjs still contains the fake YouTube" >&2
             exit 1

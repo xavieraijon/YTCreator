@@ -1,6 +1,6 @@
-import type { JobKind, Logger } from '@ytcreator/core'
+import type { Logger } from '@ytcreator/core'
 import type { JobEvent } from '@ytcreator/core/api'
-import type { Job, JobsRepo } from '../db/repos/jobs.ts'
+import type { Job, JobsRepo, NewJob } from '../db/repos/jobs.ts'
 
 export interface JobContext {
   readonly id: string
@@ -60,7 +60,7 @@ export function createJobsService({ jobs, logger }: { jobs: JobsRepo; logger: Lo
   return {
     get: (id: string): Job | null => jobs.get(id),
 
-    start(job: { journeyId: string | null; kind: JobKind; total?: number }, work: JobWork): Job {
+    start(job: NewJob, work: JobWork): Job {
       const started = jobs.start(job)
       void run(started.id, work)
       return started

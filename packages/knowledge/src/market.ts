@@ -124,6 +124,26 @@ export const MARKET_SCHEMAS = {
       }),
       cache: z.object({ hours: z.number().positive(), handleHours: z.number().positive() }),
       names: z.object({ titleHits: z.number().int().positive(), maxLength: z.number().int().positive() }),
+      // The traffic light of an idea (004, research.md R3–R5). No study backs it: `basis` says so on screen.
+      ideas: z.object({
+        basis: z.object({ label: z.string().min(1), assumption: z.literal(true), date: z.iso.date() }),
+        searchResults: z.number().int().positive(),
+        broadResults: z.number().int().positive(),
+        similarHigh: z.number().int().positive(),
+        similarLow: z.number().int().nonnegative(),
+        recentDays: z.number().int().positive(),
+        recentBurst: z.number().int().positive(),
+        datedSample: z.number().int().positive(),
+        deadMedianViews: z.number().int().positive(),
+        audienceViews: z.number().int().positive(),
+        audienceVideos: z.number().int().positive(),
+        keywordShare: z.number().gt(0).max(1),
+        staleDays: z.number().int().positive(),
+        opportunity: z.object({
+          englishBigVideos: z.number().int().positive(),
+          maxSimilar: z.number().int().nonnegative(),
+        }),
+      }),
     }),
   ),
   'pricing.json': envelope(

@@ -14,6 +14,7 @@ import {
   NO_READER_QUERY_WORDS,
   EMPTY_QUERY_WORDS,
   FAKE_CHANNELS,
+  ideaSearch,
   type FakeChannel,
   SEARCH_CHANNELS,
   TAKEN_HANDLE_PREFIX,
@@ -50,6 +51,8 @@ export function createFakeYouTube(options: FakeYouTubeOptions = {}): YouTubeData
       if (EMPTY_QUERY_WORDS.some((w) => text.includes(w))) return youtubeFailure('sin_datos')
       if (BLOCKED_QUERY_WORDS.some((w) => text.includes(w))) return youtubeFailure('bloqueado')
       if (NO_READER_QUERY_WORDS.some((w) => text.includes(w))) return youtubeFailure('no_disponible')
+      const idea = ideaSearch(text, now())
+      if (idea) return sourced(idea.slice(0, limit))
       // The query shifts the views so two niches do not look the same.
       const seed = [...text].reduce((sum, ch) => sum + ch.charCodeAt(0), 0)
       const hits: VideoHit[] = Array.from({ length: Math.min(limit, 40) }, (_, i) => {

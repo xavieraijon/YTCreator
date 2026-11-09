@@ -12,6 +12,10 @@ import { createAccountsRepo } from '../src/db/repos/accounts.ts'
 import { createConnectionsRepo } from '../src/db/repos/connections.ts'
 import { createChannelsRepo } from '../src/db/repos/channels.ts'
 import { createJobsRepo } from '../src/db/repos/jobs.ts'
+import { createIdeaBatchesRepo } from '../src/db/repos/idea-batches.ts'
+import { createIdeaMeasuresRepo } from '../src/db/repos/idea-measures.ts'
+import { createIdeaMeasure } from '../src/services/idea-measure.ts'
+import { createIdeasRepo } from '../src/db/repos/ideas.ts'
 import { createJourneysRepo } from '../src/db/repos/journeys.ts'
 import { createLimitsRepo } from '../src/db/repos/limits.ts'
 import { createMeasuresRepo } from '../src/db/repos/measures.ts'
@@ -168,6 +172,40 @@ export function makeTestApp({
     logger,
     now,
   })
+  const ideasRepo = createIdeasRepo(db, now)
+  const ideaMeasures = createIdeaMeasuresRepo(db, now)
+  const ideaYouTube = { ...fakeYouTube, effectiveSource: () => 'fake' as const }
+  const ideas = {
+    db,
+    channels: channel.channels,
+    profiles: channel.profiles,
+    journeys: channel.journeys,
+    aiRun,
+    promptFor,
+    ideas: ideasRepo,
+    batches: createIdeaBatchesRepo(db, now),
+    measures: ideaMeasures,
+    jobs: jobsRepo,
+    staleDays: market.thresholds.data.ideas.staleDays,
+    measure: createIdeaMeasure({
+      youtube: ideaYouTube,
+      ideas: ideasRepo,
+      measures: ideaMeasures,
+      jobs,
+      thresholds: market.thresholds.data.ideas,
+      thresholdsVersion: market.thresholds.version,
+      logger,
+      now,
+    }),
+    youtube: ideaYouTube,
+    dataApiUnits: market.thresholds.data.dataApi,
+    measureBasis: {
+      ...market.thresholds.data.ideas.basis,
+      recentDays: market.thresholds.data.ideas.recentDays,
+      audienceViews: market.thresholds.data.ideas.audienceViews,
+    },
+    now,
+  }
   const version = '0.1.0'
   const ytQuota = createYtQuotaRepo(db, now)
   const keyCheck = createFakeKeyCheck()
@@ -184,6 +222,7 @@ export function makeTestApp({
     limits,
     settings,
     channel: { ...channel, now, research, reading },
+    ideas,
     jobs,
     usage,
     now,
@@ -247,6 +286,7 @@ export function makeTestApp({
     jobs,
     jobsRepo,
     channel,
+    ideas,
     measures: channel.measures,
     channelProposals: channel.proposals,
     research,

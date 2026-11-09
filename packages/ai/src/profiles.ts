@@ -24,6 +24,10 @@ const CHANNEL_USES = {
   lectura_canal: long(6144),
   posicionamiento: long(6144),
   perfil_parte: long(2048),
+  // The idea bank (004, contracts/ai-uses.md): output cap and time per use.
+  ideas: { model: SONNET, timeoutMs: 90_000, maxOutputTokens: 3000 },
+  otro_enfoque: { model: SONNET, timeoutMs: 60_000, maxOutputTokens: 1500 },
+  busquedas_idea: { model: HAIKU, timeoutMs: 30_000, maxOutputTokens: 300 },
 } satisfies Record<Exclude<AiUse, 'comprobacion'>, AiProfile>
 
 const withEffort = (effort: AiProfile['effort'], profile: AiProfile): AiProfile => ({ ...profile, effort })
@@ -40,6 +44,9 @@ export const PROFILES: Record<ProviderId, Record<AiUse, AiProfile>> = {
     lectura_canal: withEffort('medium', CHANNEL_USES.lectura_canal),
     posicionamiento: withEffort('medium', CHANNEL_USES.posicionamiento),
     perfil_parte: withEffort('low', CHANNEL_USES.perfil_parte),
+    ideas: withEffort('medium', CHANNEL_USES.ideas),
+    otro_enfoque: withEffort('medium', CHANNEL_USES.otro_enfoque),
+    busquedas_idea: withEffort('low', CHANNEL_USES.busquedas_idea),
   },
   anthropic: { comprobacion: { model: HAIKU, timeoutMs: 30_000, maxOutputTokens: 16 }, ...CHANNEL_USES },
   // Longer than the 5 s after which the web offers «Cancelar», so `lento` can show it (e2e failures.spec.ts).

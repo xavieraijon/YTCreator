@@ -13,6 +13,7 @@ import { ApiError } from './errors.ts'
 import { guard } from './guard.ts'
 import { aiRoutes } from './routes/ai.ts'
 import { channelRoutes, type ChannelRoutesDeps } from './routes/channel.ts'
+import { ideaRoutes, type IdeaRoutesDeps } from './routes/ideas.ts'
 import { jobsRoutes } from './routes/jobs.ts'
 import { knowledgeRoutes, type KnowledgeRoutesDeps } from './routes/knowledge.ts'
 import { usageRoutes } from './routes/usage.ts'
@@ -39,6 +40,7 @@ export interface AppDeps {
   limits?: LimitsRepo
   settings?: SettingsRepo
   channel?: ChannelRoutesDeps
+  ideas?: IdeaRoutesDeps
   jobs?: JobsService
   youtube?: YouTubeRoutesDeps
   youtubeSettings?: YouTubeSettingsDeps
@@ -116,6 +118,7 @@ export function createApp(deps: AppDeps) {
   if (deps.settings) app.route('/api/updates', updatesRoutes({ settings: deps.settings, version: deps.version }))
 
   if (deps.channel) app.route('/api', channelRoutes(deps.channel))
+  if (deps.ideas) app.route('/api', ideaRoutes(deps.ideas))
   if (deps.youtube) app.route('/api', youtubeRoutes(deps.youtube))
   if (deps.jobs) app.route('/api/jobs', jobsRoutes(deps.jobs))
 

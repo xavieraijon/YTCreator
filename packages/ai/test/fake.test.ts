@@ -1,15 +1,19 @@
 import {
   CHANNEL_OUTPUTS,
+  anglesOutputFor,
   checkClaims,
+  ideasOutputFor,
   Secret,
   type AiRequest,
   type ChannelOutput,
   type ChannelUse,
+  type IdeasOutput,
   type ProviderDeps,
 } from '@ytcreator/core'
 import { describe, expect, it } from 'vitest'
 import { createFakeLogin, FAKE_LOGIN_CODE } from '../src/fake/fake-login.ts'
 import { createFakeProvider } from '../src/fake/fake-provider.ts'
+import { fakeChannelOutput } from '../src/fake/outputs.ts'
 import { parseScenario } from '../src/fake/scenarios.ts'
 
 const NOW = new Date('2026-10-28T10:00:00.000Z')
@@ -165,6 +169,33 @@ describe('fake provider: channel uses', () => {
     const result = await createFakeProvider(parseScenario('limite_de_gasto'), KEY, deps).generate(request('nichos'))
     expect(result.ok).toBe(true)
     if (result.ok) expect(result.usage.inputTokens).toBeGreaterThanOrEqual(1_000_000)
+  })
+
+  it('pilar_invalido names a pillar out of the profile first, and a valid one when asked again', async () => {
+    const profile = { pillars: ['Cenas rápidas', 'Táper'] }
+    const strict = ideasOutputFor(profile.pillars)
+    const result = await createFakeProvider(parseScenario('pilar_invalido'), KEY, deps).generate({
+      use: 'ideas',
+      prompt: { id: 'ideas', version: 1, text: 'Prueba.' },
+      input: { profile },
+      schema: strict as unknown as AiRequest<IdeasOutput>['schema'],
+    })
+    expect(result.ok).toBe(true)
+    expect(strict.safeParse(fakeChannelOutput('ideas', { profile }, 'pilar_invalido', 1)).success).toBe(false)
+    const angles = anglesOutputFor(profile.pillars)
+    expect(angles.safeParse(fakeChannelOutput('otro_enfoque', { profile }, 'pilar_invalido', 1)).success).toBe(false)
+    expect(angles.safeParse(fakeChannelOutput('otro_enfoque', { profile }, 'pilar_invalido', 2)).success).toBe(true)
+  })
+
+  it('ideas_repetidas repeats two ideas of the bank', () => {
+    const avoid = [{ title: 'Mi idea uno' }, { title: 'Mi idea dos' }]
+    const output = fakeChannelOutput('ideas', { avoid }, 'ideas_repetidas') as IdeasOutput
+    expect(output.ideas.map((idea) => idea.title).slice(0, 2)).toEqual(['Mi idea uno', 'Mi idea dos'])
+  })
+
+  it('gives only shorts to a channel with no long videos', () => {
+    const output = fakeChannelOutput('ideas', { profile: { rhythm: { longPerWeek: 0 } } }, 'normal') as IdeasOutput
+    expect(new Set(output.ideas.map((idea) => idea.format))).toEqual(new Set(['short']))
   })
 
   it('keeps answering listo for comprobacion', async () => {

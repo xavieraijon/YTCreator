@@ -6,6 +6,17 @@ import {
   channelSchema,
   createChannelResponseSchema,
   estimateSchema,
+  batchDecideResultSchema,
+  ideaBankSchema,
+  ideaOrderResultSchema,
+  ideaQueueResultSchema,
+  ideaBatchOutcomeSchema,
+  ideaQueriesOutcomeSchema,
+  ideaSchema,
+  measureEstimateSchema,
+  newIdeaResultSchema,
+  type IdeaPatchBody,
+  type NewIdeaBody,
   type JobEvent,
   jobStartedSchema,
   jobEventSchema,
@@ -25,7 +36,7 @@ import {
   youtubeSettingsSchema,
   type YouTubeSourceSetting,
 } from '@ytcreator/core/api'
-import type { ChannelProfile, ProfilePart } from '@ytcreator/core'
+import type { ChannelProfile, IdeaUse, ProfilePart } from '@ytcreator/core'
 
 // Any Zod schema from @ytcreator/core/api; structural so the web needs no direct zod import.
 export interface Parser<T> {
@@ -112,7 +123,32 @@ export function createApiClient({ fetch = globalThis.fetch.bind(globalThis), bas
     }
   }
 
+  // A download: the file and the name the server gives it. An error answers like any other call, so the page can
+  // say it instead of leaving the app for the error's JSON.
+  async function file(path: string): Promise<{ blob: Blob; name: string }> {
+    let response: Response
+    try {
+      response = await fetch(`${baseUrl}${path}`, { headers: { accept: '*/*' } })
+    } catch {
+      throw new ApiClientError('red', null, null)
+    }
+    if (!response.ok) {
+      const parsed = apiErrorSchema.safeParse(await response.json().catch(() => null))
+      throw parsed.success
+        ? new ApiClientError('api', response.status, parsed.data.error)
+        : new ApiClientError('respuesta', response.status, null)
+    }
+    const name = /filename="([^"]+)"/.exec(response.headers.get('Content-Disposition') ?? '')?.[1]
+    if (!name) throw new ApiClientError('respuesta', response.status, null)
+    try {
+      return { blob: await response.blob(), name }
+    } catch {
+      throw new ApiClientError('red', null, null)
+    }
+  }
+
   return {
+    file,
     get: <T>(path: string, schema: Parser<T>, options?: RequestOptions) =>
       request('GET', path, undefined, schema, options),
     post: <T>(path: string, body: unknown, schema: Parser<T>, options?: RequestOptions) =>
@@ -205,6 +241,42 @@ export const profileApi = {
     ),
   approveRegeneration: (channelId: string, body: { regenerationId: string; baseVersion: number }) =>
     apiClient.post(`/api/channels/${encodeURIComponent(channelId)}/profile/regenerated`, body, profileVersionSchema),
+}
+
+// The idea bank of a channel (specs/004-idea-bank/contracts/http-api.md).
+const channelPath = (channelId: string) => `/api/channels/${encodeURIComponent(channelId)}`
+export const ideasApi = {
+  list: (channelId: string, options?: RequestOptions) =>
+    apiClient.get(`${channelPath(channelId)}/ideas`, ideaBankSchema, options),
+  archived: (channelId: string) => apiClient.get(`${channelPath(channelId)}/ideas/archived`, ideaSchema.array()),
+  create: (channelId: string, body: NewIdeaBody) =>
+    apiClient.post(`${channelPath(channelId)}/ideas`, body, newIdeaResultSchema),
+  change: (ideaId: string, body: IdeaPatchBody) =>
+    apiClient.patch(`/api/ideas/${encodeURIComponent(ideaId)}`, body, ideaSchema),
+  estimate: (channelId: string, use: IdeaUse, ideaId?: string) =>
+    apiClient.post(`${channelPath(channelId)}/ideas/estimate`, { use, ...(ideaId ? { ideaId } : {}) }, estimateSchema),
+  propose: (channelId: string, body: { estimateId: string; instructions?: string }) =>
+    apiClient.post(`${channelPath(channelId)}/idea-batches`, body, ideaBatchOutcomeSchema),
+  decide: (batchId: string, body: { keep: number[]; discard: number[] }) =>
+    apiClient.post(`/api/idea-batches/${encodeURIComponent(batchId)}/decide`, body, batchDecideResultSchema),
+  measureEstimate: (channelId: string, ideaIds: string[]) =>
+    apiClient.post(`${channelPath(channelId)}/idea-measures/estimate`, { ideaIds }, measureEstimateSchema),
+  measure: (channelId: string, ideaIds: string[], fresh = false) =>
+    apiClient.post(
+      `${channelPath(channelId)}/idea-measures`,
+      { ideaIds, ...(fresh ? { fresh: true } : {}) },
+      jobStartedSchema,
+    ),
+  angles: (ideaId: string, body: { estimateId: string; instructions?: string }) =>
+    apiClient.post(`/api/ideas/${encodeURIComponent(ideaId)}/angles`, body, ideaBatchOutcomeSchema),
+  queries: (ideaId: string, body: { estimateId: string; revision: number }) =>
+    apiClient.post(`/api/ideas/${encodeURIComponent(ideaId)}/queries`, body, ideaQueriesOutcomeSchema),
+  order: (channelId: string, ids: string[]) =>
+    apiClient.put(`${channelPath(channelId)}/ideas/order`, { ids }, ideaOrderResultSchema),
+  queue: (channelId: string, ids: string[]) =>
+    apiClient.put(`${channelPath(channelId)}/ideas/queue`, { ids }, ideaQueueResultSchema),
+  download: (channelId: string, format: 'md' | 'json') =>
+    apiClient.file(`${channelPath(channelId)}/ideas/export?format=${format}`),
 }
 
 export const usageApi = {

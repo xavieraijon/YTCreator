@@ -38,6 +38,7 @@ import { errorText } from '../../../shell/errorText.ts'
 import { useJob } from '../../../shell/useJob.ts'
 import { channelEs } from '../../../strings/channel.es.ts'
 import { es } from '../../../strings/es.ts'
+import { ideasEs } from '../../../strings/ideas.es.ts'
 import {
   youtubeFailureActionsEs,
   youtubeFailuresEs,
@@ -285,7 +286,12 @@ export function ProfileView({
 
       <ExportButtons channelId={channel.id} onDownloaded={onDownloaded} />
 
-      <p className={styles.why}>{text.nextStep}</p>
+      <div className={styles.option}>
+        <p className={styles.why}>{text.nextStep}</p>
+        <Button variant="primary" onClick={() => navigate({ page: 'ideaBank' })}>
+          {ideasEs.bank.open}
+        </Button>
+      </div>
     </>
   )
 }
