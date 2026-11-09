@@ -6,6 +6,9 @@ import {
   defaultTargetSeconds,
   detectClaims,
   draftOutputFor,
+  compareItems,
+  orderChanged,
+  comparableItems,
   shortDraftOutputFor,
   type ShortDraftOutput,
   durationSeconds,
@@ -536,11 +539,18 @@ export function createScriptService(deps: ScriptServiceDeps) {
       schema: undefined,
       keep: (value: unknown, usageId: string | null, instructions: string | null) => {
         const { blocks } = value as { blocks: Omit<OutlineContent['blocks'][number], 'id'>[] }
+        // The same place keeps its id, so another proposal can be compared block by block.
+        const previous = versions.latest(script.id, 'escaleta')
         addVersion(
           found,
           'escaleta',
           'ia',
-          { blocks: blocks.map((block) => ({ ...block, id: randomUUID() })) },
+          {
+            blocks: blocks.map((block, index) => ({
+              ...block,
+              id: previous?.content.blocks[index]?.id ?? randomUUID(),
+            })),
+          },
           {
             factsVersion: versions.latestNumber(script.id, 'hechos'),
             instructions,
@@ -741,7 +751,53 @@ export function createScriptService(deps: ScriptServiceDeps) {
     return voiceOf(channel.id)
   }
 
+  const summaryOf = ({ version, origin, createdAt, restoredFrom }: ScriptVersion) => ({
+    version,
+    origin,
+    createdAt,
+    restoredFrom,
+  })
+
+  const listVersions = (id: string, kind: ScriptKind) => versions.summaries(find(id).script.id, kind)
+
+  const readVersion = (id: string, kind: ScriptKind, number: number) => {
+    const { script } = find(id)
+    const older = versions.get(script.id, kind, number)
+    const latest = versions.latest(script.id, kind)
+    if (!older || !latest) throw new ApiError({ code: 'no_encontrado' })
+    const before = comparableItems(kind, older.content)
+    const after = comparableItems(kind, latest.content)
+    return {
+      version: summaryOf(older),
+      changes: compareItems(before, after),
+      orderChanged: orderChanged(before, after),
+    }
+  }
+
+  // A copy as the newest: nothing is lost, and what it was written with goes with it (R1, data-model.md «Avisos»).
+  const restoreVersion = (id: string, kind: ScriptKind, number: number, baseVersion: number) => {
+    const found = find(id)
+    assertIdle(found.script)
+    const latest = versions.latest(found.script.id, kind)
+    assertBase(latest?.version ?? null, baseVersion)
+    const older = versions.get(found.script.id, kind, number)
+    if (!older) throw new ApiError({ code: 'no_encontrado' })
+    if (older.version !== latest?.version) {
+      addVersion(found, kind, 'recuperada', older.content, {
+        factsVersion: older.factsVersion,
+        outlineVersion: older.outlineVersion,
+        instructions: older.instructions,
+        restoredFrom: older.version,
+        writtenWith: { ideaRevision: older.ideaRevision, profileVersion: older.profileVersion },
+      })
+    }
+    return view(scripts.get(id)!, found.idea, found.profileVersion)
+  }
+
   return {
+    listVersions,
+    readVersion,
+    restoreVersion,
     approveDraft,
     exportOne,
     exportAll,

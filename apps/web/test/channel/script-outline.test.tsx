@@ -53,6 +53,7 @@ const script = (fields: Partial<ScriptView> = {}): ScriptView =>
 const outline = (view: ScriptView, state: ScriptAi) =>
   renderToStaticMarkup(
     <OutlineStep
+      onEditing={() => undefined}
       script={view}
       ai={state}
       onChange={() => undefined}

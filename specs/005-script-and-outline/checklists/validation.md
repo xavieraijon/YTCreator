@@ -321,3 +321,65 @@ VI (accesibilidad), XI (este informe).
 ### 9. Cómo revertir
 
 `git revert` del commit de esta historia. No hay migraciones. Queda: US5 en adelante.
+
+## US5 (T061–T067), Puerta A del 2026-11-09
+
+### 1. Resumen
+
+Historial en todos los pasos: cada versión con fecha y origen, comparación con la actual por bloques y «Volver a esta
+versión», que añade una versión y no borra ninguna. En un guion aprobado avisa antes. No gasta IA.
+
+### 2. Requisitos
+
+| Requisito | Estado | Evidencia | Fecha |
+|---|---|---|---|
+| AS1 todas las versiones, con fecha y origen | Cumplido | `scripts-versions.test.ts`, `scripts.spec.ts` | 2026-11-09 |
+| AS2 / FR-020 qué bloques cambian | Cumplido | `compare.test.ts`, `scripts-versions.test.ts`, `scripts.spec.ts` | 2026-11-09 |
+| AS3 / SC-007 una versión más y ninguna menos | Cumplido | `scripts-versions.test.ts` (versión 3 intacta), `scripts.spec.ts` (también tras recargar) | 2026-11-09 |
+| AS4 / FR-017 aprobado vuelve a borrador, avisando | Cumplido | `scripts-versions.test.ts`, `scripts.spec.ts` (diálogo) | 2026-11-09 |
+| FR-013 sin gasto | Cumplido | `scripts-versions.test.ts`, incluye recuperar | 2026-11-09 |
+| AS4 de US4 volver a una versión en un Short | Cumplido | `scripts.spec.ts` (Short aprobado) | 2026-11-09 |
+
+### 3. Cómo se comprobó
+
+Tras las correcciones: `lint` 0, `typecheck` 0, `test` en verde (código 0), `test:e2e` web 44 de 44. Después solo se ajustó
+un test de `compare` y un valor nulo de la fuente, con `test` y `typecheck` de nuevo en verde.
+
+### 4. Controles
+
+- Pasados: lint, typecheck, test, test:e2e web, glosario, `secrets-leak`, axe claro y oscuro a 375 y 1280 px con reduced-motion
+  (historial, comparación y diálogo), foco en comparar, cerrar y recuperar.
+- Tipos de fallo de IA: no aplica.
+- No ejecutados: `test:installer` (no se toca); IA real (P1). Las correcciones han pasado los controles, pero no una segunda
+  vuelta de revisores.
+
+### 5. Hallazgos
+
+Corregidos (grave): volver a una versión con un bloque de escaleta abierto perdía lo escrito y bloqueaba el paso; ahora la
+escaleta avisa como el guion, y los pasos también quedan frenados. Corregidos (medios): la comparación ocultaba el orden, «Cambiado»
+sin ver qué cambió, marcas sin pintar ni contar, detalle distinto al contrato, foco al comparar, test que decía probar el trabajo
+en curso sin hacerlo. Corregidos (menores): recuperar sin prueba en FR-013 y en la escaleta, `comparableItems` de todos los tipos,
+tipo duplicado a mano, cerrar la comparación, dos clics seguidos, nota de recuperado que se quedaba, `formatDate` duplicado,
+separador fuera del catálogo, ids nuevos en cada escaleta, foco al aprobar dos veces.
+
+Descartados: ninguno.
+
+Abiertos (menores): si otra pestaña aprobó, recuperar no avisa antes (el aviso depende de lo que sabe esta pestaña); una versión
+antigua que ya no valide da un error genérico al compararla, aunque la lista la tolera; recuperar la escaleta con la que se escribió
+el guion mantiene el aviso de escaleta cambiada, como dice `data-model.md`.
+
+### 6. Desviaciones
+
+Entradas 30 y 31 de `decisions.md`; `contracts/http-api.md` alineado.
+
+### 7. Decisiones
+
+Agente: 30 y 31 (medio). Pendientes del creador: P1 y P2; no bloquean esta historia.
+
+### 8. Constitución
+
+II (se puede volver a cualquier versión; marcas también en el historial), III (sin gasto), VI (accesibilidad, foco), XI (este informe).
+
+### 9. Cómo revertir
+
+`git revert` del commit de esta historia. No hay migraciones. Queda: US6 en adelante.

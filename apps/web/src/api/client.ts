@@ -1,4 +1,4 @@
-import type { ChannelOrigin, ChannelUse, JourneyStep, ProposalKind } from '@ytcreator/core'
+import type { ScriptKind, ChannelOrigin, ChannelUse, JourneyStep, ProposalKind } from '@ytcreator/core'
 import {
   apiErrorSchema,
   type ApiErrorBody,
@@ -19,6 +19,9 @@ import {
   scriptSettingsViewSchema,
   scriptViewSchema,
   scriptReviewViewSchema,
+  scriptVersionDetailSchema,
+  scriptVersionSummarySchema,
+  type RestoreBody,
   type ApproveDraftBody,
   type ClaimActionBody,
   type DraftSaveBody,
@@ -315,6 +318,12 @@ export const scriptsApi = {
   download: (id: string, format: 'md' | 'json') => apiClient.file(`${scriptPath(id)}/export?format=${format}`),
   downloadAll: (channelId: string, format: 'md' | 'json') =>
     apiClient.file(`${channelPath(channelId)}/scripts/export?format=${format}`),
+  versions: (id: string, kind: ScriptKind, options?: RequestOptions) =>
+    apiClient.get(`${scriptPath(id)}/versions?kind=${kind}`, scriptVersionSummarySchema.array(), options),
+  version: (id: string, kind: ScriptKind, version: number) =>
+    apiClient.get(`${scriptPath(id)}/versions/${kind}/${version}`, scriptVersionDetailSchema),
+  restore: (id: string, kind: ScriptKind, version: number, body: RestoreBody) =>
+    apiClient.post(`${scriptPath(id)}/versions/${kind}/${version}/restore`, body, scriptViewSchema),
   saveDraft: (id: string, body: DraftSaveBody) => apiClient.put(`${scriptPath(id)}/draft`, body, scriptViewSchema),
   actOnClaim: (id: string, claimId: string, body: ClaimActionBody) =>
     apiClient.post(`${scriptPath(id)}/claims/${encodeURIComponent(claimId)}`, body, scriptViewSchema),

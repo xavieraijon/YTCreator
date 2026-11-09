@@ -36,8 +36,8 @@ R18), `sin_aprobar` (409, falta aprobar el paso anterior), `sin_internet` (409, 
 | `PUT /scripts/:id/draft` | `{baseVersion, content}` | `ScriptView` con la versión nueva |
 | `POST /scripts/:id/claims/:claimId` | `{baseVersion, action, text?}` | `confirmar` y `no_es_dato` dan una versión `marcas` (R10); `corregir`, `quitar_del_guion` y `aceptar_propuesta`, una versión `edicion` |
 | `GET /scripts/:id/versions?kind=` | | lista: versión, origen, fecha |
-| `GET /scripts/:id/versions/:kind/:version` | | versión completa y bloques cambiados frente a la actual |
-| `POST /scripts/:id/versions/:kind/:version/restore` | `{baseVersion}` | versión nueva de origen `recuperada` |
+| `GET /scripts/:id/versions/:kind/:version` | | resumen de la versión, `orderChanged` y todos sus bloques comparados con los actuales (decisión 30) |
+| `POST /scripts/:id/versions/:kind/:version/restore` | `{baseVersion}` | `ScriptView`, con una versión nueva de origen `recuperada`; si ya es la actual, ninguna (decisión 30) |
 | `POST /scripts/:id/outline/approve` | `{version}` | `ScriptView` |
 | `POST /scripts/:id/draft/approve` | `{version, acknowledgedPending}` | `ScriptView`; 409 si `acknowledgedPending` no coincide |
 

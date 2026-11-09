@@ -11,6 +11,7 @@ import { scriptEs } from '../../../strings/script.es.ts'
 import styles from '../channel.module.css'
 import { DraftStep } from './DraftStep.tsx'
 import { FactsStep } from './FactsStep.tsx'
+import { History } from './History.tsx'
 import { OutlineStep } from './OutlineStep.tsx'
 import { ReviewStep } from './ReviewStep.tsx'
 import { ScriptWarnings } from './ScriptWarnings.tsx'
@@ -19,6 +20,8 @@ import { useScriptAi } from './useScriptAi.ts'
 const text = scriptEs.screen
 
 export type ScriptStep = 'hechos' | 'escaleta' | 'guion' | 'revisar'
+
+const KIND_OF = { hechos: 'hechos', escaleta: 'escaleta', guion: 'guion', revisar: 'guion' } as const
 
 // A Short goes straight from the facts to the script (contracts/ui-screens.md).
 export const stepsOf = (script: ScriptView): readonly ScriptStep[] =>
@@ -61,7 +64,7 @@ export function ScriptScreen({ id }: { readonly id: string }) {
   const [error, setError] = useState<unknown>(null)
   const [loadFailed, setLoadFailed] = useState(false)
   const [targetBlock, setTargetBlock] = useState<string | null>(null)
-  const [editingDraft, setEditingDraft] = useState(false)
+  const [editingBlock, setEditingBlock] = useState(false)
 
   const load = useCallback(
     async (signal?: AbortSignal) => {
@@ -140,7 +143,7 @@ export function ScriptScreen({ id }: { readonly id: string }) {
               variant="ghost"
               size="sm"
               aria-current={one === step ? 'step' : undefined}
-              disabled={editingDraft && one !== step}
+              disabled={editingBlock && one !== step}
               onClick={() => setStep(one)}
             >
               {text.steps[one]}
@@ -176,6 +179,7 @@ export function ScriptScreen({ id }: { readonly id: string }) {
           onError={setError}
           onToFacts={() => setStep('hechos')}
           onToDraft={() => setStep('guion')}
+          onEditing={setEditingBlock}
         />
       )}
       {step === 'guion' && (
@@ -188,7 +192,7 @@ export function ScriptScreen({ id }: { readonly id: string }) {
           onToReview={() => setStep('revisar')}
           targetBlock={targetBlock}
           onTargetReached={() => setTargetBlock(null)}
-          onEditing={setEditingDraft}
+          onEditing={setEditingBlock}
         />
       )}
       {step === 'revisar' && (
@@ -204,6 +208,14 @@ export function ScriptScreen({ id }: { readonly id: string }) {
           onToDraft={() => setStep('guion')}
         />
       )}
+      <History
+        key={KIND_OF[step]}
+        script={script}
+        kind={KIND_OF[step]}
+        busy={editingBlock || ai.working !== null}
+        onChange={onChange}
+        onError={setError}
+      />
       <div className={styles.actions}>
         <Button variant="ghost" onClick={() => navigate({ page: 'scriptList' })}>
           {text.backToList}

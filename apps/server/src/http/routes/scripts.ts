@@ -6,6 +6,9 @@ import {
   draftSaveBodySchema,
   exportQuerySchema,
   outlineSaveBodySchema,
+  restoreBodySchema,
+  scriptVersionParamsSchema,
+  scriptVersionsQuerySchema,
   scriptEstimateBodySchema,
   scriptGenerateBodySchema,
   scriptPatchBodySchema,
@@ -66,6 +69,29 @@ export function scriptRoutes({ service, scripts }: ScriptRoutesDeps) {
   routes.get('/scripts/:id/review', (c) => {
     service.find(c.req.param('id'))
     return c.json({ rules: service.reviewRules() })
+  })
+
+  const versionParams = (c: Context) => {
+    const params = scriptVersionParamsSchema.safeParse({ kind: c.req.param('kind'), version: c.req.param('version') })
+    if (!params.success) throw new ApiError({ code: 'validacion', fields: { version: 'no_valido' } })
+    return params.data
+  }
+
+  routes.get('/scripts/:id/versions', (c) => {
+    const query = scriptVersionsQuerySchema.safeParse({ kind: c.req.query('kind') })
+    if (!query.success) throw new ApiError({ code: 'validacion', fields: { kind: 'no_valido' } })
+    return c.json(service.listVersions(c.req.param('id'), query.data.kind))
+  })
+
+  routes.get('/scripts/:id/versions/:kind/:version', (c) => {
+    const { kind, version } = versionParams(c)
+    return c.json(service.readVersion(c.req.param('id'), kind, version))
+  })
+
+  routes.post('/scripts/:id/versions/:kind/:version/restore', async (c) => {
+    const { kind, version } = versionParams(c)
+    const { baseVersion } = await parseBody(c, restoreBodySchema)
+    return c.json(service.restoreVersion(c.req.param('id'), kind, version, baseVersion))
   })
 
   routes.post('/scripts/:id/draft/approve', async (c) => {

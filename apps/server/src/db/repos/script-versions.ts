@@ -1,6 +1,12 @@
 import { randomUUID } from 'node:crypto'
 import type { DatabaseSync } from 'node:sqlite'
-import { CONTENT_SCHEMAS, type ContentOf, type DraftContent, type ScriptKind, type VersionOrigin } from '@ytcreator/core'
+import {
+  CONTENT_SCHEMAS,
+  type ContentOf,
+  type DraftContent,
+  type ScriptKind,
+  type VersionOrigin,
+} from '@ytcreator/core'
 import { inTransaction } from '../transaction.ts'
 
 // Every version of the facts, the outline and the draft of a script: a whole picture each (research.md R1).
@@ -58,6 +64,13 @@ interface Row {
   created_at: string
 }
 
+interface SummaryRow {
+  version: number
+  origin: VersionOrigin
+  created_at: string
+  restored_from: number | null
+}
+
 const orNull = (value: number | null) => (value === null ? null : Number(value))
 
 // The content is validated on the way out: a row that no longer fits its schema must not reach the screen.
@@ -107,10 +120,11 @@ export function createScriptVersionsRepo(db: DatabaseSync, now: () => Date = () 
   const selectLatest = db.prepare(
     'SELECT * FROM script_version WHERE script_id = ? AND kind = ? ORDER BY version DESC LIMIT 1',
   )
-  const selectNumber = db.prepare(
-    'SELECT MAX(version) AS version FROM script_version WHERE script_id = ? AND kind = ?',
-  )
+  const selectNumber = db.prepare('SELECT MAX(version) AS version FROM script_version WHERE script_id = ? AND kind = ?')
   const selectOne = db.prepare('SELECT * FROM script_version WHERE script_id = ? AND kind = ? AND version = ?')
+  const selectSummaries = db.prepare(
+    'SELECT version, origin, created_at, restored_from FROM script_version WHERE script_id = ? AND kind = ? ORDER BY version DESC',
+  )
   const selectAll = db.prepare('SELECT * FROM script_version WHERE script_id = ? AND kind = ? ORDER BY version DESC')
   const insert = db.prepare(
     `INSERT INTO script_version (id, script_id, kind, version, origin, content, facts_version, outline_version,
@@ -139,6 +153,15 @@ export function createScriptVersionsRepo(db: DatabaseSync, now: () => Date = () 
       const row = selectOne.get(scriptId, kind, version) as Row | undefined
       return row ? fromRow<K>(row) : null
     },
+
+    // Without the content: an old row that no longer validates must not stop the list of the others.
+    summaries: (scriptId: string, kind: ScriptKind) =>
+      (selectSummaries.all(scriptId, kind) as unknown as SummaryRow[]).map((row) => ({
+        version: Number(row.version),
+        origin: row.origin,
+        createdAt: row.created_at,
+        restoredFrom: orNull(row.restored_from),
+      })),
 
     // The newest first.
     list: <K extends ScriptKind>(scriptId: string, kind: K): ScriptVersion<K>[] =>

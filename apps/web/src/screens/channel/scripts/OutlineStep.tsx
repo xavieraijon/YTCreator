@@ -120,9 +120,11 @@ export interface OutlineStepProps {
   readonly onError: (cause: unknown) => void
   readonly onToFacts: () => void
   readonly onToDraft: () => void
+  /** A block is open: replacing the outline or leaving the step would lose what is being written. */
+  readonly onEditing: (editing: boolean) => void
 }
 
-export function OutlineStep({ script, ai, onChange, onError, onToFacts, onToDraft }: OutlineStepProps) {
+export function OutlineStep({ script, ai, onChange, onError, onToFacts, onToDraft, onEditing }: OutlineStepProps) {
   const [editing, setEditing] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [instructions, setInstructions] = useState('')
@@ -133,6 +135,17 @@ export function OutlineStep({ script, ai, onChange, onError, onToFacts, onToDraf
   const { estimate } = price
   const isApproved = script.outline !== null && script.outlineApprovedVersion === script.outline.version
   const writePrice = useEstimate(script, 'guion', isApproved && script.format === 'largo' && !script.draft)
+
+  const isEditing = editing !== null
+  useEffect(() => {
+    onEditing(isEditing)
+    return () => onEditing(false)
+  }, [isEditing, onEditing])
+
+  // Another tab can take the open block away: there would be nothing left to finish.
+  useEffect(() => {
+    if (editing && outline && !outline.content.blocks.some((block) => block.id === editing)) setEditing(null)
+  }, [editing, outline])
 
   useEffect(() => {
     if (!refocus.current) return

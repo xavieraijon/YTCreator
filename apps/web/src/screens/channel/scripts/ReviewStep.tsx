@@ -111,6 +111,7 @@ export function ReviewStep({ script, onChange, onError, onToBlock, onToDraft, bu
   const approve = async () => {
     setSaving(true)
     setAsking(false)
+    setJustApproved(false)
     try {
       onChange(await scriptsApi.approveDraft(id, { version: draft.version, acknowledgedPending: pending }))
       setChangedElsewhere(false)

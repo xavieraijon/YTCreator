@@ -164,13 +164,13 @@ separado.
 
 **Independent Test**: Un guion con cuatro versiones grabadas: abrir la segunda, ver qué cambia, volver a ella y comprobar que la cuarta sigue.
 
-- [ ] T061 [P] [US5] Test en `packages/core/test/script/compare.test.ts`: bloques `igual`, `cambiado`, `nuevo` y `quitado`, emparejados por `id`
-- [ ] T062 [US5] Implementar `packages/core/src/script/compare.ts` para que pase T061
-- [ ] T063 [P] [US5] Test de rutas en `apps/server/test/http/scripts-versions.test.ts`: listar de la más nueva a la más antigua, leer con la comparación, recuperar crea versión `recuperada` con `restored_from` y una más sin perder ninguna (SC-007), y recuperar en un guion aprobado lo vuelve a borrador
-- [ ] T064 [US5] Implementar las rutas de T063 en `apps/server/src/http/routes/scripts.ts`
-- [ ] T065 [US5] Implementar `apps/web/src/screens/channel/scripts/History.tsx` con sus textos, incluidos los siete orígenes y el aviso antes de recuperar en un guion aprobado (FR-017), y usarlo en todos los pasos
-- [ ] T066 [US5] e2e en `apps/web/e2e/scripts.spec.ts` (US5), con axe en claro y oscuro a 375 y 1280 px
-- [ ] T067 [A] [US5] Puerta A de US5: ejecutar `/puerta-a 005 US5`
+- [X] T061 [P] [US5] Test en `packages/core/test/script/compare.test.ts`: bloques `igual`, `cambiado`, `nuevo` y `quitado`, emparejados por `id`
+- [X] T062 [US5] Implementar `packages/core/src/script/compare.ts` para que pase T061
+- [X] T063 [P] [US5] Test de rutas en `apps/server/test/http/scripts-versions.test.ts`: listar de la más nueva a la más antigua, leer con la comparación, recuperar crea versión `recuperada` con `restored_from` y una más sin perder ninguna (SC-007), y recuperar en un guion aprobado lo vuelve a borrador
+- [X] T064 [US5] Implementar las rutas de T063 en `apps/server/src/http/routes/scripts.ts`
+- [X] T065 [US5] Implementar `apps/web/src/screens/channel/scripts/History.tsx` con sus textos, incluidos los siete orígenes y el aviso antes de recuperar en un guion aprobado (FR-017), y usarlo en todos los pasos
+- [X] T066 [US5] e2e en `apps/web/e2e/scripts.spec.ts` (US5), con axe en claro y oscuro a 375 y 1280 px
+- [X] T067 [A] [US5] Puerta A de US5: ejecutar `/puerta-a 005 US5`
 
 ---
 

@@ -4,12 +4,14 @@ import {
   draftContentSchema,
   factsContentSchema,
   outlineContentSchema,
+  SCRIPT_KINDS,
   SCRIPT_LIMITS,
   scriptSettingsSchema,
   VERSION_ORIGINS,
   VOICE_ADDRESSES,
   VOICE_REGISTERS,
 } from '../script/model.ts'
+import { itemComparisonSchema } from '../script/compare.ts'
 import { SCRIPT_USES } from '../script/outputs.ts'
 import { SCRIPT_STATUSES, SCRIPT_WARNINGS } from '../script/status.ts'
 
@@ -149,6 +151,32 @@ export const scriptReviewViewSchema = z.object({
 })
 
 export type ScriptReviewView = z.infer<typeof scriptReviewViewSchema>
+
+export const scriptVersionSummarySchema = z.object({
+  version: z.number().int().positive(),
+  origin: z.enum(VERSION_ORIGINS),
+  createdAt: z.string(),
+  restoredFrom: z.number().int().positive().nullable(),
+})
+export type ScriptVersionSummary = z.infer<typeof scriptVersionSummarySchema>
+
+export const scriptVersionDetailSchema = z.object({
+  version: scriptVersionSummarySchema,
+  changes: z.array(itemComparisonSchema),
+  orderChanged: z.boolean(),
+})
+export type ScriptVersionDetail = z.infer<typeof scriptVersionDetailSchema>
+
+export const scriptVersionsQuerySchema = z.object({ kind: z.enum(SCRIPT_KINDS) })
+export const scriptVersionParamsSchema = z.object({
+  kind: z.enum(SCRIPT_KINDS),
+  version: z
+    .string()
+    .regex(/^[1-9]\d{0,8}$/)
+    .transform(Number),
+})
+export const restoreBodySchema = z.object({ baseVersion })
+export type RestoreBody = z.infer<typeof restoreBodySchema>
 
 export const approveOutlineBodySchema = z.object({ version: z.number().int().positive() })
 
