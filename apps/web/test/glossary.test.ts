@@ -5,6 +5,7 @@ import { channelEs } from '../src/strings/channel.es.ts'
 import { es } from '../src/strings/es.ts'
 import { failuresEs } from '../src/strings/failures.es.ts'
 import { ideasEs } from '../src/strings/ideas.es.ts'
+import { scriptEs } from '../src/strings/script.es.ts'
 import { youtubeFailureActionsEs, youtubeFailuresEs } from '../src/strings/youtube-failures.es.ts'
 
 // The creator has to know which service each option uses (contracts/ui-screens.md), so the web may name the
@@ -31,7 +32,10 @@ function installerStrings(): Record<string, string> {
 describe('glossary of the web (FR-032, principle I)', () => {
   it('no text of apps/web/src/strings uses a forbidden term', () => {
     expect(
-      findForbiddenTerms({ es, failuresEs, channelEs, ideasEs, youtubeFailuresEs, youtubeFailureActionsEs }, webTerms),
+      findForbiddenTerms(
+        { es, failuresEs, channelEs, ideasEs, scriptEs, youtubeFailuresEs, youtubeFailureActionsEs },
+        webTerms,
+      ),
     ).toEqual([])
   })
 
@@ -58,13 +62,15 @@ describe('glossary of the web (FR-032, principle I)', () => {
   )
 
   it('no source of the knowledge files uses one either: they are shown under the figures', () => {
-    const dir = new URL('../../../packages/knowledge/market/', import.meta.url)
     const labels: Record<string, string> = {}
-    for (const file of readdirSync(dir).filter((name) => name.endsWith('.json'))) {
-      const { source } = JSON.parse(readFileSync(new URL(file, dir), 'utf8')) as { source: { label: string }[] }
-      source.forEach(({ label }, index) => {
-        labels[`${file}.${index}`] = label
-      })
+    for (const folder of ['market', 'script']) {
+      const dir = new URL(`../../../packages/knowledge/${folder}/`, import.meta.url)
+      for (const file of readdirSync(dir).filter((name) => name.endsWith('.json'))) {
+        const { source } = JSON.parse(readFileSync(new URL(file, dir), 'utf8')) as { source: { label: string }[] }
+        source.forEach(({ label }, index) => {
+          labels[`${folder}/${file}.${index}`] = label
+        })
+      }
     }
     expect(Object.keys(labels).length).toBeGreaterThan(0)
     expect(findForbiddenTerms(labels, webTerms)).toEqual([])

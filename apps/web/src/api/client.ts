@@ -15,7 +15,10 @@ import {
   ideaSchema,
   measureEstimateSchema,
   newIdeaResultSchema,
+  scriptSummarySchema,
+  scriptViewSchema,
   type IdeaPatchBody,
+  type ScriptPatchBody,
   type NewIdeaBody,
   type JobEvent,
   jobStartedSchema,
@@ -277,6 +280,19 @@ export const ideasApi = {
     apiClient.put(`${channelPath(channelId)}/ideas/queue`, { ids }, ideaQueueResultSchema),
   download: (channelId: string, format: 'md' | 'json') =>
     apiClient.file(`${channelPath(channelId)}/ideas/export?format=${format}`),
+}
+
+const scriptPath = (id: string) => `/api/scripts/${encodeURIComponent(id)}`
+
+// The script of an idea (specs/005-script-and-outline/contracts/http-api.md).
+export const scriptsApi = {
+  list: (channelId: string, options?: RequestOptions) =>
+    apiClient.get(`${channelPath(channelId)}/scripts`, scriptSummarySchema.array(), options),
+  open: (ideaId: string) =>
+    apiClient.post(`/api/ideas/${encodeURIComponent(ideaId)}/script`, {}, scriptViewSchema),
+  get: (id: string, options?: RequestOptions) => apiClient.get(scriptPath(id), scriptViewSchema, options),
+  change: (id: string, body: ScriptPatchBody) =>
+    apiClient.patch(scriptPath(id), body, scriptViewSchema),
 }
 
 export const usageApi = {

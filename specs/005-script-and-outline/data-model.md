@@ -35,6 +35,7 @@ La voz y el ritmo de cada canal. Si no hay fila, se usan los valores por defecto
 | `draft_approved_pending` | INTEGER NULL | afirmaciones pendientes al aprobar |
 | `source_script_id` | TEXT NULL | → `script`; Short sacado de un vídeo largo |
 | `source_block_id` | TEXT NULL | el momento del guion del que sale |
+| `source_draft_version` | INTEGER NULL | versión del guion largo de la que salió (para `origen_cambiado`) |
 | `short_angles` | TEXT NULL | JSON con los enfoques ya pagados |
 | `job_id` | TEXT NULL | → `background_job` |
 | `job_op` | TEXT NULL | uso en curso |
@@ -80,7 +81,7 @@ Source         { id, url|null, reference|null, title, accessedAt, link: abre|no_
   url o reference, al menos uno
 
 OutlineContent { blocks: OutlineBlock[] }             (1 a 30)
-OutlineBlock   { id, type: gancho|contexto|acto|cierre, title (1-120), purpose (0-300),
+OutlineBlock   { id, type: gancho|contexto|acto|cierre, title (0-120; vacío al editar, no al aprobar), purpose (0-300),
                  question|null, reward|null, bridge|null, seconds }
 
 DraftContent   { blocks: DraftBlock[], claims: Claim[] }

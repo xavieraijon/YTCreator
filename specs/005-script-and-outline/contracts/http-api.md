@@ -20,11 +20,11 @@ R18), `sin_aprobar` (409, falta aprobar el paso anterior), `sin_internet` (409, 
 |---|---|---|
 | `POST /ideas/:id/script` | | `ScriptView`, 201; si ya existe, 200 con el mismo. Exige idea elegida o guion previo |
 | `GET /scripts/:id` | | `ScriptView` |
-| `PATCH /scripts/:id` | `{targetSeconds?, notes?}` | `ScriptView` |
+| `PATCH /scripts/:id` | `{baseUpdatedAt, targetSeconds?, notes?}` | `ScriptView`; 409 `version_cambiada` si otra pestaña guardó antes |
 | `GET /scripts/:id/review` | | `{rules}`: el paquete de revisión versionado |
 | `GET /scripts/:id/export?format=md\|json` | | fichero |
 
-`ScriptView` lleva la idea, el estado, las últimas versiones de los tres tipos, los avisos, el trabajo en curso si lo hay,
+`ScriptView` lleva la idea, el estado, las últimas versiones de los tres tipos, los avisos, el último trabajo con su estado (también si ya acabó, para poder decir que falló al volver),
 `webResearch` y los límites de duración.
 
 ## Versiones
@@ -45,7 +45,7 @@ R18), `sin_aprobar` (409, falta aprobar el paso anterior), `sin_internet` (409, 
 
 | Método y ruta | Cuerpo | Respuesta |
 |---|---|---|
-| `POST /scripts/:id/estimate` | `{use, blockId?}` | `Estimate` de la 003, con `searches`; `cents` es lo esperado y `maxCents` lo máximo, que es lo que comprueba `blockedBy` |
+| `POST /scripts/:id/estimate` | `{use, blockId?}` | `Estimate` de la 003, con `searches`; `cents` es lo esperado y `maxCents` lo máximo; `blockedBy` y `run` comprueban el tope de salida del perfil |
 | `POST /scripts/:id/generate` | `{use, estimateId, instructions?, blockId?}` | 202 `{jobId}` |
 | `POST /scripts/:id/short-angles/:index/choose` | | 201 `{ideaId, scriptId}`. No llama a la IA: el guion queda en `sin_empezar` |
 

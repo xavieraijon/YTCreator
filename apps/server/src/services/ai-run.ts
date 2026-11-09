@@ -136,14 +136,18 @@ export function createAiRunService(deps: AiRunDeps) {
       journeyId,
       use,
       input,
+      outputTokens,
     }: {
       journeyId: string
       use: ChannelUse
       input: Record<string, unknown>
+      /** What the AI is expected to write (005, R11): what is shown. The budget still counts the most it may write. */
+      outputTokens?: number
     }): Estimate {
       const ai = activeOrThrow()
       const profile = profileOf(ai, use)
       const call = callCents(ai, profile.model, profile.maxOutputTokens, use, input)
+      const expected = callCents(ai, profile.model, Math.min(outputTokens ?? profile.maxOutputTokens, profile.maxOutputTokens), use, input)
       const withInstructions = callCents(ai, profile.model, profile.maxOutputTokens, use, {
         ...input,
         instructions: MAX_INSTRUCTIONS,
@@ -152,12 +156,12 @@ export function createAiRunService(deps: AiRunDeps) {
       const blockedBy = budgetBlock(ai, call.cents * CALLS_RESERVED)
       dropExpired()
       const estimateId = randomUUID()
-      estimates.set(estimateId, { journeyId, use, cents: call.cents, createdAt: now() })
+      estimates.set(estimateId, { journeyId, use, cents: expected.cents, createdAt: now() })
       return {
         estimateId,
         use,
-        cents: call.cents,
-        included: call.included,
+        cents: expected.cents,
+        included: expected.included,
         blockedBy,
         maxCents: maxCentsOf(ai, withInstructions.cents),
         pricingVersion: call.pricingVersion,

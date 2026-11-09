@@ -13,6 +13,11 @@ export const API_ERROR_CODES = [
   'youtube',
   'prohibido',
   'interno',
+  // The script (005, contracts/http-api.md).
+  'en_curso',
+  'version_cambiada',
+  'sin_aprobar',
+  'sin_internet',
 ] as const
 export type ApiErrorCode = (typeof API_ERROR_CODES)[number]
 
@@ -56,4 +61,8 @@ export const HTTP_STATUS_BY_CODE: Record<ApiErrorCode, number> = {
   ia: 422,
   youtube: 502,
   interno: 500,
+  en_curso: 409,
+  version_cambiada: 409,
+  sin_aprobar: 409,
+  sin_internet: 409,
 }

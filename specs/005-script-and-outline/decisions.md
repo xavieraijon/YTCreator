@@ -19,9 +19,16 @@ Riesgo según `.specify/memory/riesgo.md`. Lo de riesgo alto no se decide aquí:
 | 11 | 2026-11-09 | Agente | Cuatro salidas para una marca: correcta, corregir, no es un dato y quitar del guion | «Quitar» podía entenderse de dos maneras, y la detección de nombres es aproximada | Solo «quitar» | Medio (efecto visible) | US2 |
 | 12 | 2026-11-09 | Agente | El presupuesto se comprueba con el coste máximo; en pantalla se enseña el esperado y el máximo | Un guion puede escribir mucho más de lo esperado; el límite no debe depender de la estimación (análisis, I1) | Comprobar con el esperado | Medio (efecto visible) | Foundational, US6 |
 | 13 | 2026-11-09 | Agente | Un guion escrito conserva su estado aunque cambie la escaleta, con el aviso `escaleta_cambiada` | El estado debe ser uno solo; un guion aprobado sigue siendo válido hasta que el creador decida (análisis, I2) | Volver a escaleta en borrador | Medio (efecto visible) | Foundational |
+| 14 | 2026-11-09 | Agente | La tabla `script` lleva además `source_draft_version`, con la versión del guion largo de la que salió un Short | Sin ella no se puede saber si el origen cambió después (aviso `origen_cambiado`) | Comparar fechas | Medio | Foundational |
+| 15 | 2026-11-09 | Agente | El título de un bloque de escaleta puede quedar vacío mientras se edita; lo que no se puede es aprobar o recibir de la IA un bloque sin título | Guardar a medias no debe perder lo escrito; la regla «aprobar: ninguno sin título» ya lo cubre (hallazgo de Puerta A) | Rechazar el guardado | Bajo | Foundational |
+| 16 | 2026-11-09 | Agente | Guardar duración y apuntes también avisa si otra pestaña guardó antes, comparando `updatedAt` | Esos campos no tienen versiones y la spec dice que no se pisa el trabajo sin preguntar (hallazgo de Puerta A) | Versionar los apuntes | Bajo | Foundational |
+| 17 | 2026-11-09 | Agente | Límites que el modelo de datos no fijaba: título de fuente 300, referencia 500, pistas de bloque 300, marca 600, guion de 1 a 30 bloques; y una idea sin elegir responde `validacion` | Campos de texto acotados, sin efecto visible salvo en casos extremos | Sin límite | Bajo | Foundational |
+
+Las entradas 6 a 9 y 11 a 13 forman parte de `research.md` y del análisis que el creador aceptó (decisión 10); la P2 le pide ratificar la 8, que cambia el texto que graba.
 
 ## Pendientes del creador
 
 | # | Qué falta | Opciones | Recomendación | Impacto | Tarea pausada |
 |---|-----------|----------|---------------|---------|---------------|
 | P1 | Autorizar una prueba real de la búsqueda, al terminar US6: gasta cupo de la suscripción y, con la API, céntimos reales | Probar con Claude Code; probar con Claude Code y API; no probar | Claude Code y API: una investigación y una generación por cada una, menos de 1 € | Sin ella, la búsqueda real, SC-002 y SC-011 quedan como no ejecutados | Solo la prueba real; el resto sigue con el proveedor falso |
+| P2 | Ratificar que el guion escribe cifras y fechas con dígitos (decisión 8), en lugar de en letra como el proyecto de referencia | Dígitos; en letra | Dígitos: quien lee es el creador, y la detección de cifras es fiable. Cambiarlo es una versión nueva del prompt | Solo afecta a cómo salen los números en el texto generado | Ninguna (se puede cambiar después) |

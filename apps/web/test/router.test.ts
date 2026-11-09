@@ -11,6 +11,8 @@ const targets: Target[] = [
   { page: 'home' },
   { page: 'channelStart' },
   { page: 'ideaBank' },
+  { page: 'scriptList' },
+  { page: 'script', id: 'abc-123' },
   { page: 'channelStep', kind: 'nuevo', step: 'intereses' },
   { page: 'channelStep', kind: 'existente', step: 'posicionamiento' },
   { page: 'settings' },

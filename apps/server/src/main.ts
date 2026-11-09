@@ -10,6 +10,8 @@ import {
   conceptKnowledge,
   knowledgeFiles,
   loadMarket,
+  loadScriptKnowledge,
+  scriptKnowledgeFiles,
   promptFor,
   STALE_AFTER_DAYS,
   warningKnowledge,
@@ -25,8 +27,11 @@ import { createConnectionsRepo } from './db/repos/connections.ts'
 import { createJobsRepo } from './db/repos/jobs.ts'
 import { createIdeaBatchesRepo } from './db/repos/idea-batches.ts'
 import { createIdeaMeasuresRepo } from './db/repos/idea-measures.ts'
+import { createScriptService } from './services/scripts.ts'
 import { createIdeaMeasure } from './services/idea-measure.ts'
 import { createIdeasRepo } from './db/repos/ideas.ts'
+import { createScriptVersionsRepo } from './db/repos/script-versions.ts'
+import { createScriptsRepo } from './db/repos/scripts.ts'
 import { createJourneysRepo } from './db/repos/journeys.ts'
 import { createLimitsRepo } from './db/repos/limits.ts'
 import { createMeasuresRepo } from './db/repos/measures.ts'
@@ -186,6 +191,8 @@ export async function startServer({
 
   // The knowledge package fails here if a file does not validate: the server refuses to start (principle V).
   const market = loadMarket()
+  // A broken package of the script stops the start here, not later in front of the creator (principle V).
+  const scriptKnowledge = loadScriptKnowledge()
   const pricing: Pricing = {
     version: market.pricing.version,
     models: market.pricing.data.models,
@@ -351,6 +358,23 @@ export async function startServer({
     logger,
     now,
   })
+  const scriptsRepo = createScriptsRepo(db, now)
+  const scriptVersions = createScriptVersionsRepo(db, now)
+  const scriptService = createScriptService({
+    db,
+    channels: channel.channels,
+    profiles: channel.profiles,
+    journeys: channel.journeys,
+    ideas: ideasRepo,
+    measures: ideaMeasures,
+    jobsRepo,
+    jobs,
+    scripts: scriptsRepo,
+    versions: scriptVersions,
+    shortMaxSeconds: market.shorts.data.maxDurationSeconds,
+    webResearch: () => false,
+    now,
+  })
   app = createApp({
     port,
     version,
@@ -386,10 +410,14 @@ export async function startServer({
       },
       now,
     },
+    script: { service: scriptService, scripts: scriptsRepo },
     jobs,
     youtubeSettings,
     usage,
-    knowledge: { files: () => knowledgeFiles(market), staleAfterDays: STALE_AFTER_DAYS },
+    knowledge: {
+      files: () => [...knowledgeFiles(market), ...scriptKnowledgeFiles(scriptKnowledge)],
+      staleAfterDays: STALE_AFTER_DAYS,
+    },
     youtube: {
       journeys: channel.journeys,
       measures: channel.measures,

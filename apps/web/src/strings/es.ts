@@ -336,6 +336,10 @@ export const es = {
     prohibido: 'YTCreator ha bloqueado esta acción por seguridad. Recarga la página.',
     interno:
       'Algo ha fallado dentro de YTCreator. Vuelve a intentarlo y, si sigue pasando, ciérralo y ábrelo otra vez.',
+    en_curso: 'La IA ya está trabajando en este guion. Espera a que termine.',
+    version_cambiada: 'Esto ha cambiado en otra pestaña. Recarga para ver lo último; lo que has escrito sigue aquí.',
+    sin_aprobar: 'Antes hay que aprobar el paso anterior.',
+    sin_internet: 'Tu conexión de IA no puede buscar en internet. Puedes seguir con tus apuntes.',
   } satisfies Record<ApiErrorCode, string>,
 
   // The request never reached YTCreator, or its answer made no sense.
