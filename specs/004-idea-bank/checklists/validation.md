@@ -608,7 +608,7 @@ Fecha: 2026-11-08. **Resultado: pasada.**
 
 - Cierra el Polish: recorrido del quickstart, auditoría de novato en dos rondas y arreglos de lo que encontró.
 - La auditoría pasa con 0 graves y 2 medios abiertos. La revisión independiente no encontró graves.
-- Queda P1 (un caso de la 002), que el creador debe resolver antes de cerrar la feature. No afecta a esta fase.
+- P1 (un caso de la 002) pasa a los pendientes de la 002 por decisión del creador (entrada 70). La 004 queda sin pendientes.
 
 ### 2. Requisitos
 
@@ -664,7 +664,6 @@ Abiertos:
 
 - El caso de variantes repetidas se prueba en la pantalla cambiando la respuesta del servidor. El camino real con 0 borradores
   solo se vio en la auditoría de novato.
-- P1, en la sección 7.
 
 ### 6. Desviaciones
 
@@ -673,8 +672,8 @@ Ninguna frente a la spec. De más: los avisos y el foco de las decisiones 64 a 6
 ### 7. Decisiones
 
 - Del agente: 64 a 69. Las 64 a 68 son de riesgo medio; la 69, bajo.
-- Pendientes del creador: P1 (002, «Lo haré más tarde» y luego conectar desde Ajustes). Es de riesgo no alto y no afecta a esta
-  fase, pero la constitución pide resolverlo antes de cerrar la feature.
+- Del creador: 70, que traslada P1 a `specs/002-onboarding/decisions.md`.
+- Pendientes del creador: ninguno en la 004.
 
 ### 8. Impacto en la constitución
 
@@ -686,4 +685,4 @@ Ninguna frente a la spec. De más: los avisos y el foco de las decisiones 64 a 6
 ### 9. Cómo revertir y qué queda
 
 - Revertir el commit `feat(004): Polish …`. No hay migraciones.
-- Queda: resolver P1, el PR si el creador lo pide, y los medios y menores para la pasada de interfaz con modo Design.
+- Queda: el PR si el creador lo pide, y los medios y menores para la pasada de interfaz con modo Design.

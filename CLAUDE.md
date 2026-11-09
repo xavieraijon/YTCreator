@@ -32,8 +32,7 @@ Spec-Driven Development with GitHub Spec Kit (`/speckit-*`).
   P36 (change the money category from the profile; not blocking). Reports in `specs/003-channel-and-niche/checklists/validation.md`.
 - 004 `idea-bank`: US1–US4 and Polish done on branch `004-idea-bank` (not merged yet). Novice audit passed in round 2
   (`specs/004-idea-bank/novice-audit.md`); its open mediums (home does not lead to the bank, queue without semaphore) and
-  minors go to the UI pass with Design mode. Real AI and real YouTube not tested. Open: P1 of its `decisions.md` (a 002 edge case; the constitution requires
-  resolving it before closing 004). Report in `specs/004-idea-bank/checklists/validation.md`.
+  minors go to the UI pass with Design mode. Real AI and real YouTube not tested. No open items in its `decisions.md`; P1 moved to `specs/002-onboarding/decisions.md` (for a task after v1). Report in `specs/004-idea-bank/checklists/validation.md`.
 - Provider subscriptions beyond Claude are a later feature, not part of 002. First one planned: Gemini
   (Google AI Pro, with its CLI).
 - Commands (Node 24, `fnm exec --using=24 --`): `pnpm dev` (server + web), `pnpm lint`, `pnpm typecheck`,
