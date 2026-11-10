@@ -75,6 +75,8 @@ const CLAIM_FIELDS: Partial<Record<ChannelUse, readonly string[]>> = {
   guion: [],
   guion_short: [],
   bloque_guion: [],
+  // Nothing marks what an angle says, so its figures are checked like those of any other angle.
+  enfoques_short: ['hook', 'why'],
   // A fact is labelled by its links, not trimmed by its figures (R8).
   investigacion: [],
   comprobar_guion: [],
@@ -298,6 +300,8 @@ export function createAiRunService(deps: AiRunDeps) {
       // What the AI wrote the last time is not a source: a figure in it may be out of date, or its own invention.
       const sources: Record<string, unknown> = { ...(input as Record<string, unknown>) }
       delete sources['previous']
+      // Nor the angles it offered before (005, `enfoques_short`): a figure in a title is never checked.
+      delete sources['alreadyOffered']
 
       let result = await call(prompt.text)
       if (result.ok) {

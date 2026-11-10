@@ -30,7 +30,11 @@ export function ScriptWarnings({
   const draftUse = isShort ? ('guion_short' as const) : ('guion' as const)
   const redoUse = script.draft ? draftUse : ('escaleta' as const)
   const outlineApproved = script.outline !== null && script.outlineApprovedVersion === script.outline.version
-  const moved = script.warnings.some((warning) => warning !== 'origen_cambiado')
+  // Writing the Short again takes the moment as the long script says it now, which clears `origen_cambiado` too,
+  // unless that moment is gone (decision 44).
+  const moved = script.warnings.some(
+    (warning) => warning !== 'origen_cambiado' || script.links.parent?.momentGone === false,
+  )
   const canRedo = moved && (isShort ? script.draft !== null : script.draft ? outlineApproved : script.outline !== null)
   const price = useEstimate(script, redoUse, canRedo)
 
@@ -41,7 +45,9 @@ export function ScriptWarnings({
     perfil_cambiado: { label: text.toProfile, run: () => navigate({ page: 'channelStart' }) },
     hechos_cambiados: { label: text.toFacts, run: () => onStep('hechos') },
     escaleta_cambiada: { label: text.toOutline, run: () => onStep('escaleta') },
-    origen_cambiado: null,
+    origen_cambiado: script.links.parent
+      ? { label: text.toSource, run: () => navigate({ page: 'script', id: script.links.parent!.id }) }
+      : null,
   }
 
   return (

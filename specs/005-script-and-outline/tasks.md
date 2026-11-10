@@ -209,13 +209,13 @@ separado.
 
 **Independent Test**: Con proveedor falso, pedir enfoques, elegir uno, encontrar en el banco la idea Short enlazada y escribir su guion.
 
-- [ ] T088 [P] [US7] Test de la salida `enfoques_short` (de 2 a 3, `blockId` existente) en `packages/core/test/script/outputs.test.ts`
-- [ ] T089 [US7] Implementar la salida y dar de alta el uso `enfoques_short` según las convenciones, con su prompt
-- [ ] T090 [P] [US7] Test de rutas en `apps/server/test/http/scripts-short-from-long.test.ts`: `sin_aprobar` sin guion aprobado; enfoques guardados en `short_angles`; elegir crea una idea `short` con `origin='otro_enfoque'`, `source_idea_id` y estado `banco`, y un guion en `sin_empezar`, sin llamar a la IA, con `source_script_id` y hechos `heredada`; varios Shorts del mismo vídeo; y `origen_cambiado`
-- [ ] T091 [US7] Implementar la elección en `apps/server/src/services/scripts.ts` y `POST /scripts/:id/short-angles/:index/choose` en las rutas
-- [ ] T092 [US7] Añadir en `ReviewStep.tsx` «Sacar un Short» y los enfoques; al elegir, abrir el guion del Short con «Escribir el guion · {coste}»; añadir los enlaces entre los dos guiones, el aviso `origen_cambiado` en `ScriptWarnings.tsx` y sus textos. La idea muestra de qué vídeo sale
-- [ ] T093 [US7] e2e en `apps/web/e2e/scripts.spec.ts` (US7), con axe en claro y oscuro a 375 y 1280 px
-- [ ] T094 [A] [US7] Puerta A de US7: ejecutar `/puerta-a 005 US7`
+- [X] T088 [P] [US7] Test de la salida `enfoques_short` (de 2 a 3, `blockId` existente) en `packages/core/test/script/outputs.test.ts`
+- [X] T089 [US7] Implementar la salida y dar de alta el uso `enfoques_short` según las convenciones, con su prompt
+- [X] T090 [P] [US7] Test de rutas en `apps/server/test/http/scripts-short-from-long.test.ts`: `sin_aprobar` sin guion aprobado; enfoques guardados en `short_angles`; elegir crea una idea `short` con `origin='otro_enfoque'`, `source_idea_id` y estado `banco`, y un guion en `sin_empezar`, sin llamar a la IA, con `source_script_id` y hechos `heredada`; varios Shorts del mismo vídeo; y `origen_cambiado`
+- [X] T091 [US7] Implementar la elección en `apps/server/src/services/scripts.ts` y `POST /scripts/:id/short-angles/:index/choose` en las rutas
+- [X] T092 [US7] Añadir en `ReviewStep.tsx` «Sacar un Short» y los enfoques; al elegir, abrir el guion del Short con «Escribir el guion · {coste}»; añadir los enlaces entre los dos guiones, el aviso `origen_cambiado` en `ScriptWarnings.tsx` y sus textos. La idea muestra de qué vídeo sale
+- [X] T093 [US7] e2e en `apps/web/e2e/scripts.spec.ts` (US7), con axe en claro y oscuro a 375 y 1280 px
+- [X] T094 [A] [US7] Puerta A de US7: ejecutar `/puerta-a 005 US7`
 
 ---
 

@@ -4,6 +4,10 @@ import {
   backingDomains,
   blockOutput,
   checkOutputFor,
+  liveShortAngles,
+  shortAnglesOutputFor,
+  storedShortAnglesSchema,
+  type StoredShortAngle,
   factLabel,
   seenSources,
   scriptSourceSchema,
@@ -26,6 +30,7 @@ import {
   settleOrphans,
   type BlockOutput,
   type CheckOutput,
+  type ShortAnglesOutput,
   type Fact,
   type LinkState,
   type ResearchOutput,
@@ -67,6 +72,7 @@ import type { AiRunService, PromptRef } from './ai-run.ts'
 import type { LinkCheck } from './link-check.ts'
 import { profileInput } from './ideas.ts'
 import type { JobsService } from './jobs.ts'
+import { inTransaction } from '../db/transaction.ts'
 import { ApiError } from '../http/errors.ts'
 
 export interface ScriptServiceDeps {
@@ -155,13 +161,39 @@ export function createScriptService(deps: ScriptServiceDeps) {
     return latest?.status === 'medida' && latest.ideaRevision === idea.revision ? latest : null
   }
 
+  // Already paid for: all of them are kept as they were, also one that no longer reads (decision 41).
+  const keptAngles = (script: Script): unknown[] => (Array.isArray(script.shortAngles) ? [...script.shortAngles] : [])
+  const storedAngles = (script: Script): (StoredShortAngle | null)[] =>
+    keptAngles(script).map((one) => {
+      const parsed = storedShortAnglesSchema.element.safeParse(one)
+      return parsed.success ? parsed.data : null
+    })
+
+  // The approved long script: what a Short is drawn from and checked against (FR-019, decision 44).
+  const approvedVersionOf = (scriptId: string) => scripts.get(scriptId)?.draftApprovedVersion ?? null
+
+  // Offered only while the approved script says what they were drawn from (decision 41).
+  const anglesOf = (script: Script) => {
+    const draft = versions.latest(script.id, 'guion')
+    if (!draft || draft.version !== script.draftApprovedVersion) return []
+    return liveShortAngles(storedAngles(script), draft.content.blocks)
+  }
+
+  // The text of the moment a Short comes from, in one draft of the long script.
+  const momentIn = (scriptId: string, blockId: string | null, version: number | null): string | null => {
+    if (version === null) return null
+    const draft = versions.get(scriptId, 'guion', version)
+    return draft?.content.blocks.find((block) => block.id === blockId)?.text ?? null
+  }
+
   const view = (script: Script, idea: Idea, profileVersion: number): ScriptView => {
     const facts = versions.latest(script.id, 'hechos')
     const outline = versions.latest(script.id, 'escaleta')
     const draft = versions.latest(script.id, 'guion')
     const job = jobOf(script)
     const written = draft ?? outline
-    const parent = script.sourceScriptId ? versions.latest(script.sourceScriptId, 'guion') : null
+    const parentScript = script.sourceScriptId ? scripts.get(script.sourceScriptId) : null
+    const linked = (other: Script) => ({ id: other.id, title: ideas.get(other.ideaId)?.title ?? '' })
     return {
       id: script.id,
       channelId: script.channelId,
@@ -206,10 +238,28 @@ export function createScriptService(deps: ScriptServiceDeps) {
         latestOutline: outline?.version ?? null,
         draftOutline: draft?.outlineVersion ?? null,
         source: script.sourceScriptId
-          ? { latestDraft: parent?.version ?? null, usedDraft: script.sourceDraftVersion }
+          ? {
+              usedMoment: momentIn(script.sourceScriptId, script.sourceBlockId, script.sourceDraftVersion),
+              latestMoment: momentIn(
+                script.sourceScriptId,
+                script.sourceBlockId,
+                approvedVersionOf(script.sourceScriptId),
+              ),
+            }
           : null,
       }),
       job: job && script.jobOp ? { id: job.id, op: script.jobOp, status: job.status, failure: job.failure } : null,
+      shortAngles: anglesOf(script),
+      links: {
+        // A moment that is gone cannot be written from again: the screen does not offer it (decision 44).
+        parent: parentScript
+          ? {
+              ...linked(parentScript),
+              momentGone: momentIn(parentScript.id, script.sourceBlockId, parentScript.draftApprovedVersion) === null,
+            }
+          : null,
+        shorts: scripts.listBySource(script.id).map(linked),
+      },
       webResearch: deps.webResearch(),
       limits: {
         minSeconds: script.format === 'largo' ? SCRIPT_LIMITS.longSeconds.min : SCRIPT_LIMITS.shortSeconds.min,
@@ -324,10 +374,10 @@ export function createScriptService(deps: ScriptServiceDeps) {
   }
 
   // What the creator has said: nothing in it gets marked (R9).
+  // The title and the hook of a Short drawn from a long video were written by the AI, so they do not count.
   const knownOf = ({ script, idea }: { script: Script; idea: Idea }) => [
     script.notes,
-    idea.title,
-    idea.hook,
+    ...(script.sourceScriptId ? [] : [idea.title, idea.hook]),
     idea.query ?? '',
     idea.notes,
   ]
@@ -350,6 +400,23 @@ export function createScriptService(deps: ScriptServiceDeps) {
     const outline = versions.latest(script.id, 'escaleta')
     if (!outline || outline.version !== script.outlineApprovedVersion) throw new ApiError({ code: 'sin_aprobar' })
     return outline
+  }
+
+  const approvedDraft = (script: Script) => {
+    const draft = versions.latest(script.id, 'guion')
+    if (!draft || draft.version !== script.draftApprovedVersion) throw new ApiError({ code: 'sin_aprobar' })
+    return draft
+  }
+
+  // The moment of the long video a Short comes from, for whoever writes it (contracts/ai-uses.md): as the approved long
+  // script says it now, if it still has it; if not, as it was. Writing from it is what clears `origen_cambiado`.
+  const angleOf = ({ script, idea }: Found) => {
+    if (!script.sourceScriptId || script.sourceDraftVersion === null) return null
+    const approved = approvedVersionOf(script.sourceScriptId)
+    const now = momentIn(script.sourceScriptId, script.sourceBlockId, approved)
+    const version = now === null ? script.sourceDraftVersion : approved!
+    const moment = now ?? momentIn(script.sourceScriptId, script.sourceBlockId, script.sourceDraftVersion)
+    return moment === null ? null : { title: idea.title, hook: idea.hook, moment, version }
   }
 
   const blockRequest = (found: Found, blockId: string | undefined) => {
@@ -445,7 +512,10 @@ export function createScriptService(deps: ScriptServiceDeps) {
       return { promptId: prompt.id, promptVersion: prompt.version }
     }
     // A Short has no outline, and a long video is written from one.
-    const wrongShape = script.format === 'short' ? use === 'escaleta' || use === 'guion' : use === 'guion_short'
+    const wrongShape =
+      script.format === 'short'
+        ? use === 'escaleta' || use === 'guion' || use === 'enfoques_short'
+        : use === 'guion_short'
     if (wrongShape) throw new ApiError({ code: 'validacion', fields: { use: 'no_valido' } })
 
     // Only the idea and the notes leave for a search: never the profile, nor anything else of the channel (R20).
@@ -493,6 +563,38 @@ export function createScriptService(deps: ScriptServiceDeps) {
             { facts: [...own, ...researched].slice(0, SCRIPT_LIMITS.facts) },
             { instructions, usageId, ...promptMeta() },
           )
+        },
+      }
+    }
+
+    if (use === 'enfoques_short') {
+      const { blocks } = approvedDraft(script).content
+      return {
+        input: {
+          blocks: blocks.map(({ id: blockId, type, title, text }) => ({ id: blockId, type, title, text })),
+          idea: ideaInput(idea),
+          profile: profileInput(profile),
+          craft: deps.knowledge.craft.data,
+          // What is already on the screen, so asking again brings something else. Never a source (ai-run.ts).
+          alreadyOffered: anglesOf(script).map(({ title, blockId }) => ({ title, blockId })),
+        },
+        outputTokens: undefined,
+        schema: shortAnglesOutputFor(blocks.map((block) => block.id)),
+        // Asking again adds to what was paid for: nothing kept is dropped (principle II, decision 41).
+        keep: (
+          value: unknown,
+          _usageId: string | null,
+          _instructions: string | null,
+          _seenUrls: string[] | undefined,
+          claimsTrimmed: boolean,
+        ) => {
+          const fresh = (value as ShortAnglesOutput).angles.map((angle) => ({
+            ...angle,
+            moment: blocks.find((block) => block.id === angle.blockId)!.text,
+            trimmed: claimsTrimmed,
+            scriptId: null,
+          }))
+          scripts.setShortAngles(script.id, [...keptAngles(scripts.get(script.id)!), ...fresh])
         },
       }
     }
@@ -562,6 +664,7 @@ export function createScriptService(deps: ScriptServiceDeps) {
     if (use === 'guion_short') {
       const { wordsPerMinute } = voiceOf(script.channelId)
       const previous = versions.latest(script.id, 'guion')
+      const angle = angleOf(found)
       return {
         input: {
           idea: ideaInput(idea),
@@ -572,7 +675,7 @@ export function createScriptService(deps: ScriptServiceDeps) {
           targetSeconds: script.targetSeconds,
           wordsPerMinute,
           craft: deps.knowledge.craft.data,
-          angle: null,
+          angle: angle && { title: angle.title, hook: angle.hook, moment: angle.moment },
         },
         outputTokens: expectedOutputTokens(script.targetSeconds, wordsPerMinute, 3),
         schema: shortDraftOutputFor(shortMaxSeconds, wordsPerMinute),
@@ -605,6 +708,8 @@ export function createScriptService(deps: ScriptServiceDeps) {
               ...promptMeta(),
             },
           )
+          // Written from the moment as the long script says it now: what it is checked against from here on.
+          if (angle && angle.version !== script.sourceDraftVersion) scripts.setSourceDraft(script.id, angle.version)
         },
       }
     }
@@ -739,7 +844,7 @@ export function createScriptService(deps: ScriptServiceDeps) {
     const job = deps.jobs.start({ journeyId: null, channelId: found.script.channelId, kind: 'ia' }, async () => {
       const result = await aiRun.run({ estimateId, journeyId, use, input, instructions, ...(schema ? { schema } : {}) })
       if (!result.ok) return { failure: result.failure }
-      await keep(result.value, result.usageId, instructions ?? null, result.seenUrls)
+      await keep(result.value, result.usageId, instructions ?? null, result.seenUrls, result.claimsTrimmed)
       return undefined
     })
     scripts.setJob(found.script.id, job.id, use)
@@ -817,6 +922,51 @@ export function createScriptService(deps: ScriptServiceDeps) {
     assertBase(latest?.version ?? null, baseVersion)
     addVersion(found, 'escaleta', 'edicion', content, { factsVersion: latest?.factsVersion ?? null })
     return view(scripts.get(id)!, found.idea, found.profileVersion)
+  }
+
+  // Costs nothing: the idea and its script are created here, and writing it is a request of its own (FR-019).
+  const chooseShortAngle = (id: string, index: number, baseUpdatedAt: string) => {
+    const found = find(id)
+    assertIdle(found.script)
+    // Which one it is depends on the list that was on the screen (spec, Edge Cases: two tabs).
+    if (found.script.updatedAt !== baseUpdatedAt) throw new ApiError({ code: 'version_cambiada' })
+    if (found.script.format !== 'largo') throw new ApiError({ code: 'validacion', fields: { format: 'no_valido' } })
+    const draft = approvedDraft(found.script)
+    // `index` is its place in what is kept, so one that stopped being offered is never taken by mistake.
+    const angle = anglesOf(found.script).find((one) => one.index === index)
+    const block = draft.content.blocks.find((one) => one.id === angle?.blockId)
+    if (!angle || !block) throw new ApiError({ code: 'no_encontrado' })
+    // One Short per angle: the second would be the same idea twice in the bank (decision 43).
+    if (angle.scriptId !== null) throw new ApiError({ code: 'validacion', fields: { index: 'no_valido' } })
+    const { channel, idea: source, profileVersion } = found
+    return inTransaction(deps.db, () => {
+      const idea = ideas.create({
+        channelId: channel.id,
+        origin: 'otro_enfoque',
+        sourceIdeaId: source.id,
+        title: angle.title,
+        hook: angle.hook,
+        pillar: source.pillar,
+        format: 'short',
+        profileVersion,
+      })
+      const script = scripts.create({
+        channelId: channel.id,
+        ideaId: idea.id,
+        format: 'short',
+        targetSeconds: defaultTargetSeconds('short'),
+        sourceScriptId: found.script.id,
+        sourceBlockId: block.id,
+        sourceDraftVersion: draft.version,
+      })
+      const facts = versions.latest(found.script.id, 'hechos')
+      if (facts) addVersion({ ...found, script, idea }, 'hechos', 'heredada', facts.content)
+      // Marking it moves the long script, so a second tab with the same list gets `version_cambiada`.
+      const kept = keptAngles(found.script)
+      kept[index] = { ...storedAngles(found.script)[index]!, scriptId: script.id }
+      scripts.setShortAngles(found.script.id, kept)
+      return { ideaId: idea.id, scriptId: script.id }
+    })
   }
 
   const approveOutline = (id: string, version: number) => {
@@ -1040,11 +1190,12 @@ export function createScriptService(deps: ScriptServiceDeps) {
     estimate,
     generate,
     saveFacts,
+    chooseShortAngle,
     saveOutline,
     approveOutline,
-    ideaScript(ideaId: string): { id: string; status: ReturnType<typeof statusOf> } | null {
+    ideaScript(ideaId: string): { id: string; status: ReturnType<typeof statusOf>; fromVideo: boolean } | null {
       const script = scripts.getByIdea(ideaId)
-      return script ? { id: script.id, status: statusOf(script) } : null
+      return script ? { id: script.id, status: statusOf(script), fromVideo: script.sourceScriptId !== null } : null
     },
   }
 }

@@ -35,8 +35,8 @@ La voz y el ritmo de cada canal. Si no hay fila, se usan los valores por defecto
 | `draft_approved_pending` | INTEGER NULL | afirmaciones pendientes al aprobar |
 | `source_script_id` | TEXT NULL | → `script`; Short sacado de un vídeo largo |
 | `source_block_id` | TEXT NULL | el momento del guion del que sale |
-| `source_draft_version` | INTEGER NULL | versión del guion largo de la que salió (para `origen_cambiado`) |
-| `short_angles` | TEXT NULL | JSON con los enfoques ya pagados |
+| `source_draft_version` | INTEGER NULL | versión del guion largo de la que se escribió por última vez (para `origen_cambiado`) |
+| `short_angles` | TEXT NULL | JSON con los enfoques ya pagados: cada uno con su `moment` (texto del bloque), `trimmed` y el `scriptId` del Short que salió de él (decisiones 41 y 43) |
 | `job_id` | TEXT NULL | → `background_job` |
 | `job_op` | TEXT NULL | uso en curso |
 | `created_at`, `updated_at` | TEXT | ISO |
@@ -130,7 +130,7 @@ hay que aprobarla. Un Short sacado de un vídeo largo empieza en `sin_empezar`.
 | `perfil_cambiado` | versión actual del perfil > `profile_version` |
 | `hechos_cambiados` | última versión de hechos > `facts_version` |
 | `escaleta_cambiada` | última versión de escaleta > `outline_version` del guion |
-| `origen_cambiado` | el guion largo de origen tiene una versión posterior |
+| `origen_cambiado` | el texto del momento de origen en la versión aprobada del guion largo no es el de `source_draft_version` (decisión 44) |
 
 ## Relación con la 004
 

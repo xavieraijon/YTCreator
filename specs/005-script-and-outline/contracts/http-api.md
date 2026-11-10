@@ -25,7 +25,7 @@ R18), `sin_aprobar` (409, falta aprobar el paso anterior), `sin_internet` (409, 
 | `GET /scripts/:id/export?format=md\|json` | | fichero |
 
 `ScriptView` lleva la idea, el estado, las últimas versiones de los tres tipos, los avisos, el último trabajo con su estado (también si ya acabó, para poder decir que falló al volver),
-`webResearch` y los límites de duración.
+`shortAngles` (los enfoques vigentes, cada uno con `index`, `trimmed` y `scriptId`), `links` (`parent`, con `momentGone`, y `shorts`), `webResearch` y los límites de duración.
 
 ## Versiones
 
@@ -47,7 +47,7 @@ R18), `sin_aprobar` (409, falta aprobar el paso anterior), `sin_internet` (409, 
 |---|---|---|
 | `POST /scripts/:id/estimate` | `{use, blockId?}` | `Estimate` de la 003, con `searches`; `cents` es lo esperado y `maxCents` lo máximo; `blockedBy` y `run` comprueban el tope de salida del perfil |
 | `POST /scripts/:id/generate` | `{use, estimateId, instructions?, blockId?}` | 202 `{jobId}` |
-| `POST /scripts/:id/short-angles/:index/choose` | | 201 `{ideaId, scriptId}`. No llama a la IA: el guion queda en `sin_empezar` |
+| `POST /scripts/:id/short-angles/:index/choose` | `{baseUpdatedAt}` | 201 `{ideaId, scriptId}`; 409 `version_cambiada` si otra pestaña cambió la lista; 400 `validacion` si ese enfoque ya dio un Short; 404 si no está vigente. `index` es el de `shortAngles`. No llama a la IA: el guion queda en `sin_empezar` |
 
 `use` es uno de los siete de [ai-uses.md](./ai-uses.md). El progreso va por el SSE de trabajos de la 003, y el resultado se
 lee con `GET /scripts/:id` al terminar.

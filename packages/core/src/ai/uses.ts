@@ -17,6 +17,7 @@ export const AI_USES = [
   'guion',
   'guion_short',
   'bloque_guion',
+  'enfoques_short',
   'investigacion',
   'comprobar_guion',
 ] as const

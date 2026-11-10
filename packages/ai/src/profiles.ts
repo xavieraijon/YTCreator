@@ -37,6 +37,7 @@ const CHANNEL_USES = {
   guion: { model: SONNET, timeoutMs: 420_000, maxOutputTokens: 22_000 },
   guion_short: { model: SONNET, timeoutMs: 90_000, maxOutputTokens: 2000 },
   bloque_guion: { model: SONNET, timeoutMs: 90_000, maxOutputTokens: 3000 },
+  enfoques_short: { model: SONNET, timeoutMs: 60_000, maxOutputTokens: 1500 },
   investigacion: { model: SONNET, timeoutMs: 300_000, maxOutputTokens: 8000, web: WEB_LIMITS },
   comprobar_guion: { model: SONNET, timeoutMs: 300_000, maxOutputTokens: 8000, web: WEB_LIMITS },
 } satisfies Record<Exclude<AiUse, 'comprobacion'>, AiProfile>
@@ -62,6 +63,7 @@ export const PROFILES: Record<ProviderId, Record<AiUse, AiProfile>> = {
     guion: withEffort('medium', CHANNEL_USES.guion),
     guion_short: withEffort('medium', CHANNEL_USES.guion_short),
     bloque_guion: withEffort('medium', CHANNEL_USES.bloque_guion),
+    enfoques_short: withEffort('medium', CHANNEL_USES.enfoques_short),
     investigacion: withEffort('medium', CHANNEL_USES.investigacion),
     comprobar_guion: withEffort('medium', CHANNEL_USES.comprobar_guion),
   },

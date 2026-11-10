@@ -9,7 +9,8 @@ salida Zod en `packages/core/src/script/outputs.ts` y perfil por proveedor.
 
 - Todos pasan por `ai-run.ts`: estimación, presupuesto, puerto y `ai_usage`.
 - Una salida que no valida se repite una vez. En los usos con internet solo se repite el paso estructurado.
-- `CLAIM_FIELDS` es `[]`: aquí una cifra sin fuente se marca, no se recorta (R9).
+- `CLAIM_FIELDS` es `[]`: aquí una cifra sin fuente se marca, no se recorta (R9). La excepción es `enfoques_short`, que no
+  tiene marcas y comprueba `hook` y `why` como `otro_enfoque` (decisión 42).
 - Los usos de texto hablado (`guion`, `guion_short`, `bloque_guion`) llevan `writing/spoken.md`; los demás, `human.md`.
 - `voice` es `{address, register, sample}`. `craft` es el paquete `script/craft.json`.
 
@@ -59,8 +60,11 @@ En Claude Code, esfuerzo `medium`.
 - Salida: `{checks: {claimId, verdict, sources: {url, title}[], proposal}[]}`. Cada `claimId` debe existir.
 
 **`enfoques_short`**
-- Entrada: `blocks` del guion aprobado, `idea`, `profile`, `craft`.
+- Entrada: `blocks` del guion aprobado, `idea`, `profile`, `craft`, `alreadyOffered` (los enfoques que ya se ven,
+  `{title, blockId}`; no cuenta como fuente de cifras) e `instructions`.
 - Salida: `{angles: {title, hook, blockId, why}[]}`, de 2 a 3, con `blockId` existente.
+- `angle` de `guion_short`: `{title, hook, moment}`, con el texto del bloque del que sale tal como está en la versión
+  aprobada del guion largo, o en la usada si ese bloque ya no está (decisión 44).
 
 ## Puerto
 

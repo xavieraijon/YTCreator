@@ -60,7 +60,9 @@ describe('versioned prompts', () => {
       expect(prompt.text).toContain(SPOKEN_WRITING)
       expect(prompt.text).not.toContain(HUMAN_WRITING)
     }
-    const other = parsePrompt(`---\nid: escaleta\nversion: 1\nuse: escaleta\nsha256: ${promptHash('Haz.')}\n---\nHaz.\n`)
+    const other = parsePrompt(
+      `---\nid: escaleta\nversion: 1\nuse: escaleta\nsha256: ${promptHash('Haz.')}\n---\nHaz.\n`,
+    )
     expect(other.text).toContain(HUMAN_WRITING)
   })
 })

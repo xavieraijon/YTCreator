@@ -8,7 +8,7 @@ async function setUp(format: 'largo' | 'short' = 'largo') {
   const t = makeTestApp({ fakeAi: 'ok' })
   const { channelId } = await finished(t)
   const made = await call(t, 'POST', `/api/channels/${channelId}/ideas`, { title: 'Una idea', format })
-  const ideaId = ((made.body['idea'] as { id: string }).id)
+  const ideaId = (made.body['idea'] as { id: string }).id
   return { t, channelId, ideaId }
 }
 const choose = (t: TestApp, ideaId: string) =>
@@ -69,7 +69,10 @@ describe('script base routes (contracts/http-api.md)', () => {
     const patched = await patch(t, id, { targetSeconds: 300, notes: 'Mis apuntes' })
     expect(patched.status).toBe(200)
     expect(patched.body).toMatchObject({ targetSeconds: 300, notes: 'Mis apuntes' })
-    expect((await call(t, 'GET', `/api/scripts/${id}`)).body).toMatchObject({ targetSeconds: 300, notes: 'Mis apuntes' })
+    expect((await call(t, 'GET', `/api/scripts/${id}`)).body).toMatchObject({
+      targetSeconds: 300,
+      notes: 'Mis apuntes',
+    })
     expect((await patch(t, id, { targetSeconds: 179 })).status).toBe(400)
     expect((await patch(t, id, { targetSeconds: 1801 })).status).toBe(400)
     expect((await patch(t, id, { notes: 'x'.repeat(20_001) })).status).toBe(400)
@@ -88,7 +91,9 @@ describe('script base routes (contracts/http-api.md)', () => {
     const { t, ideaId } = await setUp()
     await choose(t, ideaId)
     const { id, updatedAt } = (await open(t, ideaId)) as { id: string; updatedAt: string }
-    t.db.prepare("UPDATE script SET notes = 'De otra pestaña', updated_at = '2030-01-01T00:00:00.000Z' WHERE id = ?").run(id)
+    t.db
+      .prepare("UPDATE script SET notes = 'De otra pestaña', updated_at = '2030-01-01T00:00:00.000Z' WHERE id = ?")
+      .run(id)
     const stale = await call(t, 'PATCH', `/api/scripts/${id}`, { baseUpdatedAt: updatedAt, notes: 'Mía' })
     expect(stale.status).toBe(409)
     expect((stale.body['error'] as { code: string }).code).toBe('version_cambiada')
@@ -121,7 +126,14 @@ describe('script base routes (contracts/http-api.md)', () => {
     const { body } = await call(t, 'POST', `/api/ideas/${ideaId}/script`)
     const list = await call(t, 'GET', `/api/channels/${channelId}/scripts`)
     expect(list.body).toEqual([
-      { id: body['id'], ideaId, title: 'Una idea', format: 'largo', status: 'sin_empezar', updatedAt: expect.any(String) },
+      {
+        id: body['id'],
+        ideaId,
+        title: 'Una idea',
+        format: 'largo',
+        status: 'sin_empezar',
+        updatedAt: expect.any(String),
+      },
     ])
     expect((await call(t, 'GET', '/api/channels/otro/scripts')).status).toBe(404)
     const other = t.channels.create({ origin: 'nuevo' })

@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import { scriptStatus, scriptWarnings } from '../../src/script/status.ts'
 
-const nothing = { format: 'largo', latestOutline: null, approvedOutline: null, latestDraft: null, approvedDraft: null } as const
+const nothing = {
+  format: 'largo',
+  latestOutline: null,
+  approvedOutline: null,
+  latestDraft: null,
+  approvedDraft: null,
+} as const
 
 describe('scriptStatus', () => {
   it('without outline nor draft: sin_empezar', () => {
@@ -20,21 +26,21 @@ describe('scriptStatus', () => {
 
   it('a draft whose last version is not the approved one: guion_borrador', () => {
     expect(scriptStatus({ ...nothing, latestOutline: 1, approvedOutline: 1, latestDraft: 1 })).toBe('guion_borrador')
-    expect(
-      scriptStatus({ ...nothing, latestOutline: 1, approvedOutline: 1, latestDraft: 3, approvedDraft: 2 }),
-    ).toBe('guion_borrador')
+    expect(scriptStatus({ ...nothing, latestOutline: 1, approvedOutline: 1, latestDraft: 3, approvedDraft: 2 })).toBe(
+      'guion_borrador',
+    )
   })
 
   it('the last draft approved: guion_aprobado', () => {
-    expect(
-      scriptStatus({ ...nothing, latestOutline: 1, approvedOutline: 1, latestDraft: 2, approvedDraft: 2 }),
-    ).toBe('guion_aprobado')
+    expect(scriptStatus({ ...nothing, latestOutline: 1, approvedOutline: 1, latestDraft: 2, approvedDraft: 2 })).toBe(
+      'guion_aprobado',
+    )
   })
 
   it('a new outline with a written draft does not change the status', () => {
-    expect(
-      scriptStatus({ ...nothing, latestOutline: 2, approvedOutline: 1, latestDraft: 2, approvedDraft: 2 }),
-    ).toBe('guion_aprobado')
+    expect(scriptStatus({ ...nothing, latestOutline: 2, approvedOutline: 1, latestDraft: 2, approvedDraft: 2 })).toBe(
+      'guion_aprobado',
+    )
     expect(scriptStatus({ ...nothing, latestOutline: 2, approvedOutline: 1, latestDraft: 1 })).toBe('guion_borrador')
   })
 
@@ -69,9 +75,9 @@ describe('scriptWarnings', () => {
 
   it('warns when the facts changed, also when there were none', () => {
     expect(scriptWarnings({ ...base, latestFacts: 2 })).toEqual(['hechos_cambiados'])
-    expect(
-      scriptWarnings({ ...base, latestFacts: 1, current: { ...base.current, factsVersion: null } }),
-    ).toEqual(['hechos_cambiados'])
+    expect(scriptWarnings({ ...base, latestFacts: 1, current: { ...base.current, factsVersion: null } })).toEqual([
+      'hechos_cambiados',
+    ])
   })
 
   it('warns when the outline changed under a written draft', () => {
@@ -80,14 +86,25 @@ describe('scriptWarnings', () => {
     expect(scriptWarnings({ ...base, latestOutline: 2, draftOutline: null })).toEqual([])
   })
 
-  it('warns when the long script of origin moved on', () => {
-    expect(scriptWarnings({ ...base, source: { latestDraft: 4, usedDraft: 4 } })).toEqual([])
-    expect(scriptWarnings({ ...base, source: { latestDraft: 5, usedDraft: 4 } })).toEqual(['origen_cambiado'])
+  it('warns when the moment of the long script it comes from changed', () => {
+    expect(scriptWarnings({ ...base, source: { usedMoment: 'Antes', latestMoment: 'Antes' } })).toEqual([])
+    expect(scriptWarnings({ ...base, source: { usedMoment: 'Antes', latestMoment: 'Ahora' } })).toEqual([
+      'origen_cambiado',
+    ])
+    // A moment that is gone from the long script has changed too.
+    expect(scriptWarnings({ ...base, source: { usedMoment: 'Antes', latestMoment: null } })).toEqual([
+      'origen_cambiado',
+    ])
   })
 
   it('a Short drawn from a long video warns even before it is written', () => {
     expect(
-      scriptWarnings({ ...base, current: null, draftOutline: null, source: { latestDraft: 5, usedDraft: 4 } }),
+      scriptWarnings({
+        ...base,
+        current: null,
+        draftOutline: null,
+        source: { usedMoment: 'Antes', latestMoment: 'Ahora' },
+      }),
     ).toEqual(['origen_cambiado'])
   })
 })

@@ -70,8 +70,10 @@ principal, que cambia según el estado.
   «Aprobar igualmente».
 - Con guion, aprobado o no (US3, escenario 4): «Descargar» (`.md` y `.json`).
 - Aprobado: en un vídeo largo, «Sacar un Short · {coste}».
-- Enfoques del Short: 2 o 3 `Card` con gancho, momento del guion, y «Elegir este». Al elegir, se abre el guion del Short
-  con «Escribir el guion · {coste}» como acción principal.
+- Con enfoques: «Pedir otros enfoques · {coste}», con indicaciones; se suman a los que había.
+- Enfoques del Short: una `Card` por enfoque vigente (2 o 3 por petición) con gancho, momento del guion, y «Elegir este». Al
+  elegir, se abre el guion del Short con «Escribir el guion · {coste}» como acción principal. Uno ya elegido dice «Ya has
+  sacado un Short de este enfoque» con «Abrir su guion» (decisión 43). Si se quitó alguna cifra, un aviso lo dice.
 
 ### En todos los pasos
 

@@ -67,7 +67,14 @@ describe('script versions repo (R1, R10)', () => {
     const { id } = script()
     addDraft(id, 'edicion')
     addDraft(id, 'edicion', 'otro')
-    versions.add({ scriptId: id, kind: 'hechos', origin: 'edicion', content: { facts: [] }, ideaRevision: 1, profileVersion: 1 })
+    versions.add({
+      scriptId: id,
+      kind: 'hechos',
+      origin: 'edicion',
+      content: { facts: [] },
+      ideaRevision: 1,
+      profileVersion: 1,
+    })
     expect(versions.latest(id, 'guion')?.version).toBe(2)
     expect(versions.latest(id, 'hechos')?.version).toBe(1)
     expect(versions.list(id, 'guion').map((v) => v.version)).toEqual([2, 1])

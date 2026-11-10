@@ -5,6 +5,9 @@ import {
   draftOutputFor,
   outlineOutput,
   researchOutput,
+  liveShortAngles,
+  shortAnglesOutput,
+  shortAnglesOutputFor,
   shortDraftOutput,
   shortDraftOutputFor,
 } from '../../src/script/outputs.ts'
@@ -123,5 +126,57 @@ describe('the outputs that come from the internet (T080)', () => {
     const schema = checkOutputFor(['marca-1', 'marca-2'])
     expect(schema.safeParse(check('marca-2')).success).toBe(true)
     expect(schema.safeParse(check('otra')).success).toBe(false)
+  })
+})
+
+describe('the angles for a Short (T088)', () => {
+  const angle = (blockId: string) => ({ title: 'Un título', hook: 'Un gancho', blockId, why: 'Por esto' })
+
+  it('asks for two or three', () => {
+    expect(shortAnglesOutput.safeParse({ angles: [angle('a')] }).success).toBe(false)
+    expect(shortAnglesOutput.safeParse({ angles: [angle('a'), angle('b')] }).success).toBe(true)
+    expect(shortAnglesOutput.safeParse({ angles: [angle('a'), angle('b'), angle('c')] }).success).toBe(true)
+    expect(shortAnglesOutput.safeParse({ angles: ['a', 'b', 'c', 'd'].map(angle) }).success).toBe(false)
+  })
+
+  it('only takes moments that are in the script', () => {
+    const schema = shortAnglesOutputFor(['a', 'b'])
+    expect(schema.safeParse({ angles: [angle('a'), angle('b')] }).success).toBe(true)
+    expect(schema.safeParse({ angles: [angle('a'), angle('otro')] }).success).toBe(false)
+  })
+})
+
+describe('the angles still offered (decision 41)', () => {
+  const kept = (blockId: string, moment: string, scriptId: string | null = null) => ({
+    title: `De ${blockId}`,
+    hook: 'Un gancho',
+    blockId,
+    why: 'Por esto',
+    moment,
+    trimmed: false,
+    scriptId,
+  })
+
+  it('offers only those whose moment still says the same, with their place in what is kept', () => {
+    const stored = [kept('a', 'Texto A'), kept('b', 'Texto B'), kept('c', 'Texto C', 'guion-1')]
+    const live = liveShortAngles(stored, [
+      { id: 'a', text: 'Texto A cambiado' },
+      { id: 'b', text: 'Texto B' },
+      { id: 'c', text: 'Texto C' },
+    ])
+    expect(live.map((angle) => [angle.blockId, angle.index, angle.scriptId])).toEqual([
+      ['b', 1, null],
+      ['c', 2, 'guion-1'],
+    ])
+  })
+
+  it('offers an angle again when its text comes back', () => {
+    const stored = [kept('a', 'Texto A')]
+    expect(liveShortAngles(stored, [{ id: 'a', text: 'Otro' }])).toEqual([])
+    expect(liveShortAngles(stored, [{ id: 'a', text: 'Texto A' }])).toHaveLength(1)
+  })
+
+  it('leaves out an angle whose moment is gone', () => {
+    expect(liveShortAngles([kept('a', 'Texto A')], [{ id: 'b', text: 'Texto A' }])).toEqual([])
   })
 })

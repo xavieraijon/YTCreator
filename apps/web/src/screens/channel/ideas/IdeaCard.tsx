@@ -8,6 +8,8 @@ const text = ideasEs.card
 
 export function originText(idea: IdeaView, sourceTitle: string | null): string {
   if (idea.origin !== 'otro_enfoque') return text.origin[idea.origin]
+  if (idea.script?.fromVideo)
+    return sourceTitle ? format(text.origin.del_video, { titulo: sourceTitle }) : text.origin.del_video_sin_titulo
   return sourceTitle ? format(text.origin.otro_enfoque, { titulo: sourceTitle }) : text.origin.otro_enfoque_sin_titulo
 }
 

@@ -44,6 +44,8 @@ const script = (fields: Partial<ScriptView> = {}): ScriptView =>
     outlineApprovedVersion: null,
     warnings: [],
     job: null,
+    shortAngles: [],
+    links: { parent: null, shorts: [] },
     webResearch: false,
     limits: { minSeconds: 60, maxSeconds: 3600, maxReviewedAt: null },
     voice: { wordsPerMinute: 150 },

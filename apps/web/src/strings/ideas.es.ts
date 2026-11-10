@@ -54,6 +54,8 @@ export const ideasEs = {
       creador: 'Tuya',
       otro_enfoque: 'Otro enfoque de «{titulo}»',
       otro_enfoque_sin_titulo: 'Otro enfoque de otra idea',
+      del_video: 'Short del vídeo «{titulo}»',
+      del_video_sin_titulo: 'Short de otro vídeo tuyo',
     },
   },
   format: { largo: 'Vídeo largo', short: 'Short' },

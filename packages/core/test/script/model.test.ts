@@ -41,7 +41,15 @@ const block = {
   seconds: 30,
 }
 const draftBlock = { id: 'b1', type: 'gancho', title: 'Empieza', text: 'Hola.', visual: '' }
-const claim = { id: 'c1', blockId: 'b1', text: '1990', status: 'pendiente', reason: 'sin_respaldo', factId: null, check: null }
+const claim = {
+  id: 'c1',
+  blockId: 'b1',
+  text: '1990',
+  status: 'pendiente',
+  reason: 'sin_respaldo',
+  factId: null,
+  check: null,
+}
 
 describe('the facts', () => {
   it('admits from 0 to 60 facts', () => {
@@ -154,7 +162,15 @@ describe('the limits of a script', () => {
 
 describe('coherence of the blocks (R10)', () => {
   const block = { id: 'b1', type: 'acto', title: 'Uno', text: 'Hola', visual: '' } as const
-  const claim = { id: 'c1', blockId: 'b1', text: 'dato', status: 'pendiente', reason: 'sin_respaldo', factId: null, check: null } as const
+  const claim = {
+    id: 'c1',
+    blockId: 'b1',
+    text: 'dato',
+    status: 'pendiente',
+    reason: 'sin_respaldo',
+    factId: null,
+    check: null,
+  } as const
 
   it('refuses two blocks with the same id', () => {
     expect(draftContentSchema.safeParse({ blocks: [block, block], claims: [] }).success).toBe(false)

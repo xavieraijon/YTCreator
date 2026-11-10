@@ -18,6 +18,7 @@ import {
   scriptSummarySchema,
   scriptSettingsViewSchema,
   scriptViewSchema,
+  shortChosenSchema,
   scriptReviewViewSchema,
   scriptVersionDetailSchema,
   scriptVersionSummarySchema,
@@ -26,6 +27,7 @@ import {
   type ClaimActionBody,
   type DraftSaveBody,
   type FactsSaveBody,
+  type ShortChooseBody,
   type ScriptSettingsBody,
   type IdeaPatchBody,
   type OutlineSaveBody,
@@ -325,6 +327,8 @@ export const scriptsApi = {
     apiClient.get(`${scriptPath(id)}/versions/${kind}/${version}`, scriptVersionDetailSchema),
   restore: (id: string, kind: ScriptKind, version: number, body: RestoreBody) =>
     apiClient.post(`${scriptPath(id)}/versions/${kind}/${version}/restore`, body, scriptViewSchema),
+  chooseShortAngle: (id: string, index: number, body: ShortChooseBody) =>
+    apiClient.post(`${scriptPath(id)}/short-angles/${index}/choose`, body, shortChosenSchema),
   saveFacts: (id: string, body: FactsSaveBody) => apiClient.put(`${scriptPath(id)}/facts`, body, scriptViewSchema),
   saveDraft: (id: string, body: DraftSaveBody) => apiClient.put(`${scriptPath(id)}/draft`, body, scriptViewSchema),
   actOnClaim: (id: string, claimId: string, body: ClaimActionBody) =>

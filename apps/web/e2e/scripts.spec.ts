@@ -511,6 +511,45 @@ test('facts with their links, a list of your own and a script checked on the int
   await expect(body.getByText('Una redacción con más cuidado').first()).toBeVisible()
 })
 
+test('a Short out of an approved long video, linked to it both ways (US7)', async ({ page, context }) => {
+  test.setTimeout(180_000)
+  await blockExternal(context)
+  await newScript(server, page, 'Vídeo con Short')
+  await toDraft(page)
+  await page.getByRole('button', { name: 'Revisar el guion' }).click()
+  await expect(page.getByText('Para sacar un Short, aprueba antes el guion.')).toBeVisible()
+  await page.getByRole('button', { name: 'Aprobar el guion' }).click()
+  await page.getByRole('button', { name: 'Aprobar igualmente' }).click()
+
+  const makeShort = page.getByRole('button', { name: /^Sacar un Short/ })
+  await expect(makeShort).toContainText('·')
+  await makeShort.click()
+  await expect(page.getByRole('heading', { name: 'Enfoques para el Short' })).toBeVisible()
+  await expect(page.getByText('Gancho: Si haces esto, tu pan no sube.')).toBeVisible()
+  await expect(page.getByText('Sale de:', { exact: false }).first()).toBeVisible()
+  await audit(page)
+
+  await page.getByRole('button', { name: 'Elegir este: El error que arruina tu masa madre' }).click()
+  await expect(heading(page, 'El error que arruina tu masa madre')).toBeVisible()
+  await expect(page.getByRole('button', { name: /^Escribir el guion/ })).toContainText('·')
+  await expect(page.getByText('Este Short sale del vídeo:')).toBeVisible()
+  await audit(page)
+  await page.getByRole('button', { name: /^Escribir el guion/ }).click()
+  await expect(page.getByRole('button', { name: 'Revisar el guion' })).toBeVisible()
+
+  await page.getByRole('button', { name: 'Vídeo con Short' }).click()
+  await expect(heading(page, 'Vídeo con Short')).toBeVisible()
+  await expect(page.getByText('Shorts sacados de este vídeo:')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'El error que arruina tu masa madre', exact: true })).toBeVisible()
+  // The angle chosen says so and leads to its Short; the other one can still be chosen.
+  await expect(page.getByText('Ya has sacado un Short de este enfoque.')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Abrir su guion: «El error que arruina tu masa madre»' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Elegir este: El truco de la temperatura' })).toBeVisible()
+  await audit(page)
+  await page.goto(`${server.baseURL}/canal/ideas`)
+  await expect(page.getByText('Short del vídeo «Vídeo con Short»')).toBeVisible()
+})
+
 test('a search that finds nothing reliable says so and changes nothing (US6)', async ({ page, context }) => {
   test.setTimeout(120_000)
   await blockExternal(context)

@@ -107,6 +107,7 @@ export function createScriptsRepo(db: DatabaseSync, now: () => Date = () => new 
   const updateJob = db.prepare('UPDATE script SET job_id = ?, job_op = ? WHERE id = ?')
   const updateAngles = db.prepare('UPDATE script SET short_angles = ?, updated_at = ? WHERE id = ?')
   const updateTouched = db.prepare('UPDATE script SET updated_at = ? WHERE id = ?')
+  const updateSourceDraft = db.prepare('UPDATE script SET source_draft_version = ?, updated_at = ? WHERE id = ?')
   const selectSettings = db.prepare('SELECT * FROM channel_script_settings WHERE channel_id = ?')
   const upsertSettings = db.prepare(
     `INSERT INTO channel_script_settings (channel_id, address, register, sample, words_per_minute, updated_at)
@@ -173,8 +174,16 @@ export function createScriptsRepo(db: DatabaseSync, now: () => Date = () => new 
       updateJob.run(jobId, op, id)
     },
 
+    // Always later than before, even within the same millisecond: a choice is checked against it (decision 43).
     setShortAngles(id: string, angles: unknown): Script {
-      updateAngles.run(JSON.stringify(angles), at(), id)
+      const before = get(id)?.updatedAt
+      const when = before && at() <= before ? new Date(Date.parse(before) + 1).toISOString() : at()
+      updateAngles.run(JSON.stringify(angles), when, id)
+      return get(id)!
+    },
+
+    setSourceDraft(id: string, version: number): Script {
+      updateSourceDraft.run(version, at(), id)
       return get(id)!
     },
 

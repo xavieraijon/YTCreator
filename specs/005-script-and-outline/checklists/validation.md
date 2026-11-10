@@ -453,3 +453,91 @@ V (conocimiento versionado, prompts con lock), VI (accesibilidad), IX (sin jerga
 ### 9. Cómo revertir
 
 `git revert` del commit de esta historia. La migración de `web_searches` solo añade una columna. Queda: T087, US7 y Polish.
+
+## US7 (T088–T093), Puerta A del 2026-11-10
+
+### 1. Resumen
+
+Desde un guion largo aprobado, el creador pide de 2 a 3 enfoques de Short, elige uno y se crea, sin llamar a la IA, una idea
+Short enlazada y su guion sin escribir, con los hechos del vídeo largo. Los dos guiones se enlazan entre sí. Todo probado con el
+proveedor falso; **la IA real no se ha probado** (va con P1).
+
+### 2. Requisitos
+
+| Requisito | Estado | Evidencia | Fecha |
+|---|---|---|---|
+| FR-019 enfoques desde un guion aprobado | Cumplido (falso) | `scripts-short-from-long.test.ts` (`sin_aprobar`, enfoques guardados), `outputs.test.ts` | 2026-11-10 |
+| FR-019 elegir crea idea y guion sin IA, con los hechos | Cumplido | `scripts-short-from-long.test.ts` (sin llamada ni gasto, hechos `heredada`) | 2026-11-10 |
+| Escenario 1: coste a la vista y 2 o 3 enfoques con gancho y momento | Cumplido | `scripts.spec.ts` (US7) | 2026-11-10 |
+| Escenario 2: idea Short que dice de qué vídeo sale y guion con «Escribir el guion · {coste}» | Cumplido | `scripts.spec.ts` («Short del vídeo «…»»), decisión 43 | 2026-11-10 |
+| Escenario 3: enlace en los dos sentidos | Cumplido | `scripts.spec.ts`, `scripts-short-from-long.test.ts` | 2026-11-10 |
+| Escenario 4: sin aprobar, la acción no está y se dice por qué | Cumplido | `scripts.spec.ts` | 2026-11-10 |
+| Regresión 004: la idea nueva se puede medir a petición | Cumplido | `scripts-short-from-long.test.ts` | 2026-11-10 |
+| `origen_cambiado` | Cumplido | `status.test.ts`, `scripts-short-from-long.test.ts`, decisión 44 | 2026-11-10 |
+| Principio III: elegir no gasta; pedir enfoques con coste antes | Cumplido | tests de ruta y e2e | 2026-11-10 |
+| IA real (Claude Code y API) | **No ejecutado** | requiere autorización (P1) | |
+
+### 3. Cómo se comprobó
+
+Tras las correcciones: `lint` 0, `typecheck` 0, `test` 2248 pasados y 4 omitidos (175 ficheros), `test:e2e` catálogo 97 de 97 y web 48 de 48.
+`scripts-short-from-long.test.ts` tiene 27 casos, incluida la batería de fallos de IA.
+
+### 4. Controles
+
+- Pasados: lint, typecheck, test, glosario (`glossary.test.ts` de web y ui), tipos de fallo de IA (`sin_sesion`, `cupo_agotado`,
+  `tiempo_agotado`, `contenido_filtrado`, `no_disponible`: los enfoques guardados no cambian), prompt con lock
+  (`enfoques_short@1`).
+- e2e con axe en claro y oscuro a 375 y 1280 px y zoom 200 %, teclado y reduced-motion: catálogo 97 de 97, web 48 de 48, con
+  `secrets-leak` incluido. En vueltas intermedias fallaron una vez, sin repetirse y sin relación con el diff, `ideas.spec.ts` (US1
+  de la 004: el texto del aviso estaba a la vez en la región de avisos y en su `role=status`) y el axe del catálogo por tiempo
+  agotado (120 s); en la vuelta final pasan los dos.
+- No ejecutados: `test:installer` (no se toca el instalador ni el empaquetado); IA real (P1).
+
+### 5. Hallazgos
+
+Dos vueltas de revisores (fidelidad, lógica, seguridad y coste, regresión; la segunda, fidelidad y lógica).
+
+Corregidos (medios):
+- `origen_cambiado` comparaba números de versión: saltaba al revisar una marca y no se quitaba nunca. Ahora compara el texto del
+  momento en el guion aprobado; escribir el Short otra vez lo quita, y si el momento ya no está no se ofrece pagar por reescribirlo
+  (decisión 44).
+- Al pedir otros enfoques se borraban los caducados y pasados 12 los más antiguos; un guardado que no validaba se perdía entero.
+  Ahora no se borra nada y lo ilegible conserva su sitio (decisión 41).
+- Si se quitaba una cifra de un enfoque, la pantalla no lo decía. Ahora lo dice (decisión 42).
+- «Ya has sacado un Short de este enfoque» se decidía por el título, y dos pestañas podían crear el mismo Short. Ahora el enfoque
+  guarda su guion, la segunda pestaña recibe `version_cambiada` y la fecha nunca repite milisegundo (decisiones 43 y 45).
+- El Short se escribía desde la última versión del guion largo aunque no estuviera aprobada (con bloques vacíos, por ejemplo).
+  Ahora parte del aprobado (decisión 44).
+- Decisiones con efecto visible clasificadas como «Medio» a secas: reclasificadas y elevadas al creador en P4.
+
+Corregidos (menores): la IA no sabía qué enfoques había ya (`alreadyOffered`, que no cuenta como fuente de cifras); el banco decía
+«Otro enfoque de…» en vez de «Short del vídeo…»; las indicaciones se reenviaban; contratos sin `instructions` ni el número de
+enfoques; la regla «se entiende sin ver el vídeo largo» estaba en el prompt y no en `craft.json`; faltaban tests de dominio
+(`liveShortAngles`, `scriptWarnings`) y el de la medida de la idea nueva; nombre accesible de «Abrir su guion».
+
+Abiertos (menores):
+- Una cifra del guion largo aprobado con marcas pendientes («Aprobar igualmente») cuenta como respaldo de un enfoque. Queda
+  mitigado: al escribir el Short, el título y el gancho no eximen de marca.
+- El título y el gancho del Short siguen sin contar como del creador aunque los reescriba en el banco (en P4).
+- El tiempo de `enfoques_short` (60 s con el guion largo entero) solo se puede ajustar con IA real (P1).
+
+### 6. Desviaciones
+
+Decisiones 41 a 45. `data-model.md` (`short_angles`, `source_draft_version`, `origen_cambiado`), `contracts/ai-uses.md`,
+`contracts/http-api.md` y `contracts/ui-screens.md` alineados. Un Short por enfoque: para otro del mismo momento se piden enfoques
+nuevos (la spec dice «tantos como quiera» de Shorts, y se cumple).
+
+### 7. Decisiones
+
+Agente: 41 a 45, de riesgo medio con efecto visible; 41, 43, 44 y 45 van al creador para ratificar en P4. Pendientes del
+creador: P1, P2, P3 y P4; ninguna bloquea esta historia.
+
+### 8. Constitución
+
+II (lo pagado no se pierde, los enfoques llevan `DataSource` de la IA, la idea sigue siendo del creador), III (coste antes de pedir
+enfoques; elegir no gasta; no se ofrece pagar algo que no sirve), IV (salida validada contra los bloques del guion), V (prompt
+versionado con lock; la regla de oficio en `craft.json`), VI (axe), IX (sin jerga), XI (este informe).
+
+### 9. Cómo revertir
+
+`git revert` del commit de esta historia. No hay migración: usa columnas de `0006_script.sql`. Queda: T087 (P1) y Polish.

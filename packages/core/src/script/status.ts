@@ -18,7 +18,12 @@ export interface ScriptStatusInput {
   approvedDraft: number | null
 }
 
-export function scriptStatus({ latestOutline, approvedOutline, latestDraft, approvedDraft }: ScriptStatusInput): ScriptStatus {
+export function scriptStatus({
+  latestOutline,
+  approvedOutline,
+  latestDraft,
+  approvedDraft,
+}: ScriptStatusInput): ScriptStatus {
   if (latestDraft !== null) return latestDraft === approvedDraft ? 'guion_aprobado' : 'guion_borrador'
   if (latestOutline === null) return 'sin_empezar'
   return latestOutline === approvedOutline ? 'escaleta_aprobada' : 'escaleta_borrador'
@@ -42,8 +47,11 @@ export interface ScriptWarningInput {
   latestOutline: number | null
   /** The outline the current draft was written with. */
   draftOutline: number | null
-  /** The long script a Short came from: its last draft, and the one the Short was drawn from. */
-  source: { latestDraft: number | null; usedDraft: number | null } | null
+  /**
+   * The long script a Short came from: the text of its moment in the draft the Short was written from, and in the
+   * last draft (`null` if that moment is gone). A new version that leaves it as it was is not a change for the Short.
+   */
+  source: { usedMoment: string | null; latestMoment: string | null } | null
 }
 
 // Nothing changes on its own: the creator is told what moved since this was written (data-model.md, «Avisos»).
@@ -56,6 +64,6 @@ export function scriptWarnings(input: ScriptWarningInput): ScriptWarning[] {
     if ((latestFacts ?? 0) > (current.factsVersion ?? 0)) warnings.push('hechos_cambiados')
   }
   if (draftOutline !== null && (latestOutline ?? 0) > draftOutline) warnings.push('escaleta_cambiada')
-  if (source && (source.latestDraft ?? 0) > (source.usedDraft ?? 0)) warnings.push('origen_cambiado')
+  if (source && source.latestMoment !== source.usedMoment) warnings.push('origen_cambiado')
   return warnings
 }

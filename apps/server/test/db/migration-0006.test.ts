@@ -22,7 +22,10 @@ function seeded(): DatabaseSync {
          created_at, updated_at) VALUES (?, 'c', 'creador', 'Idea', 'largo', 'banco', 1, '{}', 1, ?, ?)`,
     ).run(id, NOW, NOW)
   }
-  const columns = db.prepare('PRAGMA table_info(ai_usage)').all().map((c) => String(c['name']))
+  const columns = db
+    .prepare('PRAGMA table_info(ai_usage)')
+    .all()
+    .map((c) => String(c['name']))
   const row: Record<string, unknown> = {
     id: 'u1',
     journey_id: 'j',
@@ -114,7 +117,10 @@ describe('migration 0006 (the script)', () => {
   it('leaves version 6 recorded', () => {
     const db = seeded()
     migrate(db, MIGRATIONS)
-    const versions = db.prepare('SELECT version FROM schema_migrations ORDER BY version').all().map((r) => r['version'])
+    const versions = db
+      .prepare('SELECT version FROM schema_migrations ORDER BY version')
+      .all()
+      .map((r) => r['version'])
     expect(versions).toEqual([1, 2, 3, 4, 5, 6])
   })
 })

@@ -355,6 +355,26 @@ function normal(
         ),
       }
     }
+    case 'enfoques_short': {
+      const blocks = (input['blocks'] ?? []) as { id: string }[]
+      const moment = (index: number) => blocks[index]?.id ?? 'bloque'
+      return {
+        angles: [
+          {
+            title: 'El error que arruina tu masa madre',
+            hook: 'Si haces esto, tu pan no sube.',
+            blockId: moment(0),
+            why: 'Es lo que más sorprende del vídeo.',
+          },
+          {
+            title: 'El truco de la temperatura',
+            hook: 'Nadie te cuenta dónde dejar la masa.',
+            blockId: moment(1),
+            why: 'Se entiende en pocos segundos.',
+          },
+        ],
+      }
+    }
     case 'bloque_guion':
       return {
         text: 'Este bloque está escrito de nuevo. Lo agradecen dos millones de personas.',
@@ -420,6 +440,10 @@ function invent(use: ChannelUse, output: Record<string, unknown>): Record<string
     }
     case 'bloque_guion':
       return { ...output, text: add(output.text as string) }
+    case 'enfoques_short': {
+      const [first, ...rest] = output.angles as { hook: string }[]
+      return { angles: [{ ...first, hook: add(first!.hook) }, ...rest] }
+    }
     case 'investigacion': {
       const [first, ...rest] = output.facts as { text: string }[]
       return { facts: [{ ...first, text: add(first!.text) }, ...rest] }

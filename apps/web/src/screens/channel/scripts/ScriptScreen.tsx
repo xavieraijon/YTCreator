@@ -145,6 +145,16 @@ export function ScriptScreen({ id }: { readonly id: string }) {
         />
       }
     >
+      {(script.links.parent || script.links.shorts.length > 0) && (
+        <section aria-label={text.linksLabel} className={styles.notice}>
+          <span>{script.links.parent ? text.fromVideo : text.itsShorts}</span>{' '}
+          {(script.links.parent ? [script.links.parent] : script.links.shorts).map((other) => (
+            <Button key={other.id} variant="ghost" size="sm" onClick={() => navigate({ page: 'script', id: other.id })}>
+              {other.title}
+            </Button>
+          ))}
+        </section>
+      )}
       <nav aria-label={text.navigation} className={styles.actions}>
         {steps
           .filter((one) => isReachable(script, one))
@@ -216,6 +226,7 @@ export function ScriptScreen({ id }: { readonly id: string }) {
       {step === 'revisar' && (
         <ReviewStep
           script={script}
+          ai={ai}
           onChange={onChange}
           onError={setError}
           busy={ai.working !== null}

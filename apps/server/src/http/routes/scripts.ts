@@ -14,6 +14,7 @@ import {
   scriptGenerateBodySchema,
   scriptPatchBodySchema,
   scriptSettingsBodySchema,
+  shortChooseBodySchema,
 } from '@ytcreator/core/api'
 import { Hono } from 'hono'
 import type { ScriptsRepo } from '../../db/repos/scripts.ts'
@@ -144,6 +145,14 @@ export function scriptRoutes({ service, scripts }: ScriptRoutesDeps) {
   routes.put('/scripts/:id/facts', async (c) => {
     const body = await parseBody(c, factsSaveBodySchema)
     return c.json(await service.saveFacts(c.req.param('id'), body))
+  })
+
+  routes.post('/scripts/:id/short-angles/:index/choose', async (c) => {
+    const index = Number(c.req.param('index'))
+    if (!Number.isInteger(index) || index < 0)
+      throw new ApiError({ code: 'validacion', fields: { index: 'no_valido' } })
+    const { baseUpdatedAt } = await parseBody(c, shortChooseBodySchema)
+    return c.json(service.chooseShortAngle(c.req.param('id'), index, baseUpdatedAt), 201)
   })
 
   routes.put('/scripts/:id/outline', async (c) => {

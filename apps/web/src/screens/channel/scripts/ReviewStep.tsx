@@ -1,14 +1,18 @@
 import { type DraftBlock, type ReviewNotice, reviewScript } from '@ytcreator/core'
 import type { ScriptReviewView, ScriptView } from '@ytcreator/core/api'
-import { Button, Card, DataSource, Dialog, ErrorMessage, format } from '@ytcreator/ui'
+import { SCRIPT_LIMITS } from '@ytcreator/core'
+import { Button, Card, DataSource, Dialog, ErrorMessage, format, TextArea } from '@ytcreator/ui'
 import { useEffect, useRef, useState } from 'react'
 import { ApiClientError, scriptsApi } from '../../../api/client.ts'
+import { navigate } from '../../../router.ts'
 import { errorText } from '../../../shell/errorText.ts'
 import { es } from '../../../strings/es.ts'
 import { scriptEs } from '../../../strings/script.es.ts'
 import styles from '../channel.module.css'
+import { AiAction } from '../Proposal.tsx'
 import { clock } from './OutlineStep.tsx'
 import { saveFile } from './saveFile.ts'
+import { type ScriptAi, useEstimate } from './useScriptAi.ts'
 
 const text = scriptEs.review
 
@@ -16,6 +20,7 @@ type ReviewRulesView = ScriptReviewView['rules']
 
 export interface ReviewStepProps {
   readonly script: ScriptView
+  readonly ai: ScriptAi
   readonly onChange: (script: ScriptView) => void
   readonly onError: (cause: unknown) => void
   readonly onToBlock: (blockId: string) => void
@@ -58,7 +63,7 @@ function whereText(notice: ReviewNotice, titulo: string): string {
 }
 
 // What can be fixed for free before recording. Nothing here stops the approval (FR-016).
-export function ReviewStep({ script, onChange, onError, onToBlock, onToDraft, busy }: ReviewStepProps) {
+export function ReviewStep({ script, ai, onChange, onError, onToBlock, onToDraft, busy }: ReviewStepProps) {
   const [rules, setRules] = useState<ReviewRulesView | null>(null)
   const [failed, setFailed] = useState<unknown>(null)
   const [attempt, setAttempt] = useState(0)
@@ -67,7 +72,14 @@ export function ReviewStep({ script, onChange, onError, onToBlock, onToDraft, bu
   const [changedElsewhere, setChangedElsewhere] = useState(false)
   const [justApproved, setJustApproved] = useState(false)
   const approvedNote = useRef<HTMLParagraphElement>(null)
+  const [choosing, setChoosing] = useState<number | null>(null)
+  const [anglesAsk, setAnglesAsk] = useState('')
   const { id } = script
+  const canAskAngles = script.format === 'largo' && script.status === 'guion_aprobado'
+  const anglesPrice = useEstimate(script, 'enfoques_short', canAskAngles)
+  // What was asked for is not sent again once new angles arrive.
+  const lastAngle = script.shortAngles.at(-1)?.index ?? null
+  useEffect(() => setAnglesAsk(''), [lastAngle])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -127,6 +139,18 @@ export function ReviewStep({ script, onChange, onError, onToBlock, onToDraft, bu
       } else onError(cause)
     } finally {
       setSaving(false)
+    }
+  }
+
+  // Costs nothing: the Short opens unwritten, with its price on the button (FR-019).
+  const chooseAngle = async (index: number) => {
+    setChoosing(index)
+    try {
+      const { scriptId } = await scriptsApi.chooseShortAngle(id, index, { baseUpdatedAt: script.updatedAt })
+      navigate({ page: 'script', id: scriptId })
+    } catch (cause) {
+      onError(cause)
+      setChoosing(null)
     }
   }
 
@@ -213,6 +237,85 @@ export function ReviewStep({ script, onChange, onError, onToBlock, onToDraft, bu
           {text.downloadData}
         </Button>
       </div>
+      {script.format === 'largo' &&
+        (canAskAngles ? (
+          <>
+            <p className={styles.why}>{text.makeShortIntro}</p>
+            {anglesPrice.error !== null && (
+              <ErrorMessage
+                live
+                title={errorText(anglesPrice.error)}
+                action={{ label: es.app.retry, onClick: anglesPrice.retry }}
+              />
+            )}
+            {script.shortAngles.length > 0 && (
+              <>
+                <h2>{text.anglesTitle}</h2>
+                <DataSource kind="ia" />
+                {script.shortAngles.some((angle) => angle.trimmed) && (
+                  <p className={styles.notice}>{text.anglesTrimmed}</p>
+                )}
+                <ul className={styles.options}>
+                  {script.shortAngles.map((angle) => (
+                    <Card as="li" key={angle.index}>
+                      <h3>{angle.title}</h3>
+                      <p>{format(text.angleHook, { texto: angle.hook })}</p>
+                      <p>{format(text.angleMoment, { titulo: titleOf(angle.blockId) })}</p>
+                      <p className={styles.notice}>{format(text.angleWhy, { texto: angle.why })}</p>
+                      {angle.scriptId !== null ? (
+                        <p className={styles.notice}>
+                          {text.angleUsed}{' '}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            aria-label={format(text.openShortNamed, { titulo: angle.title })}
+                            onClick={() => navigate({ page: 'script', id: angle.scriptId! })}
+                          >
+                            {text.openShort}
+                          </Button>
+                        </p>
+                      ) : (
+                        <div className={styles.actions}>
+                          <Button
+                            variant="secondary"
+                            loading={choosing === angle.index}
+                            disabled={busy || (choosing !== null && choosing !== angle.index)}
+                            aria-label={format(text.chooseAngleNamed, { titulo: angle.title })}
+                            onClick={() => void chooseAngle(angle.index)}
+                          >
+                            {text.chooseAngle}
+                          </Button>
+                        </div>
+                      )}
+                    </Card>
+                  ))}
+                </ul>
+              </>
+            )}
+            {script.shortAngles.length > 0 && (
+              <TextArea
+                label={text.anglesInstructions}
+                description={text.anglesInstructionsHelp}
+                optional
+                value={anglesAsk}
+                maxLength={SCRIPT_LIMITS.instructions}
+                disabled={busy}
+                onChange={(event) => setAnglesAsk(event.target.value)}
+              />
+            )}
+            <AiAction
+              label={script.shortAngles.length > 0 ? text.anglesAgain : text.makeShort}
+              primary={false}
+              estimate={anglesPrice.estimate}
+              failure={ai.failureFor('enfoques_short')}
+              busy={ai.working === 'enfoques_short'}
+              disabled={busy}
+              onRun={() => void ai.run('enfoques_short', anglesPrice, anglesAsk)}
+            />
+          </>
+        ) : (
+          <p className={styles.notice}>{text.makeShortBlocked}</p>
+        ))}
       <Dialog
         open={asking}
         onOpenChange={setAsking}

@@ -81,7 +81,8 @@ export type IdeaMeasureView = z.infer<typeof ideaMeasureSchema>
 export const ideaSchema = z.object({
   id,
   // The script of this idea, if it has one (005, data-model.md).
-  script: z.object({ id, status: z.enum(SCRIPT_STATUSES) }).nullable(),
+  // `fromVideo`: a Short drawn from a long video, which the bank names as such (005, US7).
+  script: z.object({ id, status: z.enum(SCRIPT_STATUSES), fromVideo: z.boolean() }).nullable(),
   origin: z.enum(IDEA_ORIGINS),
   batchId: id.nullable(),
   sourceIdeaId: id.nullable(),

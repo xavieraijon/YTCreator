@@ -12,7 +12,7 @@ import {
   VOICE_REGISTERS,
 } from '../script/model.ts'
 import { itemComparisonSchema } from '../script/compare.ts'
-import { SCRIPT_USES } from '../script/outputs.ts'
+import { SCRIPT_USES, shortAngleViewSchema } from '../script/outputs.ts'
 import { SCRIPT_STATUSES, SCRIPT_WARNINGS } from '../script/status.ts'
 
 // The script routes (specs/005-script-and-outline/contracts/http-api.md).
@@ -49,6 +49,14 @@ export const scriptJobSchema = z.object({
 })
 export type ScriptJob = z.infer<typeof scriptJobSchema>
 
+const linkedScriptSchema = z.object({ id, title: z.string() })
+
+export const shortChooseBodySchema = z.object({ baseUpdatedAt: z.string().min(1) })
+export type ShortChooseBody = z.infer<typeof shortChooseBodySchema>
+
+export const shortChosenSchema = z.object({ ideaId: id, scriptId: id })
+export type ShortChosen = z.infer<typeof shortChosenSchema>
+
 export const scriptViewSchema = z.object({
   id,
   channelId: id,
@@ -84,6 +92,12 @@ export const scriptViewSchema = z.object({
   warnings: z.array(z.enum(SCRIPT_WARNINGS)),
   // Kept after it ends: on coming back the screen still has to say that it failed.
   job: scriptJobSchema.nullable(),
+  shortAngles: z.array(shortAngleViewSchema),
+  links: z.object({
+    // `momentGone`: the approved long script no longer has the moment this Short comes from (decision 44).
+    parent: linkedScriptSchema.extend({ momentGone: z.boolean() }).nullable(),
+    shorts: z.array(linkedScriptSchema),
+  }),
   webResearch: z.boolean(),
   limits: z.object({
     minSeconds: z.number().int(),

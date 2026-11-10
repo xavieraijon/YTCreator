@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { IDEA_LIMITS } from '../ideas/model.ts'
 import { durationSeconds } from './duration.ts'
 import { CLAIM_VERDICTS, OUTLINE_BLOCK_TYPES, SCRIPT_LIMITS } from './model.ts'
 
@@ -135,6 +136,64 @@ export const checkOutputFor = (claimIds: readonly string[]) =>
     message: 'marca_desconocida',
   })
 
+const angleText = (max: number) => z.string().trim().min(1).max(max)
+
+export const shortAngleSchema = z.object({
+  title: angleText(IDEA_LIMITS.title),
+  hook: angleText(IDEA_LIMITS.hook),
+  blockId: z.string().min(1),
+  why: angleText(IDEA_LIMITS.hook),
+})
+export type ShortAngle = z.infer<typeof shortAngleSchema>
+
+export const shortAnglesSchema = z.array(shortAngleSchema)
+
+// As kept: with the text it came from, because a change in the script leaves that angle out of date; whether a figure
+// was taken out of it; and the Short it became, once chosen (decision 41).
+export const storedShortAnglesSchema = z.array(
+  shortAngleSchema.extend({
+    moment: z.string(),
+    trimmed: z.boolean().default(false),
+    scriptId: z.string().nullable().default(null),
+  }),
+)
+export type StoredShortAngle = z.infer<typeof storedShortAnglesSchema>[number]
+
+// What the screen offers: each one with its place in what is kept, so choosing does not depend on what is hidden.
+export const shortAngleViewSchema = shortAngleSchema.extend({
+  index: z.number().int().nonnegative(),
+  trimmed: z.boolean(),
+  scriptId: z.string().nullable(),
+})
+export type ShortAngleView = z.infer<typeof shortAngleViewSchema>
+
+/**
+ * The angles still offered: those whose moment says, in the script as it is now, what it said when they were drawn.
+ * Nothing is dropped from what is kept: an angle comes back if its text does (decision 41).
+ */
+export function liveShortAngles(
+  stored: readonly (StoredShortAngle | null)[],
+  blocks: readonly { id: string; text: string }[],
+): ShortAngleView[] {
+  // `null` is one kept that no longer reads: it keeps its place, so the others keep theirs.
+  return stored.flatMap((angle, index) => {
+    if (angle === null) return []
+    const { title, hook, blockId, why, moment, trimmed, scriptId } = angle
+    return blocks.find((block) => block.id === blockId)?.text === moment
+      ? [{ title, hook, blockId, why, index, trimmed, scriptId }]
+      : []
+  })
+}
+
+export const shortAnglesOutput = z.object({ angles: shortAnglesSchema.min(2).max(3) })
+export type ShortAnglesOutput = z.infer<typeof shortAnglesOutput>
+
+// Each one comes from a moment that is really in the script (ai-uses.md).
+export const shortAnglesOutputFor = (blockIds: readonly string[]) =>
+  shortAnglesOutput.refine(({ angles }) => angles.every((angle) => blockIds.includes(angle.blockId)), {
+    message: 'bloque_desconocido',
+  })
+
 export const SCRIPT_OUTPUTS = {
   escaleta: outlineOutput,
   guion: draftOutput,
@@ -142,6 +201,7 @@ export const SCRIPT_OUTPUTS = {
   bloque_guion: blockOutput,
   investigacion: researchOutput,
   comprobar_guion: checkOutput,
+  enfoques_short: shortAnglesOutput,
 } as const
 export type ScriptUse = keyof typeof SCRIPT_OUTPUTS
 export const SCRIPT_USES = Object.keys(SCRIPT_OUTPUTS) as [ScriptUse, ...ScriptUse[]]

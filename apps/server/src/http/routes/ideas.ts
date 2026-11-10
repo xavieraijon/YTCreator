@@ -59,7 +59,7 @@ export interface IdeaRoutesDeps {
   staleDays: number
   measure: IdeaMeasureService
   // Its script, for the queue (005); the bank works without it.
-  scriptOf?: (ideaId: string) => { id: string; status: ScriptStatus } | null
+  scriptOf?: (ideaId: string) => { id: string; status: ScriptStatus; fromVideo: boolean } | null
   youtube: { effectiveSource(): YouTubeSource }
   // The prices of the Data API in thresholds.json (`dataApi`), for the units of «Medir todas» (R2).
   dataApiUnits: { searchUnits: number; otherUnits: number }
