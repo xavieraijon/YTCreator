@@ -96,7 +96,9 @@ test('the AI settings: accounts, reconnecting, changing the option and back, and
   await expect(row).toContainText('Funciona')
   await expect(row.getByRole('button', { name: 'Volver a conectar' })).toHaveCount(0)
 
-  // To pay per use: the key, «Usar esta opción», and the limits it cannot do without (FR-021).
+  // To pay per use, folded under «Más opciones» (decision 1 of 002): the key, «Usar esta opción», and the limits it
+  // cannot do without (FR-021).
+  await others(page).getByText('Más opciones', { exact: true }).click()
   await others(page).getByRole('button', { name: 'Configurar' }).click()
   await expect(heading(page, 'Conecta tu clave de Anthropic')).toBeVisible()
   await expect(page).toHaveURL(/\/ajustes\/ia\/cambiar\/pago_por_uso$/)
@@ -197,6 +199,7 @@ test('using a saved key that has no limits yet asks only for the limits, not for
 
     // The key is saved from «Configurar», but the creator goes back without using it: no limits yet.
     await page.goto(`${local.baseURL}/ajustes/ia`)
+    await others(page).getByText('Más opciones', { exact: true }).click()
     await others(page).getByRole('button', { name: 'Configurar' }).click()
     await page.getByLabel('Tu clave').fill(FAKE_KEY)
     await page.getByRole('button', { name: 'Comprobar y guardar' }).click()

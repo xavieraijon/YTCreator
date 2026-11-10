@@ -18,16 +18,14 @@ test('the whole wizard with the subscription, two accounts, and the home afterwa
   await blockExternal(context)
   await page.goto(server.baseURL)
 
-  // FR-018: what is needed, with both links.
+  // FR-018: what is needed; only the subscription has a link (decision 1 of 002).
   await expect(heading(page, 'Te damos la bienvenida a YTCreator')).toBeVisible()
   await expect(page.getByRole('link', { name: 'Ver las suscripciones de Claude' })).toHaveAttribute(
     'href',
     /claude\.ai/,
   )
-  await expect(page.getByRole('link', { name: 'Crear una cuenta de Anthropic' })).toHaveAttribute(
-    'href',
-    /console\.anthropic\.com/,
-  )
+  await expect(page.getByText(/también vale una cuenta de Anthropic con saldo/)).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Crear una cuenta de Anthropic' })).toHaveCount(0)
   // The header has no badge nor settings during the wizard.
   await expect(page.getByRole('link', { name: 'Ajustes' })).toHaveCount(0)
 

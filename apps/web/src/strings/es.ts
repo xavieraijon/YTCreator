@@ -50,9 +50,8 @@ export const es = {
     intro: 'YTCreator te acompaña desde la idea hasta el vídeo listo para publicar.',
     next: 'Vamos a conectar una IA. Son unos minutos.',
     needs:
-      'Necesitas una suscripción de Claude o una cuenta de Anthropic con saldo. YTCreator no incluye una IA gratuita.',
+      'Necesitas una suscripción de Claude Pro o Max (también vale una cuenta de Anthropic con saldo, en «Más opciones»). YTCreator no incluye una IA gratuita.',
     subscriptionLink: 'Ver las suscripciones de Claude',
-    apiLink: 'Crear una cuenta de Anthropic',
     start: 'Empezar',
   },
 
@@ -60,6 +59,7 @@ export const es = {
     title: 'Elige cómo usar la IA',
     why: 'La IA es la que te propone ideas y guiones. Puedes cambiar de opción cuando quieras.',
     continue: 'Continuar',
+    more: 'Más opciones',
     options: {
       suscripcion: {
         title: 'Usar mi suscripción de Claude',

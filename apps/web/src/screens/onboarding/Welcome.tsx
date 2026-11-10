@@ -7,6 +7,7 @@ import styles from './onboarding.module.css'
 import { useWizardStep } from './WizardShell.tsx'
 
 // FR-018: what YTCreator does, what comes next and what the creator needs. It does not count as a wizard step.
+// The pay-per-use account is said, not linked: it is the secondary option (decision 1 of 002).
 export function Welcome() {
   const { pending, error, send } = useWizardStep()
 
@@ -19,9 +20,6 @@ export function Welcome() {
         <div className={styles.links}>
           <ExternalLink className={styles.link} href={links.claudePlans}>
             {es.welcome.subscriptionLink}
-          </ExternalLink>
-          <ExternalLink className={styles.link} href={links.anthropicConsole}>
-            {es.welcome.apiLink}
           </ExternalLink>
         </div>
       </div>

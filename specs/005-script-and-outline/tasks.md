@@ -199,7 +199,7 @@ separado.
 - [X] T084 [US6] Ampliar `FactsStep.tsx` con la investigación, las etiquetas, los enlaces, el aviso de lo que la app comprueba y el caso sin internet, y `DraftStep.tsx` con «Comprobar con internet», el veredicto y «Usar esta redacción», con sus textos
 - [X] T085 [US6] e2e en `apps/web/e2e/scripts.spec.ts` (US6), incluido `sin_web`, con axe en claro y oscuro a 375 y 1280 px
 - [X] T086 [A] [US6] Puerta A de US6: ejecutar `/puerta-a 005 US6`. La prueba real consta como no ejecutada hasta T087
-- [ ] T087 [US6] Prueba real de P1, **solo con la autorización del creador**: una investigación y una generación con cada conexión autorizada, guardando el resultado en `checklists/validation.md`, incluidos SC-002 y SC-011 (tiempo total: los pasos de búsqueda, forma y enlaces). Si se pasa de 5 minutos, se ajustan los tiempos y se anota. Si `--json-schema` no convive con las herramientas web, Claude Code pasa a dos pasos como en R4
+- [X] T087 [US6] Prueba real de P1, **solo con la autorización del creador**: una investigación y una generación con cada conexión autorizada, guardando el resultado en `checklists/validation.md`, incluidos SC-002 y SC-011 (tiempo total: los pasos de búsqueda, forma y enlaces). Si se pasa de 5 minutos, se ajustan los tiempos y se anota. Si `--json-schema` no convive con las herramientas web, Claude Code pasa a dos pasos como en R4
 
 ---
 

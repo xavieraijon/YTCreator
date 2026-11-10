@@ -16,6 +16,8 @@ test('the second click of a double click on «Empezar» does not choose for the 
   await page.goto(server.baseURL)
   await page.getByRole('button', { name: 'Empezar' }).click()
   await expect(heading(page, 'Elige cómo usar la IA')).toBeVisible()
-  await page.getByText('Pagar solo lo que uses', { exact: true }).click()
+  // Paying per use is folded (decision 1 of 002): what is under the pointer is the subscription, already marked.
+  await page.getByText('Usar mi suscripción de Claude', { exact: true }).click()
   await expect(page.getByRole('radio', { name: /Usar mi suscripción de Claude/ })).toBeChecked()
+  await expect(page.getByRole('radio', { name: /Pagar solo lo que uses/ })).toHaveCount(0)
 })

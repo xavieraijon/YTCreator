@@ -145,6 +145,7 @@ test('no credential leaks to the logs, the disk, the HTTP answers, the DOM, loca
   // A key Anthropic refuses.
   await server.restart('sin_sesion:clave_no_valida')
   await page.reload()
+  await others.getByText('Más opciones', { exact: true }).click()
   await others.getByRole('button', { name: 'Configurar' }).click()
   await expect(heading(page, 'Conecta tu clave de Anthropic')).toBeVisible()
   await page.getByLabel('Tu clave').fill(BAD_KEY)

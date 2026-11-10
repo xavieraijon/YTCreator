@@ -1,6 +1,6 @@
 import { CONNECTION_KINDS, type AiFailure, type ConnectionKind } from '@ytcreator/core'
 import { aiOverviewSchema, checkConnectionResponseSchema, repairStateSchema } from '@ytcreator/core/api'
-import { Button, Card, Dialog, ErrorMessage, format, ProgressBar, useToast } from '@ytcreator/ui'
+import { Button, Card, Dialog, Disclosure, ErrorMessage, format, ProgressBar, useToast } from '@ytcreator/ui'
 import { useEffect, useState } from 'react'
 import { kindLabel } from '../../ai/kindLabel.ts'
 import { reloadAi, useAiOverview } from '../../ai/useAiOverview.ts'
@@ -69,6 +69,34 @@ export function AiSettings() {
   const accountLabel = (id: string) => overview.accounts.find((a) => a.id === id)?.label ?? ''
   const key = overview.connections.find((c) => c.kind === 'pago_por_uso')
   const others = CONNECTION_KINDS.filter((kind) => kind !== overview.activeKind)
+  // Paying per use is secondary (decision 1 of 002): folded while there is no key saved.
+  const folded = others.filter((kind) => kind === 'pago_por_uso' && !key?.hint)
+  const shown = others.filter((kind) => !folded.includes(kind))
+  const otherCard = (kind: ConnectionKind) => {
+    const connection = overview.connections.find((c) => c.kind === kind)
+    const ready = connection?.status === 'conectada'
+    return (
+      <Card as="li" key={kind} className={`${styles.row} ${styles.spread}`}>
+        <span className={styles.option}>
+          <strong>{kindLabel(kind)}</strong>
+          {kind === 'suscripcion' && overview.accounts.length === 0 ? (
+            <span className={styles.text}>{es.aiSettings.noAccount}</span>
+          ) : (
+            connection && <StatusLine view={connection} />
+          )}
+        </span>
+        {ready ? (
+          <Button variant="secondary" loading={busy === kind} onClick={() => void use(kind)}>
+            {es.aiSettings.useThis}
+          </Button>
+        ) : (
+          <Button variant="secondary" onClick={() => navigate({ page: 'switchAi', kind })}>
+            {es.aiSettings.configure}
+          </Button>
+        )}
+      </Card>
+    )
+  }
   const failing = active && active.status !== 'conectada' && active.status !== 'sin_comprobar' && active.reason
 
   // The option that takes over if `removed` is in use and goes away: the other one, if it works and can be used.
@@ -261,33 +289,12 @@ export function AiSettings() {
         <h2 id={OTHERS_ID} tabIndex={-1}>
           {es.aiSettings.others}
         </h2>
-        <ul className={styles.accounts}>
-          {others.map((kind) => {
-            const connection = overview.connections.find((c) => c.kind === kind)
-            const ready = connection?.status === 'conectada'
-            return (
-              <Card as="li" key={kind} className={`${styles.row} ${styles.spread}`}>
-                <span className={styles.option}>
-                  <strong>{kindLabel(kind)}</strong>
-                  {kind === 'suscripcion' && overview.accounts.length === 0 ? (
-                    <span className={styles.text}>{es.aiSettings.noAccount}</span>
-                  ) : (
-                    connection && <StatusLine view={connection} />
-                  )}
-                </span>
-                {ready ? (
-                  <Button variant="secondary" loading={busy === kind} onClick={() => void use(kind)}>
-                    {es.aiSettings.useThis}
-                  </Button>
-                ) : (
-                  <Button variant="secondary" onClick={() => navigate({ page: 'switchAi', kind })}>
-                    {es.aiSettings.configure}
-                  </Button>
-                )}
-              </Card>
-            )
-          })}
-        </ul>
+        {shown.length > 0 && <ul className={styles.accounts}>{shown.map(otherCard)}</ul>}
+        {folded.length > 0 && (
+          <Disclosure summary={es.choose.more}>
+            <ul className={styles.accounts}>{folded.map(otherCard)}</ul>
+          </Disclosure>
+        )}
       </section>
 
       {key && <LimitsSection />}

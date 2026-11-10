@@ -403,7 +403,7 @@ puede seguir. **La búsqueda real no se ha ejecutado** (T087, pendiente de P1): 
 | R4 dos pasos y repetir solo el formato | Cumplido (falso) | `anthropic-web.test.ts`, `claude-web-retry.test.ts` | 2026-11-09 |
 | R6 cabe en el límite propuesto | Cumplido (con precios de `pricing.json`) | `web-budget.test.ts` | 2026-11-09 |
 | R7 enlaces sin red privada | Cumplido | `link-check.test.ts` | 2026-11-09 |
-| SC-002, SC-011 | **No ejecutado** | requieren búsqueda real (P1) | |
+| SC-002, SC-011 | Ver «Prueba real (T087)» | Claude Code real; la API no pasa | 2026-11-10 |
 
 ### 3. Cómo se comprobó
 
@@ -475,7 +475,7 @@ proveedor falso; **la IA real no se ha probado** (va con P1).
 | Regresión 004: la idea nueva se puede medir a petición | Cumplido | `scripts-short-from-long.test.ts` | 2026-11-10 |
 | `origen_cambiado` | Cumplido | `status.test.ts`, `scripts-short-from-long.test.ts`, decisión 44 | 2026-11-10 |
 | Principio III: elegir no gasta; pedir enfoques con coste antes | Cumplido | tests de ruta y e2e | 2026-11-10 |
-| IA real (Claude Code y API) | **No ejecutado** | requiere autorización (P1) | |
+| IA real | Claude Code cumplido; API no | «Prueba real (T087)» | 2026-11-10 |
 
 ### 3. Cómo se comprobó
 
@@ -541,3 +541,34 @@ versionado con lock; la regla de oficio en `craft.json`), VI (axe), IX (sin jerg
 ### 9. Cómo revertir
 
 `git revert` del commit de esta historia. No hay migración: usa columnas de `0006_script.sql`. Queda: T087 (P1) y Polish.
+
+
+## Prueba real (T087), 2026-11-10
+
+Autorizada por el creador (P1, decisión 47) con Claude Code y API. `pnpm test:real-ai`
+(`apps/server/test/real/script-ai.real.test.ts`): por cada conexión, una investigación en internet con los prompts, perfiles
+y esquemas de la app, la comprobación real de los enlaces y un guion de Short con esos hechos. Los secretos los exportó el
+creador en su terminal; la prueba no los imprime.
+
+| Comprobación | Claude Code (suscripción) | API de Anthropic |
+|---|---|---|
+| Salida estructurada con búsqueda web | Cumple en un solo paso: `--json-schema` convive con `WebSearch`/`WebFetch`, no hace falta ir a dos pasos (R4) | No llegó al paso de formato |
+| SC-011: investigación < 5 min | **61 s** (IA 61 s, enlaces < 1 s) | **No cumple**: la búsqueda agotó sus 240 s (300 s del uso menos la reserva del paso de formato) |
+| Resultado de la investigación | 11 hechos (10 de una fuente o comprobados, 1 sin confirmar), 3 enlaces, 1 abre | `tiempo_agotado` |
+| Guion de Short (SC-002, una muestra) | 43 s para 45 s (4 % de desvío), 5 afirmaciones marcadas, 9 s | No se llegó |
+| Gasto | Cupo de la suscripción | Lo que consumió la búsqueda hasta el corte (por debajo de 1 $; el importe exacto está en la consola de Anthropic) |
+
+**Fallo encontrado y corregido (grave):** la CLI 2.1.322 rechaza un `--json-schema` con `$schema`, que es lo que escribe Zod.
+Toda salida estructurada por la suscripción fallaba como `servicio_caido`, también en la 003 y la 004, que nunca se habían
+probado con IA real. Corregido en `packages/ai/src/claude-code/adapter.ts` (`cliSchema`); la CLI falsa de los tests la
+rechaza ya como la real (commit `4568e38`).
+
+**Abiertos:**
+- (medio) Pocas fuentes: 11 hechos con solo 3 enlaces, y 2 no abren. Como la etiqueta la decide la app por los enlaces que
+  abren (FR-004c), la mayoría quedará «sin confirmar». Conviene que el prompt de `investigacion` pida un enlace por hecho;
+  sin probar con más muestras.
+- (medio) La investigación por la API pasa de su límite. El creador decide no repetir la prueba y dejar la API como opción
+  secundaria (decisión 47 y decisión 1 de la 002). Si se retoma: cronometrar cada llamada (ya lo hace la prueba) y bajar
+  búsquedas y lecturas.
+- SC-002 es una muestra: no basta para el 90 %.
+- P3 (`WebFetch`): la prueba no dice qué direcciones abrió; sigue abierto.

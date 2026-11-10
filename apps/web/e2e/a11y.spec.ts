@@ -86,6 +86,7 @@ test('the subscription screens, the home and the settings pass axe in both theme
     await server.restart('sin_sesion:clave_no_valida')
     await page.reload()
     const others = page.getByRole('region', { name: 'Otras opciones' })
+    await others.getByText('Más opciones', { exact: true }).click()
     await others.getByRole('button', { name: 'Configurar' }).click()
     await expect(heading(page, 'Conecta tu clave de Anthropic')).toBeVisible()
     await audit('ChangeAi · clave')
@@ -181,7 +182,9 @@ test('the whole wizard with the keyboard alone, the focus always visible (SC-010
     await page.keyboard.press('Enter')
     await expect(heading(page, 'Elige cómo usar la IA')).toBeVisible()
 
-    // The arrows move the choice; the first option is the one already marked.
+    // «Más opciones» shows paying per use; the arrows move the choice; the first option is the one already marked.
+    await tabTo(page, page.getByRole('button', { name: 'Más opciones' }))
+    await page.keyboard.press('Enter')
     const subscription = page.getByRole('radio', { name: /Usar mi suscripción de Claude/ })
     const perUse = page.getByRole('radio', { name: /Pagar solo lo que uses/ })
     await tabTo(page, subscription)
