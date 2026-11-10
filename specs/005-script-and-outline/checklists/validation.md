@@ -518,7 +518,7 @@ enfoques; la regla «se entiende sin ver el vídeo largo» estaba en el prompt y
 Abiertos (menores):
 - Una cifra del guion largo aprobado con marcas pendientes («Aprobar igualmente») cuenta como respaldo de un enfoque. Queda
   mitigado: al escribir el Short, el título y el gancho no eximen de marca.
-- El título y el gancho del Short siguen sin contar como del creador aunque los reescriba en el banco (en P4).
+- El título y el gancho del Short siguen sin contar como del creador aunque los reescriba en el banco (ratificado, decisión 46).
 - El tiempo de `enfoques_short` (60 s con el guion largo entero) solo se puede ajustar con IA real (P1).
 
 ### 6. Desviaciones
@@ -529,8 +529,8 @@ nuevos (la spec dice «tantos como quiera» de Shorts, y se cumple).
 
 ### 7. Decisiones
 
-Agente: 41 a 45, de riesgo medio con efecto visible; 41, 43, 44 y 45 van al creador para ratificar en P4. Pendientes del
-creador: P1, P2, P3 y P4; ninguna bloquea esta historia.
+Agente: 41 a 45, de riesgo medio con efecto visible. El creador ratificó 41, 43, 44 y 45 el 2026-11-10 (decisión 46, cierra P4).
+Pendientes del creador: P1, P2 y P3; ninguna bloquea esta historia.
 
 ### 8. Constitución
 
