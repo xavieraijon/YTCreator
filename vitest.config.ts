@@ -29,7 +29,13 @@ export default defineConfig({
       { test: { name: 'catalog', root: 'apps/catalog', environment: 'node', include: ['test/**/*.test.ts'] } },
       {
         define: allowFakeAi,
-        test: { name: 'server', root: 'apps/server', environment: 'node', include: ['test/**/*.test.ts'] },
+        test: {
+          name: 'server',
+          root: 'apps/server',
+          environment: 'node',
+          include: ['test/**/*.test.ts'],
+          exclude: ['test/**/*.real.test.ts'],
+        },
       },
       { test: { name: 'web', root: 'apps/web', environment: 'node', include: ['test/**/*.test.{ts,tsx}'] } },
       {

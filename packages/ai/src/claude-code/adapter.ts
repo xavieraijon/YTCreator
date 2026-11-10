@@ -43,6 +43,13 @@ export async function claudeVersion(
   return run.exitCode === 0 && version ? { ok: true, version } : { ok: false, failure: UNKNOWN_FAILURE }
 }
 
+// The CLI refuses a schema that names its draft (2.1.322, T087): Zod writes `$schema`, so it goes.
+export function cliSchema(schema: z.ZodType): Record<string, unknown> {
+  const json = z.toJSONSchema(schema) as Record<string, unknown>
+  delete json['$schema']
+  return json
+}
+
 // Claude subscription through the CLI the creator installed (research R10), one config folder per account.
 export function createClaudeCodeProvider(
   credentials: Secret,
@@ -118,7 +125,7 @@ export function createClaudeCodeProvider(
     },
 
     async generate<T>(request: AiRequest<T>): Promise<AiResult<T>> {
-      const jsonSchema = request.schema ? z.toJSONSchema(request.schema) : undefined
+      const jsonSchema = request.schema ? cliSchema(request.schema) : undefined
       // The CLI has no limit of its own: it goes in the instruction, and a subscription pays nothing per search (R5).
       const limits = request.web
         ? WEB_LIMITS_NOTE.replace('{busquedas}', String(request.web.maxSearches)).replace(
