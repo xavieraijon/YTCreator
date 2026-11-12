@@ -99,6 +99,7 @@ export function IdeaQueue({ ideas, busy, onMove, onRemove }: IdeaQueueProps) {
                     variant={index === 0 ? 'primary' : 'secondary'}
                     size="sm"
                     aria-label={format(scriptEs.queue.named, { accion: scriptAction(idea), titulo: idea.title })}
+                    data-script-open={idea.id}
                     onClick={() => void openScript(idea)}
                   >
                     {scriptAction(idea)}

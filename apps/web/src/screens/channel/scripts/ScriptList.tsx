@@ -69,26 +69,35 @@ export function ScriptList() {
           action={{ label: text.toBank, onClick: () => navigate({ page: 'ideaBank' }) }}
         />
       ) : (
-        <ul className={styles.options}>
-          {scripts.map((script, index) => (
-            <Card as="li" key={script.id} className={styles.option}>
-              <h2>{script.title}</h2>
-              <p>
-                <Badge>{scriptEs.format[script.format]}</Badge> <Badge>{scriptEs.status[script.status]}</Badge>
-              </p>
-              <p>{format(text.updated, { date: dateOf(script.updatedAt) })}</p>
-              <div className={styles.actions}>
-                <Button
-                  variant={index === 0 ? 'primary' : 'secondary'}
-                  aria-label={format(text.openNamed, { titulo: script.title })}
-                  onClick={() => navigate({ page: 'script', id: script.id })}
-                >
-                  {text.open}
-                </Button>
-              </div>
-            </Card>
-          ))}
-        </ul>
+        <>
+          {/* With scripts already there, starting another one is still in reach (novice audit, decision 50). */}
+          <p className={styles.notice}>
+            {text.another}{' '}
+            <Button variant="secondary" size="sm" onClick={() => navigate({ page: 'ideaBank' })}>
+              {text.toBank}
+            </Button>
+          </p>
+          <ul className={styles.options}>
+            {scripts.map((script, index) => (
+              <Card as="li" key={script.id} className={styles.option}>
+                <h2>{script.title}</h2>
+                <p>
+                  <Badge>{scriptEs.format[script.format]}</Badge> <Badge>{scriptEs.status[script.status]}</Badge>
+                </p>
+                <p>{format(text.updated, { date: dateOf(script.updatedAt) })}</p>
+                <div className={styles.actions}>
+                  <Button
+                    variant={index === 0 ? 'primary' : 'secondary'}
+                    aria-label={format(text.openNamed, { titulo: script.title })}
+                    onClick={() => navigate({ page: 'script', id: script.id })}
+                  >
+                    {text.open}
+                  </Button>
+                </div>
+              </Card>
+            ))}
+          </ul>
+        </>
       )}
       {downloadFailed !== null && (
         <ErrorMessage

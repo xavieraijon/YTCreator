@@ -140,7 +140,8 @@ export function ScriptScreen({ id }: { readonly id: string }) {
       before={
         <Stepper
           steps={steps.map((one) => ({ id: one, label: text.steps[one] }))}
-          current={steps.indexOf(step) + 1}
+          // Where the script has got to, not the step on screen: going back to read does not undo the rest (novice audit).
+          current={steps.indexOf(stepFor(script)) + 1}
           aria-label={text.progress}
         />
       }
@@ -197,6 +198,7 @@ export function ScriptScreen({ id }: { readonly id: string }) {
           onChange={onChange}
           onError={setError}
           onToDraft={() => setStep('guion')}
+          onToOutline={() => setStep('escaleta')}
         />
       )}
       {step === 'escaleta' && (

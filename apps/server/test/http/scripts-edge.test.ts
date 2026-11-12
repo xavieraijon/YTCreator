@@ -220,3 +220,22 @@ describe('the logs (T096)', () => {
     expect(draft.version).toBe(1)
   })
 })
+
+describe('the outline the script was written from (decision 51)', () => {
+  it('says it changed only while its blocks are different', async () => {
+    const { t, id, outline } = await withDraft()
+    const blocks = outline.content.blocks.map((block, index) =>
+      index === 0 ? { ...block, title: 'Otro título' } : block,
+    )
+    const saved = await call(t, 'PUT', `/api/scripts/${id}/outline`, {
+      baseVersion: outline.version,
+      content: { blocks },
+    })
+    expect(saved.body['warnings']).toContain('escaleta_cambiada')
+    const restored = await call(t, 'POST', `/api/scripts/${id}/versions/escaleta/${outline.version}/restore`, {
+      baseVersion: outline.version + 1,
+    })
+    expect((restored.body['outline'] as Version).version).toBe(outline.version + 2)
+    expect(restored.body['warnings']).not.toContain('escaleta_cambiada')
+  })
+})

@@ -156,6 +156,20 @@ export function createScriptService(deps: ScriptServiceDeps) {
     return { ...(saved ?? DEFAULT_SCRIPT_SETTINGS), isDefault: saved === null }
   }
 
+  // The outline the script was written from counts as unchanged while its blocks are the same: going back to it, or
+  // saving it as it was, makes a new version but says nothing new (novice audit of 005, decision 51).
+  const outlineSaidChanged = (
+    scriptId: string,
+    outline: ReturnType<typeof versions.latest<'escaleta'>>,
+    usedVersion: number | null,
+  ): number | null => {
+    if (!outline || usedVersion === null || outline.version <= usedVersion) return outline?.version ?? null
+    const used = versions.get(scriptId, 'escaleta', usedVersion)
+    return used && JSON.stringify(used.content.blocks) === JSON.stringify(outline.content.blocks)
+      ? usedVersion
+      : outline.version
+  }
+
   const verdictOf = (idea: Idea) => {
     const latest = measures.latest(idea.id)
     return latest?.status === 'medida' && latest.ideaRevision === idea.revision ? latest : null
@@ -235,7 +249,7 @@ export function createScriptService(deps: ScriptServiceDeps) {
             }
           : null,
         latestFacts: facts?.version ?? null,
-        latestOutline: outline?.version ?? null,
+        latestOutline: outlineSaidChanged(script.id, outline, draft?.outlineVersion ?? null),
         draftOutline: draft?.outlineVersion ?? null,
         source: script.sourceScriptId
           ? {

@@ -1,7 +1,7 @@
 import { type ScriptView } from '@ytcreator/core/api'
 import { SCRIPT_LIMITS } from '@ytcreator/core'
 import { Button, Card, ErrorMessage, format, TextArea, TextField } from '@ytcreator/ui'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ApiClientError, scriptsApi } from '../../../api/client.ts'
 import { errorText } from '../../../shell/errorText.ts'
 import { es } from '../../../strings/es.ts'
@@ -20,10 +20,13 @@ export interface FactsStepProps {
   readonly onChange: (script: ScriptView) => void
   readonly onError: (cause: unknown) => void
   readonly onToDraft: () => void
+  readonly onToOutline: () => void
 }
 
+const AUTOSAVE_MS = 1500
+
 // Duration and notes: what the AI starts from (contracts/ui-screens.md, «Hechos»).
-export function FactsStep({ script, ai, nothingFound, onChange, onError, onToDraft }: FactsStepProps) {
+export function FactsStep({ script, ai, nothingFound, onChange, onError, onToDraft, onToOutline }: FactsStepProps) {
   // A long video is thought of in minutes and a Short in seconds.
   const unit = script.format === 'largo' ? 60 : 1
   const [duration, setDuration] = useState(String(Math.round(script.targetSeconds / unit)))
@@ -34,7 +37,9 @@ export function FactsStep({ script, ai, nothingFound, onChange, onError, onToDra
   const isShort = script.format === 'short'
   const writeUse = isShort ? 'guion_short' : 'escaleta'
   // Once a Short is written, asking for another is done from its script, where an approval is protected.
-  const canWrite = !isShort || script.draft === null
+  // Once written, what is next is never replaced from here: another one is asked for in its own step, which protects
+  // an approval (decision 28; for the outline, novice audit of 005, decision 51).
+  const canWrite = isShort ? script.draft === null : script.outline === null
   const price = useEstimate(script, writeUse, canWrite)
   const { estimate } = price
   const researchPrice = useEstimate(script, 'investigacion', script.webResearch)
@@ -107,6 +112,16 @@ export function FactsStep({ script, ai, nothingFound, onChange, onError, onToDra
     queue.current = queue.current.then(send, send)
     return queue.current
   }
+
+  // The notes save themselves a moment after the creator stops typing: closing the tab with the cursor still in them
+  // used to lose them (novice audit of 005, decision 51).
+  const latestSave = useRef(save)
+  latestSave.current = save
+  useEffect(() => {
+    if (notes === lastSaved.current.notes) return
+    const timer = setTimeout(() => void latestSave.current(), AUTOSAVE_MS)
+    return () => clearTimeout(timer)
+  }, [notes])
 
   const propose = async () => {
     // Saved first, so the price is the one of what is on the screen.
@@ -239,10 +254,10 @@ export function FactsStep({ script, ai, nothingFound, onChange, onError, onToDra
         </>
       ) : (
         <>
-          <p className={styles.why}>{text.shortIntro}</p>
+          <p className={styles.why}>{isShort ? text.shortIntro : text.outlineDone}</p>
           <div className={styles.actions}>
-            <Button variant="primary" onClick={onToDraft}>
-              {scriptEs.outline.toDraft}
+            <Button variant="primary" onClick={isShort ? onToDraft : onToOutline}>
+              {isShort ? scriptEs.outline.toDraft : scriptEs.draft.toOutline}
             </Button>
           </div>
         </>

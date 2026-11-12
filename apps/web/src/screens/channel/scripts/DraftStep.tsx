@@ -121,6 +121,8 @@ function BlockAgain({
         disabled={disabled}
         onChange={(event) => setInstructions(event.target.value)}
       />
+      {/* What is there now goes, hand-written words too: said before paying (novice audit, decision 51). */}
+      <p className={styles.notice}>{text.blockReplaces}</p>
       {price.error !== null && (
         <ErrorMessage live title={errorText(price.error)} action={{ label: es.app.retry, onClick: price.retry }} />
       )}
@@ -238,6 +240,13 @@ function ClaimDialog({
   )
 }
 
+// What the counter adds: where the marks are, and, once searched, where the answer is (novice audit of 005).
+function searchedSaid(pending: number, searched: number): string {
+  if (searched === 0) return text.claimsHint
+  if (searched === pending) return pending === 1 ? text.claimsSearched.one : text.claimsSearched.other
+  return format(text.claimsSearched.some, { n: String(searched) })
+}
+
 // What the creator is going to say, block by block (contracts/ui-screens.md).
 export function DraftStep({
   script,
@@ -259,12 +268,15 @@ export function DraftStep({
   const counter = useRef<HTMLParagraphElement>(null)
   const openEdit = useRef<DraftBlock | null>(null)
   const focusCounter = useRef(false)
+  const refocusBlock = useRef<string | null>(null)
   const refocus = useRef<string | null>(null)
   const rewriteUse = script.format === 'short' ? 'guion_short' : 'guion'
   const canRewrite =
     script.format === 'short' || (script.outline !== null && script.outlineApprovedVersion === script.outline.version)
   const price = useEstimate(script, rewriteUse, canRewrite)
-  const unchecked = script.draft?.content.claims.filter((claim) => claim.status === 'pendiente').length ?? 0
+  // Only what has not been searched yet: searching again the same marks would spend for the same answer (novice audit).
+  const unchecked =
+    script.draft?.content.claims.filter((claim) => claim.status === 'pendiente' && claim.check === null).length ?? 0
   const checkPrice = useEstimate(script, 'comprobar_guion', script.webResearch && unchecked > 0)
   const draft = script.draft
 
@@ -288,7 +300,15 @@ export function DraftStep({
 
   // After the dialog has gone: until then the page is inert, and it hands the focus back to a mark that no longer exists.
   useEffect(() => {
-    if (openClaim !== null || !focusCounter.current) return
+    if (openClaim !== null) return
+    if (refocusBlock.current) {
+      const heading = document.querySelector<HTMLElement>(`[data-block-heading="${CSS.escape(refocusBlock.current)}"]`)
+      refocusBlock.current = null
+      heading?.scrollIntoView({ block: 'start' })
+      heading?.focus()
+      return
+    }
+    if (!focusCounter.current) return
     focusCounter.current = false
     counter.current?.focus()
   }, [openClaim])
@@ -298,6 +318,13 @@ export function DraftStep({
   const { blocks, claims } = draft.content
   const { wordsPerMinute } = script.voice
   const pendingClaims = claims.filter((claim) => claim.status === 'pendiente')
+  const searched = pendingClaims.filter((claim) => claim.check !== null).length
+  // The marks are found by their colour alone, so the button takes the creator to the first one (novice audit).
+  const toFirstClaim = () => {
+    const first = document.querySelector<HTMLElement>('[data-claim]')
+    first?.scrollIntoView({ block: 'center' })
+    first?.focus()
+  }
   const claim = claims.find((one) => one.id === openClaim) ?? null
   const total = durationSeconds(blocks.map((block) => block.text).join(' '), wordsPerMinute)
   const busy = saving || ai.working !== null
@@ -342,8 +369,10 @@ export function DraftStep({
         action,
         ...(fixed ? { text: fixed } : {}),
       })
-      // The mark that opened it is gone: the count that just went down is the next thing to read.
-      focusCounter.current = true
+      // The mark that opened it is gone: the count that just went down is the next thing to read. Taking a fragment out
+      // may leave the sentence broken, so then the block is what comes next, in sight (novice audit, decision 50).
+      if (action === 'quitar_del_guion') refocusBlock.current = claim.blockId
+      else focusCounter.current = true
       setOpenClaim(null)
       onChange(changed)
     } catch (cause) {
@@ -375,11 +404,16 @@ export function DraftStep({
       <p ref={counter} tabIndex={-1} role="status">
         {pendingClaims.length === 0
           ? text.noClaims
-          : format(pendingClaims.length === 1 ? text.claimsCount.one : text.claimsCount.other, {
+          : `${format(pendingClaims.length === 1 ? text.claimsCount.one : text.claimsCount.other, {
               n: pendingClaims.length,
-            })}
+            })}. ${searchedSaid(pendingClaims.length, searched)}`}
       </p>
-      {script.webResearch && pendingClaims.length > 0 && (
+      {pendingClaims.length > 0 && (
+        <Button variant="secondary" size="sm" disabled={busy} onClick={toFirstClaim}>
+          {text.toFirstClaim}
+        </Button>
+      )}
+      {script.webResearch && unchecked > 0 && (
         <>
           <p className={styles.why}>{text.checkIntro}</p>
           {checkPrice.error !== null && (
@@ -450,6 +484,7 @@ export function DraftStep({
                         key={index}
                         type="button"
                         className={styles.claim}
+                        data-claim
                         aria-label={format(text.claimName, { texto: part.text })}
                         aria-disabled={busy || undefined}
                         onClick={() => !busy && part.claimId && guard(() => setOpenClaim(part.claimId ?? null))}

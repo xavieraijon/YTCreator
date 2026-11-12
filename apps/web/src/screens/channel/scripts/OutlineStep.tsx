@@ -1,7 +1,18 @@
 import type { OutlineBlock } from '@ytcreator/core'
 import { SCRIPT_LIMITS } from '@ytcreator/core'
 import type { ScriptView } from '@ytcreator/core/api'
-import { Badge, Button, Card, DataSource, Disclosure, ErrorMessage, format, TextArea, TextField } from '@ytcreator/ui'
+import {
+  Badge,
+  Button,
+  Card,
+  DataSource,
+  Dialog,
+  Disclosure,
+  ErrorMessage,
+  format,
+  TextArea,
+  TextField,
+} from '@ytcreator/ui'
 import { useEffect, useRef, useState } from 'react'
 import { scriptsApi } from '../../../api/client.ts'
 import { errorText } from '../../../shell/errorText.ts'
@@ -126,6 +137,8 @@ export interface OutlineStepProps {
 
 export function OutlineStep({ script, ai, onChange, onError, onToFacts, onToDraft, onEditing }: OutlineStepProps) {
   const [editing, setEditing] = useState<string | null>(null)
+  // Taking a block out asks first: it is gone at once, and only the history brings it back (novice audit, decision 50).
+  const [removing, setRemoving] = useState<OutlineBlock | null>(null)
   const [saving, setSaving] = useState(false)
   const [instructions, setInstructions] = useState('')
   // Where the focus goes back after a move: the same button of the same block.
@@ -286,15 +299,7 @@ export function OutlineStep({ script, ai, onChange, onError, onToFacts, onToDraf
                     'down',
                   )}
                   {actionButton(text.change, block, () => setEditing(block.id))}
-                  {actionButton(
-                    text.remove,
-                    block,
-                    () => {
-                      refocus.current = 'add'
-                      void save(blocks.filter((one) => one.id !== block.id))
-                    },
-                    blocks.length === 1,
-                  )}
+                  {actionButton(text.remove, block, () => setRemoving(block), blocks.length === 1)}
                 </div>
               </>
             )}
@@ -375,6 +380,31 @@ export function OutlineStep({ script, ai, onChange, onError, onToFacts, onToDraf
           onRun={() => void ai.run('escaleta', price, instructions)}
         />
       </Disclosure>
+      <Dialog
+        open={removing !== null}
+        onOpenChange={(open) => !open && setRemoving(null)}
+        title={format(text.removeTitle, { titulo: removing ? titleOf(removing) : '' })}
+        description={text.removeBody}
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setRemoving(null)}>
+              {text.cancel}
+            </Button>
+            <Button
+              variant="primary"
+              onClick={() => {
+                const gone = removing
+                setRemoving(null)
+                if (!gone) return
+                refocus.current = 'add'
+                void save(blocks.filter((one) => one.id !== gone.id))
+              }}
+            >
+              {text.removeConfirm}
+            </Button>
+          </>
+        }
+      />
     </>
   )
 }

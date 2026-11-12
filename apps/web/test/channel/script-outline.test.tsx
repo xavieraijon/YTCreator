@@ -73,6 +73,7 @@ const facts = (view: ScriptView) =>
       onChange={() => undefined}
       onError={() => undefined}
       onToDraft={() => undefined}
+      onToOutline={() => undefined}
     />,
   )
 
@@ -103,5 +104,13 @@ describe('the facts step', () => {
   it('warns that with nothing to go on almost everything will be to check', () => {
     expect(facts(script())).toContain(scriptEs.facts.noNotes)
     expect(facts(script({ notes: 'Mis apuntes' }))).not.toContain(scriptEs.facts.noNotes)
+  })
+
+  it('with the outline written, leads to it and never replaces it from here (decision 51)', () => {
+    const written = facts(script())
+    expect(written).toContain(scriptEs.facts.outlineDone)
+    expect(written).toContain(scriptEs.draft.toOutline)
+    expect(written).not.toContain(scriptEs.facts.proposeOutline)
+    expect(facts(script({ outline: null }))).toContain(scriptEs.facts.proposeOutline)
   })
 })

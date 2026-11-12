@@ -1,7 +1,7 @@
 import { type DraftBlock, type ReviewNotice, reviewScript } from '@ytcreator/core'
 import type { ScriptReviewView, ScriptView } from '@ytcreator/core/api'
 import { SCRIPT_LIMITS } from '@ytcreator/core'
-import { Button, Card, DataSource, Dialog, ErrorMessage, format, TextArea } from '@ytcreator/ui'
+import { Button, Card, DataSource, Dialog, Disclosure, ErrorMessage, format, TextArea } from '@ytcreator/ui'
 import { useEffect, useRef, useState } from 'react'
 import { ApiClientError, scriptsApi } from '../../../api/client.ts'
 import { navigate } from '../../../router.ts'
@@ -166,6 +166,15 @@ export function ReviewStep({ script, ai, onChange, onError, onToBlock, onToDraft
   return (
     <>
       <p className={styles.why}>{text.why}</p>
+      {/* What is approved can be read here, whole, without going back a step (novice audit, decision 50). */}
+      <Disclosure summary={text.readAll}>
+        {blocks.map((block) => (
+          <section key={block.id} aria-label={nameOf(block)}>
+            <h2>{nameOf(block)}</h2>
+            <p>{block.text}</p>
+          </section>
+        ))}
+      </Disclosure>
       {failed !== null && (
         <ErrorMessage
           live
