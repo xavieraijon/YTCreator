@@ -561,6 +561,7 @@ export function DraftStep({
       <Disclosure key={again ? 'failed' : 'idle'} summary={text.againSection} defaultOpen={again !== null}>
         {canRewrite ? (
           <>
+            <p className={styles.notice}>{scriptEs.warnings.redoBody}</p>
             <TextArea
               label={text.instructions}
               description={text.instructionsHelp}

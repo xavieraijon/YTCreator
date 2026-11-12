@@ -348,7 +348,8 @@ export const scriptEs = {
       idea_cambiada: 'La idea ha cambiado desde que se escribió esto.',
       perfil_cambiado: 'El perfil del canal ha cambiado desde que se escribió esto.',
       hechos_cambiados: 'Los hechos han cambiado desde que se escribió esto.',
-      escaleta_cambiada: 'La escaleta ha cambiado desde que se escribió el guion.',
+      escaleta_cambiada:
+        'La escaleta ha cambiado desde que se escribió el guion, y el guion sigue como estaba. Si quieres que siga la escaleta nueva, cámbialo a mano o escríbelo de nuevo.',
       origen_cambiado: 'El guion largo del que sale este Short ha cambiado.',
     },
     toBank: 'Ver la idea',
@@ -358,6 +359,11 @@ export const scriptEs = {
     redoDraft: 'Escribir el guion de nuevo',
     redoOutline: 'Proponer otra escaleta',
     redoDraftNote: 'Si lo escribes de nuevo, dejará de estar aprobado.',
+    redoDraftTitle: '¿Escribir el guion de nuevo?',
+    redoOutlineTitle: '¿Proponer otra escaleta?',
+    redoBody:
+      'Se sustituye entero, también lo que escribiste tú y las correcciones que aceptaste. Si te arrepientes, lo recuperas en el historial.',
+    cancel: 'Cancelar',
   },
   queue: {
     prepare: 'Preparar el guion',

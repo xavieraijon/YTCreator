@@ -1,6 +1,7 @@
 import type { IdeaVerdict, ScriptWarning } from '@ytcreator/core'
 import type { ScriptView } from '@ytcreator/core/api'
-import { Button, DataSource, Semaphore } from '@ytcreator/ui'
+import { Button, DataSource, Dialog, Semaphore } from '@ytcreator/ui'
+import { useState } from 'react'
 import { navigate } from '../../../router.ts'
 import { ideasEs } from '../../../strings/ideas.es.ts'
 import { scriptEs } from '../../../strings/script.es.ts'
@@ -37,6 +38,8 @@ export function ScriptWarnings({
   )
   const canRedo = moved && (isShort ? script.draft !== null : script.draft ? outlineApproved : script.outline !== null)
   const price = useEstimate(script, redoUse, canRedo)
+  // Redoing replaces all of it, hand-written words included: asked first (novice audit, round 4, decision 52).
+  const [confirming, setConfirming] = useState(false)
 
   if (script.warnings.length === 0 && !risky) return null
 
@@ -80,7 +83,29 @@ export function ScriptWarnings({
             estimate={price.estimate}
             busy={ai.working === redoUse}
             disabled={ai.working !== null}
-            onRun={() => void ai.run(redoUse, price)}
+            onRun={() => setConfirming(true)}
+          />
+          <Dialog
+            open={confirming}
+            onOpenChange={setConfirming}
+            title={script.draft ? text.redoDraftTitle : text.redoOutlineTitle}
+            description={script.status === 'guion_aprobado' ? `${text.redoBody} ${text.redoDraftNote}` : text.redoBody}
+            footer={
+              <>
+                <Button variant="secondary" onClick={() => setConfirming(false)}>
+                  {text.cancel}
+                </Button>
+                <Button
+                  variant="primary"
+                  onClick={() => {
+                    setConfirming(false)
+                    void ai.run(redoUse, price)
+                  }}
+                >
+                  {script.draft ? text.redoDraft : text.redoOutline}
+                </Button>
+              </>
+            }
           />
         </>
       )}

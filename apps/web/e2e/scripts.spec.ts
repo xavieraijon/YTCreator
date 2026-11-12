@@ -422,7 +422,7 @@ test('every version stays, and going back to one adds another (US5)', async ({ p
   await page.getByRole('button', { name: 'Abrir el guion de «Pan sin amasar»' }).click()
   await page.getByRole('button', { name: 'Guion', exact: true }).click()
 
-  await page.getByText('Historial').click()
+  await page.getByText('Historial', { exact: true }).click()
   const history = page.locator('details').filter({ has: page.locator('summary', { hasText: 'Historial' }) })
   const items = history.getByRole('listitem').filter({ hasText: /^Versión/ })
   await expect(items.first()).toContainText('La actual')
@@ -446,13 +446,13 @@ test('every version stays, and going back to one adds another (US5)', async ({ p
   expect(was).toContain('La actual')
 
   await page.reload()
-  await page.getByText('Historial').click()
+  await page.getByText('Historial', { exact: true }).click()
   await expect(items).toHaveCount(before + 1)
 
   // On an approved script it says first that it will stop being approved.
   await page.goto(`${server.baseURL}/canal/guiones`)
   await page.getByRole('button', { name: 'Abrir el guion de «Pan en un minuto»' }).click()
-  await page.getByText('Historial').click()
+  await page.getByText('Historial', { exact: true }).click()
   await page.getByRole('button', { name: 'Comparar con la actual la versión 1', exact: true }).click()
   await page.getByRole('button', { name: 'Volver a esta versión' }).click()
   const dialog = page.getByRole('dialog')
@@ -603,6 +603,48 @@ test('a Short out of an approved long video, linked to it both ways (US7)', asyn
   await audit(page)
   await page.goto(`${server.baseURL}/canal/ideas`)
   await expect(page.getByText('Short del vídeo «Vídeo con Short»')).toBeVisible()
+})
+
+test('writing it all again from a notice asks first, and says what goes (novice audit, decision 52)', async ({
+  page,
+  context,
+}) => {
+  test.setTimeout(120_000)
+  await blockExternal(context)
+  await newScript(server, page, 'Reescribir entero')
+  await toDraft(page)
+  const steps = page.getByRole('navigation', { name: 'Pasos de este guion' })
+  await steps.getByRole('button', { name: 'Escaleta' }).click()
+  await page
+    .getByRole('button', { name: /^Bajar «/ })
+    .first()
+    .click()
+  await page.getByRole('button', { name: 'Aprobar la escaleta' }).click()
+  await steps.getByRole('button', { name: 'Guion', exact: true }).click()
+  await expect(page.getByText('y el guion sigue como estaba', { exact: false })).toBeVisible()
+  const channelId = ((await api(server, 'GET', '/api/channels/current'))['channel'] as { id: string }).id
+  const listed = (await api(server, 'GET', `/api/channels/${channelId}/scripts`)) as unknown as {
+    id: string
+    title: string
+  }[]
+  const scriptId = listed.find((one) => one.title === 'Reescribir entero')!.id
+  const draftVersion = async () =>
+    ((await api(server, 'GET', `/api/scripts/${scriptId}`))['draft'] as { version: number }).version
+  const before = await draftVersion()
+
+  await page.getByRole('button', { name: /^Escribir el guion de nuevo/ }).click()
+  const dialog = page.getByRole('dialog')
+  await expect(dialog.getByRole('heading', { name: '¿Escribir el guion de nuevo?' })).toBeVisible()
+  await expect(dialog).toContainText('también lo que escribiste tú')
+  await audit(page)
+  await dialog.getByRole('button', { name: 'Cancelar' }).click()
+  await expect(dialog).toBeHidden()
+  expect(await draftVersion()).toBe(before)
+
+  await page.getByRole('button', { name: /^Escribir el guion de nuevo/ }).click()
+  await page.getByRole('dialog').getByRole('button', { name: 'Escribir el guion de nuevo' }).click()
+  await expect(page.getByText('y el guion sigue como estaba', { exact: false })).toHaveCount(0)
+  expect(await draftVersion()).toBe(before + 1)
 })
 
 test('a search that finds nothing reliable says so and changes nothing (US6)', async ({ page, context }) => {
