@@ -79,7 +79,14 @@ type Option = 'Usar mi suscripción de Claude' | 'Pagar solo lo que uses'
 
 // The radio sits under its card's label, which takes the click.
 // The choice screen ignores clicks in its first moments (the second click of a double click on «Empezar»).
+// Paying per use is behind «Más opciones» (decision 1 of 002).
 export async function choose(page: Page, option: Option) {
+  if (option === 'Pagar solo lo que uses') {
+    // Already shown if it was the option chosen before; otherwise, once the screen is there.
+    const more = page.getByRole('button', { name: 'Más opciones' })
+    await expect(more.or(page.getByRole('radio', { name: option }))).toBeVisible()
+    if (await more.isVisible()) await more.click()
+  }
   await expect(async () => {
     await page.getByText(option, { exact: true }).click()
     await expect(page.getByRole('radio', { name: option })).toBeChecked({ timeout: 300 })

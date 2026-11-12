@@ -44,6 +44,20 @@ describe('logging', () => {
     expect(lines(dir)[0]?.message).toBe('bad [oculto] and [oculto]')
   })
 
+  it('hides links anywhere in the line, also in the message of an error', () => {
+    const logger = createLogger(dir, { now: () => NOW })
+    logger.error('job.failed', {
+      error: new Error('no abre "https://fuente.example/pan?q=1" ni http://otra.example'),
+      note: 'HTTPS://MAYUSCULAS.example/ruta y nada más',
+    })
+    const raw = readFileSync(join(dir, 'server.log'), 'utf8')
+    expect(raw).not.toMatch(/example/i)
+    expect(lines(dir)[0]).toMatchObject({
+      error: { name: 'Error', message: 'no abre "[oculto]" ni [oculto]' },
+      note: '[oculto] y nada más',
+    })
+  })
+
   it('hides sensitive fields, also nested, and Secret values', () => {
     const logger = createLogger(dir, { now: () => NOW })
     logger.info('request', {

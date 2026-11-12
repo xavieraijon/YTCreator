@@ -22,6 +22,13 @@ const yppRequirement = z.object({
 
 const regionRanges = z.object({ label: z.string().min(1), espana: range, latam: range, mixto: range })
 
+const webAssumption = z.object({
+  value: z.number().int().positive(),
+  label: z.string().min(1),
+  assumption: z.literal(true),
+  date: z.iso.date(),
+})
+
 export const MARKET_SCHEMAS = {
   'ypp.json': envelope(
     z.object({
@@ -152,6 +159,9 @@ export const MARKET_SCHEMAS = {
       models: z.record(z.string(), z.object({ input: z.number().nonnegative(), output: z.number().nonnegative() })),
       usdToEur: z.object({ rate: z.number().positive(), date: z.iso.date() }),
       charsPerToken: z.number().positive(),
+      webSearchUsdPer1000: z.number().nonnegative(),
+      webInputTokensPerSearch: webAssumption,
+      webInputTokensPerFetch: webAssumption,
     }),
   ),
 } as const

@@ -50,9 +50,8 @@ export const es = {
     intro: 'YTCreator te acompaña desde la idea hasta el vídeo listo para publicar.',
     next: 'Vamos a conectar una IA. Son unos minutos.',
     needs:
-      'Necesitas una suscripción de Claude o una cuenta de Anthropic con saldo. YTCreator no incluye una IA gratuita.',
+      'Necesitas una suscripción de Claude Pro o Max (también vale una cuenta de Anthropic con saldo, en «Más opciones»). YTCreator no incluye una IA gratuita.',
     subscriptionLink: 'Ver las suscripciones de Claude',
-    apiLink: 'Crear una cuenta de Anthropic',
     start: 'Empezar',
   },
 
@@ -60,6 +59,7 @@ export const es = {
     title: 'Elige cómo usar la IA',
     why: 'La IA es la que te propone ideas y guiones. Puedes cambiar de opción cuando quieras.',
     continue: 'Continuar',
+    more: 'Más opciones',
     options: {
       suscripcion: {
         title: 'Usar mi suscripción de Claude',
@@ -247,6 +247,13 @@ export const es = {
       ideas: 'Proponer ideas de vídeo',
       otro_enfoque: 'Buscar otro enfoque',
       busquedas_idea: 'Preparar la medida de una idea',
+      escaleta: 'Proponer la escaleta de un vídeo',
+      guion: 'Escribir el guion de un vídeo',
+      guion_short: 'Escribir el guion de un Short',
+      bloque_guion: 'Escribir de nuevo un bloque del guion',
+      enfoques_short: 'Proponer enfoques para un Short',
+      investigacion: 'Investigar un tema en internet',
+      comprobar_guion: 'Comprobar el guion en internet',
     } satisfies Record<AiUse, string>,
     failed: 'No salió bien',
     knowledge: 'Información que conviene revisar',
@@ -336,6 +343,10 @@ export const es = {
     prohibido: 'YTCreator ha bloqueado esta acción por seguridad. Recarga la página.',
     interno:
       'Algo ha fallado dentro de YTCreator. Vuelve a intentarlo y, si sigue pasando, ciérralo y ábrelo otra vez.',
+    en_curso: 'La IA ya está trabajando en este guion. Espera a que termine.',
+    version_cambiada: 'Esto ha cambiado en otra pestaña. Recarga para ver lo último; lo que has escrito sigue aquí.',
+    sin_aprobar: 'Antes hay que aprobar el paso anterior.',
+    sin_internet: 'Tu conexión de IA no puede buscar en internet. Puedes seguir con tus apuntes.',
   } satisfies Record<ApiErrorCode, string>,
 
   // The request never reached YTCreator, or its answer made no sense.

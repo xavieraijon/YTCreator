@@ -1,9 +1,16 @@
 import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { createRegistry } from '@ytcreator/ai'
+import { createFakeLinkCheck, createRegistry } from '@ytcreator/ai'
 import type { Pricing } from '@ytcreator/core'
-import { conceptKnowledge, knowledgeFiles, loadMarket, STALE_AFTER_DAYS, warningKnowledge } from '@ytcreator/knowledge'
+import {
+  conceptKnowledge,
+  knowledgeFiles,
+  loadMarket,
+  loadScriptKnowledge,
+  STALE_AFTER_DAYS,
+  warningKnowledge,
+} from '@ytcreator/knowledge'
 import { createFakeKeyCheck, createFakeYouTube } from '@ytcreator/youtube'
 import { afterEach } from 'vitest'
 import { migrate, MIGRATIONS } from '../src/db/migrate.ts'
@@ -16,6 +23,9 @@ import { createIdeaBatchesRepo } from '../src/db/repos/idea-batches.ts'
 import { createIdeaMeasuresRepo } from '../src/db/repos/idea-measures.ts'
 import { createIdeaMeasure } from '../src/services/idea-measure.ts'
 import { createIdeasRepo } from '../src/db/repos/ideas.ts'
+import { createScriptVersionsRepo } from '../src/db/repos/script-versions.ts'
+import { createScriptsRepo } from '../src/db/repos/scripts.ts'
+import { createScriptService } from '../src/services/scripts.ts'
 import { createJourneysRepo } from '../src/db/repos/journeys.ts'
 import { createLimitsRepo } from '../src/db/repos/limits.ts'
 import { createMeasuresRepo } from '../src/db/repos/measures.ts'
@@ -51,6 +61,9 @@ const PRICING: Pricing = {
   },
   usdToEur: 0.9,
   charsPerToken: 3.5,
+  webSearchUsdPer1000: 10,
+  webInputTokensPerSearch: 5000,
+  webInputTokensPerFetch: 8000,
 }
 
 export const TEST_PORT = 4310
@@ -197,6 +210,7 @@ export function makeTestApp({
       logger,
       now,
     }),
+    scriptOf: (ideaId: string) => scriptService.ideaScript(ideaId),
     youtube: ideaYouTube,
     dataApiUnits: market.thresholds.data.dataApi,
     measureBasis: {
@@ -206,6 +220,31 @@ export function makeTestApp({
     },
     now,
   }
+  const scriptKnowledge = loadScriptKnowledge()
+  const scriptsRepo = createScriptsRepo(db, now)
+  const scriptVersions = createScriptVersionsRepo(db, now)
+  const links = createFakeLinkCheck()
+  const scriptService = createScriptService({
+    db,
+    channels: channel.channels,
+    profiles: channel.profiles,
+    journeys: channel.journeys,
+    ideas: ideasRepo,
+    measures: ideaMeasures,
+    jobsRepo: jobsRepo,
+    jobs,
+    scripts: scriptsRepo,
+    versions: scriptVersions,
+    shortMaxSeconds: market.shorts.data.maxDurationSeconds,
+    shortsReviewedAt: market.shorts.reviewedAt,
+    webResearch: () => ai.activeAi()?.webResearch ?? false,
+    links,
+    now,
+    aiRun: aiRun,
+    promptFor: promptFor,
+    knowledge: scriptKnowledge,
+  })
+  const script = { service: scriptService, scripts: scriptsRepo }
   const version = '0.1.0'
   const ytQuota = createYtQuotaRepo(db, now)
   const keyCheck = createFakeKeyCheck()
@@ -223,6 +262,7 @@ export function makeTestApp({
     settings,
     channel: { ...channel, now, research, reading },
     ideas,
+    script,
     jobs,
     usage,
     now,
@@ -287,6 +327,10 @@ export function makeTestApp({
     jobsRepo,
     channel,
     ideas,
+    script,
+    scripts: scriptsRepo,
+    scriptVersions,
+    links,
     measures: channel.measures,
     channelProposals: channel.proposals,
     research,

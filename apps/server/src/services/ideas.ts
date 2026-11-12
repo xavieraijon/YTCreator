@@ -26,10 +26,21 @@ export const measureView = (measure: IdeaMeasure): IdeaMeasureView => ({
 export function ideaView(
   idea: Idea,
   measure: IdeaMeasure | null,
-  { profileVersion, staleDays, now }: { profileVersion: number; staleDays: number; now: Date },
+  {
+    profileVersion,
+    staleDays,
+    now,
+    scriptOf,
+  }: {
+    profileVersion: number
+    staleDays: number
+    now: Date
+    scriptOf?: (ideaId: string) => IdeaView['script']
+  },
 ): IdeaView {
   return {
     id: idea.id,
+    script: scriptOf?.(idea.id) ?? null,
     origin: idea.origin,
     batchId: idea.batchId,
     sourceIdeaId: idea.sourceIdeaId,

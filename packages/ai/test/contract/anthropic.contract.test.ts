@@ -5,6 +5,7 @@ import { resolveProfile } from '../../src/profiles.ts'
 import {
   CONTRACT_SCHEMA,
   INVALID_OUTPUT,
+  NEVER_SEEN_URL,
   runProviderContract,
   useOutputs,
   VALID_OUTPUT,
@@ -58,6 +59,26 @@ const replies =
   (call) =>
     list[Math.min(call, list.length - 1)]!
 
+// The first step of a search: one result seen, and an address that is only written in the text.
+const searched = () =>
+  json(200, {
+    id: 'msg_FAKE',
+    type: 'message',
+    role: 'assistant',
+    model: 'claude-sonnet-5-5',
+    content: [
+      {
+        type: 'web_search_tool_result',
+        tool_use_id: 'srvtoolu_FAKE',
+        content: [{ type: 'web_search_result', url: 'https://vista.example/', title: 'Vista', encrypted_content: 'x' }],
+      },
+      { type: 'text', text: `Leído en ${NEVER_SEEN_URL}` },
+    ],
+    stop_reason: 'end_turn',
+    stop_sequence: null,
+    usage: { input_tokens: 12, output_tokens: 4, server_tool_use: { web_search_requests: 1, web_fetch_requests: 0 } },
+  })
+
 const RESPONDERS: Record<BaseCase, Responder> = {
   valid_credential: replies(json(200, MODELS)),
   invalid_credential: replies(apiError(401, 'authentication_error', 'invalid x-api-key')),
@@ -71,6 +92,8 @@ const RESPONDERS: Record<BaseCase, Responder> = {
   output_valid: replies(message(JSON.stringify(VALID_OUTPUT))),
   output_invalid_then_valid: replies(message(JSON.stringify(INVALID_OUTPUT)), message(JSON.stringify(VALID_OUTPUT))),
   output_invalid_twice: replies(message(JSON.stringify(INVALID_OUTPUT))),
+  web_unsupported: replies(message('')),
+  web_valid: replies(searched(), message(JSON.stringify(VALID_OUTPUT))),
 }
 
 function responderFor(stub: ContractCase): Responder {
@@ -121,7 +144,12 @@ runProviderContract(
     const timeoutMs = resolveProfile('anthropic', 'comprobacion', { aiTimeoutSeconds }).timeoutMs
     return { provider, calls: () => requests.length, credential: KEY, timeoutMs }
   },
-  { skip: { filtered: 'check() solo lista los modelos y no genera; el rechazo se prueba con generate en AN3' } },
+  {
+    skip: {
+      filtered: 'check() solo lista los modelos y no genera; el rechazo se prueba con generate en AN3',
+      web_unsupported: 'la API siempre puede buscar',
+    },
+  },
 )
 
 describe('anthropic: casos propios', () => {

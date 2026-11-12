@@ -103,6 +103,28 @@
     font-size: var(--s-font-size-sm);
   }
 
+  /* Inline, inside what is said: a mark is read as part of the sentence and pressed like a button. */
+  .claim {
+    appearance: none;
+    background: none;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    font: inherit;
+    padding: 0;
+  }
+
+  .claim mark {
+    background: var(--s-color-warning-bg);
+    border-block-end: var(--s-focus-ring-width) solid var(--s-color-warning-border);
+    color: inherit;
+  }
+
+  .claim:focus-visible {
+    outline: var(--s-focus-ring-width) solid var(--s-color-border-focus);
+    outline-offset: var(--s-focus-ring-offset);
+  }
+
   /* A form that cannot be saved as it is: it reads as an error, not as a side note. */
   .alert {
     color: var(--s-color-danger-fg);

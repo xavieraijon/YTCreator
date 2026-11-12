@@ -3,6 +3,7 @@ export interface AiCapabilities {
   structured: boolean
   streaming: boolean
   vision: boolean
+  webResearch: boolean // can look things up on the internet (005, R3)
 }
 
 export type Billing = 'por_uso' | 'suscripcion'

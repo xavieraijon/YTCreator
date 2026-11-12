@@ -25,10 +25,22 @@ const CHANNELS = [
   },
 ]
 // A channel with only Shorts, and one with nothing: no list of videos, as yt-dlp says it.
-const ONLY_SHORTS = { handle: 'solocortos', id: 'UCsolocortos000000000000', title: 'Solo Cortos', prefix: 'solo', count: 20 }
+const ONLY_SHORTS = {
+  handle: 'solocortos',
+  id: 'UCsolocortos000000000000',
+  title: 'Solo Cortos',
+  prefix: 'solo',
+  count: 20,
+}
 const EMPTY = { handle: 'canalvacio', id: 'UCcanalvacio000000000000', title: 'Canal Vacío' }
 // Its list of videos answers 404, and it does have Shorts.
-const NO_VIDEOS_LIST = { handle: 'listarota', id: 'UClistarota0000000000000', title: 'Lista Rota', prefix: 'rota', count: 20 }
+const NO_VIDEOS_LIST = {
+  handle: 'listarota',
+  id: 'UClistarota0000000000000',
+  title: 'Lista Rota',
+  prefix: 'rota',
+  count: 20,
+}
 
 const dir = process.env.FAKE_YTDLP_DIR
 const state = JSON.parse(readFileSync(join(dir, 'state.json'), 'utf8'))
@@ -117,7 +129,8 @@ function answerSearch(limit, query) {
   // A run that ends well with output that is not JSON (P9): unreadable, not empty.
   // JSON that is not a list, and a list whose entries cannot be read (P9): unreadable too.
   if (query.includes('sin lista')) return print({ _type: 'playlist', id: query })
-  if (query.includes('formato raro')) return print({ _type: 'playlist', id: query, entries: [{ id: 'abc', title: 'x' }] })
+  if (query.includes('formato raro'))
+    return print({ _type: 'playlist', id: query, entries: [{ id: 'abc', title: 'x' }] })
   if (query.includes('ilegible')) {
     process.stdout.write('WARNING: something unexpected\n{"_type": "playl')
     process.exit(0)

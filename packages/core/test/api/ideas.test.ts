@@ -11,6 +11,7 @@ import {
 
 const idea = {
   id: 'i1',
+  script: null,
   origin: 'creador',
   batchId: null,
   sourceIdeaId: null,

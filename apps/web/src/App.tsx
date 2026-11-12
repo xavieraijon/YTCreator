@@ -7,6 +7,9 @@ import { reloadOnboarding, useOnboarding, useOnboardingSync } from './onboarding
 import { href, navigate, onboardingRedirect, type Route, usePathname, useRoute } from './router.ts'
 import { ChannelStep } from './screens/channel/ChannelStep.tsx'
 import { IdeaBank } from './screens/channel/ideas/IdeaBank.tsx'
+import { ScriptList } from './screens/channel/scripts/ScriptList.tsx'
+import { VoiceSettings } from './screens/channel/scripts/VoiceSettings.tsx'
+import { ScriptScreen } from './screens/channel/scripts/ScriptScreen.tsx'
 import { Start } from './screens/channel/start/Start.tsx'
 import { ConnectAi } from './screens/connect-later/ConnectAi.tsx'
 import { Home } from './screens/home/Home.tsx'
@@ -60,6 +63,12 @@ function Page({ route, state }: { route: Route; state: OnboardingState | null })
       return <Start />
     case 'ideaBank':
       return <IdeaBank />
+    case 'scriptList':
+      return <ScriptList />
+    case 'scriptVoice':
+      return <VoiceSettings />
+    case 'script':
+      return <ScriptScreen key={route.id} id={route.id} />
     case 'channelStep':
       return <ChannelStep key={href(route)} kind={route.kind} step={route.step} />
     case 'settings':

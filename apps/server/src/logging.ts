@@ -4,6 +4,9 @@ import type { Logger } from '@ytcreator/core'
 
 const HIDDEN = '[oculto]'
 const KEY_PATTERNS = [/sk-ant-[A-Za-z0-9_-]{8,}/g, /AIza[A-Za-z0-9_-]{20,}/g]
+// An address says what the creator is researching, so it never reaches the disk either (005, T096). Inside a JSON line
+// it ends at a quote, a backslash (an escaped quote) or a space.
+const LINK_PATTERN = /https?:\/\/[^\s"\\]+/gi
 const SENSITIVE_FIELDS = new Set(['apikey', 'token', 'code', 'authorization', 'x-api-key', 'x-goog-api-key', 'url'])
 
 const FILE = 'server.log'
@@ -14,9 +17,9 @@ export interface LoggerOptions {
   maxBytes?: number
 }
 
-// Last line of defence (R22): whatever reached the line, key patterns never reach the disk.
+// Last line of defence (R22): whatever reached the line, key patterns and links never reach the disk.
 export function redactLine(line: string): string {
-  return KEY_PATTERNS.reduce((text, pattern) => text.replace(pattern, HIDDEN), line)
+  return [...KEY_PATTERNS, LINK_PATTERN].reduce((text, pattern) => text.replace(pattern, HIDDEN), line)
 }
 
 function replacer(key: string, value: unknown): unknown {

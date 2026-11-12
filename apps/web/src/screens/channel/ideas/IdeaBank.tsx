@@ -548,10 +548,16 @@ export function IdeaBank() {
   // After a move the focus goes back to the same button of the same idea (contracts/ui-screens.md).
   useEffect(() => {
     if (!focusAfter.current) return
-    const target = focusAfter.current.startsWith('card:')
-      ? (document.querySelector<HTMLElement>(`[data-card="${focusAfter.current.slice(5)}"]`) ??
-        document.querySelector<HTMLElement>('[data-ideas-title]'))
-      : document.querySelector<HTMLElement>(`[data-order="${focusAfter.current}"]`)
+    const key = focusAfter.current
+    const card = () =>
+      document.querySelector<HTMLElement>(`[data-card="${key.slice(key.indexOf(':') + 1)}"]`) ??
+      document.querySelector<HTMLElement>('[data-ideas-title]')
+    const target = key.startsWith('script:')
+      ? (document.querySelector<HTMLElement>(`[data-script-open="${key.slice(7)}"]`) ?? card())
+      : key.startsWith('card:')
+        ? card()
+        : document.querySelector<HTMLElement>(`[data-order="${key}"]`)
+    if (key.startsWith('script:')) target?.scrollIntoView({ block: 'center' })
     target?.focus()
     focusAfter.current = null
   }, [state])
@@ -918,7 +924,9 @@ export function IdeaBank() {
       await ideasApi.change(idea.id, { revision: idea.revision, status })
       // The button pressed may be gone (archived, chosen): once the bank is read again, the focus goes to the card,
       // or else to the list.
-      focusAfter.current = `card:${idea.id}`
+      // A chosen idea is chosen to write its script: the focus goes to «Preparar el guion» in the queue, which may be
+      // out of sight (novice audit of 005, decision 48).
+      focusAfter.current = status === 'elegida' ? `script:${idea.id}` : `card:${idea.id}`
       const [loaded, archive] = await Promise.all([reload(), ideasApi.archived(channelId)])
       setArchived(archive)
       // Said once, by the notice: the live region is for the moves of the order.

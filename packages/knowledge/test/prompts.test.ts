@@ -1,5 +1,15 @@
 import { describe, expect, it } from 'vitest'
-import { HUMAN_WRITING, PROMPT_LOCK, PROMPTS, checkPromptLock, parsePrompt, promptHash } from '../src/index.ts'
+import {
+  HUMAN_WRITING,
+  PROMPT_LOCK,
+  PROMPTS,
+  SPOKEN_WRITING,
+  checkPromptLock,
+  parsePrompt,
+  promptHash,
+} from '../src/index.ts'
+
+const SPOKEN = ['guion', 'guion_short', 'bloque_guion']
 
 describe('versioned prompts', () => {
   it('loads at least the comprobacion prompt', () => {
@@ -38,7 +48,21 @@ describe('versioned prompts', () => {
     expect(HUMAN_WRITING.length).toBeGreaterThan(50)
     expect(PROMPTS['comprobacion']!.text).not.toContain(HUMAN_WRITING)
     for (const prompt of Object.values(PROMPTS)) {
-      if (prompt.use !== 'comprobacion') expect(prompt.text).toContain(HUMAN_WRITING)
+      if (prompt.use !== 'comprobacion' && !SPOKEN.includes(prompt.use)) expect(prompt.text).toContain(HUMAN_WRITING)
     }
+  })
+
+  it('what is said out loud gets the spoken rules instead of the ones for the creator (005)', () => {
+    for (const use of SPOKEN) {
+      const body = 'Escribe.'
+      const raw = `---\nid: ${use}\nversion: 1\nuse: ${use}\nsha256: ${promptHash(body)}\n---\n${body}\n`
+      const prompt = parsePrompt(raw)
+      expect(prompt.text).toContain(SPOKEN_WRITING)
+      expect(prompt.text).not.toContain(HUMAN_WRITING)
+    }
+    const other = parsePrompt(
+      `---\nid: escaleta\nversion: 1\nuse: escaleta\nsha256: ${promptHash('Haz.')}\n---\nHaz.\n`,
+    )
+    expect(other.text).toContain(HUMAN_WRITING)
   })
 })

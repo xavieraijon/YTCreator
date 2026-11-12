@@ -1,10 +1,17 @@
-import { FAILURE_REASONS, NEW_CHANNEL_STEPS, EXISTING_CHANNEL_STEPS, YOUTUBE_FAILURES } from '@ytcreator/core'
+import {
+  EXISTING_CHANNEL_STEPS,
+  FAILURE_REASONS,
+  NEW_CHANNEL_STEPS,
+  SCRIPT_STATUSES,
+  YOUTUBE_FAILURES,
+} from '@ytcreator/core'
 import { AI_RUN_FAILURES, API_ERROR_CODES, FIELD_CODES, GUARDS } from '@ytcreator/core/api'
 import { describe, expect, it } from 'vitest'
 import { flattenStrings } from '../../../packages/ui/test/forbidden-terms.ts'
 import { channelEs } from '../src/strings/channel.es.ts'
 import { es } from '../src/strings/es.ts'
 import { failuresEs } from '../src/strings/failures.es.ts'
+import { scriptEs } from '../src/strings/script.es.ts'
 import { youtubeFailureActionsEs, youtubeFailuresEs } from '../src/strings/youtube-failures.es.ts'
 
 // Mirrors the `label` keys of packages/ai/src/registry.ts.
@@ -35,6 +42,10 @@ describe('strings coverage (FR-027, SC-007)', () => {
     expect(sorted(Object.keys(es.apiError))).toEqual(sorted(API_ERROR_CODES))
   })
 
+  it('every state of a script has a text (005)', () => {
+    expect(sorted(Object.keys(scriptEs.status))).toEqual(sorted(SCRIPT_STATUSES))
+  })
+
   it('every provider label key resolves to a text, with no orphans', () => {
     const keys = flattenStrings(es.ai.provider, 'ai.provider').map(({ key }) => key)
     expect(sorted(keys)).toEqual(sorted(PROVIDER_LABELS))
@@ -56,7 +67,7 @@ describe('strings coverage (FR-027, SC-007)', () => {
   })
 
   it('no text is empty or has a malformed placeholder', () => {
-    const all = flattenStrings({ es, failuresEs, channelEs, youtubeFailuresEs, youtubeFailureActionsEs })
+    const all = flattenStrings({ es, failuresEs, channelEs, youtubeFailuresEs, youtubeFailureActionsEs, scriptEs })
     expect(all.filter(({ value }) => value.trim() === '')).toEqual([])
     expect(all.filter(({ value }) => /\{(?!\w+\})|(?<!\{\w*)\}/.test(value))).toEqual([])
   })

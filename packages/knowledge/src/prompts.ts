@@ -1,8 +1,15 @@
 import { createHash } from 'node:crypto'
 import humanWriting from '../writing/human.md?raw'
+import spokenWriting from '../writing/spoken.md?raw'
 import lock from '../prompts/lock.json'
 
 export const HUMAN_WRITING = humanWriting.trim()
+export const SPOKEN_WRITING = spokenWriting.trim()
+
+// What is said out loud is written for the audience, not for the creator (005, research.md R13).
+const SPOKEN_USES: readonly string[] = ['guion', 'guion_short', 'bloque_guion']
+
+const writingRulesOf = (use: string) => (SPOKEN_USES.includes(use) ? SPOKEN_WRITING : HUMAN_WRITING)
 
 export interface Prompt {
   id: string
@@ -38,7 +45,7 @@ export function parsePrompt(raw: string): Prompt {
   }
   const body = match[2]!.trim()
   if (promptHash(body) !== sha256) throw new Error(`El hash de ${id}@${version} no coincide con su texto`)
-  const text = use === 'comprobacion' ? body : `${body}\n\n${HUMAN_WRITING}`
+  const text = use === 'comprobacion' ? body : `${body}\n\n${writingRulesOf(use)}`
   return { id, version, use, sha256, body, text }
 }
 

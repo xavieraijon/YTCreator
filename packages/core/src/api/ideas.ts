@@ -13,6 +13,7 @@ import {
   searchTextSchema,
 } from '../ideas/model.ts'
 import { IDEA_USES } from '../ideas/outputs.ts'
+import { SCRIPT_STATUSES } from '../script/status.ts'
 import { YOUTUBE_FAILURES } from '../youtube/failures.ts'
 import { YOUTUBE_SOURCES } from '../youtube/port.ts'
 import { AI_RUN_FAILURES, type AiRunFailure } from './channel.ts'
@@ -79,6 +80,9 @@ export type IdeaMeasureView = z.infer<typeof ideaMeasureSchema>
 
 export const ideaSchema = z.object({
   id,
+  // The script of this idea, if it has one (005, data-model.md).
+  // `fromVideo`: a Short drawn from a long video, which the bank names as such (005, US7).
+  script: z.object({ id, status: z.enum(SCRIPT_STATUSES), fromVideo: z.boolean() }).nullable(),
   origin: z.enum(IDEA_ORIGINS),
   batchId: id.nullable(),
   sourceIdeaId: id.nullable(),

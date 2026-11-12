@@ -1,3 +1,4 @@
+import { SCRIPT_USES } from '../script/outputs.ts'
 import { z } from 'zod'
 import { FAILURE_KINDS } from '../ai/failures.ts'
 import { journeyStateSchema } from '../channel/journey.ts'
@@ -351,7 +352,7 @@ export const journeyStepBodySchema = z.object({
 
 const CHANNEL_USES = Object.keys(CHANNEL_OUTPUTS) as [ChannelUse, ...ChannelUse[]]
 // `perfil_parte` is asked for from the profile, and the idea uses from the idea bank, not from a journey.
-const NOT_JOURNEY: readonly string[] = ['perfil_parte', 'ideas', 'otro_enfoque', 'busquedas_idea']
+const NOT_JOURNEY: readonly string[] = ['perfil_parte', 'ideas', 'otro_enfoque', 'busquedas_idea', ...SCRIPT_USES]
 const JOURNEY_USES = CHANNEL_USES.filter((use) => !NOT_JOURNEY.includes(use)) as [ChannelUse, ...ChannelUse[]]
 
 // POST /api/journeys/:id/estimate
@@ -364,6 +365,8 @@ export const estimateSchema = z.object({
   blockedBy: z.enum(['por_operacion', 'diario', 'mensual']).nullable(),
   // The most it can cost if the AI has to repeat itself (P17); 0 when included.
   maxCents: cents,
+  // The most it will search on the internet, when the use does (005).
+  searches: z.number().int().nonnegative().optional(),
   pricingVersion: z.number().int().positive(),
 })
 export type EstimateView = z.infer<typeof estimateSchema>

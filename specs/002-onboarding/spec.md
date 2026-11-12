@@ -313,7 +313,8 @@ versión más nueva y comprobar que los datos y la conexión se conservan y que 
   con una sola acción principal por pantalla y una frase que explique por qué importa cada paso.
 - **FR-012**: El asistente DEBE recordar su progreso y retomarse en el mismo paso si se cierra la app.
 - **FR-013**: El paso de elección DEBE presentar las opciones de la v1 por lo que necesitan, lo que cuestan y a dónde
-  viaja el contenido del creador, sin nombres de modelo ni jerga.
+  viaja el contenido del creador, sin nombres de modelo ni jerga. El pago por uso es una opción secundaria: se muestra
+  tras «Más opciones», y también en los ajustes mientras no haya una clave guardada (decisión 1, 2026-11-10).
 - **FR-014**: «Usar mi suscripción» DEBE ser la opción **por defecto**, ya marcada al llegar al paso. La elección final
   es siempre del creador.
 - **FR-015**: La opción de suscripción DEBE llevar la etiqueta «usa tu suscripción, bajo tu responsabilidad». La
@@ -338,7 +339,8 @@ versión más nueva y comprobar que los datos y la conexión se conservan y que 
   si al usarla falta saldo, DEBE decirlo en la primera operación con coste. Si la comprobación gratuita permite
   detectarlo (spike S4), se avisa ya al conectar.
 - **FR-018**: La bienvenida del asistente DEBE decir en una frase que hace falta una suscripción de Claude o una
-  cuenta de Anthropic con saldo, con un enlace a cada una, y que YTCreator no ofrece una opción gratuita. La v1 NO
+  cuenta de Anthropic con saldo, con un enlace a las suscripciones de Claude, y que YTCreator no ofrece una opción
+  gratuita. La cuenta de Anthropic se nombra sin enlace (decisión 1, 2026-11-10). La v1 NO
   DEBE incluir ninguna opción gratuita (constitución 2.0.0, principios III y IV).
 - **FR-019**: Toda conexión DEBE validarse con una **comprobación sin coste** antes de darse por buena. Su resultado
   se traduce a uno de los fallos tipados del principio IV o a «conectada».

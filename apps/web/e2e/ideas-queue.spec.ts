@@ -86,7 +86,7 @@ test('orders the bank by keyboard, filters, chooses two, archives and recovers, 
   await expect.poll(() => queueTitles(page)).toEqual(['1. Pan de centeno'])
   await page.getByRole('button', { name: 'Elegir para guion «Pan de pita»' }).click()
   await expect.poll(() => queueTitles(page)).toEqual(['1. Pan de centeno', '2. Pan de pita'])
-  await expect(page.getByText('El guion de la primera llegará en la próxima versión.')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Preparar el guion de «Pan de centeno»' })).toBeVisible()
   // Its buttons say they change the queue, not the bank.
   const up = page.getByRole('button', { name: 'Subir en la cola «Pan de pita»' })
   await up.focus()

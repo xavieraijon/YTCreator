@@ -26,6 +26,8 @@ const STATES: Record<BaseCase, FakeClaudeState> = {
   output_valid: { scenario: 'output', outputs: [VALID_OUTPUT] },
   output_invalid_then_valid: { scenario: 'output', outputs: [INVALID_OUTPUT, VALID_OUTPUT] },
   output_invalid_twice: { scenario: 'output', outputs: [INVALID_OUTPUT, INVALID_OUTPUT] },
+  web_unsupported: { scenario: 'ok' },
+  web_valid: { scenario: 'output', outputs: [VALID_OUTPUT] },
 }
 
 // The env of the server, with everything that could switch the CLI to another account or provider (CC1).
@@ -48,18 +50,22 @@ function depsFor(bin: string, accountDir = mkdtemp('ytc-account-')): ProviderDep
   return { fetch, now: () => new Date(), logger: silent, claudeBin: bin, accountDir }
 }
 
-runProviderContract('claude-code', (stub, deps) => {
-  const outputs = useOutputs(stub)
-  const fake = createFakeClaude(outputs ? { scenario: 'output', outputs } : STATES[stub as BaseCase])
-  const aiTimeoutSeconds = stub === 'timeout' ? 1 : undefined
-  const provider = createClaudeCodeProvider(
-    Secret.from(TOKEN),
-    { ...deps, claudeBin: fake.bin, accountDir: mkdtemp('ytc-account-'), aiTimeoutSeconds },
-    { env: SERVER_ENV },
-  )
-  const timeoutMs = resolveProfile('claude-code', 'comprobacion', { aiTimeoutSeconds }).timeoutMs
-  return { provider, calls: () => fake.calls().length, credential: TOKEN, timeoutMs }
-})
+runProviderContract(
+  'claude-code',
+  (stub, deps) => {
+    const outputs = useOutputs(stub)
+    const fake = createFakeClaude(outputs ? { scenario: 'output', outputs } : STATES[stub as BaseCase])
+    const aiTimeoutSeconds = stub === 'timeout' ? 1 : undefined
+    const provider = createClaudeCodeProvider(
+      Secret.from(TOKEN),
+      { ...deps, claudeBin: fake.bin, accountDir: mkdtemp('ytc-account-'), aiTimeoutSeconds },
+      { env: SERVER_ENV },
+    )
+    const timeoutMs = resolveProfile('claude-code', 'comprobacion', { aiTimeoutSeconds }).timeoutMs
+    return { provider, calls: () => fake.calls().length, credential: TOKEN, timeoutMs }
+  },
+  { skip: { web_unsupported: 'Claude Code siempre puede buscar' } },
+)
 
 describe('claude-code: casos propios', () => {
   it('CC1 entorno limpio, con el token y la carpeta de la cuenta', async () => {

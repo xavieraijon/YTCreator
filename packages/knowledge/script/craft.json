@@ -1,0 +1,62 @@
+{
+  "version": 1,
+  "reviewedAt": "2026-11-09",
+  "source": [
+    {
+      "label": "Ayuda de YouTube: momentos clave de la retención de la audiencia",
+      "url": "https://support.google.com/youtube/answer/9314415"
+    },
+    {
+      "label": "Blog de YouTube: Creator Playbook, los primeros 15 segundos (2011)",
+      "url": "https://blog.youtube/creator-and-artist-stories/youtube-creator-playbook-tips-first-15"
+    }
+  ],
+  "data": {
+    "longVideo": {
+      "structure": [
+        {
+          "text": "Un vídeo largo va en cuatro partes: gancho, contexto, varios actos que van a más y cierre.",
+          "assumption": true
+        },
+        {
+          "text": "Cada acto abre una pregunta, da una recompensa y deja un enganche con el siguiente.",
+          "assumption": true
+        },
+        {
+          "text": "Cada bloque tiene que decir para qué está. Si no sirve para que la persona siga, sobra.",
+          "assumption": true
+        }
+      ],
+      "hook": [
+        { "text": "Empieza con algo que atrape enseguida: una frase potente o una imagen llamativa.", "source": 1 },
+        { "text": "Deja claro pronto de qué va el vídeo.", "source": 1 },
+        { "text": "Adelanta parte de lo que viene para que apetezca seguir viendo.", "source": 1 },
+        {
+          "text": "Primero el contenido y después la marca: una intro elaborada no debe quitarle protagonismo.",
+          "source": 1
+        },
+        { "text": "El principio tiene que cumplir lo que prometen el título y la miniatura.", "source": 0 }
+      ],
+      "retention": [
+        {
+          "text": "YouTube mide cuánta gente sigue viendo después de los primeros 30 segundos, así que ese tramo se cuida más que ninguno.",
+          "source": 0
+        },
+        {
+          "text": "Las partes que la gente se salta o donde deja de ver son las que hay que acortar o cambiar.",
+          "source": 0
+        },
+        {
+          "text": "Cambia de ritmo antes de que un tramo se haga largo y recuerda qué se va a conseguir al final.",
+          "assumption": true
+        }
+      ]
+    },
+    "short": [
+      { "text": "Un Short va en tres tramos: gancho, desarrollo y cierre.", "assumption": true },
+      { "text": "El gancho se dice en los primeros segundos, sin saludos ni presentaciones.", "assumption": true },
+      { "text": "El cierre empuja a seguir viendo o enlaza con otro vídeo.", "assumption": true },
+      { "text": "Un Short sacado de un vídeo largo se entiende sin haber visto ese vídeo.", "assumption": true }
+    ]
+  }
+}

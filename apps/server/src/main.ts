@@ -3,13 +3,15 @@ import { mkdirSync } from 'node:fs'
 import type { Server } from 'node:http'
 import type { AddressInfo } from 'node:net'
 import { createAdaptorServer } from '@hono/node-server'
-import { claudeVersion, createRegistry, resolveClaudeBin } from '@ytcreator/ai'
+import { claudeVersion, createFakeLinkCheck, createRegistry, resolveClaudeBin } from '@ytcreator/ai'
 import { type ChannelUse, type Pricing } from '@ytcreator/core'
 import { join } from 'node:path'
 import {
   conceptKnowledge,
   knowledgeFiles,
   loadMarket,
+  loadScriptKnowledge,
+  scriptKnowledgeFiles,
   promptFor,
   STALE_AFTER_DAYS,
   warningKnowledge,
@@ -25,8 +27,12 @@ import { createConnectionsRepo } from './db/repos/connections.ts'
 import { createJobsRepo } from './db/repos/jobs.ts'
 import { createIdeaBatchesRepo } from './db/repos/idea-batches.ts'
 import { createIdeaMeasuresRepo } from './db/repos/idea-measures.ts'
+import { createScriptService } from './services/scripts.ts'
 import { createIdeaMeasure } from './services/idea-measure.ts'
 import { createIdeasRepo } from './db/repos/ideas.ts'
+import { createScriptVersionsRepo } from './db/repos/script-versions.ts'
+import { createScriptsRepo } from './db/repos/scripts.ts'
+import { createLinkCheck } from './services/link-check.ts'
 import { createJourneysRepo } from './db/repos/journeys.ts'
 import { createLimitsRepo } from './db/repos/limits.ts'
 import { createMeasuresRepo } from './db/repos/measures.ts'
@@ -186,11 +192,16 @@ export async function startServer({
 
   // The knowledge package fails here if a file does not validate: the server refuses to start (principle V).
   const market = loadMarket()
+  // A broken package of the script stops the start here, not later in front of the creator (principle V).
+  const scriptKnowledge = loadScriptKnowledge()
   const pricing: Pricing = {
     version: market.pricing.version,
     models: market.pricing.data.models,
     usdToEur: market.pricing.data.usdToEur.rate,
     charsPerToken: market.pricing.data.charsPerToken,
+    webSearchUsdPer1000: market.pricing.data.webSearchUsdPer1000,
+    webInputTokensPerSearch: market.pricing.data.webInputTokensPerSearch.value,
+    webInputTokensPerFetch: market.pricing.data.webInputTokensPerFetch.value,
   }
   const jobsRepo = createJobsRepo(db, now)
   const jobs = createJobsService({ jobs: jobsRepo, logger })
@@ -351,6 +362,28 @@ export async function startServer({
     logger,
     now,
   })
+  const scriptsRepo = createScriptsRepo(db, now)
+  const scriptVersions = createScriptVersionsRepo(db, now)
+  const scriptService = createScriptService({
+    db,
+    channels: channel.channels,
+    profiles: channel.profiles,
+    journeys: channel.journeys,
+    ideas: ideasRepo,
+    measures: ideaMeasures,
+    jobsRepo,
+    jobs,
+    scripts: scriptsRepo,
+    versions: scriptVersions,
+    shortMaxSeconds: market.shorts.data.maxDurationSeconds,
+    shortsReviewedAt: market.shorts.reviewedAt,
+    webResearch: () => ai.activeAi()?.webResearch ?? false,
+    links: __YTC_ALLOW_FAKE_AI__ && fake ? createFakeLinkCheck() : createLinkCheck({ logger }),
+    now,
+    aiRun: channel.aiRun,
+    promptFor: channelPrompt,
+    knowledge: scriptKnowledge,
+  })
   app = createApp({
     port,
     version,
@@ -377,6 +410,7 @@ export async function startServer({
       jobs: jobsRepo,
       staleDays: market.thresholds.data.ideas.staleDays,
       measure: ideaMeasure,
+      scriptOf: (ideaId: string) => scriptService.ideaScript(ideaId),
       youtube,
       dataApiUnits: market.thresholds.data.dataApi,
       measureBasis: {
@@ -386,10 +420,14 @@ export async function startServer({
       },
       now,
     },
+    script: { service: scriptService, scripts: scriptsRepo },
     jobs,
     youtubeSettings,
     usage,
-    knowledge: { files: () => knowledgeFiles(market), staleAfterDays: STALE_AFTER_DAYS },
+    knowledge: {
+      files: () => [...knowledgeFiles(market), ...scriptKnowledgeFiles(scriptKnowledge)],
+      staleAfterDays: STALE_AFTER_DAYS,
+    },
     youtube: {
       journeys: channel.journeys,
       measures: channel.measures,

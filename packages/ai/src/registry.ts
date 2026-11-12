@@ -31,6 +31,7 @@ const SLOTS: Slot[] = [
 function fakeDescriptor(slot: Slot, scenario: FakeScenario, now: () => Date): ProviderDescriptor {
   return {
     ...slot,
+    webResearch: scenario.output !== 'sin_web',
     create: (credentials, deps) => createFakeProvider(scenario, credentials, deps, { billing: slot.billing }),
     login: slot.connectionKind === 'suscripcion' ? createFakeLogin(scenario, now) : undefined,
   }
@@ -54,9 +55,10 @@ export function createRegistry({
   return [
     {
       ...subscription,
+      webResearch: true,
       create: (credentials, deps) => createClaudeCodeProvider(credentials, { claudeBin, ...deps }, { env }),
       login: createClaudeLogin({ logger, now, claudeBin, env }),
     },
-    { ...payPerUse, create: (credentials, deps) => createAnthropicProvider(credentials, deps) },
+    { ...payPerUse, webResearch: true, create: (credentials, deps) => createAnthropicProvider(credentials, deps) },
   ]
 }

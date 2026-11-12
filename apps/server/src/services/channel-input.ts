@@ -101,6 +101,13 @@ export function channelInput(
     case 'ideas':
     case 'otro_enfoque':
     case 'busquedas_idea':
+    case 'escaleta':
+    case 'guion':
+    case 'guion_short':
+    case 'bloque_guion':
+    case 'enfoques_short':
+    case 'investigacion':
+    case 'comprobar_guion':
       return {}
   }
 }

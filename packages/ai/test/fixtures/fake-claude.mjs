@@ -55,6 +55,15 @@ async function print() {
   const prompt = await readStdin()
   appendFileSync(join(dir, 'calls.log'), `${JSON.stringify({ argv: args, env, prompt })}\n`)
   const call = readFileSync(join(dir, 'calls.log'), 'utf8').trim().split('\n').length - 1
+  // Like the real CLI (2.1.322, T087): a schema that names its draft is refused before anything else, on stderr.
+  const schemaAt = args.indexOf('--json-schema')
+  if (schemaAt !== -1 && '$schema' in JSON.parse(args[schemaAt + 1])) {
+    process.stderr.write(
+      'Error: --json-schema is not a valid JSON Schema: no schema with key or ref "https://json-schema.org/draft/2020-12/schema"\n',
+      () => process.exit(1),
+    )
+    return
+  }
   const scenario = state.scenarios?.[call] ?? state.scenario ?? 'ok'
   const [type, value] = scenario.split(':')
 

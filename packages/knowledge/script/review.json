@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "reviewedAt": "2026-11-09",
+  "source": [
+    {
+      "label": "Ayuda de YouTube: momentos clave de la retención de la audiencia",
+      "url": "https://support.google.com/youtube/answer/9314415"
+    }
+  ],
+  "data": {
+    "basis": {
+      "label": "Supuesto de YTCreator: ningún estudio fija estos límites ni la lista de muletillas; son una ayuda para revisar y nunca impiden aprobar.",
+      "assumption": true,
+      "date": "2026-11-09"
+    },
+    "maxSentenceWords": 25,
+    "hookMaxSeconds": {
+      "largo": 30,
+      "short": 5
+    },
+    "durationTolerance": 0.1,
+    "fillers": [
+      "en el mundo de hoy",
+      "hoy en día",
+      "cabe destacar",
+      "es importante destacar",
+      "es importante señalar",
+      "sin lugar a dudas",
+      "sin duda alguna",
+      "en definitiva",
+      "en conclusión",
+      "no solo eso",
+      "no es solo",
+      "adentrémonos",
+      "sumérgete",
+      "descubre cómo",
+      "un viaje fascinante",
+      "revolucionario",
+      "fascinante mundo",
+      "ni más ni menos",
+      "al fin y al cabo",
+      "vale la pena mencionar"
+    ]
+  }
+}

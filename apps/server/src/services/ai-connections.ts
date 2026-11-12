@@ -155,6 +155,7 @@ export function createAiConnectionsService(deps: AiConnectionsDeps) {
       return {
         providerId: descriptor.id as ProviderId,
         billing: descriptor.billing,
+        webResearch: descriptor.webResearch,
         async generate<T>(request: AiRequest<T>): Promise<AiResult<T>> {
           if (active.kind === 'pago_por_uso') return generateWith(descriptor, active.secretRef, request)
           const run = await runWithRotation(

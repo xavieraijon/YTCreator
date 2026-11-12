@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "reviewedAt": "2026-11-09",
+  "source": [
+    {
+      "label": "Wikipedia: pauta sobre fuentes fiables (Reliable sources)",
+      "url": "https://en.wikipedia.org/wiki/Wikipedia:Reliable_sources"
+    },
+    {
+      "label": "Universidad de Wisconsin-Green Bay: cómo evaluar la información",
+      "url": "https://library.uwgb.edu/evalinfo"
+    }
+  ],
+  "data": {
+    "twoSourcesRule": {
+      "label": "Supuesto de YTCreator: «comprobado» pide dos fuentes fiables de sitios distintos. No tiene fuente externa.",
+      "assumption": true,
+      "date": "2026-11-09"
+    },
+    "reliable": [
+      "Publicaciones con revisión editorial: prensa de referencia, revistas científicas y libros de editoriales conocidas.",
+      "Datos oficiales de organismos públicos, universidades y centros de investigación.",
+      "Obras de referencia reconocidas: enciclopedias y manuales.",
+      "La fuente original de un dato, mejor que quien la repite."
+    ],
+    "notReliable": [
+      "Blogs personales, foros y redes sociales.",
+      "Webs que cualquiera puede editar, incluida Wikipedia: sirven para encontrar fuentes, no como fuente.",
+      "Contenido que vende algo relacionado con lo que afirma.",
+      "Páginas que no dicen quién escribe ni de dónde sacan el dato."
+    ],
+    "unreliableDomains": [
+      "wikipedia.org",
+      "wikia.com",
+      "fandom.com",
+      "reddit.com",
+      "quora.com",
+      "x.com",
+      "twitter.com",
+      "facebook.com",
+      "instagram.com",
+      "tiktok.com",
+      "youtube.com",
+      "pinterest.com",
+      "medium.com",
+      "blogspot.com",
+      "wordpress.com",
+      "tumblr.com"
+    ],
+    "listsBasis": {
+      "label": "Supuesto de YTCreator: las listas de qué es fiable y de los sitios que no cuentan parten de los criterios citados, pero la selección concreta es nuestra.",
+      "assumption": true,
+      "date": "2026-11-09"
+    }
+  }
+}

@@ -10,6 +10,21 @@ export type FakeOutputMode =
   // The idea bank (004, contracts/ai-uses.md, «Proveedor falso»).
   | 'ideas_repetidas'
   | 'pilar_invalido'
+  // The script (005): the connection cannot search the internet.
+  | 'sin_web'
+  // ...or it searches and finds nothing reliable.
+  | 'sin_resultados'
+
+// Reserved names (RFC 2606): nothing here can ever reach a real site. `createFakeLinkCheck` answers for them.
+export const FAKE_LINKS = {
+  first: 'https://fuente-uno.example/masa-madre',
+  second: 'https://fuente-dos.example/fermentar',
+  broken: 'https://enlace-roto.example/pagina',
+  blocked: 'https://bloquea-robots.example/pagina',
+  invented: 'https://inventada.example/nada',
+} as const
+// What the provider really saw: all of them but the invented one.
+export const FAKE_SEEN_URLS: string[] = [FAKE_LINKS.first, FAKE_LINKS.second, FAKE_LINKS.broken, FAKE_LINKS.blocked]
 
 export const INVENTED_SENTENCE = 'Este tema mueve 250.000 visitas al mes.'
 export const INVENTED_VIDEO_ID = 'video-inventado'
@@ -93,6 +108,29 @@ const IDEA_TITLES: readonly (readonly [string, string, string, string])[] = [
   ],
   ['Legumbres que no parecen de abuela', 'legumbres recetas modernas', 'recetas de legumbres', 'modern legume recipes'],
 ]
+
+// Fits the duration asked for, so the total shown is right.
+function outline(input: Record<string, unknown>) {
+  const seconds = Math.max(Math.round(Number(input.targetSeconds ?? 600) / 5), 1)
+  const block = (type: string, title: string, purpose: string) => ({
+    type,
+    title,
+    purpose,
+    question: type === 'acto' ? '¿Qué pasa si lo haces al revés?' : null,
+    reward: type === 'acto' ? 'Un truco que puedes usar hoy.' : null,
+    bridge: type === 'cierre' ? null : 'Y aquí viene lo que nadie cuenta.',
+    seconds,
+  })
+  return {
+    blocks: [
+      block('gancho', 'El error que comete casi todo el mundo', 'Que quien llega se quede a ver el resto.'),
+      block('contexto', 'Por qué pasa esto', 'Que se entienda de qué va el vídeo.'),
+      block('acto', 'Lo que hay que cambiar primero', 'Dar la primera solución.'),
+      block('acto', 'El paso que marca la diferencia', 'Dar lo que no se encuentra en otro sitio.'),
+      block('cierre', 'Qué hacer mañana', 'Que la persona sepa cómo seguir.'),
+    ],
+  }
+}
 
 function ideaDrafts(input: Record<string, unknown>, attempt: number, mode: FakeOutputMode) {
   const pillars = pillarsOf(input)
@@ -238,6 +276,111 @@ function normal(
     }
     case 'busquedas_idea':
       return { query: 'cena rapida con sobras', broadQuery: 'cenas rapidas', queryEn: 'quick dinner with leftovers' }
+    case 'escaleta':
+      return outline(input)
+    case 'guion': {
+      const outlined = input.outline as { blocks: { id: string; title: string }[] } | undefined
+      const blocks = outlined?.blocks ?? [{ id: 'bloque', title: 'Este bloque' }]
+      return {
+        blocks: blocks.map((block) => ({
+          outlineBlockId: block.id,
+          text: `Esto es lo que dirías en ${block.title.toLocaleLowerCase('es')}. Esta parte sale del guion, para que la leas en voz alta sin trabarte.`,
+          visual: 'Tú, hablando a cámara.',
+        })),
+        claims: [{ outlineBlockId: blocks[0]!.id, text: 'Esta parte sale del guion', factId: null }],
+      }
+    }
+    case 'guion_short':
+      return {
+        blocks: [
+          { type: 'gancho', text: 'Mira lo que pasa aquí.', visual: 'Tú, muy cerca de la cámara.' },
+          {
+            type: 'desarrollo',
+            text: 'Esta parte sale del guion, y la cuentas en voz alta sin trabarte.',
+            visual: 'El plano del detalle.',
+          },
+          { type: 'cierre', text: 'Sigue viendo y te lo enseño entero.', visual: 'Tú, señalando abajo.' },
+        ],
+        claims: [{ type: 'desarrollo', text: 'Esta parte sale del guion', factId: null }],
+      }
+    case 'investigacion':
+      if (mode === 'sin_resultados') return { facts: [] }
+      return {
+        facts: [
+          {
+            text: 'La masa madre fermenta mejor en un sitio templado.',
+            label: 'comprobado',
+            sources: [
+              { url: FAKE_LINKS.first, title: 'Guía de fermentación' },
+              { url: FAKE_LINKS.second, title: 'Manual de panadería' },
+            ],
+            alternatives: null,
+          },
+          {
+            text: 'El pan de antes aguantaba toda la semana.',
+            label: 'comprobado',
+            sources: [
+              { url: FAKE_LINKS.first, title: 'Guía de fermentación' },
+              { url: FAKE_LINKS.broken, title: 'Página que ya no existe' },
+              { url: FAKE_LINKS.blocked, title: 'Página que no deja entrar' },
+            ],
+            alternatives: null,
+          },
+          {
+            text: 'Esta receta nació en un convento.',
+            label: 'comprobado',
+            sources: [{ url: FAKE_LINKS.invented, title: 'Enlace inventado' }],
+            alternatives: 'Otra versión la sitúa en un molino.',
+          },
+        ],
+      }
+    case 'comprobar_guion': {
+      const claims = Array.isArray(input.claims) ? (input.claims as { id: string; text: string }[]) : []
+      const backed = [
+        { url: FAKE_LINKS.first, title: 'Guía de fermentación' },
+        { url: FAKE_LINKS.second, title: 'Manual de panadería' },
+      ]
+      return {
+        checks: claims.map((claim, index) =>
+          index === 0
+            ? { claimId: claim.id, verdict: 'matizar', sources: backed, proposal: 'Una redacción con más cuidado' }
+            : index === 1
+              ? { claimId: claim.id, verdict: 'correcto', sources: backed, proposal: null }
+              : {
+                  claimId: claim.id,
+                  verdict: 'correcto',
+                  sources: [{ url: FAKE_LINKS.broken, title: 'Página que ya no existe' }],
+                  proposal: null,
+                },
+        ),
+      }
+    }
+    case 'enfoques_short': {
+      const blocks = (input['blocks'] ?? []) as { id: string }[]
+      const moment = (index: number) => blocks[index]?.id ?? 'bloque'
+      return {
+        angles: [
+          {
+            title: 'El error que arruina tu masa madre',
+            hook: 'Si haces esto, tu pan no sube.',
+            blockId: moment(0),
+            why: 'Es lo que más sorprende del vídeo.',
+          },
+          {
+            title: 'El truco de la temperatura',
+            hook: 'Nadie te cuenta dónde dejar la masa.',
+            blockId: moment(1),
+            why: 'Se entiende en pocos segundos.',
+          },
+        ],
+      }
+    }
+    case 'bloque_guion':
+      return {
+        text: 'Este bloque está escrito de nuevo. Lo agradecen dos millones de personas.',
+        visual: 'Un plano más cerca.',
+        claims: [],
+      }
   }
 }
 
@@ -286,6 +429,27 @@ function invent(use: ChannelUse, output: Record<string, unknown>): Record<string
     }
     case 'busquedas_idea':
       return { ...output, broadQuery: 'cenas con 250.000 visitas' }
+    case 'escaleta': {
+      const [first, ...rest] = output.blocks as { purpose: string }[]
+      return { blocks: [{ ...first, purpose: add(first!.purpose).slice(0, 300) }, ...rest] }
+    }
+    case 'guion':
+    case 'guion_short': {
+      const [first, ...rest] = output.blocks as { text: string }[]
+      return { ...output, blocks: [{ ...first, text: add(first!.text) }, ...rest] }
+    }
+    case 'bloque_guion':
+      return { ...output, text: add(output.text as string) }
+    case 'enfoques_short': {
+      const [first, ...rest] = output.angles as { hook: string }[]
+      return { angles: [{ ...first, hook: add(first!.hook) }, ...rest] }
+    }
+    case 'investigacion': {
+      const [first, ...rest] = output.facts as { text: string }[]
+      return { facts: [{ ...first, text: add(first!.text) }, ...rest] }
+    }
+    case 'comprobar_guion':
+      return { checks: [{ claimId: 'marca', verdict: 'sin_fuente', sources: [], proposal: add('Otra redacción.') }] }
   }
 }
 

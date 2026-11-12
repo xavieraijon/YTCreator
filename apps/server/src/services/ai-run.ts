@@ -1,10 +1,11 @@
 import { randomUUID } from 'node:crypto'
-import { type ProviderId, resolveProfile } from '@ytcreator/ai'
+import { type AiProfile, type ProviderId, resolveProfile } from '@ytcreator/ai'
 import {
   type AiRequest,
   type AiResult,
   type Billing,
   type BudgetBlock,
+  type CallEstimate,
   CHANNEL_OUTPUTS,
   type ChannelOutput,
   type ChannelUse,
@@ -16,6 +17,7 @@ import {
   claimsFeedback,
   costCents,
   estimateCall,
+  reservedCents,
   isEstimateExpired,
   overrunsEstimate,
   trimClaims,
@@ -28,6 +30,7 @@ import { ApiError } from '../http/errors.ts'
 export interface ActiveAi {
   providerId: ProviderId
   billing: Billing
+  webResearch: boolean
   generate<T>(req: AiRequest<T>): Promise<AiResult<T>>
 }
 
@@ -56,6 +59,8 @@ export interface Estimate {
   blockedBy: BudgetBlock | null
   /** The most it can cost if the AI has to repeat itself, within the limit per operation (P17). */
   maxCents: number
+  /** The most it will search on the internet, when the use does. */
+  searches?: number
   pricingVersion: number
 }
 
@@ -65,6 +70,16 @@ const CLAIM_FIELDS: Partial<Record<ChannelUse, readonly string[]>> = {
   ideas: ['hook'],
   otro_enfoque: ['hook', 'why'],
   busquedas_idea: [],
+  // In a script a figure without a source gets marked, not trimmed (R9).
+  escaleta: [],
+  guion: [],
+  guion_short: [],
+  bloque_guion: [],
+  // Nothing marks what an angle says, so its figures are checked like those of any other angle.
+  enfoques_short: ['hook', 'why'],
+  // A fact is labelled by its links, not trimmed by its figures (R8).
+  investigacion: [],
+  comprobar_guion: [],
 }
 
 // One request can become up to four calls: an answer that does not validate is always asked for again by the adapter
@@ -81,7 +96,8 @@ const MAX_INSTRUCTIONS = 'x'.repeat(500)
 export type RunFailure = FailureKind | 'respuesta_invalida' | 'limite_de_gasto'
 
 export type RunResult<U extends ChannelUse> =
-  { ok: true; value: ChannelOutput<U>; claimsTrimmed: boolean; usageId: string } | { ok: false; failure: RunFailure }
+  | { ok: true; value: ChannelOutput<U>; claimsTrimmed: boolean; usageId: string; seenUrls?: string[] }
+  | { ok: false; failure: RunFailure }
 
 interface Saved {
   journeyId: string
@@ -113,53 +129,83 @@ export function createAiRunService(deps: AiRunDeps) {
   }
 
   // The most a request can cost: four calls, and never past the limit per operation, which every repetition checks.
-  const maxCentsOf = (ai: ActiveAi, cents: number): number => {
-    if (ai.billing === 'suscripcion' || cents === 0) return 0
+  const maxCentsOf = (ai: ActiveAi, call: CallEstimate): number => {
+    if (ai.billing === 'suscripcion' || call.cents === 0) return 0
     const perOperation = limits.get()?.perOperationCents ?? Number.POSITIVE_INFINITY
-    return Math.max(cents * CALLS_RESERVED, Math.min(cents * MAX_CALLS_PER_RUN, perOperation))
+    return Math.max(reservedCents(call, CALLS_RESERVED), Math.min(reservedCents(call, MAX_CALLS_PER_RUN), perOperation))
   }
 
-  const callCents = (ai: ActiveAi, model: string, maxOutputTokens: number, use: ChannelUse, input: unknown) =>
+  const callCents = (ai: ActiveAi, profile: AiProfile, maxOutputTokens: number, use: ChannelUse, input: unknown) =>
     estimateCall(pricing, {
       billing: ai.billing,
-      model,
+      model: profile.model,
       promptChars: deps.promptFor(use).text.length + JSON.stringify(input).length,
       maxOutputTokens,
+      ...(profile.web ? { web: profile.web } : {}),
     })
 
   const dropExpired = () => {
     for (const [id, saved] of estimates) if (isEstimateExpired(saved.createdAt, now())) estimates.delete(id)
   }
 
+  // An estimate spent or for something else is refused; work in the background asks this before it starts.
+  const estimateOf = (estimateId: string, use: ChannelUse, journeyId?: string): Saved => {
+    const saved = estimates.get(estimateId)
+    if (
+      !saved ||
+      saved.use !== use ||
+      (journeyId !== undefined && saved.journeyId !== journeyId) ||
+      isEstimateExpired(saved.createdAt, now())
+    ) {
+      throw new ApiError({ code: 'validacion', fields: { estimateId: 'no_valido' } })
+    }
+    return saved
+  }
+
   return {
+    assertEstimate(estimateId: string, use: ChannelUse, journeyId?: string): void {
+      estimateOf(estimateId, use, journeyId)
+    },
+
     estimate({
       journeyId,
       use,
       input,
+      outputTokens,
     }: {
       journeyId: string
       use: ChannelUse
       input: Record<string, unknown>
+      /** What the AI is expected to write (005, R11): what is shown. The budget still counts the most it may write. */
+      outputTokens?: number
     }): Estimate {
       const ai = activeOrThrow()
       const profile = profileOf(ai, use)
-      const call = callCents(ai, profile.model, profile.maxOutputTokens, use, input)
-      const withInstructions = callCents(ai, profile.model, profile.maxOutputTokens, use, {
+      const call = callCents(ai, profile, profile.maxOutputTokens, use, input)
+      const expected = callCents(
+        ai,
+        profile,
+        Math.min(outputTokens ?? profile.maxOutputTokens, profile.maxOutputTokens),
+        use,
+        input,
+      )
+      const withInstructions = callCents(ai, profile, profile.maxOutputTokens, use, {
         ...input,
         instructions: MAX_INSTRUCTIONS,
       })
       // The repetition of an invalid answer is reserved: the budget has to hold two calls (principle IV, P17).
-      const blockedBy = budgetBlock(ai, call.cents * CALLS_RESERVED)
+      const blockedBy = budgetBlock(ai, reservedCents(call, CALLS_RESERVED))
       dropExpired()
       const estimateId = randomUUID()
-      estimates.set(estimateId, { journeyId, use, cents: call.cents, createdAt: now() })
+      estimates.set(estimateId, { journeyId, use, cents: expected.cents, createdAt: now() })
       return {
         estimateId,
         use,
-        cents: call.cents,
-        included: call.included,
+        cents: expected.cents,
+        included: expected.included,
         blockedBy,
-        maxCents: maxCentsOf(ai, withInstructions.cents),
+        maxCents: maxCentsOf(ai, withInstructions),
+        ...(profile.web ? { searches: profile.web.maxSearches } : {}),
         pricingVersion: call.pricingVersion,
       }
     },
@@ -183,15 +229,7 @@ export function createAiRunService(deps: AiRunDeps) {
       /** A stricter schema than the use's own, such as one that knows the pillars of the profile (004, ai-uses.md). */
       schema?: { safeParse(value: unknown): { success: boolean } }
     }): Promise<RunResult<U>> {
-      const saved = estimates.get(estimateId)
-      if (
-        !saved ||
-        saved.use !== use ||
-        (journeyId !== undefined && saved.journeyId !== journeyId) ||
-        isEstimateExpired(saved.createdAt, now())
-      ) {
-        throw new ApiError({ code: 'validacion', fields: { estimateId: 'no_valido' } })
-      }
+      const saved = estimateOf(estimateId, use, journeyId)
       estimates.delete(estimateId)
 
       const ai = activeOrThrow()
@@ -208,13 +246,13 @@ export function createAiRunService(deps: AiRunDeps) {
       const fullInput = instructions ? { ...input, instructions } : input
       // What is really sent (the previous proposal, the creator's instructions) can be longer than what was estimated:
       // the budget is checked with the larger of the two (P17).
-      const oneCallCents = Math.max(
-        saved.cents,
-        callCents(ai, profile.model, profile.maxOutputTokens, use, fullInput).cents,
-      )
+      const sent = callCents(ai, profile, profile.maxOutputTokens, use, fullInput)
+      const onceCents = sent.cents - sent.repeatableCents
+      const repeatableCents = Math.max(saved.cents - onceCents, sent.repeatableCents)
+      const reserved = onceCents + repeatableCents * CALLS_RESERVED
 
       // Checked again, with the repetition reserved: the totals may have moved since the estimate.
-      if (budgetBlock(ai, oneCallCents * CALLS_RESERVED)) {
+      if (budgetBlock(ai, reserved)) {
         usage.record({ ...base, inputTokens: 0, outputTokens: 0, costCents: 0, outcome: 'limite_de_gasto' })
         return { ok: false, failure: 'limite_de_gasto' }
       }
@@ -223,11 +261,13 @@ export function createAiRunService(deps: AiRunDeps) {
       const schema = (strict ?? CHANNEL_OUTPUTS[use]) as unknown as AiRequest<ChannelOutput<U>>['schema']
       let inputTokens = 0
       let outputTokens = 0
+      let webSearches = 0
+      let seenUrls: string[] | undefined
       // Asking again for the figures goes only if what was spent, plus two more calls (that one and the repetition the
       // adapter may need), still fits every limit (P17).
       const mayAskAgain = (): boolean => {
-        const spent = costCents(pricing, profile.model, inputTokens, outputTokens)
-        const allowed = budgetBlock(ai, spent + oneCallCents * CALLS_RESERVED) === null
+        const spent = costCents(pricing, profile.model, inputTokens, outputTokens, webSearches)
+        const allowed = budgetBlock(ai, spent + reserved) === null
         if (!allowed) logger.warn('ai.retry_skipped_budget', { use })
         return allowed
       }
@@ -238,15 +278,19 @@ export function createAiRunService(deps: AiRunDeps) {
           input: fullInput,
           schema,
           ...(signal ? { signal } : {}),
+          ...(profile.web ? { web: profile.web } : {}),
         })
         // Also on a failure: an answer that did not validate was paid for all the same (principle III).
         inputTokens += result.usage?.inputTokens ?? 0
         outputTokens += result.usage?.outputTokens ?? 0
+        webSearches += result.usage?.webSearches ?? 0
+        if (result.ok) seenUrls = result.seenUrls
         return result
       }
       const finish = (outcome: RunFailure | 'ok') => {
-        const cents = ai.billing === 'suscripcion' ? 0 : costCents(pricing, profile.model, inputTokens, outputTokens)
-        const row = usage.record({ ...base, inputTokens, outputTokens, costCents: cents, outcome })
+        const cents =
+          ai.billing === 'suscripcion' ? 0 : costCents(pricing, profile.model, inputTokens, outputTokens, webSearches)
+        const row = usage.record({ ...base, inputTokens, outputTokens, webSearches, costCents: cents, outcome })
         if (overrunsEstimate(saved.cents, cents)) {
           logger.warn('estimate_overrun', { use, estimatedCents: saved.cents, costCents: cents })
         }
@@ -256,6 +300,8 @@ export function createAiRunService(deps: AiRunDeps) {
       // What the AI wrote the last time is not a source: a figure in it may be out of date, or its own invention.
       const sources: Record<string, unknown> = { ...(input as Record<string, unknown>) }
       delete sources['previous']
+      // Nor the angles it offered before (005, `enfoques_short`): a figure in a title is never checked.
+      delete sources['alreadyOffered']
 
       let result = await call(prompt.text)
       if (result.ok) {
@@ -276,7 +322,13 @@ export function createAiRunService(deps: AiRunDeps) {
         finish('respuesta_invalida')
         return { ok: false, failure: 'respuesta_invalida' }
       }
-      return { ok: true, value: output, claimsTrimmed: trimmed, usageId: finish('ok') }
+      return {
+        ok: true,
+        value: output,
+        claimsTrimmed: trimmed,
+        usageId: finish('ok'),
+        ...(seenUrls ? { seenUrls } : {}),
+      }
     },
   }
 }

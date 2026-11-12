@@ -13,12 +13,14 @@ const SCENARIOS: Partial<Record<ContractCase, string>> = {
   timeout: 'lento',
   service_down: 'no_disponible:servicio_caido',
   filtered: 'contenido_filtrado:rechazo_del_modelo',
+  web_unsupported: 'sin_web',
 }
 
 const OUTPUTS: Partial<Record<ContractCase, unknown[]>> = {
   output_valid: [VALID_OUTPUT],
   output_invalid_then_valid: [INVALID_OUTPUT, VALID_OUTPUT],
   output_invalid_twice: [INVALID_OUTPUT, INVALID_OUTPUT],
+  web_valid: [VALID_OUTPUT, VALID_OUTPUT],
 }
 
 runProviderContract('fake', (stub, deps) => {
