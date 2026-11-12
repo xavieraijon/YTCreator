@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { Claim, Fact } from '../../src/script/model.ts'
 import {
   detectClaims,
+  needsSearch,
   occurrences,
   replaceFragment,
   settleOrphans,
@@ -207,5 +208,24 @@ describe('splitMarks', () => {
 
   it('without marks it is the text', () => {
     expect(splitMarks('Nada.', [])).toEqual([{ text: 'Nada.' }])
+  })
+})
+
+describe('needsSearch (decision 49)', () => {
+  const source = (link: string) => ({ link }) as never
+  const check = (...links: string[]) =>
+    ({ verdict: 'sin_fuente', proposal: null, checkedAt: '', sources: links.map(source) }) as never
+  it('searches a pending mark never searched, and nothing else', () => {
+    expect(needsSearch({ status: 'pendiente', check: null })).toBe(true)
+    expect(needsSearch({ status: 'confirmada', check: null })).toBe(false)
+  })
+  it('does not search again what was answered', () => {
+    expect(needsSearch({ status: 'pendiente', check: check('abre') })).toBe(false)
+    expect(needsSearch({ status: 'pendiente', check: check('no_abre') })).toBe(false)
+    expect(needsSearch({ status: 'pendiente', check: check('abre', 'sin_comprobar') })).toBe(false)
+  })
+  it('searches again a mark whose links could not be tried', () => {
+    expect(needsSearch({ status: 'pendiente', check: check('sin_comprobar') })).toBe(true)
+    expect(needsSearch({ status: 'pendiente', check: check('no_abre', 'sin_comprobar') })).toBe(true)
   })
 })

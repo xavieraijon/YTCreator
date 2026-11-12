@@ -202,3 +202,12 @@ export function splitMarks(text: string, claims: readonly Claim[]): MarkedPart[]
   if (at < text.length || parts.length === 0) parts.push({ text: text.slice(at) })
   return parts
 }
+
+// What «Comprobar con internet» still has to search: a pending mark never searched, or one whose search was cut short
+// (a link that could not be tried, nothing that opens). A mark already answered is not paid for again (decision 49).
+export function needsSearch(claim: Pick<Claim, 'status' | 'check'>): boolean {
+  if (claim.status !== 'pendiente') return false
+  if (claim.check === null) return true
+  const links = claim.check.sources.map((source) => source.link)
+  return !links.includes('abre') && links.includes('sin_comprobar')
+}

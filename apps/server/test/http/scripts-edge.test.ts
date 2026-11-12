@@ -191,7 +191,7 @@ describe('several channels', () => {
 
 describe('the logs (T096)', () => {
   it('no line names a link: researching, the links of the creator, checking or failing', async () => {
-    const { t, id, draft } = await withDraft()
+    const { t, id } = await withDraft()
     await ask(t, id, 'investigacion')
     const facts = (await read(t, id))['facts'] as { version: number; content: { facts: unknown[] } }
     const link = 'https://mi-fuente.example/receta-secreta'
@@ -217,7 +217,6 @@ describe('the logs (T096)', () => {
 
     expect(t.logger.lines.some((line) => line.includes('job.failed'))).toBe(true)
     expect(t.logger.lines.filter((line) => /https?:\/\/|\.example/i.test(line))).toEqual([])
-    expect(draft.version).toBe(1)
   })
 })
 

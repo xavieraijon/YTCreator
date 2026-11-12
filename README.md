@@ -4,7 +4,8 @@ Tu productor de YouTube con IA, instalado en tu propio ordenador. Te acompaña d
 listo para publicar: canal y nicho, ideas, guion, escaleta, título, descripción y subtítulos.
 
 Tus datos se quedan en tu ordenador. YTCreator solo se conecta a la IA que tú elijas, a YouTube para ver qué funciona en
-tu tema y, cuando investigas un vídeo, a las páginas de las fuentes para comprobar que abren.
+tu tema, cuando investigas un vídeo a las páginas de las fuentes para comprobar que abren y, una vez al día, a la página
+de versiones para saber si hay una nueva (se puede desactivar).
 
 ## Lo que necesitas
 

@@ -599,3 +599,102 @@ el puerto 4310.
 guardado sin destello»). Como `test:e2e` corre el catálogo primero, la web no llegó a ejecutarse. La rama no toca el
 catálogo, `packages/ui` ni `packages/tokens`. Repetido: el test pasa (6/6), el catálogo entero también (97) y la web
 también (48). Se trata como inestable, igual que los dos fallos sueltos de US7.
+
+## Polish (T095–T100), Puerta A del 2026-11-12
+
+### 1. Resumen
+
+Polish cierra la 005 con casos límite (T095), logs sin enlaces (T096), el quickstart recorrido (T097), la auditoría de
+novato pasada en la ronda 5 (T098) y la documentación al día (T099). Los revisores encontraron que el servidor volvía a
+buscar y cobrar marcas ya buscadas: corregido. Ningún hallazgo grave queda abierto. **La IA real no se ha vuelto a probar** después de T087.
+
+### 2. Requisitos
+
+| Requisito | Estado | Evidencia | Fecha |
+|---|---|---|---|
+| T095 casos límite: idea archivada y recuperada, quemada o competida, apuntes largos, límite de gasto, fallos tipados, bloque que falla, varios canales | Cumplido | `scripts-edge.test.ts` | 2026-11-12 |
+| T096 glosario y `secrets-leak` sin cambios; ningún log con enlaces | Cumplido | `glossary.test.ts` (también exportaciones), `secrets-leak.spec.ts`, `logging.test.ts`, `scripts-edge.test.ts` (logs), decisión 54 | 2026-11-12 |
+| T097 quickstart con IA falsa | Cumplido | sección «Polish: recorrido del quickstart (T097)» | 2026-11-12 |
+| T098 auditoría de novato: 0 graves y como mucho 3 medios; tiempo SC-001 | Cumplido (ronda 5: 0 y 3) | `novice-audit.md`; el tiempo es con IA simulada | 2026-11-12 |
+| T099 CLAUDE.md y README | Cumplido | commit 9821fd6; el README nombra también la comprobación diaria de versión | 2026-11-12 |
+| FR-012b comprobar las pendientes, sin pagar dos veces lo mismo | Cumplido | `scripts-facts.test.ts` (dos tests nuevos), `claims.test.ts` (`needsSearch`), decisión 55 | 2026-11-12 |
+| Principio II en «Leer el guion entero» | Cumplido | marcas y «Opinión de la IA» en Revisar; `scripts.spec.ts` (US3) | 2026-11-12 |
+
+### 3. Cómo se comprobó
+
+Tras las correcciones: `lint` 0, `typecheck` 0, `test` 0 (2271 pasados y 4 omitidos, 176 ficheros), `test:e2e` ver
+controles.
+
+### 4. Controles
+
+- Pasados: lint, typecheck, test, glosario (web, con las descargas, y ui), tipos de fallo de IA (`sin_sesion`,
+  `cupo_agotado`, `tiempo_agotado`, `respuesta_invalida` y `limite_de_gasto` en `scripts-edge.test.ts`;
+  `contenido_filtrado` y `no_disponible` en `scripts-facts`, `scripts-outline` y `scripts-short-from-long`), «Cómo se
+  demuestra» de Polish (el quickstart, T097).
+- e2e con axe en claro y oscuro a 375 y 1280 px, teclado y reduced-motion, con `secrets-leak`: código 0, catálogo 97 de 97 y web 49 de 49, a la primera.
+- No ejecutados: `test:installer` (no se toca el instalador ni el empaquetado); IA real (después de T087 no hace falta
+  para Polish y gastaría).
+
+### 5. Hallazgos
+
+Una vuelta de los cuatro revisores (fidelidad, lógica, seguridad y coste, regresión).
+
+Corregidos (medios):
+- «Comprobar con internet» enviaba a la IA y cobraba todas las marcas pendientes, también las ya buscadas, y pisaba su
+  veredicto. Ahora el servidor solo busca las que no tienen respuesta (lo encontraron tres revisores; decisión 55).
+- Una marca que quedaba «sin fuente» porque la red cortó la comprobación de enlaces no se podía volver a buscar. Ahora
+  cuenta como sin respuesta si ningún enlace abre y alguno no se pudo probar (decisión 55).
+- Las decisiones 48, 49, 50, 52 y 53 cambian textos y comportamiento visible y estaban como «Bajo»: reclasificadas a
+  «Medio» y destacadas en el punto 7.
+- Contratos sin actualizar: `ui-screens.md` (Lista, Hechos, Escaleta, Guion y Revisar) y `data-model.md`
+  (`escaleta_cambiada` compara bloques) alineados con las decisiones 49 a 53.
+- «Leer el guion entero» enseñaba el texto de la IA sin marcas ni «Opinión de la IA» (principio II): ahora lleva las
+  dos y una frase que lo explica.
+
+Corregidos (menores):
+- «Proponer otra escaleta» usaba el texto del guion: ahora tiene uno propio (que deja de estar aprobada).
+- Quitar un bloque de una escaleta aprobada no decía que deja de estarlo: ahora lo dice.
+- Con la duración no válida, los apuntes no se guardaban sin aviso: la frase sale siempre y lo dice.
+- Plural «1 ya se han buscado», y un «. » escrito en el código en vez de en el catálogo de textos.
+- El guardado automático de los apuntes borraba los mensajes en pantalla («no se encontró nada fiable», fallos): ya no.
+- Un `expect` inútil en `scripts-edge.test.ts`; el e2e no comprobaba el texto de «Quiero otra escaleta»: ahora sí.
+- El README no nombraba la comprobación diaria de versión.
+- El cambio de los logs no tenía entrada: decisión 54.
+
+Descartados:
+- «La descarga cambia de "undefined" a vacío» (`export.ts`): no puede pasar, el esquema de la fuente exige enlace o
+  referencia, así que el nombre nunca queda vacío. El formato no cambia.
+- «El log no tapa dominios sin `http`»: ningún camino actual los escribe (`link-check` captura sus errores y solo cuenta);
+  taparlos confundiría nombres de evento como `job.failed`. Queda escrito en la decisión 54.
+- «Las URL de las fuentes van en el `.md` descargado»: es la descarga que pide el creador, no un log.
+
+Abiertos (menores, para la pasada de interfaz con modo Design):
+- La barra de pasos marca el progreso y la navegación la pestaña vista: dos «actual» a la vez (decisión 51; ronda 5,
+  n.º 4).
+- «Elegir para guion» lleva el foco a «Próximos vídeos»: quien elige varias ideas seguidas con el teclado vuelve a la
+  lista (decisión 48).
+- «Ir a la primera» no hace nada si todas las marcas están en el bloque que se está editando.
+
+### 6. Desviaciones
+
+Decisiones 48 a 55, todas en los contratos. «Comprobar con internet» ya no vuelve a buscar lo respondido: FR-012b habla de
+las pendientes, y una pendiente ya respondida se ve con su veredicto; una cortada por la red sí se puede volver a buscar.
+
+### 7. Decisiones
+
+Agente, riesgo medio con efecto visible, para que el creador las vea: 48 (foco al elegir para guion), 49 (contador e «Ir a
+la primera»; el botón de comprobar solo con algo sin buscar), 50 (preguntar antes de quitar un bloque, «Leer el guion
+entero», «¿Otro vídeo?»), 51 (barra de pasos, «Ir a la escaleta», guardado automático, `escaleta_cambiada` por bloques),
+52 (preguntar antes de reescribir), 53 (avisos de «Quiero otra escaleta» y de la duración), 54 (logs sin enlaces) y 55
+(qué marcas se buscan). Pendientes del creador: P2 (dígitos) y P3 (`WebFetch`); ninguna bloquea Polish.
+
+### 8. Constitución
+
+II (lo de la IA marcado también al leerlo entero; lo que se sustituye avisa y se recupera del historial), III (no se
+paga dos veces la misma búsqueda; el coste sigue antes de pedir), VI (axe), VII (logs sin enlaces), IX (auditoría de
+novato pasada), XI (este informe).
+
+### 9. Cómo revertir
+
+`git revert` de los commits de Polish (de 19d6da2 al de T100). No hay migración. Queda: la pasada de interfaz con modo Design,
+P2 y P3, y el PR a `main` cuando lo pida el creador.

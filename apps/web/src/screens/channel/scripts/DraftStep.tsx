@@ -1,4 +1,4 @@
-import { durationSeconds, SCRIPT_LIMITS, splitMarks, type Claim, type DraftBlock } from '@ytcreator/core'
+import { durationSeconds, needsSearch, SCRIPT_LIMITS, splitMarks, type Claim, type DraftBlock } from '@ytcreator/core'
 import type { ScriptView } from '@ytcreator/core/api'
 import { Button, Card, DataSource, Dialog, Disclosure, ErrorMessage, format, TextArea, TextField } from '@ytcreator/ui'
 import { type MutableRefObject, useEffect, useRef, useState } from 'react'
@@ -244,6 +244,7 @@ function ClaimDialog({
 function searchedSaid(pending: number, searched: number): string {
   if (searched === 0) return text.claimsHint
   if (searched === pending) return pending === 1 ? text.claimsSearched.one : text.claimsSearched.other
+  if (searched === 1) return text.claimsSearched.someOne
   return format(text.claimsSearched.some, { n: String(searched) })
 }
 
@@ -274,9 +275,8 @@ export function DraftStep({
   const canRewrite =
     script.format === 'short' || (script.outline !== null && script.outlineApprovedVersion === script.outline.version)
   const price = useEstimate(script, rewriteUse, canRewrite)
-  // Only what has not been searched yet: searching again the same marks would spend for the same answer (novice audit).
-  const unchecked =
-    script.draft?.content.claims.filter((claim) => claim.status === 'pendiente' && claim.check === null).length ?? 0
+  // Only what has not been answered yet: searching again the same marks would spend for the same answer (decision 49).
+  const unchecked = script.draft?.content.claims.filter(needsSearch).length ?? 0
   const checkPrice = useEstimate(script, 'comprobar_guion', script.webResearch && unchecked > 0)
   const draft = script.draft
 
@@ -318,7 +318,7 @@ export function DraftStep({
   const { blocks, claims } = draft.content
   const { wordsPerMinute } = script.voice
   const pendingClaims = claims.filter((claim) => claim.status === 'pendiente')
-  const searched = pendingClaims.filter((claim) => claim.check !== null).length
+  const searched = pendingClaims.filter((claim) => !needsSearch(claim)).length
   // The marks are found by their colour alone, so the button takes the creator to the first one (novice audit).
   const toFirstClaim = () => {
     const first = document.querySelector<HTMLElement>('[data-claim]')
@@ -404,9 +404,12 @@ export function DraftStep({
       <p ref={counter} tabIndex={-1} role="status">
         {pendingClaims.length === 0
           ? text.noClaims
-          : `${format(pendingClaims.length === 1 ? text.claimsCount.one : text.claimsCount.other, {
-              n: pendingClaims.length,
-            })}. ${searchedSaid(pendingClaims.length, searched)}`}
+          : format(text.claimsCounter, {
+              count: format(pendingClaims.length === 1 ? text.claimsCount.one : text.claimsCount.other, {
+                n: pendingClaims.length,
+              }),
+              hint: searchedSaid(pendingClaims.length, searched),
+            })}
       </p>
       {pendingClaims.length > 0 && (
         <Button variant="secondary" size="sm" disabled={busy} onClick={toFirstClaim}>

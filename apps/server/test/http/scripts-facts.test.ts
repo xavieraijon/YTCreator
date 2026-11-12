@@ -472,6 +472,33 @@ describe('checking a script with the internet', () => {
     expect(sent[0]!.context).toContain('Frase uno.')
   })
 
+  it('does not search again the marks already searched (decision 49)', async () => {
+    const { t, id, draft } = await withDraft()
+    await addClaims(t, id, draft)
+    const checked = (await ask(t, id, 'comprobar_guion'))['draft'] as Draft
+    const row = t.scriptVersions.latest(id, 'guion')!
+    t.scriptVersions.add({
+      ...row,
+      origin: 'edicion',
+      content: {
+        ...row.content,
+        claims: row.content.claims.map((claim, index) => (index === 2 ? { ...claim, check: null } : claim)),
+      },
+    } as never)
+    const run = vi.spyOn(t.channel.aiRun, 'run')
+    const after = (await ask(t, id, 'comprobar_guion'))['draft'] as Draft
+    const sent = run.mock.calls[0]![0].input['claims'] as { id: string }[]
+    expect(sent.map((claim) => claim.id)).toEqual(['marca-tres'])
+    expect(after.content.claims[0]!.check).toEqual(checked.content.claims[0]!.check)
+  })
+
+  it('has nothing to check once every pending mark was searched', async () => {
+    const { t, id, draft } = await withDraft()
+    await addClaims(t, id, draft)
+    await ask(t, id, 'comprobar_guion')
+    expect((await call(t, 'POST', `/api/scripts/${id}/estimate`, { use: 'comprobar_guion' })).status).toBe(400)
+  })
+
   it('needs something to check', async () => {
     const { t, id, draft } = await withDraft()
     t.scriptVersions.add({

@@ -226,7 +226,7 @@ separado.
 - [x] T097 Recorrer el [quickstart](./quickstart.md) entero con IA falsa y guardar el resultado en `checklists/validation.md`
 - [x] T098 Auditoría de novato del guion con el agente `usuario-novato`, en `specs/005-script-and-outline/novice-audit.md`. Debe dar 0 graves y como mucho 3 medios, y anotar el tiempo de la idea al guion aprobado (SC-001). Los menores visuales van a la pasada del modo Design
 - [x] T099 Actualizar `CLAUDE.md` (estado de la 005) y `README.md` si cambia algo de cara al creador
-- [ ] T100 [A] Puerta A de Polish: ejecutar `/puerta-a 005 Polish`
+- [x] T100 [A] Puerta A de Polish: ejecutar `/puerta-a 005 Polish`
 
 ---
 

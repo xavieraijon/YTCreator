@@ -1,4 +1,4 @@
-import { type DraftBlock, type ReviewNotice, reviewScript } from '@ytcreator/core'
+import { type DraftBlock, type ReviewNotice, reviewScript, splitMarks } from '@ytcreator/core'
 import type { ScriptReviewView, ScriptView } from '@ytcreator/core/api'
 import { SCRIPT_LIMITS } from '@ytcreator/core'
 import { Button, Card, DataSource, Dialog, Disclosure, ErrorMessage, format, TextArea } from '@ytcreator/ui'
@@ -168,10 +168,26 @@ export function ReviewStep({ script, ai, onChange, onError, onToBlock, onToDraft
       <p className={styles.why}>{text.why}</p>
       {/* What is approved can be read here, whole, without going back a step (novice audit, decision 50). */}
       <Disclosure summary={text.readAll}>
+        {/* The figures still to check stay marked here too: what the AI wrote is not passed off as fact (principle II). */}
+        <DataSource kind="ia" />
+        {claims.some((claim) => claim.status === 'pendiente') && <p className={styles.notice}>{text.readAllMarks}</p>}
         {blocks.map((block) => (
           <section key={block.id} aria-label={nameOf(block)}>
             <h2>{nameOf(block)}</h2>
-            <p>{block.text}</p>
+            <p>
+              {splitMarks(
+                block.text,
+                claims.filter((claim) => claim.blockId === block.id),
+              ).map((part, index) =>
+                part.claimId ? (
+                  <span key={index} className={styles.claim}>
+                    <mark>{part.text}</mark>
+                  </span>
+                ) : (
+                  part.text
+                ),
+              )}
+            </p>
           </section>
         ))}
       </Disclosure>

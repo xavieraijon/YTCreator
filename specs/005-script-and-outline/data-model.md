@@ -129,7 +129,7 @@ hay que aprobarla. Un Short sacado de un vídeo largo empieza en `sin_empezar`.
 | `idea_cambiada` | `idea.revision` > `idea_revision` de la versión actual |
 | `perfil_cambiado` | versión actual del perfil > `profile_version` |
 | `hechos_cambiados` | última versión de hechos > `facts_version` |
-| `escaleta_cambiada` | última versión de escaleta > `outline_version` del guion |
+| `escaleta_cambiada` | los bloques de la última versión de escaleta no son los de `outline_version` del guion (decisión 51) |
 | `origen_cambiado` | el texto del momento de origen en la versión aprobada del guion largo no es el de `source_draft_version` (decisión 44) |
 
 ## Relación con la 004

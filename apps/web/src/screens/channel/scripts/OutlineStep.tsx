@@ -386,7 +386,7 @@ export function OutlineStep({ script, ai, onChange, onError, onToFacts, onToDraf
         open={removing !== null}
         onOpenChange={(open) => !open && setRemoving(null)}
         title={format(text.removeTitle, { titulo: removing ? titleOf(removing) : '' })}
-        description={text.removeBody}
+        description={approved ? `${text.removeBody} ${text.removeApproved}` : text.removeBody}
         footer={
           <>
             <Button variant="secondary" onClick={() => setRemoving(null)}>

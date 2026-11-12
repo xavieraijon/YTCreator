@@ -105,6 +105,8 @@ test('from a chosen idea to an approved outline, with the keyboard, surviving a 
 
   // The price moved between looking and pressing: nothing is spent and the new one is shown.
   await page.getByText('Quiero otra escaleta').click()
+  // What it replaces is said before asking (decision 53).
+  await expect(page.getByText(/^Se sustituye la escaleta entera, también lo que cambiaste tú/)).toBeVisible()
   const again = page.getByRole('button', { name: /Pedir otra escaleta/ })
   await expect(again).toBeEnabled()
   await page.route('**/api/scripts/*/estimate', async (route) => {
@@ -302,6 +304,14 @@ test('reviewing for free, approving knowing what is left, downloading and reopen
   // What is approved can be read whole here.
   await page.getByText('Leer el guion entero').click()
   await expect(page.getByRole('region', { name: /El error que comete/ })).toContainText('Cabe destacar')
+  // What is still to check stays marked when read whole (principle II).
+  await expect(page.getByText(/^Lo resaltado está por comprobar/)).toBeVisible()
+  await expect(
+    page
+      .getByRole('region', { name: /El error que comete/ })
+      .locator('mark')
+      .first(),
+  ).toBeVisible()
   await expect(page.getByText('Suena a texto de IA: «cabe destacar».')).toBeVisible()
   await expect(page.getByText(/Dura unos .* y querías 10 min\./)).toBeVisible()
   await expect(page.getByText(/^El gancho dura unos/)).toBeVisible()

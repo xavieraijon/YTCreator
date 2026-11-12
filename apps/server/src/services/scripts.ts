@@ -38,6 +38,7 @@ import {
   type ChannelProfile,
   type Claim,
   type ContentOf,
+  needsSearch,
   type DraftContent,
   type DraftOutput,
   type Idea,
@@ -617,7 +618,8 @@ export function createScriptService(deps: ScriptServiceDeps) {
       assertCanSearch()
       const draft = versions.latest(script.id, 'guion')
       if (!draft) throw new ApiError({ code: 'no_encontrado' })
-      const pending = draft.content.claims.filter((claim) => claim.status === 'pendiente')
+      // A mark already answered is not paid for again (decision 49).
+      const pending = draft.content.claims.filter(needsSearch)
       if (pending.length === 0) throw new ApiError({ code: 'validacion', fields: { use: 'no_valido' } })
       return {
         input: {

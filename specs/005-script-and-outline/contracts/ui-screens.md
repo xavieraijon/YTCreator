@@ -20,6 +20,7 @@ de tu vídeo: qué cuentas y en qué orden.»
 - **Por qué importa**: «Aquí tienes los guiones de tus vídeos, en el punto en que los dejaste.»
 - Una `Card` por guion: título de la idea, formato, estado, último cambio y «Abrir».
 - Sin guiones ni cola: `EmptyState` que explica que primero hay que elegir una idea, con «Ir al banco de ideas».
+- Con guiones: «¿Otro vídeo?…» con «Ir al banco de ideas» (decisión 50).
 - «Descargar todos» y «Voz del canal».
 
 ## Guion (`/canal/guiones/:id`)
@@ -39,13 +40,17 @@ principal, que cambia según el estado.
 - Acciones: «Investigar el tema · {coste}», «Añadir un hecho o una fuente», «Quitar», «Cambiar».
 - Sin internet en la conexión: una frase que lo explica, sin botón de investigar.
 - **Principal**: «Proponer escaleta · {coste}» (largo) o «Escribir el guion · {coste}» (Short; ya escrito, «Ir al guion», decisión 28).
+  Con la escaleta ya hecha, «Ir a la escaleta» en su lugar (decisión 51). Con la duración no válida, una frase junto al
+  botón dice que hay que arreglarla y que hasta entonces no se guardan los apuntes (decisión 53). Los apuntes se guardan
+  solos 1,5 s después de dejar de escribir (decisión 51).
 
 ### Escaleta
 
 - **Por qué importa**: «La estructura decide si la gente se queda. Cambiar el orden aquí cuesta un minuto.»
 - Un bloque por `Card`: tipo, título, para qué está, pregunta, recompensa, enganche y duración, con «Subir», «Bajar»,
   «Cambiar» y «Quitar». «Añadir bloque».
-- Duración total frente al objetivo. «Pedir otra escaleta», con indicaciones.
+- Duración total frente al objetivo. «Pedir otra escaleta», con indicaciones y la frase de que sustituye la escaleta
+  entera (decisión 53). «Quitar» pregunta antes en un `Dialog` (decisión 50).
 - Todo lo que propone la IA va marcado con `DataSource` «Opinión de la IA».
 - **Principal**: «Aprobar la escaleta»; aprobada, «Escribir el guion · {coste}».
 
@@ -56,7 +61,10 @@ principal, que cambia según el estado.
   {coste}».
 - Cada marca abre `Dialog` con «Es correcto», «Corregir», «No es un dato» y «Quitar del guion», y si se comprobó,
   veredicto, enlaces y «Usar esta redacción».
-- Contador «{n} afirmaciones por comprobar» y «Comprobar con internet · {coste}».
+- Contador «{n} afirmaciones por comprobar», con dónde están e «Ir a la primera»; una vez buscadas, lo dice.
+  «Comprobar con internet · {coste}» solo sale si queda alguna marca pendiente sin respuesta, y solo busca esas
+  (decisión 49).
+- «Pedir de nuevo este bloque» y «Pedir otro guion» dicen antes que sustituyen lo escrito a mano (decisiones 51 y 52).
 - «Pedir otro guion · {coste}», con indicaciones.
 - Guion aprobado: antes del primer cambio, «Si lo cambias, dejará de estar aprobado».
 - «Voz del canal»: «tú y cercano, por defecto» y enlace para cambiarla.
@@ -64,7 +72,9 @@ principal, que cambia según el estado.
 
 ### Revisar
 
-- **Por qué importa**: «Lo que se ve aquí se arregla gratis antes de grabar.»
+- **Por qué importa**: «Antes de aprobar, lee el guion entero en voz alta. Aquí te avisamos, sin gastar nada, de lo que
+  conviene arreglar…» (decisión 50).
+- «Leer el guion entero» (`Disclosure`): el texto por bloques, con lo pendiente resaltado y «Opinión de la IA».
 - Lista de avisos: motivo y «Ir al bloque».
 - **Principal**: «Aprobar el guion». Con pendientes, `Dialog`: «Quedan {n} afirmaciones sin comprobar», con «Revisarlas» y
   «Aprobar igualmente».

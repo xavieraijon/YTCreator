@@ -73,7 +73,7 @@ export const scriptEs = {
     saved: 'Guardado',
     shortIntro: 'En un Short, los primeros segundos deciden si alguien se queda o pasa al siguiente.',
     outlineDone: 'Tu escaleta ya está hecha. Si quieres otra, pídela desde la escaleta.',
-    fixDuration: 'Para seguir, arregla arriba cuánto quieres que dure.',
+    fixDuration: 'Arregla arriba cuánto quieres que dure: hasta entonces no se guardan tus apuntes ni puedes seguir.',
     writeShort: 'Escribir el guion',
     outlineIntro:
       'La escaleta es el esquema de tu vídeo: qué cuentas y en qué orden. La estructura decide si la gente se queda.',
@@ -135,6 +135,7 @@ export const scriptEs = {
     remove: 'Quitar',
     removeTitle: '¿Quitar «{titulo}» de la escaleta?',
     removeBody: 'Si te arrepientes, lo recuperas en el historial, al final de esta página.',
+    removeApproved: 'La escaleta dejará de estar aprobada.',
     removeConfirm: 'Quitar el bloque',
     againNote:
       'Se sustituye la escaleta entera, también lo que cambiaste tú, y deja de estar aprobada. Si te arrepientes, la recuperas en el historial.',
@@ -167,11 +168,13 @@ export const scriptEs = {
     register: { cercano: 'cercano', sobrio: 'sobrio', energico: 'enérgico' },
     noClaims: 'No queda ninguna afirmación por comprobar.',
     claimsCount: { one: '{n} afirmación por comprobar', other: '{n} afirmaciones por comprobar' },
+    claimsCounter: '{count}. {hint}',
     claimsHint: 'Están resaltadas en el texto. Pulsa una para ver por qué y decidir qué hacer.',
     toFirstClaim: 'Ir a la primera',
     claimsSearched: {
       one: 'Ya se ha buscado en internet: abre la frase resaltada para ver el resultado.',
       other: 'Ya se han buscado en internet: abre cada frase resaltada para ver su resultado.',
+      someOne: 'De ellas, 1 ya se ha buscado en internet: abre la frase resaltada para ver su resultado.',
       some: 'De ellas, {n} ya se han buscado en internet: abre cada frase resaltada para ver su resultado.',
     },
     claimName: 'Por comprobar: {texto}',
@@ -298,6 +301,7 @@ export const scriptEs = {
     chooseAngleNamed: 'Elegir este: {titulo}',
     why: 'Antes de aprobar, lee el guion entero en voz alta. Aquí te avisamos, sin gastar nada, de lo que conviene arreglar: si dura mucho más o menos de lo que querías, si el gancho es largo o si una frase suena a texto de IA.',
     readAll: 'Leer el guion entero',
+    readAllMarks: 'Lo resaltado está por comprobar: lo ha escrito la IA y nada lo respalda todavía.',
     nothing: 'No hay nada que avisar.',
     inBlock: 'En «{titulo}»',
     toBlock: 'Ir al bloque',
@@ -364,6 +368,8 @@ export const scriptEs = {
     redoDraftNote: 'Si lo escribes de nuevo, dejará de estar aprobado.',
     redoDraftTitle: '¿Escribir el guion de nuevo?',
     redoOutlineTitle: '¿Proponer otra escaleta?',
+    redoOutlineBody:
+      'Se sustituye la escaleta entera, también lo que cambiaste tú, y deja de estar aprobada. Si te arrepientes, la recuperas en el historial.',
     redoBody:
       'Se sustituye entero, también lo que escribiste tú y las correcciones que aceptaste. Si te arrepientes, lo recuperas en el historial.',
     cancel: 'Cancelar',

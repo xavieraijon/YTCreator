@@ -18,6 +18,8 @@ export interface FactsStepProps {
   readonly ai: ScriptAi
   readonly nothingFound: boolean
   readonly onChange: (script: ScriptView) => void
+  // Saving the notes or the duration on its own: it keeps the messages on screen, which the creator has not closed.
+  readonly onSaved?: (script: ScriptView) => void
   readonly onError: (cause: unknown) => void
   readonly onToDraft: () => void
   readonly onToOutline: () => void
@@ -26,7 +28,16 @@ export interface FactsStepProps {
 const AUTOSAVE_MS = 1500
 
 // Duration and notes: what the AI starts from (contracts/ui-screens.md, «Hechos»).
-export function FactsStep({ script, ai, nothingFound, onChange, onError, onToDraft, onToOutline }: FactsStepProps) {
+export function FactsStep({
+  script,
+  ai,
+  nothingFound,
+  onChange,
+  onSaved = onChange,
+  onError,
+  onToDraft,
+  onToOutline,
+}: FactsStepProps) {
   // A long video is thought of in minutes and a Short in seconds.
   const unit = script.format === 'largo' ? 60 : 1
   const [duration, setDuration] = useState(String(Math.round(script.targetSeconds / unit)))
@@ -66,7 +77,7 @@ export function FactsStep({ script, ai, nothingFound, onChange, onError, onToDra
         ...(notes !== base.notes ? { notes } : {}),
       })
       lastSaved.current = changed
-      onChange(changed)
+      onSaved(changed)
       setSaved(true)
       return true
     } catch (cause) {
@@ -237,14 +248,14 @@ export function FactsStep({ script, ai, nothingFound, onChange, onError, onToDra
       {notes.trim() === '' && (script.facts?.content.facts.length ?? 0) === 0 && (
         <p className={styles.notice}>{text.noNotes}</p>
       )}
+      {/* The button greys out and the notes do not save for a duration far above, out of sight (decision 53). */}
+      {!valid && <p className={styles.notice}>{text.fixDuration}</p>}
       {canWrite ? (
         <>
           <p className={styles.why}>{isShort ? text.shortIntro : text.outlineIntro}</p>
           {price.error !== null && (
             <ErrorMessage live title={errorText(price.error)} action={{ label: es.app.retry, onClick: price.retry }} />
           )}
-          {/* The button greys out for a duration far above, out of sight: said here (novice audit, decision 53). */}
-          {!valid && <p className={styles.notice}>{text.fixDuration}</p>}
           <AiAction
             label={isShort ? text.writeShort : text.proposeOutline}
             estimate={estimate}

@@ -89,7 +89,13 @@ export function ScriptWarnings({
             open={confirming}
             onOpenChange={setConfirming}
             title={script.draft ? text.redoDraftTitle : text.redoOutlineTitle}
-            description={script.status === 'guion_aprobado' ? `${text.redoBody} ${text.redoDraftNote}` : text.redoBody}
+            description={
+              !script.draft
+                ? text.redoOutlineBody
+                : script.status === 'guion_aprobado'
+                  ? `${text.redoBody} ${text.redoDraftNote}`
+                  : text.redoBody
+            }
             footer={
               <>
                 <Button variant="secondary" onClick={() => setConfirming(false)}>

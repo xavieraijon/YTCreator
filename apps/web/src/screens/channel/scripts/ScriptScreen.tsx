@@ -196,6 +196,7 @@ export function ScriptScreen({ id }: { readonly id: string }) {
           ai={ai}
           nothingFound={nothingFound}
           onChange={onChange}
+          onSaved={setScript}
           onError={setError}
           onToDraft={() => setStep('guion')}
           onToOutline={() => setStep('escaleta')}
