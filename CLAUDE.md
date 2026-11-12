@@ -33,7 +33,7 @@ Spec-Driven Development with GitHub Spec Kit (`/speckit-*`).
 - 004 `idea-bank`: **complete and merged into `main`** (PR #6, 2026-11-09). Novice audit passed in round 2
   (`specs/004-idea-bank/novice-audit.md`); its open mediums (home does not lead to the bank, queue without semaphore) and
   minors go to the UI pass with Design mode. Real AI and real YouTube not tested. No open items in its `decisions.md`; P1 moved to `specs/002-onboarding/decisions.md` (for a task after v1). Report in `specs/004-idea-bank/checklists/validation.md`.
-- 005 `script-and-outline`: **complete on its branch, not merged yet** (2026-11-12). US1–US7 closed with Puerta A; real AI
+- 005 `script-and-outline`: **complete on its branch, not merged yet** (2026-11-12). US1–US7 and Polish closed with Puerta A (T100, 2026-11-12); real AI
   tested with Claude Code (T087; the API timed out and became secondary). Novice audit passed in round 5
   (`specs/005-script-and-outline/novice-audit.md`); its open medium (home does not lead to the scripts, from 004) and
   minors go to the UI pass with Design mode. Open for the creator in its `decisions.md`: P2 (digits) and P3 (`WebFetch`).
