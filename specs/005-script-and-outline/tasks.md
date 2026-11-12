@@ -221,7 +221,7 @@ separado.
 
 ## Phase 10: Polish & Cross-Cutting
 
-- [ ] T095 [P] Comprobar los casos límite de la spec que falten con su test: idea archivada y recuperada, idea quemada, apuntes muy largos, límite de gasto, fallos tipados de la IA y varios canales, en `apps/server/test/http/scripts-edge.test.ts`
+- [x] T095 [P] Comprobar los casos límite de la spec que falten con su test: idea archivada y recuperada, idea quemada, apuntes muy largos, límite de gasto, fallos tipados de la IA y varios canales, en `apps/server/test/http/scripts-edge.test.ts`
 - [ ] T096 [P] Revisar que los textos nuevos pasan el glosario y `apps/web/e2e/secrets-leak.spec.ts` sin cambios, y que ningún log contiene enlaces
 - [ ] T097 Recorrer el [quickstart](./quickstart.md) entero con IA falsa y guardar el resultado en `checklists/validation.md`
 - [ ] T098 Auditoría de novato del guion con el agente `usuario-novato`, en `specs/005-script-and-outline/novice-audit.md`. Debe dar 0 graves y como mucho 3 medios, y anotar el tiempo de la idea al guion aprobado (SC-001). Los menores visuales van a la pasada del modo Design
