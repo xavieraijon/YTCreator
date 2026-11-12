@@ -95,6 +95,12 @@ const minutes = (seconds: number) => {
   return rest === 0 ? `${whole} min` : `${whole} min ${rest} s`
 }
 
+// A source as the creator reads it: its name, with the link under it when there is one.
+function cited(source: { title?: string | null; reference?: string | null; url?: string | null }): string {
+  const name = source.title || source.reference || source.url || ''
+  return source.url ? `[${name}](${source.url})` : name
+}
+
 function factsSection(facts: FactsContent): string[] {
   return [
     '## Hechos',
@@ -103,9 +109,8 @@ function factsSection(facts: FactsContent): string[] {
       `- ${oneLine(fact.text) || '(sin texto)'} (${FACT_LABEL[fact.label]})`,
       ...(fact.alternatives ? [`  - Otra versión: ${oneLine(fact.alternatives)}`] : []),
       ...fact.sources.map((source) => {
-        const name = source.title || source.reference || source.url
         const opens = source.link ? (LINK_NOTE[source.link] ?? '') : ''
-        return `  - Fuente: ${source.url ? `[${name}](${source.url})` : name} (consultada el ${day(source.accessedAt)}${opens})`
+        return `  - Fuente: ${cited(source)} (consultada el ${day(source.accessedAt)}${opens})`
       }),
     ]),
     '',
@@ -140,10 +145,9 @@ function checksSection(draft: DraftContent): string[] {
     ...checked.flatMap((claim) => [
       `- «${oneLine(claim.text)}»: ${VERDICT[claim.check!.verdict]} (el ${day(claim.check!.checkedAt)})`,
       ...(claim.check!.proposal ? [`  - Propuesta: ${oneLine(claim.check!.proposal)}`] : []),
-      ...claim.check!.sources.map((source) => {
-        const name = source.title || source.reference || source.url
-        return `  - Fuente: ${source.url ? `[${name}](${source.url})` : name}${source.link ? (LINK_NOTE[source.link] ?? '') : ''}`
-      }),
+      ...claim.check!.sources.map(
+        (source) => `  - Fuente: ${cited(source)}${source.link ? (LINK_NOTE[source.link] ?? '') : ''}`,
+      ),
     ]),
     '',
   ]

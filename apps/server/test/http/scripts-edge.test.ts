@@ -188,3 +188,35 @@ describe('several channels', () => {
     expect(exported).not.toContain('La idea del otro canal')
   })
 })
+
+describe('the logs (T096)', () => {
+  it('no line names a link: researching, the links of the creator, checking or failing', async () => {
+    const { t, id, draft } = await withDraft()
+    await ask(t, id, 'investigacion')
+    const facts = (await read(t, id))['facts'] as { version: number; content: { facts: unknown[] } }
+    const link = 'https://mi-fuente.example/receta-secreta'
+    const mine = {
+      id: 'mio',
+      text: 'Un hecho mío.',
+      label: 'del_creador',
+      origin: 'creador',
+      sources: [{ id: 's-mio', url: link, reference: null, title: 'Mi fuente', accessedAt: 'hoy', link: null }],
+      alternatives: null,
+    }
+    const saved = await call(t, 'PUT', `/api/scripts/${id}/facts`, {
+      baseVersion: facts.version,
+      content: { facts: [...facts.content.facts, mine] },
+    })
+    expect(saved.status).toBe(200)
+    await ask(t, id, 'comprobar_guion')
+    // An unexpected error that names an address, inside the job.
+    t.channel.aiRun.run = (async () => {
+      throw new Error(`no se pudo leer ${link}`)
+    }) as never
+    expect(((await ask(t, id, 'guion'))['job'] as { failure: string }).failure).toBe('interno')
+
+    expect(t.logger.lines.some((line) => line.includes('job.failed'))).toBe(true)
+    expect(t.logger.lines.filter((line) => /https?:\/\/|\.example/i.test(line))).toEqual([])
+    expect(draft.version).toBe(1)
+  })
+})

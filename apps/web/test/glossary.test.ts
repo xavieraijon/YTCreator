@@ -39,7 +39,7 @@ describe('glossary of the web (FR-032, principle I)', () => {
     ).toEqual([])
   })
 
-  it.each(['channel', 'ideas'])(
+  it.each(['channel', 'ideas', 'script'])(
     'nor the texts of a download written by the server (packages/core/src/%s/export.ts)',
     (folder) => {
       const source = readFileSync(new URL(`../../../packages/core/src/${folder}/export.ts`, import.meta.url), 'utf8')
