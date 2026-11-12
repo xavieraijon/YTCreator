@@ -73,6 +73,7 @@ export const scriptEs = {
     saved: 'Guardado',
     shortIntro: 'En un Short, los primeros segundos deciden si alguien se queda o pasa al siguiente.',
     outlineDone: 'Tu escaleta ya está hecha. Si quieres otra, pídela desde la escaleta.',
+    fixDuration: 'Para seguir, arregla arriba cuánto quieres que dure.',
     writeShort: 'Escribir el guion',
     outlineIntro:
       'La escaleta es el esquema de tu vídeo: qué cuentas y en qué orden. La estructura decide si la gente se queda.',
@@ -135,6 +136,8 @@ export const scriptEs = {
     removeTitle: '¿Quitar «{titulo}» de la escaleta?',
     removeBody: 'Si te arrepientes, lo recuperas en el historial, al final de esta página.',
     removeConfirm: 'Quitar el bloque',
+    againNote:
+      'Se sustituye la escaleta entera, también lo que cambiaste tú, y deja de estar aprobada. Si te arrepientes, la recuperas en el historial.',
     add: 'Añadir bloque',
     fieldTitle: 'De qué va este bloque',
     fieldPurpose: 'Para qué está',

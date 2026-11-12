@@ -106,6 +106,11 @@ describe('the facts step', () => {
     expect(facts(script({ notes: 'Mis apuntes' }))).not.toContain(scriptEs.facts.noNotes)
   })
 
+  it('says why writing is greyed out when the duration is out of range (decision 53)', () => {
+    expect(facts(script({ outline: null, targetSeconds: 10 }))).toContain(scriptEs.facts.fixDuration)
+    expect(facts(script({ outline: null }))).not.toContain(scriptEs.facts.fixDuration)
+  })
+
   it('with the outline written, leads to it and never replaces it from here (decision 51)', () => {
     const written = facts(script())
     expect(written).toContain(scriptEs.facts.outlineDone)

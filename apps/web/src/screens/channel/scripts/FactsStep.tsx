@@ -243,6 +243,8 @@ export function FactsStep({ script, ai, nothingFound, onChange, onError, onToDra
           {price.error !== null && (
             <ErrorMessage live title={errorText(price.error)} action={{ label: es.app.retry, onClick: price.retry }} />
           )}
+          {/* The button greys out for a duration far above, out of sight: said here (novice audit, decision 53). */}
+          {!valid && <p className={styles.notice}>{text.fixDuration}</p>}
           <AiAction
             label={isShort ? text.writeShort : text.proposeOutline}
             estimate={estimate}

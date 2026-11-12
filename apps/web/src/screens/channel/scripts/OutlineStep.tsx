@@ -361,6 +361,8 @@ export function OutlineStep({ script, ai, onChange, onError, onToFacts, onToDraf
       )}
       {/* Open if it failed: the reason and the way out are inside (contracts/http-api.md). */}
       <Disclosure key={failure ? 'failed' : 'idle'} summary={text.againSection} defaultOpen={failure !== null}>
+        {/* What goes, said before paying (novice audit, round 5, decision 53). */}
+        <p className={styles.notice}>{text.againNote}</p>
         <TextArea
           label={text.instructions}
           description={text.instructionsHelp}
