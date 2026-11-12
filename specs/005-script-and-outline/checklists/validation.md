@@ -572,3 +572,30 @@ rechaza ya como la real (commit `4568e38`).
   búsquedas y lecturas.
 - SC-002 es una muestra: no basta para el 90 %.
 - P3 (`WebFetch`): la prueba no dice qué direcciones abrió; sigue abierto.
+
+## Polish: recorrido del quickstart (T097)
+
+Fecha: 2026-11-12. Con la IA y YouTube falsos, cada paso del [quickstart](../quickstart.md) se recorre en un e2e con
+servidor propio y carpeta temporal (`apps/web/e2e/scripts.spec.ts`, puertos 4460 a 4462). No se toca `~/YTCreator` ni
+el puerto 4310.
+
+| Paso | Dónde se recorre | Resultado |
+|---|---|---|
+| 1. Controles | `pnpm lint`, `typecheck`, `test` (2263), `test:e2e` (catálogo 97, web 48) | Código 0; ver la nota del catálogo |
+| 2.1 US1: apuntes, coste antes de generar, mover un bloque con el teclado, aprobar y recargar | US1 | Pasa |
+| 2.2 US2: escribir, editar una frase, pedir de nuevo un bloque, duración recalculada | US2 | Pasa (la duración se añade en T097) |
+| 2.3 US2: cerrar la pestaña durante la generación y volver | US2 | Pasa |
+| 2.4 US3: muletillas («Suena a texto de IA») y gancho largo, aprobar con pendientes, editar, descargar | US3 | Pasa (en T097 se añade que el documento y los datos se abren y dicen lo que la pantalla) |
+| 2.5 US4: Short sin escaleta, tres tramos, aviso del máximo | US4 | Pasa |
+| 2.6 US5: volver a una versión antigua | US5 | Pasa |
+| 2.7 US6: investigar con un enlace que abre, uno roto y uno sin comprobar | US6 | Pasa |
+| 2.8 US6: escenario `sin_web` (y `sin_resultados`) | dos tests propios | Pasa |
+| 2.9 US6: comprobar pendientes y aceptar una propuesta | US6 | Pasa |
+| 2.10 US7: Short de un guion aprobado, enlazado en el banco, coste antes de escribir | US7 | Pasa |
+| 3. Comprobación de enlaces (R7) | `apps/server/test/services/link-check.test.ts` | Pasa: IP escritas y resueltas por DNS, redirecciones, esquemas y usuario en la dirección |
+| 4. Lo no comprobado aquí | — | La búsqueda real se hizo en T087; SC-002 y SC-011 siguen con una sola muestra |
+
+**Nota del catálogo:** en la primera vuelta de `test:e2e` falló una vez `theme.spec.ts` en WebKit («10 cargas con tema
+guardado sin destello»). Como `test:e2e` corre el catálogo primero, la web no llegó a ejecutarse. La rama no toca el
+catálogo, `packages/ui` ni `packages/tokens`. Repetido: el test pasa (6/6), el catálogo entero también (97) y la web
+también (48). Se trata como inestable, igual que los dos fallos sueltos de US7.

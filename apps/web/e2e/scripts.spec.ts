@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import { expect, type Page, test } from '@playwright/test'
 import { auditor } from './audit.ts'
 import { api, profileByApi } from './channel-api.ts'
@@ -179,12 +180,15 @@ test('from the approved outline to a script edited by hand and block by block (U
   await expect(page.getByRole('status').filter({ hasText: 'por comprobar' })).toBeFocused()
 
   // Edit by hand: nothing is spent, the time changes.
+  const total = page.getByText(/^En total, unos .*\. Querías 10 min\.$/)
+  const lasted = await total.innerText()
   await page.getByRole('button', { name: 'Cambiar «Por qué pasa esto»' }).click()
   const spoken = page.getByLabel('Lo que se dice')
   await expect(spoken).toBeFocused()
   await spoken.fill('Lo cuento yo con mis palabras y sin prisa ninguna.')
   await page.getByRole('button', { name: 'Guardar' }).click()
   await expect(paragraphOf(page, /Por qué pasa esto/)).toHaveText('Lo cuento yo con mis palabras y sin prisa ninguna.')
+  await expect(total).not.toHaveText(lasted)
   await expect(page.getByRole('button', { name: 'Cambiar «Por qué pasa esto»' })).toBeFocused()
 
   // Ask for one block: only that one changes.
@@ -288,9 +292,21 @@ test('reviewing for free, approving knowing what is left, downloading and reopen
   await page.reload()
   await expect(page.getByText(/Guion aprobado, sabiendo que quedaba/)).toBeVisible()
 
+  // Both files open and say what the screen says.
   const downloaded = page.waitForEvent('download')
   await page.getByRole('button', { name: 'Descargar como documento' }).click()
-  expect((await downloaded).suggestedFilename()).toBe('guion-pan-sin-amasar.md')
+  const document = await downloaded
+  expect(document.suggestedFilename()).toBe('guion-pan-sin-amasar.md')
+  const text = readFileSync((await document.path())!, 'utf8')
+  expect(text).toContain('# Pan sin amasar')
+  expect(text).toContain('## Escaleta')
+  expect(text).toContain('## Guion')
+  expect(text).toContain('Cabe destacar')
+  const data = page.waitForEvent('download')
+  await page.getByRole('button', { name: 'Descargar como datos' }).click()
+  const parsed = JSON.parse(readFileSync((await (await data).path())!, 'utf8')) as { scripts: unknown[] }
+  expect(parsed.scripts).toHaveLength(1)
+  expect(JSON.stringify(parsed)).toContain('Pan sin amasar')
 
   // In the queue it says so, and the idea is still there.
   await page.goto(`${server.baseURL}/canal/ideas`)
