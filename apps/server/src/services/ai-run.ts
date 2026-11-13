@@ -84,6 +84,9 @@ const CLAIM_FIELDS: Partial<Record<ChannelUse, readonly string[]>> = {
   // bring figures of their own (principle V, decision 30).
   titulos: ['why'],
   miniaturas: ['scene'],
+  // What the description says about the video; the names of the chapters and the tags are topics, not figures.
+  descripcion: ['firstLines', 'body', 'comment'],
+  parte_paquete: ['firstLines', 'body', 'comment'],
 }
 
 // One request can become up to four calls: an answer that does not validate is always asked for again by the adapter
@@ -106,6 +109,8 @@ export type RunResult<U extends ChannelUse> =
 interface Saved {
   journeyId: string
   use: ChannelUse
+  /** What inside the journey it was asked for (006: a package and one part of it); unchecked when not given. */
+  scope: string | null
   cents: number
   createdAt: Date
 }
@@ -153,11 +158,12 @@ export function createAiRunService(deps: AiRunDeps) {
   }
 
   // An estimate spent or for something else is refused; work in the background asks this before it starts.
-  const estimateOf = (estimateId: string, use: ChannelUse, journeyId?: string): Saved => {
+  const estimateOf = (estimateId: string, use: ChannelUse, journeyId?: string, scope?: string): Saved => {
     const saved = estimates.get(estimateId)
     if (
       !saved ||
       saved.use !== use ||
+      (scope !== undefined && saved.scope !== scope) ||
       (journeyId !== undefined && saved.journeyId !== journeyId) ||
       isEstimateExpired(saved.createdAt, now())
     ) {
@@ -167,8 +173,8 @@ export function createAiRunService(deps: AiRunDeps) {
   }
 
   return {
-    assertEstimate(estimateId: string, use: ChannelUse, journeyId?: string): void {
-      estimateOf(estimateId, use, journeyId)
+    assertEstimate(estimateId: string, use: ChannelUse, journeyId?: string, scope?: string): void {
+      estimateOf(estimateId, use, journeyId, scope)
     },
 
     estimate({
@@ -176,9 +182,11 @@ export function createAiRunService(deps: AiRunDeps) {
       use,
       input,
       outputTokens,
+      scope,
     }: {
       journeyId: string
       use: ChannelUse
+      scope?: string
       input: Record<string, unknown>
       /** What the AI is expected to write (005, R11): what is shown. The budget still counts the most it may write. */
       outputTokens?: number
@@ -201,7 +209,7 @@ export function createAiRunService(deps: AiRunDeps) {
       const blockedBy = budgetBlock(ai, reservedCents(call, CALLS_RESERVED))
       dropExpired()
       const estimateId = randomUUID()
-      estimates.set(estimateId, { journeyId, use, cents: expected.cents, createdAt: now() })
+      estimates.set(estimateId, { journeyId, use, scope: scope ?? null, cents: expected.cents, createdAt: now() })
       return {
         estimateId,
         use,
@@ -217,6 +225,7 @@ export function createAiRunService(deps: AiRunDeps) {
     async run<U extends ChannelUse>({
       estimateId,
       journeyId,
+      scope,
       use,
       input,
       instructions,
@@ -226,6 +235,8 @@ export function createAiRunService(deps: AiRunDeps) {
       estimateId: string
       /** When given, the estimate has to be one asked for this journey. */
       journeyId?: string
+      /** When given, the estimate has to be one asked for this (see `estimate`). */
+      scope?: string
       use: U
       input: Record<string, unknown>
       instructions?: string
@@ -233,7 +244,7 @@ export function createAiRunService(deps: AiRunDeps) {
       /** A stricter schema than the use's own, such as one that knows the pillars of the profile (004, ai-uses.md). */
       schema?: { safeParse(value: unknown): { success: boolean } }
     }): Promise<RunResult<U>> {
-      const saved = estimateOf(estimateId, use, journeyId)
+      const saved = estimateOf(estimateId, use, journeyId, scope)
       estimates.delete(estimateId)
 
       const ai = activeOrThrow()

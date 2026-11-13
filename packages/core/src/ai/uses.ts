@@ -23,5 +23,7 @@ export const AI_USES = [
   // The publishing package (006).
   'titulos',
   'miniaturas',
+  'descripcion',
+  'parte_paquete',
 ] as const
 export type AiUse = (typeof AI_USES)[number]

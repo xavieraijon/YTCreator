@@ -81,6 +81,9 @@ export function PackageList() {
         </ul>
       )}
       <div className={styles.actions}>
+        <Button variant="secondary" onClick={() => navigate({ page: 'publishSettings' })}>
+          {text.settings}
+        </Button>
         <Button variant="ghost" onClick={() => navigate({ page: 'channelStart' })}>
           {text.backToChannel}
         </Button>

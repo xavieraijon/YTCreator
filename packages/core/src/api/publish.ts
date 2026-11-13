@@ -13,7 +13,7 @@ import {
   thumbnailsContentSchema,
   titlesContentSchema,
 } from '../publish/model.ts'
-import { PUBLISH_USES } from '../publish/outputs.ts'
+import { PACKAGE_PARTS, PUBLISH_USES } from '../publish/outputs.ts'
 import { PACKAGE_STATUSES, PACKAGE_WARNINGS } from '../publish/status.ts'
 import { DRAFT_BLOCK_TYPES } from '../script/model.ts'
 import { SCRIPT_STATUSES } from '../script/status.ts'
@@ -98,6 +98,25 @@ export const packageViewSchema = z.object({
   // Kept after it ends: on coming back the screen still has to say that it failed.
   job: packageJobSchema.nullable(),
   studioDone: z.array(z.string()),
+  // The description as it is copied, put together from its parts (R3 to R6).
+  texts: z.object({
+    // Each chapter with when it starts: the creator's minute (`manual`) or worked out from the script, an estimate.
+    chapters: z.array(
+      z.object({
+        id,
+        title: z.string(),
+        blockIds: z.array(id),
+        startSeconds: count,
+        manual: z.boolean(),
+        time: z.string(),
+      }),
+    ),
+    // Only from the facts the approved script used (R4).
+    sources: z.array(z.object({ title: z.string(), url: z.string().nullable(), reference: z.string().nullable() })),
+    assembled: z.string().nullable(),
+    // The fixed part the channel has now, and whether it is the default one (R6).
+    fixedText: z.object({ current: z.string(), isDefault: z.boolean() }),
+  }),
   // In a Short drawn from a long video, the title of that video.
   parentTitle: z.string().nullable(),
   // What the screen warns about, with where each figure comes from (principle V).
@@ -105,6 +124,7 @@ export const packageViewSchema = z.object({
     titleMaxChars: z.number().int().positive(),
     // An assumption: no official page gives it.
     mobileTitleChars: z.number().int().positive(),
+    descriptionMaxChars: z.number().int().positive(),
     youtube: z.object({ label: z.string(), date: z.string() }),
   }),
 })
@@ -125,14 +145,23 @@ export type PackageSummary = z.infer<typeof packageSummarySchema>
 export const packageBaseVersionSchema = count
 
 // POST /packages/:id/estimate and /generate (contracts/http-api.md, «Con IA»).
-export const packageEstimateBodySchema = z.object({ use: z.enum(PUBLISH_USES) })
+// `part` only with `parte_paquete`, and always with it.
+const partMatchesUse = ({ use, part }: { use: string; part?: string | undefined }) =>
+  (use === 'parte_paquete') === (part !== undefined)
+
+export const packageEstimateBodySchema = z
+  .object({ use: z.enum(PUBLISH_USES), part: z.enum(PACKAGE_PARTS).optional() })
+  .refine(partMatchesUse, { message: 'no_valido', path: ['part'] })
 export type PackageEstimateBody = z.infer<typeof packageEstimateBodySchema>
 
-export const packageGenerateBodySchema = z.object({
-  use: z.enum(PUBLISH_USES),
-  estimateId: id,
-  instructions: z.string().trim().max(PUBLISH_LIMITS.instructions).optional(),
-})
+export const packageGenerateBodySchema = z
+  .object({
+    use: z.enum(PUBLISH_USES),
+    part: z.enum(PACKAGE_PARTS).optional(),
+    estimateId: id,
+    instructions: z.string().trim().max(PUBLISH_LIMITS.instructions).optional(),
+  })
+  .refine(partMatchesUse, { message: 'no_valido', path: ['part'] })
 export type PackageGenerateBody = z.infer<typeof packageGenerateBodySchema>
 
 // PUT /packages/:id/pieces/:kind: the content is checked against the schema of its kind by the server.
@@ -145,3 +174,22 @@ export const packageApproveBodySchema = z.object({
   versions: kindVersionsSchema,
 })
 export type PackageApproveBody = z.infer<typeof packageApproveBodySchema>
+
+// GET and PUT /channels/:id/publish-settings: the fixed part of every description and the category (R6, R12).
+export const publishSettingsViewSchema = z.object({
+  fixedText: z.string(),
+  category: z.string().nullable(),
+  // Nothing saved yet: the fixed part is the default one, empty if the profile has no @ of the channel.
+  isDefault: z.boolean(),
+  // Whether the profile has the @ of the channel, which the default subscription link needs.
+  hasHandle: z.boolean(),
+  suggestedCategory: z.string(),
+  categories: z.array(z.string()),
+})
+export type PublishSettingsView = z.infer<typeof publishSettingsViewSchema>
+
+export const publishSettingsBodySchema = z.object({
+  fixedText: z.string().max(PUBLISH_LIMITS.fixedText),
+  category: z.string().min(1).nullable(),
+})
+export type PublishSettingsBody = z.infer<typeof publishSettingsBodySchema>

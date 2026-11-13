@@ -404,6 +404,7 @@ export async function startServer({
     scriptVersions,
     packages: packagesRepo,
     versions: packageVersions,
+    profiles: channel.profiles,
     scriptStatus: (ideaId: string) => scriptService.ideaScript(ideaId)?.status ?? null,
     knowledge: publishKnowledge,
   })

@@ -9,6 +9,13 @@
     color: var(--s-color-text-secondary);
   }
 
+  /* A text that is copied as it is, with its line breaks (the assembled description, 006). */
+  .assembled {
+    margin: 0;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
   .options {
     display: grid;
     gap: var(--s-space-4);

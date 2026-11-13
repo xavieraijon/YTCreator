@@ -152,3 +152,120 @@ test('title and thumbnail from an approved script, with the keyboard, coming bac
   await expect(back.getByText('Título y miniatura aprobados')).toBeVisible()
   await audit(back)
 })
+
+// A package with its cover approved, through the API: US1 is tested above.
+async function approvedCover(scriptId: string) {
+  const id = (await api(server, 'POST', `/api/scripts/${scriptId}/package`))['id'] as string
+  const ask = async (use: string) => {
+    const estimate = await api(server, 'POST', `/api/packages/${id}/estimate`, { use })
+    await api(server, 'POST', `/api/packages/${id}/generate`, { use, estimateId: estimate['estimateId'] })
+    await expect
+      .poll(async () => ((await api(server, 'GET', `/api/packages/${id}`))['job'] as { status: string }).status)
+      .toBe('hecho')
+    return (await api(server, 'GET', `/api/packages/${id}`))['pieces'] as Record<
+      string,
+      { version: number; content: Record<string, unknown> }
+    >
+  }
+  const titles = (await ask('titulos'))['titulos']!
+  const main = (titles.content['candidates'] as { id: string }[])[0]!.id
+  await api(server, 'PUT', `/api/packages/${id}/pieces/titulos`, {
+    baseVersion: titles.version,
+    content: { ...titles.content, main },
+  })
+  const thumbnails = (await ask('miniaturas'))['miniaturas']!
+  const chosen = (thumbnails.content['concepts'] as { id: string }[])[0]!.id
+  await api(server, 'PUT', `/api/packages/${id}/pieces/miniaturas`, {
+    baseVersion: thumbnails.version,
+    content: { ...thumbnails.content, chosen: [chosen] },
+  })
+  await api(server, 'POST', `/api/packages/${id}/approve`, {
+    step: 'portada',
+    versions: { titulos: titles.version + 1, miniaturas: thumbnails.version + 1 },
+  })
+  return id
+}
+
+test('the description, its chapters, tags and comment, and the publishing settings (US2)', async ({
+  page,
+  context,
+}) => {
+  test.setTimeout(240_000)
+  await blockExternal(context)
+  // The server is shared: when US1 ran first, the AI and the channel are already there.
+  if (!(await api(server, 'GET', '/api/channels/current'))['channel']) await connect(page)
+  const channelId = ((await api(server, 'GET', '/api/channels/current'))['channel'] as { id: string }).id
+  const id = await approvedCover(await approvedScript(channelId, 'Masa madre en casa'))
+
+  // With the cover approved it opens on the description, with its price on the button.
+  await page.goto(`${server.baseURL}/canal/publicaciones/${id}`)
+  await expect(page.getByRole('heading', { name: 'Descripción', level: 2 })).toBeVisible()
+  const propose = page.getByRole('button', { name: /^Proponer descripción/ })
+  await expect(propose).toBeEnabled()
+  await expect(propose).toContainText('·')
+  await audit(page)
+  await propose.click()
+  await expect(page.getByRole('heading', { name: 'Así queda la descripción' })).toBeVisible()
+  // The script has no facts with a link: it says so instead of making sources up.
+  await expect(page.getByText('La descripción no tiene fuentes', { exact: false })).toBeVisible()
+  await expect(page.getByText('Ajústalos cuando tengas el vídeo montado.')).toBeVisible()
+  await expect(page.getByText('(estimado)', { exact: false }).first()).toBeVisible()
+  await audit(page)
+
+  // The first lines, rewritten and saved, open the assembled text.
+  const assembled = page.locator('p', { hasText: 'Suscríbete' }).first()
+  await page.getByLabel('Primeras líneas').fill('Masa madre en casa, sin complicarte.')
+  const firstSave = page.getByRole('button', { name: 'Guardar la descripción' })
+  await firstSave.focus()
+  await page.keyboard.press('Enter')
+  await expect(page.getByText('Masa madre en casa, sin complicarte.').first()).toBeVisible()
+
+  // A minute of their own for the second chapter; a wrong one is said before saving.
+  const minute = page.getByLabel('Minuto del capítulo 2')
+  await minute.fill('1:5')
+  await expect(page.getByText('Escríbelo como 1:05 (minutos y segundos).')).toBeVisible()
+  await minute.fill('1:05')
+  await page.getByRole('button', { name: 'Guardar los capítulos' }).click()
+  await expect(minute).toHaveValue('1:05')
+  await expect(page.getByText(/^1:05 /m).first()).toBeAttached()
+
+  // Only the pinned comment is written again; the rest stays as it was.
+  const before = await page.getByLabel('Primeras líneas').inputValue()
+  await page.getByText('Pedir de nuevo el comentario fijado').first().click()
+  await page.getByLabel('Qué quieres que cambie en el comentario fijado (opcional)').fill('Más corto.')
+  const asked = page.waitForResponse((response) => response.url().endsWith('/generate'))
+  await page.getByRole('button', { name: /^Pedir de nuevo el comentario fijado ·/ }).click()
+  await asked
+  await expect(page.getByRole('button', { name: 'Aprobar descripción' })).toBeEnabled()
+  await expect(page.getByLabel('Primeras líneas')).toHaveValue(before)
+  await audit(page)
+
+  // The fixed part is changed in the settings, which do not touch the description already written.
+  await page.getByRole('button', { name: 'Ajustes de publicación' }).click()
+  await expect(heading(page, 'Ajustes de publicación')).toBeVisible()
+  await expect(page.getByText('Cambiarla no toca las publicaciones que ya tienes.')).toBeVisible()
+  await audit(page)
+  await page.getByLabel('Parte fija de la descripción').fill('Más recetas en mi canal.')
+  await page.getByRole('combobox', { name: 'Categoría' }).focus()
+  await page.keyboard.press('Enter')
+  await page.getByRole('option', { name: /la que te sugerimos/ }).press('Enter')
+  await page.getByRole('button', { name: 'Guardar' }).click()
+  await expect(page.getByText('Ajustes guardados.')).toBeVisible()
+  await expect(page.getByRole('combobox', { name: 'Categoría' })).toContainText('la que te sugerimos')
+  await audit(page)
+
+  await page.goto(`${server.baseURL}/canal/publicaciones/${id}`)
+  await expect(page.getByText('La parte fija de tus descripciones ha cambiado', { exact: false })).toBeVisible()
+  await expect(assembled).toBeVisible()
+  await page.getByRole('button', { name: 'Usar la nueva' }).click()
+  await expect(page.getByText('La parte fija de tus descripciones ha cambiado', { exact: false })).toHaveCount(0)
+  await expect(page.getByText('Más recetas en mi canal.').first()).toBeVisible()
+
+  // Approved with the keyboard; it opens on the next step on coming back.
+  await page.getByRole('button', { name: 'Aprobar descripción' }).focus()
+  await page.keyboard.press('Enter')
+  await expect(page.getByText('Descripción aprobada.', { exact: false })).toBeVisible()
+  await audit(page)
+  await page.goto(`${server.baseURL}/canal/publicaciones`)
+  await expect(page.getByText('Descripción aprobada')).toBeVisible()
+})

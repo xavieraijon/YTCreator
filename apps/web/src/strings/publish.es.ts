@@ -26,6 +26,7 @@ export const publishEs = {
       'La publicación sale de un guion aprobado. Abre uno de tus guiones aprobados y pulsa «Preparar la publicación»; si aún no tienes ninguno, primero aprueba un guion.',
     toScripts: 'Ir a mis guiones',
     backToChannel: 'Volver al canal',
+    settings: 'Ajustes de publicación',
   },
   screen: {
     progress: 'Progreso de la publicación',
@@ -44,7 +45,6 @@ export const publishEs = {
     back: 'Volver a mis publicaciones',
     navigation: 'Pasos de la publicación',
     toTexts: 'Seguir con la descripción',
-    textsLater: 'Aquí prepararás la descripción, los capítulos y las etiquetas.',
     reviewLater: 'Aquí repasarás todo y lo copiarás en YouTube Studio.',
     loading: 'Cargando la publicación…',
     hook: 'Gancho del guion: «{gancho}»',
@@ -52,19 +52,32 @@ export const publishEs = {
     warnings: {
       guion_cambiado: 'El guion ha cambiado desde que se hizo esto: revisa que siga cuadrando.',
       guion_sin_aprobar: 'El guion ya no está aprobado: apruébalo de nuevo para poder aprobar esto.',
-      titulo_cambiado: 'Has cambiado el título principal: las ideas de miniatura se pensaron para otro.',
+      titulo_cambiado:
+        'Has cambiado el título principal: parte de lo que tienes se pensó para el anterior. Revísalo o pídelo de nuevo.',
       parte_fija_cambiada: 'La parte fija de tus descripciones ha cambiado desde que se hizo esta.',
-      sin_fuentes: 'La descripción no tiene fuentes: el guion no tiene datos con enlace.',
+      sin_fuentes:
+        'La descripción no tiene fuentes: el guion no tiene datos con un enlace que abra ni referencias escritas por ti.',
       pendientes_en_guion: 'El guion tiene datos sin comprobar: revísalos antes de publicar.',
     },
     warningsLabel: 'Avisos',
     toScript: 'Ir al guion',
     toThumbnails: 'Ver las miniaturas',
+    toDescription: 'Ver la descripción',
   },
   // What the AI is doing, while it works (`AiWorking`).
   uses: {
     titulos: 'Proponiendo títulos',
     miniaturas: 'Proponiendo ideas de miniatura',
+    descripcion: 'Escribiendo la descripción, los capítulos y las etiquetas',
+    parte_paquete: 'Escribiendo de nuevo {parte}',
+  },
+  // Each part of the texts, as it is said inside a sentence («Pedir de nuevo los capítulos»).
+  parts: {
+    descripcion: 'la descripción',
+    capitulos: 'los capítulos',
+    etiquetas: 'las etiquetas',
+    comentario: 'el comentario fijado',
+    portada_short: 'la portada',
   },
   // From the approved script (005) and the channel.
   entry: {
@@ -131,5 +144,81 @@ export const publishEs = {
     approvedShort: 'Título y portada aprobados. Si cambias algo, vuelven a borrador.',
     notReady: 'Para aprobar hace falta un título principal y al menos una idea de miniatura elegida.',
     notReadyShort: 'Para aprobar hace falta un título principal y la portada, que prepararemos más adelante.',
+  },
+  // «Descripción» (contracts/ui-screens.md): the text under the video, its chapters, the tags and the pinned comment.
+  texts: {
+    needsCover: 'Aprueba primero el título y la miniatura: la descripción se escribe para ese título.',
+    shortLater:
+      'La descripción de un Short la prepararemos más adelante; por ahora, quédate con el título y la portada.',
+    ask: 'Proponer descripción',
+    askWhy:
+      'Te proponemos la descripción, los capítulos, las etiquetas y un comentario para fijar, todo a partir del guion.',
+    descriptionText: 'Texto de la descripción',
+    firstLines: 'Primeras líneas',
+    firstLinesHint: 'Lo único que se ve sin pulsar «más».',
+    body: 'El resto de la descripción',
+    bodyHint: 'De qué trata el vídeo y qué se llevará quien lo vea.',
+    chapters: 'Capítulos',
+    chaptersWhy:
+      'Los capítulos dividen el vídeo en partes, cada una con su nombre y el minuto en que empieza. YouTube los muestra en la barra del vídeo y la gente salta a lo que busca.',
+    adjustLater:
+      'Ajústalos cuando tengas el vídeo montado. Más adelante, YTCreator podrá ajustarlos con el audio de tu vídeo.',
+    chapterName: 'Nombre del capítulo {n}',
+    chapterTime: 'Minuto del capítulo {n}',
+    chapterTimeHint: 'Escríbelo como 1:05. Vacío, se calcula con el guion.',
+    chapterTimeEstimated: 'Escríbelo como 1:05. Vacío, se calcula con el guion: ahora sale {tiempo} (estimado).',
+    sourceLine: '{titulo}: {enlace}',
+    tagsHint: 'Hasta {n} etiquetas, de {max} caracteres como mucho cada una.',
+    timeInvalid: 'Escríbelo como 1:05 (minutos y segundos).',
+    timeOrder: 'Tiene que empezar después del capítulo anterior.',
+    firstAtZero: 'El primero siempre empieza en 0:00.',
+    sources: 'Fuentes',
+    sourcesWhy: 'Salen de los datos de tu guion. Para cambiarlas, cambia los datos en el guion.',
+    fixed: 'Parte fija',
+    fixedWhy: 'Va al final de todas tus descripciones. Se cambia en «Ajustes de publicación».',
+    fixedEmpty: 'Ahora no tienes parte fija.',
+    fixedChanged: 'Tu parte fija ha cambiado; esta descripción lleva la de antes.',
+    useNew: 'Usar la nueva',
+    toSettings: 'Ajustes de publicación',
+    assembled: 'Así queda la descripción',
+    assembledChars: '{n} de {max} caracteres',
+    assembledTooLong: ' Pasa de {max} caracteres, el máximo de YouTube: YouTube no la aceptará así.',
+    tags: 'Etiquetas',
+    tagsWhy:
+      'Las etiquetas son palabras clave que añades a tu vídeo en YouTube Studio, aparte de la descripción. Te proponemos algunas a partir del guion.',
+    tagsField: 'Etiquetas, separadas por comas',
+    comment: 'Comentario fijado',
+    commentWhy: 'Un comentario tuyo que se queda el primero debajo del vídeo. Es opcional: puedes dejarlo vacío.',
+    save: 'Guardar',
+    saveNamed: 'Guardar {parte}',
+    instructionsFor: 'Qué quieres que cambie en {parte} (opcional)',
+    askAgain: 'Pedir de nuevo {parte}',
+    askAgainHint: 'Solo cambia esta parte; lo demás se queda como está.',
+    approve: 'Aprobar descripción',
+    approved: 'Descripción aprobada. Si cambias algo, vuelve a borrador.',
+    notReady: 'Para aprobar hacen falta las primeras líneas, al menos un capítulo y al menos una etiqueta.',
+    unsaved: 'Guarda los cambios antes de aprobar.',
+    toReview: 'Seguir con revisar y copiar',
+  },
+  // «Ajustes de publicación» (`/canal/publicaciones/ajustes`).
+  settings: {
+    title: 'Ajustes de publicación',
+    why: 'Lo que pongas aquí sirve para todas tus publicaciones.',
+    loading: 'Cargando los ajustes…',
+    fixed: 'Parte fija de la descripción',
+    fixedDefault: 'Te proponemos el enlace para que la gente se suscriba a tu canal.',
+    noHandle:
+      'Aún no has elegido la @ de tu canal, así que no podemos poner el enlace para suscribirse. Elígela en tu canal, con «Elegir el nombre», o escribe aquí lo que quieras.',
+    toChannel: 'Ir a mi canal',
+    fixedHintWithChars:
+      'Va al final de todas tus descripciones: el enlace para suscribirse, tus redes o lo que quieras repetir en cada vídeo. {n} de {max} caracteres.',
+    category: 'Categoría',
+    categoryHint: 'YouTube la pide al subir el vídeo. Suele ser la misma para todos tus vídeos.',
+    suggested: '{categoria} (la que te sugerimos)',
+    none: 'Sin elegir',
+    notice: 'Cambiarla no toca las publicaciones que ya tienes.',
+    save: 'Guardar',
+    saved: 'Ajustes guardados.',
+    back: 'Volver a mis publicaciones',
   },
 } as const

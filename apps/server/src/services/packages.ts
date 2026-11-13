@@ -1,6 +1,12 @@
 import {
+  assembleDescription,
+  channelProfileSchema,
+  chapterTimes,
   DEFAULT_SCRIPT_SETTINGS,
+  defaultFixedText,
+  descriptionSources,
   durationSeconds,
+  formatChapterTime,
   PACKAGE_KINDS,
   packageStatus,
   packageWarnings,
@@ -9,7 +15,13 @@ import {
   type ScriptStatus,
   type TitlesContent,
 } from '@ytcreator/core'
-import type { PackagePieces, PackageSummary, PackageView } from '@ytcreator/core/api'
+import type {
+  PackagePieces,
+  PackageSummary,
+  PackageView,
+  PublishSettingsBody,
+  PublishSettingsView,
+} from '@ytcreator/core/api'
 import type { PublishKnowledge } from '@ytcreator/knowledge'
 import type { ChannelsRepo } from '../db/repos/channels.ts'
 import type { IdeaMeasuresRepo } from '../db/repos/idea-measures.ts'
@@ -17,6 +29,7 @@ import type { IdeasRepo } from '../db/repos/ideas.ts'
 import type { Job, JobsRepo } from '../db/repos/jobs.ts'
 import type { PackageVersion, PackageVersionsRepo } from '../db/repos/package-versions.ts'
 import type { PackagesRepo, PublishPackage } from '../db/repos/packages.ts'
+import type { ProfilesRepo } from '../db/repos/profiles.ts'
 import type { Script, ScriptsRepo } from '../db/repos/scripts.ts'
 import type { ScriptVersionsRepo } from '../db/repos/script-versions.ts'
 import { ApiError } from '../http/errors.ts'
@@ -30,6 +43,7 @@ export interface PackageServiceDeps {
   scriptVersions: ScriptVersionsRepo
   packages: PackagesRepo
   versions: PackageVersionsRepo
+  profiles: ProfilesRepo
   /** The status of a script as 005 works it out. */
   scriptStatus: (ideaId: string) => ScriptStatus | null
   knowledge: PublishKnowledge
@@ -116,17 +130,26 @@ export function createPackageService(deps: PackageServiceDeps) {
     }
   }
 
+  const paceOf = (channelId: string) => (scripts.settings(channelId) ?? DEFAULT_SCRIPT_SETTINGS).wordsPerMinute
+  const approvedDraftOf = (script: Script) =>
+    script.draftApprovedVersion === null ? null : scriptVersions.get(script.id, 'guion', script.draftApprovedVersion)
+
   // The blocks of the approved draft, with how long each one lasts at the channel's pace (R3).
   const blocksOf = (script: Script) => {
-    if (script.draftApprovedVersion === null) return []
-    const draft = scriptVersions.get(script.id, 'guion', script.draftApprovedVersion)
-    const pace = (scripts.settings(script.channelId) ?? DEFAULT_SCRIPT_SETTINGS).wordsPerMinute
-    return (draft?.content.blocks ?? []).map((block) => ({
+    const pace = paceOf(script.channelId)
+    return (approvedDraftOf(script)?.content.blocks ?? []).map((block) => ({
       id: block.id,
       type: block.type,
       title: block.title,
       seconds: durationSeconds(block.text, pace),
     }))
+  }
+
+  // The sources of the description: from the facts the approved script used, never from the AI (R4).
+  const sourcesOf = (script: Script) => {
+    const draft = approvedDraftOf(script)
+    if (!draft || draft.factsVersion === null) return []
+    return descriptionSources(scriptVersions.get(script.id, 'hechos', draft.factsVersion)?.content.facts ?? [])
   }
 
   // Only what 004 measured (R7): the last measure that did measure, with where and when it was taken.
@@ -153,18 +176,79 @@ export function createPackageService(deps: PackageServiceDeps) {
     return (parentPackage && mainTitle(parentPackage)) ?? ideas.get(parent.ideaId)?.title ?? null
   }
 
-  // The fixed part the description is checked against; the default of a channel without settings comes with US2.
-  const currentFixedText = (channelId: string) => packages.settings(channelId)?.fixedText ?? ''
+  // A profile that does not read has no @ to build the link with: the default is then empty, as without one.
+  const handleOf = (channelId: string) => {
+    const parsed = channelProfileSchema.safeParse(deps.profiles.getCurrent(channelId)?.profile)
+    // Only a name the creator chose: a provisional one may not be theirs on YouTube.
+    return parsed.success && parsed.data.name.status === 'elegido' ? parsed.data.name.handle : null
+  }
+
+  // The fixed part of the channel: the one it saved, or the subscription link by default (R6, decision 7).
+  const fixedTextOf = (channelId: string) => {
+    const saved = packages.settings(channelId)
+    return saved
+      ? { current: saved.fixedText, isDefault: false }
+      : { current: defaultFixedText(handleOf(channelId)), isDefault: true }
+  }
+
+  const settingsOf = (channelId: string): PublishSettingsView => {
+    channelOf(channelId)
+    const { category } = deps.knowledge.studio.data
+    const saved = packages.settings(channelId)
+    const fixed = fixedTextOf(channelId)
+    return {
+      fixedText: fixed.current,
+      category: saved?.category ?? null,
+      isDefault: fixed.isDefault,
+      hasHandle: handleOf(channelId) !== null,
+      suggestedCategory: category.suggested.value,
+      categories: [...category.list],
+    }
+  }
+
+  // Changing them never touches a version already saved: each description keeps its own copy (FR-010).
+  const saveSettings = (channelId: string, body: PublishSettingsBody): PublishSettingsView => {
+    channelOf(channelId)
+    if (body.category !== null && !deps.knowledge.studio.data.category.list.includes(body.category))
+      throw new ApiError({ code: 'validacion', fields: { category: 'no_valido' } })
+    packages.saveSettings(channelId, { fixedText: body.fixedText, category: body.category })
+    return settingsOf(channelId)
+  }
+
+  // The chapters with when each one starts, and the description as it is copied (R3, R5).
+  const textsOf = (pkg: PublishPackage, script: Script, pieces: ReturnType<typeof piecesOf>): PackageView['texts'] => {
+    const draftBlocks = approvedDraftOf(script)?.content.blocks ?? []
+    const chapters = pieces.capitulos?.content.chapters ?? []
+    const times = chapterTimes(chapters, draftBlocks, paceOf(script.channelId))
+    const timed = chapters.map((chapter, index) => ({
+      id: chapter.id,
+      title: chapter.title,
+      blockIds: chapter.blockIds,
+      startSeconds: times[index]!,
+      manual: chapter.manual,
+      time: formatChapterTime(times[index]!),
+    }))
+    const sources = sourcesOf(script)
+    const description = pieces.descripcion?.content
+    return {
+      chapters: timed,
+      sources,
+      assembled: description ? assembleDescription(description, timed, sources) : null,
+      fixedText: fixedTextOf(pkg.channelId),
+    }
+  }
 
   const limitsOf = (): PackageView['limits'] => {
     const { youtube, craft } = deps.knowledge
     const title = youtube.data.titleMaxChars
+    const description = youtube.data.descriptionMaxChars
     // The maximum is cited with its own source, never with another one by default (principle V).
     const source = 'source' in title ? youtube.source[title.source] : undefined
     if (!source) throw new Error('The maximum length of a title needs its source in publish/youtube.json')
     return {
       titleMaxChars: title.value,
       mobileTitleChars: craft.data.mobileTitleChars.value,
+      descriptionMaxChars: description.value,
       youtube: { label: source.label, date: youtube.reviewedAt },
     }
   }
@@ -172,6 +256,7 @@ export function createPackageService(deps: PackageServiceDeps) {
   const view = (pkg: PublishPackage, script: Script, idea: Idea): PackageView => {
     const pieces = piecesOf(pkg)
     const job = jobOf(pkg)
+    const texts = textsOf(pkg, script, pieces)
     const scriptStatus = deps.scriptStatus(idea.id)
     const made = PACKAGE_KINDS.flatMap((kind) => {
       const piece = pieces[kind]
@@ -206,13 +291,13 @@ export function createPackageService(deps: PackageServiceDeps) {
         pieces: made,
         currentMainTitle: mainTitleOf(pieces.titulos?.content),
         descriptionFixedText: pieces.descripcion?.content.fixedText ?? null,
-        currentFixedText: currentFixedText(pkg.channelId),
-        // The sources of the description arrive with US2 (T031); until then no description can be written.
-        sourcesCount: 0,
+        currentFixedText: texts.fixedText.current,
+        sourcesCount: texts.sources.length,
       }),
       measured: measuredOf(idea),
       job: job && pkg.jobOp ? { id: job.id, op: pkg.jobOp, status: job.status, failure: job.failure } : null,
       studioDone: pkg.studioDone,
+      texts,
       parentTitle: parentTitleOf(script),
       limits: limitsOf(),
     }
@@ -266,6 +351,11 @@ export function createPackageService(deps: PackageServiceDeps) {
     openForScript,
     scriptPackage,
     statusOf,
+    settingsOf,
+    saveSettings,
+    fixedTextOf,
+    paceOf,
+    approvedDraftOf,
     channelOf,
     scriptStatusOf: deps.scriptStatus,
   }

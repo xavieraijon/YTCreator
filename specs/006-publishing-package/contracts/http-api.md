@@ -11,7 +11,7 @@ Errores con el formato de `http/errors.ts`. Códigos que se reutilizan de la 005
 |---|---|---|
 | `GET /channels/:id/packages` | | `PackageSummary[]`: idea, formato, estado, último cambio |
 | `GET /channels/:id/packages/export?format=md\|json` | | fichero con todos los paquetes |
-| `GET /channels/:id/publish-settings` | | `{fixedText, category, isDefault, suggestedCategory, categories}` |
+| `GET /channels/:id/publish-settings` | | `{fixedText, category, isDefault, hasHandle, suggestedCategory, categories}` (`hasHandle`: si el perfil tiene la @ del canal) |
 | `PUT /channels/:id/publish-settings` | `{fixedText, category}` | lo guardado |
 
 ## Un paquete

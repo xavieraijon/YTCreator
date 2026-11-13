@@ -1,8 +1,18 @@
-import type { PublishUse } from '@ytcreator/core'
+import type { PackagePart, PublishUse } from '@ytcreator/core'
 import { AI_RUN_FAILURES, type AiRunFailure, type EstimateView, type PackageView } from '@ytcreator/core/api'
 import { useCallback, useEffect, useState } from 'react'
 import { packagesApi } from '../../../api/client.ts'
 import { useJob } from '../../../shell/useJob.ts'
+
+/** What the AI is asked for: a use, or one part of the texts asked for again (`parte_paquete:<part>`, as the job says). */
+export type PackageOp = Exclude<PublishUse, 'parte_paquete'> | `parte_paquete:${PackagePart}`
+
+export const partOp = (part: PackagePart): PackageOp => `parte_paquete:${part}`
+
+const bodyOf = (op: PackageOp): { use: PublishUse; part?: PackagePart } => {
+  const [use, part] = op.split(':') as [PublishUse, PackagePart | undefined]
+  return part ? { use, part } : { use }
+}
 
 const isAiFailure = (value: string | null): value is AiRunFailure =>
   (AI_RUN_FAILURES as readonly string[]).includes(value ?? '')
@@ -15,7 +25,7 @@ export interface PackageEstimate {
   readonly fresh: () => Promise<EstimateView | null>
 }
 
-export function usePackageEstimate(pkg: PackageView, use: PublishUse, enabled = true): PackageEstimate {
+export function usePackageEstimate(pkg: PackageView, op: PackageOp, enabled = true): PackageEstimate {
   const [estimate, setEstimate] = useState<EstimateView | null>(null)
   const [error, setError] = useState<unknown>(null)
   const [attempt, setAttempt] = useState(0)
@@ -24,7 +34,7 @@ export function usePackageEstimate(pkg: PackageView, use: PublishUse, enabled = 
     if (!enabled) return undefined
     const controller = new AbortController()
     packagesApi
-      .estimate(id, { use }, { signal: controller.signal })
+      .estimate(id, bodyOf(op), { signal: controller.signal })
       .then((got) => {
         setEstimate(got)
         setError(null)
@@ -33,11 +43,11 @@ export function usePackageEstimate(pkg: PackageView, use: PublishUse, enabled = 
         if (!controller.signal.aborted) setError(cause)
       })
     return () => controller.abort()
-  }, [id, updatedAt, use, enabled, attempt])
+  }, [id, updatedAt, op, enabled, attempt])
 
   const fresh = useCallback(async () => {
     try {
-      const got = await packagesApi.estimate(id, { use })
+      const got = await packagesApi.estimate(id, bodyOf(op))
       setEstimate(got)
       setError(null)
       return got
@@ -45,17 +55,17 @@ export function usePackageEstimate(pkg: PackageView, use: PublishUse, enabled = 
       setError(cause)
       return null
     }
-  }, [id, use])
+  }, [id, op])
 
   return { estimate: enabled ? estimate : null, error, retry: () => setAttempt((n) => n + 1), fresh }
 }
 
 export interface PackageAi {
-  readonly working: PublishUse | null
-  readonly run: (use: PublishUse, price: PackageEstimate, instructions?: string) => Promise<void>
+  readonly working: PackageOp | null
+  readonly run: (op: PackageOp, price: PackageEstimate, instructions?: string) => Promise<void>
   readonly priceChanged: boolean
   readonly dismiss: () => void
-  readonly failureFor: (use: PublishUse) => AiRunFailure | null
+  readonly failureFor: (op: PackageOp) => AiRunFailure | null
   readonly otherFailure: boolean
 }
 
@@ -66,7 +76,7 @@ export function usePackageAi(
   onError: (cause: unknown) => void,
 ): PackageAi {
   const [jobId, setJobId] = useState<string | null>(null)
-  const [op, setOp] = useState<PublishUse | null>(null)
+  const [op, setOp] = useState<PackageOp | null>(null)
   const [priceChanged, setPriceChanged] = useState(false)
   const [dismissed, setDismissed] = useState<string | null>(null)
   const watch = useJob(jobId)
@@ -75,7 +85,7 @@ export function usePackageAi(
   useEffect(() => {
     if (job?.status === 'en_curso') {
       setJobId(job.id)
-      setOp(job.op as PublishUse)
+      setOp(job.op as PackageOp)
     }
   }, [job?.id, job?.status, job?.op])
 
@@ -89,7 +99,7 @@ export function usePackageAi(
   }, [watch, op, onFinished])
 
   const run = useCallback(
-    async (use: PublishUse, price: PackageEstimate, instructions?: string) => {
+    async (use: PackageOp, price: PackageEstimate, instructions?: string) => {
       if (!pkg) return
       const shown = price.estimate?.cents
       setPriceChanged(false)
@@ -101,7 +111,7 @@ export function usePackageAi(
       }
       try {
         const { jobId: started } = await packagesApi.generate(pkg.id, {
-          use,
+          ...bodyOf(use),
           estimateId: estimate.estimateId,
           ...(instructions?.trim() ? { instructions: instructions.trim() } : {}),
         })

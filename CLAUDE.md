@@ -40,7 +40,8 @@ Spec-Driven Development with GitHub Spec Kit (`/speckit-*`).
   The server log hides links as well as keys. Report in `specs/005-script-and-outline/checklists/validation.md`.
   Branch deleted (local and remote).
 - 006 `publishing-package`: **in progress** on branch `006-publishing-package`. Spec (3 creator clarifications) and plan
-  done on 2026-11-12; tasks.md (74 tasks) too; analyze fixes applied; next is `/speckit-implement`. Decisions in `specs/006-publishing-package/decisions.md`.
+  done on 2026-11-12; tasks.md (74 tasks) too. Foundational, US1 and US2 closed with Puerta A on 2026-11-13; next is
+  US3 (review and copy). Decisions in `specs/006-publishing-package/decisions.md`.
 - Provider subscriptions beyond Claude are a later feature, not part of 002. First one planned: Gemini
   (Google AI Pro, with its CLI).
 - Commands (Node 24, `fnm exec --using=24 --`): `pnpm dev` (server + web), `pnpm lint`, `pnpm typecheck`,

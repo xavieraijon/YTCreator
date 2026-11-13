@@ -256,6 +256,8 @@ export const es = {
       comprobar_guion: 'Comprobar el guion en internet',
       titulos: 'Proponer títulos para un vídeo',
       miniaturas: 'Proponer ideas de miniatura',
+      descripcion: 'Proponer la descripción de un vídeo',
+      parte_paquete: 'Pedir de nuevo una parte de la publicación',
     } satisfies Record<AiUse, string>,
     failed: 'No salió bien',
     knowledge: 'Información que conviene revisar',

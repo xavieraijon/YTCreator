@@ -12,6 +12,7 @@ import { VoiceSettings } from './screens/channel/scripts/VoiceSettings.tsx'
 import { ScriptScreen } from './screens/channel/scripts/ScriptScreen.tsx'
 import { PackageList } from './screens/channel/publish/PackageList.tsx'
 import { PackageScreen } from './screens/channel/publish/PackageScreen.tsx'
+import { PublishSettings } from './screens/channel/publish/PublishSettings.tsx'
 import { Start } from './screens/channel/start/Start.tsx'
 import { ConnectAi } from './screens/connect-later/ConnectAi.tsx'
 import { Home } from './screens/home/Home.tsx'
@@ -75,6 +76,8 @@ function Page({ route, state }: { route: Route; state: OnboardingState | null })
       return <PackageList />
     case 'package':
       return <PackageScreen key={route.id} id={route.id} />
+    case 'publishSettings':
+      return <PublishSettings />
     case 'channelStep':
       return <ChannelStep key={href(route)} kind={route.kind} step={route.step} />
     case 'settings':

@@ -24,13 +24,42 @@ async function ask(t: TestApp, id: string, use: string) {
   return readScript(t, id)
 }
 
-/** A script with its draft written, not approved yet. */
-export async function writtenScript(t: TestApp, title = 'Pan sin amasar', format: 'largo' | 'short' = 'largo') {
+/** A reference the creator wrote by hand, with no link (005). */
+export const CREATOR_REFERENCE = 'Libro «El pan de casa», página 12'
+
+// The facts of the script: what the fake AI found, plus a reference of the creator's.
+async function research(t: TestApp, scriptId: string) {
+  const facts = (await ask(t, scriptId, 'investigacion'))['facts'] as { version: number; content: { facts: unknown[] } }
+  const mine = {
+    id: 'referencia-del-creador',
+    text: 'Lo cuenta un libro que tengo en casa.',
+    label: 'del_creador',
+    origin: 'creador',
+    sources: [
+      { id: 'libro', url: null, reference: CREATOR_REFERENCE, title: '', accessedAt: '2026-11-10', link: null },
+    ],
+    alternatives: null,
+  }
+  const saved = await call(t, 'PUT', `/api/scripts/${scriptId}/facts`, {
+    baseVersion: facts.version,
+    content: { facts: [...facts.content.facts, mine] },
+  })
+  expect(saved.status).toBe(200)
+}
+
+/** A script with its draft written, not approved yet; with `facts`, researched first. */
+export async function writtenScript(
+  t: TestApp,
+  title = 'Pan sin amasar',
+  format: 'largo' | 'short' = 'largo',
+  { facts = false }: { facts?: boolean } = {},
+) {
   const { channelId } = await finished(t)
   const made = await call(t, 'POST', `/api/channels/${channelId}/ideas`, { title, format })
   const ideaId = (made.body['idea'] as { id: string }).id
   await call(t, 'PATCH', `/api/ideas/${ideaId}`, { revision: 1, status: 'elegida' })
   const scriptId = (await call(t, 'POST', `/api/ideas/${ideaId}/script`)).body['id'] as string
+  if (facts) await research(t, scriptId)
   const outline = (await ask(t, scriptId, 'escaleta'))['outline'] as { version: number }
   await call(t, 'POST', `/api/scripts/${scriptId}/outline/approve`, { version: outline.version })
   const draft = (await ask(t, scriptId, 'guion'))['draft'] as Draft
@@ -38,8 +67,8 @@ export async function writtenScript(t: TestApp, title = 'Pan sin amasar', format
 }
 
 /** A script approved with whatever claims were left to check. */
-export async function approvedScript(t: TestApp, title?: string) {
-  const written = await writtenScript(t, title)
+export async function approvedScript(t: TestApp, title?: string, options: { facts?: boolean } = {}) {
+  const written = await writtenScript(t, title, 'largo', options)
   const { scriptId, draft } = written
   const approved = await call(t, 'POST', `/api/scripts/${scriptId}/draft/approve`, {
     version: draft.version,

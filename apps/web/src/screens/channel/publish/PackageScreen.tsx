@@ -1,6 +1,6 @@
 import type { PackageWarning } from '@ytcreator/core'
 import type { PackageView } from '@ytcreator/core/api'
-import { AiWorking, Button, ErrorMessage, Stepper } from '@ytcreator/ui'
+import { AiWorking, Button, ErrorMessage, format, Stepper } from '@ytcreator/ui'
 import { useCallback, useEffect, useState } from 'react'
 import { ApiClientError, packagesApi } from '../../../api/client.ts'
 import { navigate } from '../../../router.ts'
@@ -11,7 +11,8 @@ import { publishEs } from '../../../strings/publish.es.ts'
 import { scriptEs } from '../../../strings/script.es.ts'
 import styles from '../channel.module.css'
 import { CoverStep } from './CoverStep.tsx'
-import { usePackageAi } from './usePackageAi.ts'
+import { DescriptionStep } from './DescriptionStep.tsx'
+import { type PackageOp, usePackageAi } from './usePackageAi.ts'
 
 const text = publishEs.screen
 // The texts that say the same as in the script (005): a job that failed, a price that moved, another tab.
@@ -40,6 +41,12 @@ const labelOf = (pkg: PackageView, step: PackageScreenStep) =>
 
 // The warnings that are fixed in the script (005).
 const SCRIPT_WARNINGS: readonly PackageWarning[] = ['guion_cambiado', 'guion_sin_aprobar', 'pendientes_en_guion']
+
+// What the AI is doing, said for people: a part asked for again says which one.
+const workingLabel = (op: PackageOp) => {
+  const [use, part] = op.split(':') as [keyof typeof publishEs.uses, keyof typeof publishEs.parts | undefined]
+  return part ? format(publishEs.uses.parte_paquete, { parte: publishEs.parts[part] }) : publishEs.uses[use]
+}
 
 const isConflict = (error: unknown) => error instanceof ApiClientError && error.body?.code === 'version_cambiada'
 
@@ -98,6 +105,13 @@ export function PackageScreen({ id }: { readonly id: string }) {
   }
 
   const reached = PACKAGE_SCREEN_STEPS.indexOf(stepFor(pkg))
+  // Which pieces were made for another main title, so that the warning leads to them (R16).
+  const titles = pkg.pieces.titulos?.content
+  const mainText = titles?.candidates.find((one) => one.id === titles.main)?.text ?? null
+  const stale = (piece: { mainTitle: string | null } | null) =>
+    piece !== null && piece.mainTitle !== null && piece.mainTitle !== mainText
+  const staleCover = stale(pkg.pieces.miniaturas) || stale(pkg.pieces.portada_short)
+  const staleTexts = stale(pkg.pieces.descripcion)
   return (
     <Screen
       title={pkg.idea.title}
@@ -149,25 +163,27 @@ export function PackageScreen({ id }: { readonly id: string }) {
                   {text.toScript}
                 </Button>
               )}
-              {warning === 'titulo_cambiado' && step !== 'portada' && (
+              {warning === 'titulo_cambiado' && staleCover && step !== 'portada' && (
                 <Button variant="secondary" size="sm" onClick={() => setStep('portada')}>
                   {text.toThumbnails}
                 </Button>
               )}
+              {((warning === 'titulo_cambiado' && staleTexts) || warning === 'parte_fija_cambiada') &&
+                step !== 'textos' && (
+                  <Button variant="secondary" size="sm" onClick={() => setStep('textos')}>
+                    {text.toDescription}
+                  </Button>
+                )}
             </li>
           ))}
         </ul>
       )}
-      {ai.working && <AiWorking variant="panel" label={publishEs.uses[ai.working]} />}
+      {ai.working && <AiWorking variant="panel" label={workingLabel(ai.working)} />}
       {step === 'portada' && (
         <CoverStep pkg={pkg} ai={ai} onChange={onChange} onError={setError} onNext={() => setStep('textos')} />
       )}
       {step === 'textos' && (
-        <>
-          <h2>{labelOf(pkg, step)}</h2>
-          <p className={styles.why}>{text.why.textos}</p>
-          <p className={styles.notice}>{text.textsLater}</p>
-        </>
+        <DescriptionStep pkg={pkg} ai={ai} onChange={onChange} onError={setError} onNext={() => setStep('revisar')} />
       )}
       {step === 'revisar' && (
         <>

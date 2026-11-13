@@ -5,6 +5,7 @@ import { channelEs } from '../src/strings/channel.es.ts'
 import { es } from '../src/strings/es.ts'
 import { failuresEs } from '../src/strings/failures.es.ts'
 import { ideasEs } from '../src/strings/ideas.es.ts'
+import { defaultFixedText, DESCRIPTION_TEXT } from '../../../packages/core/src/publish/description.ts'
 import { publishEs } from '../src/strings/publish.es.ts'
 import { scriptEs } from '../src/strings/script.es.ts'
 import { youtubeFailureActionsEs, youtubeFailuresEs } from '../src/strings/youtube-failures.es.ts'
@@ -38,6 +39,12 @@ describe('glossary of the web (FR-032, principle I)', () => {
         webTerms,
       ),
     ).toEqual([])
+  })
+
+  it('nor the words the server puts in a description (packages/core/src/publish/description.ts)', () => {
+    // The link itself is copied as it is: only the words around it are read.
+    const fixedText = defaultFixedText('micanal').replace(/https:\/\/\S+/, '')
+    expect(findForbiddenTerms({ ...DESCRIPTION_TEXT, fixedText }, webTerms)).toEqual([])
   })
 
   it.each(['channel', 'ideas', 'script'])(

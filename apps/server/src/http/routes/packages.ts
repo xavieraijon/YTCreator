@@ -3,6 +3,7 @@ import {
   packageEstimateBodySchema,
   packageGenerateBodySchema,
   pieceSaveBodySchema,
+  publishSettingsBodySchema,
 } from '@ytcreator/core/api'
 import { Hono } from 'hono'
 import type { PackageWork } from '../../services/package-work.ts'
@@ -20,6 +21,13 @@ export function packageRoutes({ service, work }: PackageRoutesDeps) {
 
   routes.get('/channels/:id/packages', (c) => c.json(service.summaries(c.req.param('id'))))
 
+  routes.get('/channels/:id/publish-settings', (c) => c.json(service.settingsOf(c.req.param('id'))))
+
+  routes.put('/channels/:id/publish-settings', async (c) => {
+    const body = await parseBody(c, publishSettingsBodySchema)
+    return c.json(service.saveSettings(c.req.param('id'), body))
+  })
+
   routes.post('/scripts/:id/package', (c) => {
     const { view, created } = service.openForScript(c.req.param('id'))
     return c.json(view, created ? 201 : 200)
@@ -28,8 +36,8 @@ export function packageRoutes({ service, work }: PackageRoutesDeps) {
   routes.get('/packages/:id', (c) => c.json(service.read(c.req.param('id'))))
 
   routes.post('/packages/:id/estimate', async (c) => {
-    const { use } = await parseBody(c, packageEstimateBodySchema)
-    return c.json(work.estimate(c.req.param('id'), use))
+    const body = await parseBody(c, packageEstimateBodySchema)
+    return c.json(work.estimate(c.req.param('id'), body))
   })
 
   routes.post('/packages/:id/generate', async (c) => {

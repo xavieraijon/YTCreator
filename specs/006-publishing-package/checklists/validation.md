@@ -197,3 +197,116 @@ paga si no cabe), IV (salidas validadas, una dirección web no valida), V (cifra
 ### 9. Cómo revertir
 
 `git revert` del commit de esta historia. No hay migraciones. Queda pendiente: US2 en adelante.
+
+## US2 descripción, capítulos, etiquetas y comentario (T028–T041), Puerta A del 2026-11-13
+
+### 1. Resumen
+
+Con la portada aprobada se propone la descripción de un vídeo largo: primeras líneas, cuerpo, capítulos con su minuto
+estimado, etiquetas y comentario fijado; las fuentes salen de los datos del guion y la parte fija, de los nuevos
+«Ajustes de publicación». Cada parte se edita, se pide de nuevo sola o se aprueba junto a las demás. Los cuatro revisores
+y una segunda vuelta de lógica encontraron medios (ninguno grave); están corregidos, cada uno con su test.
+
+### 2. Requisitos
+
+| Requisito | Estado | Evidencia | Fecha |
+|---|---|---|---|
+| T028–T029 `chapterTimes`, `proposeChapters` y el minuto escrito por el creador | Cumplido | `packages/core/test/publish/chapters.test.ts` (17 casos, con los grabados de SC-003, `parseChapterTime` y `chaptersInOrder`) | 2026-11-13 |
+| T030–T031 fuentes de la descripción y texto montado | Cumplido | `packages/core/test/publish/description.test.ts` | 2026-11-13 |
+| T032–T033 salidas y usos `descripcion` y `parte_paquete`, con prompts | Cumplido | `outputs.test.ts`; baterías de contrato U1–U3 de los tres adaptadores; `lock.json` | 2026-11-13 |
+| T034–T035 ajustes de publicación | Cumplido | `apps/server/test/http/publish-settings.test.ts` (5 casos); que cambiarlos no toca lo guardado, en `packages-texts.test.ts` | 2026-11-13 |
+| T036–T037 rutas de los textos | Cumplido | `apps/server/test/http/packages-texts.test.ts` (22 casos: `sin_aprobar`, cuatro versiones con `draft_version` y `main_title`, cada parte sola carácter a carácter (SC-005), ediciones, minuto manual, parte fija cambiada y «Usar la nueva», `sin_fuentes`, aprobar con piezas vacías y comentario vacío, estimación de otra parte, cifra del creador, doble petición, minutos desordenados) | 2026-11-13 |
+| T038 textos | Cumplido | `publish.es.ts`; glosario ampliado a los textos de `core/publish/description.ts` | 2026-11-13 |
+| T039 paso «Descripción» | Cumplido | e2e US2 | 2026-11-13 |
+| T040 «Ajustes de publicación» y su ruta | Cumplido | e2e US2; `router.test.ts` | 2026-11-13 |
+| T041 e2e con axe | Cumplido | `apps/web/e2e/publish.spec.ts` (US2): teclado para guardar y aprobar, minuto mal escrito, pedir de nuevo una parte, ajustes con `Select`, aviso de parte fija y «Usar la nueva»; axe en claro y oscuro a 375 y 1280 px | 2026-11-13 |
+| Short: textos | Parcial | Decisión 40: llegan con `paquete_short` (US4); el paso lo dice | 2026-11-13 |
+
+### 3. Cómo se comprobó
+
+Tras la segunda vuelta: `fnm exec --using=24 -- pnpm lint` (código 0), `typecheck` (código 0) y `test` con la caché de
+vitest borrada, porque cambiaron prompts (código 0: 188 ficheros, 2470 pasados y 4 omitidos). `test:e2e`: ver el punto 4. El flujo real
+de la historia con la IA falsa es el del e2e de US2 y el de `packages-texts.test.ts`. Los tests nuevos de las
+correcciones de cifras y de estimación se comprobaron fallando sin la corrección.
+
+### 4. Controles
+
+- Pasados: lint, typecheck, test, glosario, axe en claro y oscuro a 375 y 1280 px en el paso y en los ajustes, teclado
+  (Enter en guardar y aprobar, desplegable de categoría con teclado), los cinco tipos de fallo de IA (los cubre
+  `AiAction`, el mismo de US1, con `failureFor` por parte) y «Cómo se demuestra» (pedir de nuevo solo el comentario y ver
+  que el resto sigue igual, en e2e y carácter a carácter en el servidor).
+- `test:e2e`: tras la primera vuelta, 147 pasados y 1 fallido, el de US2, que en la ejecución completa encontraba la IA ya
+  conectada por US1 (comparten servidor); corregido y verificado con el fichero entero. Resultado tras la segunda vuelta:
+  código 0, 97 de 97 y 51 de 51.
+- No ejecutados: `test:installer`, porque no se toca el instalador; `prefers-reduced-motion` aparte, porque el paso no
+  añade animaciones propias; IA real, porque necesita la aprobación del creador (T068).
+
+### 5. Hallazgos
+
+Corregidos (primera vuelta):
+- Una estimación de una parte servía para generar otra, y de otro paquete (seguridad): la estimación queda ligada al
+  paquete y a la parte (decisión 50), con test.
+- La parte actual iba a la IA como `current` y una cifra escrita a mano contaba como fuente (seguridad, lógica): va como
+  `previous`, que no cuenta (decisión 50), con test que falla sin la corrección.
+- Las partes pedidas de nuevo se guardaban como `ia` y no como `parte_ia` (fidelidad, lógica): corregido (decisión 49).
+- Editar la descripción, o «Usar la nueva», volvía a sellar el título y borraba el aviso de título cambiado (los tres):
+  ahora conserva su título (decisión 49).
+- El aviso de título cambiado culpaba a las miniaturas y el de parte fija no tenía acción (fidelidad, regresión): dice
+  «parte de lo que tienes» y lleva a la pieza afectada (decisión 51).
+- Cifras comprobadas en la descripción sin decisión ni test (fidelidad, regresión): decisión 48 y test.
+- Afirmación sin fuente sobre lo que pesan las etiquetas (fidelidad): quitada; la decisión 38 ya no se apoya en ella.
+- Pedir `descripcion` con los textos hechos pagaba y pisaba lo editado en otra pestaña (lógica): 409 (decisión 53).
+- Un comentario vaciado por el recorte tiraba la respuesta pagada; etiquetas con coma o repetidas dejaban la pantalla con
+  «cambios sin guardar» (lógica): decisión 54, con tests.
+- Enlace de suscripción con una @ provisional (lógica): decisión 55.
+- `inputMode="numeric"` sin «:» en iOS, frases montadas en el componente, cinco «Guardar» con el mismo nombre y campos
+  de indicaciones repetidos, límite de etiquetas sin explicar, textos de `core` fuera del glosario, `hasHandle` fuera del
+  contrato, frase de la 007 que pide la spec, marca de la IA solo en la descripción, `sin_fuentes` impreciso, «Proponer
+  descripción» del contrato (regresión, fidelidad, lógica): corregidos (decisiones 52 y 56).
+- Riesgo mal clasificado en las decisiones 44 y 46 (fidelidad): pasan a medio.
+
+Corregidos (segunda vuelta, lógica):
+- La IA podía dar menos capítulos que el mínimo de YouTube y etiquetas que pasaban del total: la respuesta no vale y se
+  pide otra vez, con las cifras de `youtube.json` (decisión 57), con tests.
+- Un minuto escrito a mano podía dejar los capítulos desordenados: los estimados siguientes se mueven con él y el servidor
+  rechaza el desorden; la pantalla lo avisa antes (decisión 58), con tests.
+
+Descartados, con motivo:
+- La fuente del máximo de la descripción es la del título (fidelidad, lógica, regresión): las dos cifras tienen la misma
+  fuente en `youtube.json` y la vista lleva una sola cita desde US1; si un día difieren, `limitsOf` ya obliga a que cada
+  cifra tenga fuente. Se revisará con la vista de revisión (US3).
+- «Volver a mis publicaciones» en los ajustes no vuelve al paquete (regresión): se entra también desde la lista; el
+  navegador vuelve atrás.
+- Una parte fija guardada con la @ de entonces no se actualiza si cambia la @ (regresión): lo guardado es del creador y no
+  se cambia solo (principio II).
+- Las cuatro versiones de `descripcion` no van en una transacción (lógica, menor): son síncronas; si faltara alguna, la
+  pantalla y el servidor dejan pedirla entera otra vez (decisión 53).
+
+Abiertos (menores, para su historia):
+- «hashtags: de 0 a 3» copiado en el prompt y en `outputs.ts` en vez de inyectado de `youtube.json` (fidelidad): solo
+  afecta al Short; se corrige en US4.
+- Un número de un título de la IA cuenta como fuente en la descripción (lógica): el texto del título no pasa el control
+  de cifras (decisión 30); se revisará con la revisión (US3).
+
+Tercera vuelta: no se lanzó; las correcciones de la segunda llevan cada una su test.
+
+### 6. Desviaciones
+
+De más: la estimación ligada a la parte, el 409 de la doble petición, el desplazamiento de los minutos estimados tras uno
+manual y el campo `hasHandle`. De menos: los textos de un Short, que llegan con US4.
+
+### 7. Decisiones
+
+Agente: 38 a 58. Medio, destacadas aquí: 38, 39, 40, 43, 44, 45, 46, 48 a 55, 57 y 58. Bajo: 41, 42, 47 y 56.
+Pendientes del creador: ninguna.
+
+### 8. Constitución
+
+II (lo editado por el creador no lo pisa la IA ni otra pestaña; la marca de la IA en cada parte), III (precio por parte,
+estimación ligada a lo que se pide, nada se paga dos veces), IV (salidas validadas con las cifras de YouTube), V
+(fuentes solo de los hechos, cifras comprobadas, sin afirmaciones sin fuente), VI (teclado, nombres accesibles distintos,
+axe), XI (este informe).
+
+### 9. Cómo revertir
+
+`git revert` del commit de esta historia. No hay migraciones. Queda pendiente: US3 en adelante.

@@ -110,6 +110,8 @@ export function channelInput(
     case 'comprobar_guion':
     case 'titulos':
     case 'miniaturas':
+    case 'descripcion':
+    case 'parte_paquete':
       return {}
   }
 }

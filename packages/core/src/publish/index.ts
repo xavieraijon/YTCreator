@@ -2,3 +2,5 @@
 export * from './model.ts'
 export * from './status.ts'
 export * from './outputs.ts'
+export * from './chapters.ts'
+export * from './description.ts'

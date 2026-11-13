@@ -17,6 +17,8 @@ import {
   newIdeaResultSchema,
   packageSummarySchema,
   packageViewSchema,
+  publishSettingsViewSchema,
+  type PublishSettingsBody,
   scriptSummarySchema,
   scriptSettingsViewSchema,
   scriptViewSchema,
@@ -321,6 +323,11 @@ export const packagesApi = {
     apiClient.put(`${packagePath(id)}/pieces/${kind}`, body, packageViewSchema),
   approve: (id: string, body: PackageApproveBody) =>
     apiClient.post(`${packagePath(id)}/approve`, body, packageViewSchema),
+  // The fixed part of every description and the category of the channel (US2).
+  settings: (channelId: string, options?: RequestOptions) =>
+    apiClient.get(`${channelPath(channelId)}/publish-settings`, publishSettingsViewSchema, options),
+  saveSettings: (channelId: string, body: PublishSettingsBody) =>
+    apiClient.put(`${channelPath(channelId)}/publish-settings`, body, publishSettingsViewSchema),
 }
 
 // The script of an idea (specs/005-script-and-outline/contracts/http-api.md).

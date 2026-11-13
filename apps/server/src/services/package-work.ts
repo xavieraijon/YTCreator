@@ -1,5 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import {
+  chapterTimes,
+  chaptersInOrder,
   channelProfileSchema,
   emptyPiece,
   formatKinds,
@@ -8,8 +10,16 @@ import {
   stepKinds,
   stepApproved,
   AI_THUMBNAILS,
+  descriptionOutputFor,
+  partOutputFor,
+  proposeChapters,
   thumbnailsOutputFor,
   TITLE_COUNTS,
+  type ChaptersContent,
+  type DescriptionContent,
+  type DescriptionOutput,
+  type PackagePart,
+  type PartOutput,
   titlesOutputFor,
   type ThumbnailConcept,
   type Idea,
@@ -23,7 +33,13 @@ import {
   type TitlesContent,
   type TitlesOutput,
 } from '@ytcreator/core'
-import type { PackageApproveBody, PackageGenerateBody, PackageView, PieceSaveBody } from '@ytcreator/core/api'
+import type {
+  PackageApproveBody,
+  PackageEstimateBody,
+  PackageGenerateBody,
+  PackageView,
+  PieceSaveBody,
+} from '@ytcreator/core/api'
 import type { PublishKnowledge } from '@ytcreator/knowledge'
 import type { z } from 'zod'
 import type { JourneysRepo } from '../db/repos/journeys.ts'
@@ -52,7 +68,18 @@ export interface PackageWorkDeps {
 }
 
 // The kinds the creator can write by hand so far; the others arrive with their stories (US2, US3).
-const EDITABLE: readonly PackageKind[] = ['titulos', 'miniaturas']
+const EDITABLE: readonly PackageKind[] = [
+  'titulos',
+  'miniaturas',
+  'descripcion',
+  'capitulos',
+  'etiquetas',
+  'comentario',
+]
+
+/** What a job of the package is doing: a use, or one part asked for again (`parte_paquete:etiquetas`). */
+export const jobOpOf = (use: PublishUse, part?: PackagePart) => (part ? `${use}:${part}` : use)
+const scopeOf = (packageId: string, use: PublishUse, part?: PackagePart) => `${packageId}/${jobOpOf(use, part)}`
 
 type Found = ReturnType<PackageService['find']>
 
@@ -160,10 +187,69 @@ export function createPackageWork(deps: PackageWorkDeps) {
         }
       : null
 
-  const limitsInput = () => ({
-    titleMaxChars: deps.knowledge.youtube.data.titleMaxChars.value,
-    mobileTitleChars: deps.knowledge.craft.data.mobileTitleChars.value,
-  })
+  const limitsInput = () => {
+    const { youtube, craft } = deps.knowledge
+    return {
+      titleMaxChars: youtube.data.titleMaxChars.value,
+      mobileTitleChars: craft.data.mobileTitleChars.value,
+      descriptionMaxChars: youtube.data.descriptionMaxChars.value,
+      tagsMaxTotalChars: youtube.data.tagsMaxTotalChars.value,
+      chapterMinSeconds: youtube.data.chapters.minSeconds.value,
+      chapterMinCount: youtube.data.chapters.minCount.value,
+    }
+  }
+  const textRules = () => {
+    const { youtube } = deps.knowledge
+    return {
+      chapterMinCount: youtube.data.chapters.minCount.value,
+      tagsMaxTotalChars: youtube.data.tagsMaxTotalChars.value,
+    }
+  }
+
+  const coverApproved = (pkg: PublishPackage) =>
+    stepApproved(pkg.format, 'portada', versions.latestNumbers(pkg.id), pkg.coverApproved)
+
+  // The chapters of the AI, joined so that YouTube shows them all, each with its own id (R3, SC-003).
+  const chaptersFrom = (
+    proposed: readonly { title: string; blockIds: readonly string[] }[],
+    found: Found,
+    blocks: readonly { id: string; text: string }[],
+  ) =>
+    proposeChapters(
+      proposed,
+      blocks,
+      service.paceOf(found.pkg.channelId),
+      deps.knowledge.youtube.data.chapters.minSeconds.value,
+    ).map((chapter) => ({
+      id: randomUUID(),
+      title: chapter.title,
+      blockIds: [...chapter.blockIds],
+      startSeconds: null,
+      manual: false,
+    }))
+
+  // What can be asked for now: a use of this format, the texts once the cover is approved, a part that is there.
+  const assertCanAsk = (found: Found, use: PublishUse, part: PackagePart | undefined) => {
+    const { pkg } = found
+    const kinds = formatKinds(pkg.format)
+    if (use === 'titulos' || use === 'miniaturas') {
+      if (!kinds.includes(use)) throw new ApiError({ code: 'validacion', fields: { use: 'no_valido' } })
+      assertRoom(pkg, use)
+      return
+    }
+    if (use === 'descripcion') {
+      // A Short gets its texts with `paquete_short` (US4).
+      if (pkg.format !== 'largo') throw new ApiError({ code: 'validacion', fields: { use: 'no_valido' } })
+      if (!coverApproved(pkg)) throw new ApiError({ code: 'sin_aprobar' })
+      // Once the texts are there, each one is asked for again on its own: another tab would pay to write over them.
+      if (stepKinds(pkg.format, 'textos').every((kind) => versions.latest(pkg.id, kind)))
+        throw new ApiError({ code: 'version_cambiada' })
+      return
+    }
+    if (!part || !kinds.includes(part) || !versions.latest(pkg.id, part))
+      throw new ApiError({ code: 'validacion', fields: { part: 'no_valido' } })
+    if (part !== 'portada_short' && !coverApproved(pkg)) throw new ApiError({ code: 'sin_aprobar' })
+  }
 
   const ideaInput = (idea: Idea) => ({ title: idea.title, hook: idea.hook, format: idea.format })
 
@@ -173,7 +259,123 @@ export function createPackageWork(deps: PackageWorkDeps) {
     keep: (value: unknown, usageId: string | null, instructions: string | null) => void
   }
 
-  const requestFor = (found: Found, use: PublishUse): Request => {
+  // The texts of a long video in one request, or one part of them asked for again on its own: only that part gets a
+  // new version, and the fixed part is never the AI's (R5, R10, SC-005).
+  const textsRequest = (
+    found: Found,
+    use: 'descripcion' | 'parte_paquete',
+    part: PackagePart | undefined,
+    profile: ReturnType<typeof profileInput>,
+    draft: ReturnType<typeof approvedDraft>,
+  ): Request => {
+    const { pkg, idea, script } = found
+    const main = mainTitleOf(titlesOf(pkg))
+    const blocks = draft.blocks.map((block) => ({
+      id: block.id,
+      type: block.type,
+      title: block.title,
+      text: block.text,
+    }))
+    const blockIds = blocks.map((block) => block.id)
+    const input = {
+      mainTitle: main,
+      idea: ideaInput(idea),
+      draft: { blocks },
+      profile,
+      measured: measuredInput(service.view(pkg, script, idea)),
+      limits: limitsInput(),
+      craft: deps.knowledge.craft.data,
+    }
+    const stamp = (instructions: string | null, usageId: string | null) => ({
+      draftVersion: draft.version,
+      mainTitle: main,
+      instructions,
+      usageId,
+    })
+
+    if (use === 'descripcion') {
+      return {
+        input,
+        schema: descriptionOutputFor(blockIds, textRules()),
+        keep: (value, usageId, instructions) => {
+          const output = value as DescriptionOutput
+          const extra = stamp(instructions, usageId)
+          const fixedText = service.fixedTextOf(pkg.channelId).current
+          addVersion(
+            pkg,
+            'descripcion',
+            'ia',
+            { firstLines: output.firstLines, body: output.body, hashtags: [], fixedText },
+            extra,
+            use,
+          )
+          addVersion(
+            pkg,
+            'capitulos',
+            'ia',
+            { chapters: chaptersFrom(output.chapters, found, draft.blocks) },
+            extra,
+            use,
+          )
+          addVersion(pkg, 'etiquetas', 'ia', { tags: output.tags }, extra, use)
+          addVersion(pkg, 'comentario', 'ia', { text: output.comment }, extra, use)
+        },
+      }
+    }
+
+    const asked = part!
+    // A part asked for again is kept as such: the history says so (FR-022, `parte_ia`).
+    return {
+      // `previous`, so that a figure in it is not taken as a source (ai-run.ts).
+      input: { ...input, part: asked, previous: versions.latest(pkg.id, asked)?.content ?? null },
+      schema: partOutputFor(asked, pkg.format, blockIds, textRules()),
+      keep: (value, usageId, instructions) => {
+        const extra = stamp(instructions, usageId)
+        switch (asked) {
+          case 'descripcion': {
+            const output = value as PartOutput<'descripcion'>
+            const before = versions.latest(pkg.id, 'descripcion')!.content
+            addVersion(
+              pkg,
+              'descripcion',
+              'parte_ia',
+              {
+                ...before,
+                firstLines: output.firstLines,
+                body: output.body,
+                hashtags: pkg.format === 'short' ? (output.hashtags ?? []) : [],
+              },
+              extra,
+              use,
+            )
+            return
+          }
+          case 'capitulos': {
+            const output = value as PartOutput<'capitulos'>
+            addVersion(
+              pkg,
+              'capitulos',
+              'parte_ia',
+              { chapters: chaptersFrom(output.chapters, found, draft.blocks) },
+              extra,
+              use,
+            )
+            return
+          }
+          case 'etiquetas':
+            addVersion(pkg, 'etiquetas', 'parte_ia', { tags: (value as PartOutput<'etiquetas'>).tags }, extra, use)
+            return
+          case 'comentario':
+            addVersion(pkg, 'comentario', 'parte_ia', { text: (value as PartOutput<'comentario'>).comment }, extra, use)
+            return
+          case 'portada_short':
+            addVersion(pkg, 'portada_short', 'parte_ia', (value as PartOutput<'portada_short'>).cover, extra, use)
+        }
+      },
+    }
+  }
+
+  const requestFor = (found: Found, use: PublishUse, part?: PackagePart): Request => {
     const { pkg, idea, script } = found
     const draft = approvedDraft(found)
     const profile = profileInput(profileOf(pkg.channelId))
@@ -227,6 +429,8 @@ export function createPackageWork(deps: PackageWorkDeps) {
       }
     }
 
+    if (use === 'descripcion' || use === 'parte_paquete') return textsRequest(found, use, part, profile, draft)
+
     // A thumbnail goes with a title: the main one has to be chosen first (FR-006).
     const titles = titlesOf(pkg)
     const main = mainTitleOf(titles)
@@ -273,32 +477,35 @@ export function createPackageWork(deps: PackageWorkDeps) {
     }
   }
 
-  const estimate = (id: string, use: PublishUse) => {
+  const estimate = (id: string, { use, part }: PackageEstimateBody) => {
     const found = service.find(id)
-    if (!formatKinds(found.pkg.format).includes(use))
-      throw new ApiError({ code: 'validacion', fields: { use: 'no_valido' } })
-    assertRoom(found.pkg, use)
-    const { input } = requestFor(found, use)
-    return aiRun.estimate({ journeyId: journeyOf(found.pkg.channelId), use, input })
+    assertCanAsk(found, use, part)
+    const { input } = requestFor(found, use, part)
+    // An estimate is for this package and this part: another part costs differently (Puerta A US2).
+    return aiRun.estimate({
+      journeyId: journeyOf(found.pkg.channelId),
+      use,
+      input,
+      scope: scopeOf(found.pkg.id, use, part),
+    })
   }
 
   // Runs in the background: the creator can close the tab and find the result on coming back (FR-020).
-  const generate = (id: string, { use, estimateId, instructions }: PackageGenerateBody) => {
+  const generate = (id: string, { use, part, estimateId, instructions }: PackageGenerateBody) => {
     const found = service.find(id)
     service.assertIdle(found.pkg)
-    if (!formatKinds(found.pkg.format).includes(use))
-      throw new ApiError({ code: 'validacion', fields: { use: 'no_valido' } })
+    assertCanAsk(found, use, part)
     const journeyId = journeyOf(found.pkg.channelId)
-    aiRun.assertEstimate(estimateId, use, journeyId)
-    assertRoom(found.pkg, use)
-    const { input, keep, schema } = requestFor(found, use)
+    const scope = scopeOf(found.pkg.id, use, part)
+    aiRun.assertEstimate(estimateId, use, journeyId, scope)
+    const { input, keep, schema } = requestFor(found, use, part)
     const job = deps.jobs.start({ journeyId: null, channelId: found.pkg.channelId, kind: 'ia' }, async () => {
-      const result = await aiRun.run({ estimateId, journeyId, use, input, instructions, schema })
+      const result = await aiRun.run({ estimateId, journeyId, scope, use, input, instructions, schema })
       if (!result.ok) return { failure: result.failure }
       keep(result.value, result.usageId, instructions ?? null)
       return undefined
     })
-    packages.setJob(found.pkg.id, job.id, use)
+    packages.setJob(found.pkg.id, job.id, jobOpOf(use, part))
     return job.id
   }
 
@@ -350,10 +557,38 @@ export function createPackageWork(deps: PackageWorkDeps) {
     service.assertIdle(pkg)
     const latest = versions.latest(pkg.id, kind as PackageKind)
     assertBase(latest?.version ?? null, baseVersion)
-    const parsed = PACKAGE_CONTENT_SCHEMAS[kind as 'titulos' | 'miniaturas'].safeParse(content)
+    const parsed = PACKAGE_CONTENT_SCHEMAS[kind as PackageKind].safeParse(content)
     if (!parsed.success) throw new ApiError({ code: 'validacion', fields: { content: 'no_valido' } })
     const draftVersion = draftVersionOf(script, pkg, kind as PackageKind)
-    if (kind === 'titulos') {
+    // The texts keep the title they were written for: an edit does not make them fit another one (R16).
+    const keepTitle = { draftVersion, mainTitle: latest?.mainTitle ?? null }
+    if (kind === 'descripcion') {
+      const sent = parsed.data as DescriptionContent
+      const before = (latest?.content as DescriptionContent | undefined) ?? null
+      // The fixed part is the copy this description has, or the channel's one now («Usar la nueva», FR-010).
+      const fixedOk =
+        sent.fixedText === before?.fixedText || sent.fixedText === service.fixedTextOf(pkg.channelId).current
+      if (!fixedOk) throw new ApiError({ code: 'validacion', fields: { fixedText: 'no_valido' } })
+      // Hashtags only in a Short (decision 9).
+      if (pkg.format !== 'short' && sent.hashtags.length > 0)
+        throw new ApiError({ code: 'validacion', fields: { hashtags: 'no_valido' } })
+      addVersion(pkg, 'descripcion', 'edicion', sent, keepTitle)
+    } else if (kind === 'capitulos') {
+      // A minute is either the creator's (`manual`) or worked out from the script: never a stale one in between (R3).
+      const sent = parsed.data as ChaptersContent
+      const chapters = sent.chapters.map((chapter) => (chapter.manual ? chapter : { ...chapter, startSeconds: null }))
+      // Minutes out of order, or too close, and YouTube shows no chapter at all.
+      const times = chapterTimes(
+        chapters,
+        service.approvedDraftOf(script)?.content.blocks ?? [],
+        service.paceOf(pkg.channelId),
+      )
+      if (!chaptersInOrder(times, deps.knowledge.youtube.data.chapters.minSeconds.value))
+        throw new ApiError({ code: 'validacion', fields: { chapters: 'no_valido' } })
+      addVersion(pkg, 'capitulos', 'edicion', { chapters }, keepTitle)
+    } else if (kind === 'etiquetas' || kind === 'comentario') {
+      addVersion(pkg, kind, 'edicion', parsed.data as PackageContentOf<typeof kind>, keepTitle)
+    } else if (kind === 'titulos') {
       addVersion(pkg, 'titulos', 'edicion', titlesFromCreator(parsed.data as TitlesContent, titlesOf(pkg)), {
         draftVersion,
       })

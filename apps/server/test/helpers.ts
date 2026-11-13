@@ -263,6 +263,7 @@ export function makeTestApp({
     scriptVersions,
     packages: packagesRepo,
     versions: packageVersions,
+    profiles: channel.profiles,
     scriptStatus: (ideaId: string) => scriptService.ideaScript(ideaId)?.status ?? null,
     knowledge: publishKnowledge,
   })
