@@ -5,6 +5,7 @@ import {
   chaptersContentSchema,
   commentContentSchema,
   descriptionContentSchema,
+  PACKAGE_KINDS,
   PACKAGE_ORIGINS,
   PACKAGE_STEPS,
   PUBLISH_LIMITS,
@@ -13,6 +14,7 @@ import {
   thumbnailsContentSchema,
   titlesContentSchema,
 } from '../publish/model.ts'
+import { pieceComparisonSchema } from '../publish/compare.ts'
 import { PACKAGE_PARTS, PUBLISH_USES } from '../publish/outputs.ts'
 import { PACKAGE_STATUSES, PACKAGE_WARNINGS } from '../publish/status.ts'
 import { STUDIO_KEYS } from '../publish/studio.ts'
@@ -268,3 +270,30 @@ export const publishSettingsBodySchema = z.object({
   category: z.string().min(1).nullable(),
 })
 export type PublishSettingsBody = z.infer<typeof publishSettingsBodySchema>
+
+// The history of each piece (US5): every version, what it changes from the current one, and going back to it.
+export const packageVersionSummarySchema = z.object({
+  version: z.number().int().positive(),
+  origin: z.enum(PACKAGE_ORIGINS),
+  createdAt: z.string(),
+  restoredFrom: z.number().int().positive().nullable(),
+})
+export type PackageVersionSummary = z.infer<typeof packageVersionSummarySchema>
+
+export const packageVersionDetailSchema = z.object({
+  version: packageVersionSummarySchema,
+  content: z.unknown(),
+  comparison: pieceComparisonSchema,
+})
+export type PackageVersionDetail = z.infer<typeof packageVersionDetailSchema>
+
+export const packageVersionsQuerySchema = z.object({ kind: z.enum(PACKAGE_KINDS) })
+export const packageVersionParamsSchema = z.object({
+  kind: z.enum(PACKAGE_KINDS),
+  version: z
+    .string()
+    .regex(/^[1-9]\d{0,8}$/)
+    .transform(Number),
+})
+export const packageRestoreBodySchema = z.object({ baseVersion: packageBaseVersionSchema })
+export type PackageRestoreBody = z.infer<typeof packageRestoreBodySchema>

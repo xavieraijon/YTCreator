@@ -130,7 +130,13 @@ export function createPackageWork(deps: PackageWorkDeps) {
     kind: K,
     origin: PackageOrigin,
     content: PackageContentOf<K>,
-    extra: { draftVersion: number; mainTitle?: string | null; instructions?: string | null; usageId?: string | null },
+    extra: {
+      draftVersion: number
+      mainTitle?: string | null
+      instructions?: string | null
+      usageId?: string | null
+      restoredFrom?: number | null
+    },
     use?: PublishUse,
   ) => {
     const prompt = use ? deps.promptFor(use) : null
@@ -143,6 +149,7 @@ export function createPackageWork(deps: PackageWorkDeps) {
       mainTitle: extra.mainTitle ?? null,
       instructions: extra.instructions ?? null,
       usageId: extra.usageId ?? null,
+      restoredFrom: extra.restoredFrom ?? null,
       promptId: prompt?.id ?? null,
       promptVersion: prompt?.version ?? null,
     })
@@ -152,7 +159,8 @@ export function createPackageWork(deps: PackageWorkDeps) {
   const titlesOf = (pkg: PublishPackage) => versions.latest(pkg.id, 'titulos')?.content ?? null
 
   // The chosen ones, those the creator wrote and those a thumbnail idea is for stay; what else the AI proposed before
-  // makes room for the new ones (decision 25). A thumbnail never points to a title that is gone.
+  // makes room for the new ones (decision 25). Asking again never leaves a thumbnail for a title that is gone; going
+  // back to an older version may, and the screen says so (decision 96).
   const keptTitles = (pkg: PublishPackage) => {
     const titles = titlesOf(pkg)
     if (!titles) return []
@@ -637,8 +645,9 @@ export function createPackageWork(deps: PackageWorkDeps) {
       concepts: sent.concepts.map((concept) => {
         const previous = known.get(concept.id)
         if (previous && sameConcept(previous, concept)) return previous
-        // Only what the creator writes now is checked: an idea left as it was never blocks saving the others.
-        if (concept.titleId !== null && !titleIds.has(concept.titleId))
+        // Only what the creator writes now is checked: an idea left as it was never blocks saving the others, and one
+        // kept for a title that is gone (after going back to an older version, decision 96) can still be rewritten.
+        if (concept.titleId !== null && concept.titleId !== previous?.titleId && !titleIds.has(concept.titleId))
           throw new ApiError({ code: 'validacion', fields: { titleId: 'no_valido' } })
         return { ...concept, origin: 'creador' as const }
       }),
@@ -717,6 +726,26 @@ export function createPackageWork(deps: PackageWorkDeps) {
     return service.read(pkg.id)
   }
 
+  // Going back is a copy as the newest: nothing is lost (FR-020 of 005, SC-008). What it was written for goes with it,
+  // so its notices stay true (R16); and as a new version, an approved step or package is back in draft (FR-015).
+  const restoreVersion = (id: string, kind: PackageKind, number: number, baseVersion: number): PackageView => {
+    const { pkg } = service.find(id)
+    service.assertIdle(pkg)
+    const latest = versions.latest(pkg.id, kind)
+    assertBase(latest?.version ?? null, baseVersion)
+    const older = versions.get(pkg.id, kind, number)
+    if (!older) throw new ApiError({ code: 'no_encontrado' })
+    if (older.version !== latest?.version) {
+      addVersion(pkg, kind, 'recuperada', older.content, {
+        draftVersion: older.draftVersion,
+        mainTitle: older.mainTitle,
+        instructions: older.instructions,
+        restoredFrom: older.version,
+      })
+    }
+    return service.read(pkg.id)
+  }
+
   // A step is approved in the versions on screen: if another tab changed one, nothing is approved (R2).
   const approve = (id: string, body: PackageApproveBody): PackageView => {
     const { step, versions: sent } = body
@@ -770,7 +799,7 @@ export function createPackageWork(deps: PackageWorkDeps) {
     return service.read(pkg.id)
   }
 
-  return { estimate, generate, savePiece, approve }
+  return { estimate, generate, savePiece, approve, restoreVersion }
 }
 
 export type PackageWork = ReturnType<typeof createPackageWork>

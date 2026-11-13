@@ -19,6 +19,7 @@ import styles from '../channel.module.css'
 import { AiAction } from '../Proposal.tsx'
 import { coverApproved } from './CoverStep.tsx'
 import { AskAgain, type AskAgainProps } from './AskAgain.tsx'
+import { History } from './History.tsx'
 import { type PackageAi, type PackageOp, usePackageEstimate } from './usePackageAi.ts'
 
 const text = publishEs.texts
@@ -221,6 +222,8 @@ export function DescriptionStep({ pkg, ai, onChange, onError, onNext }: Descript
     onAsk: (...args: Parameters<AskAgainProps['onAsk']>) => void ask(...args),
   }
 
+  const historyProps = { pkg, onChange, onError }
+
   const setRow = (index: number, change: Partial<ChapterRow>) =>
     setRows(rows.map((row, at) => (at === index ? { ...row, ...change } : row)))
 
@@ -299,6 +302,7 @@ export function DescriptionStep({ pkg, ai, onChange, onError, onNext }: Descript
           </Button>
         </div>
         <AskAgain {...askProps} part="descripcion" />
+        <History {...historyProps} kind="descripcion" busy={busy || descriptionDirty} />
       </div>
 
       {capitulos !== null && (
@@ -354,6 +358,7 @@ export function DescriptionStep({ pkg, ai, onChange, onError, onNext }: Descript
             </div>
             {fromAi(capitulos) && <DataSource kind="ia" />}
             <AskAgain {...askProps} part="capitulos" />
+            <History {...historyProps} kind="capitulos" busy={busy || chaptersDirty} />
           </div>
         </>
       )}
@@ -432,6 +437,7 @@ export function DescriptionStep({ pkg, ai, onChange, onError, onNext }: Descript
         </div>
         {fromAi(etiquetas) && <DataSource kind="ia" />}
         <AskAgain {...askProps} part="etiquetas" />
+        <History {...historyProps} kind="etiquetas" busy={busy || tagsDirty} />
       </div>
 
       <div className={styles.form}>
@@ -457,6 +463,7 @@ export function DescriptionStep({ pkg, ai, onChange, onError, onNext }: Descript
         </div>
         {fromAi(comentario) && <DataSource kind="ia" />}
         <AskAgain {...askProps} part="comentario" />
+        <History {...historyProps} kind="comentario" busy={busy || commentDirty} />
       </div>
 
       {approved ? (

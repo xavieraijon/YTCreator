@@ -179,12 +179,12 @@ capítulos, ver la portada sugerida y el vídeo largo mencionado, y aprobarlo.
 **Independent Test**: Con una descripción con cuatro versiones grabadas, abrir la segunda, ver qué cambia, volver a ella
 y comprobar que la cuarta sigue en el historial.
 
-- [ ] T062 [P] [US5] Test en `packages/core/test/publish/compare.test.ts`: diferencias de una pieza con la actual (candidatos y conceptos nuevos, quitados o cambiados; partes de la descripción; capítulos; etiquetas añadidas y quitadas)
-- [ ] T063 [US5] Implementar `packages/core/src/publish/compare.ts` para que pase T062
-- [ ] T064 [P] [US5] Test de rutas en `apps/server/test/http/packages-versions.test.ts`: `GET /packages/:id/versions?kind=` de la más nueva a la más antigua con fecha y origen; `GET /packages/:id/versions/:kind/:version` con diferencias; `restore` crea una versión `recuperada` (ninguna si ya es la actual) y el historial tiene una más y ninguna menos (SC-008); recuperar en un paquete aprobado lo devuelve a borrador
-- [ ] T065 [US5] Implementar las rutas de T064 e `apps/web/src/screens/channel/publish/History.tsx`, con sus textos, siguiendo el `History.tsx` de la 005
-- [ ] T066 [US5] e2e en `apps/web/e2e/publish.spec.ts` (US5), con axe en claro y oscuro a 375 y 1280 px
-- [ ] T067 [A] [US5] Puerta A de US5: ejecutar `/puerta-a 006 US5`
+- [X] T062 [P] [US5] Test en `packages/core/test/publish/compare.test.ts`: diferencias de una pieza con la actual (candidatos y conceptos nuevos, quitados o cambiados; partes de la descripción; capítulos; etiquetas añadidas y quitadas)
+- [X] T063 [US5] Implementar `packages/core/src/publish/compare.ts` para que pase T062
+- [X] T064 [P] [US5] Test de rutas en `apps/server/test/http/packages-versions.test.ts`: `GET /packages/:id/versions?kind=` de la más nueva a la más antigua con fecha y origen; `GET /packages/:id/versions/:kind/:version` con diferencias; `restore` crea una versión `recuperada` (ninguna si ya es la actual) y el historial tiene una más y ninguna menos (SC-008); recuperar en un paquete aprobado lo devuelve a borrador
+- [X] T065 [US5] Implementar las rutas de T064 e `apps/web/src/screens/channel/publish/History.tsx`, con sus textos, siguiendo el `History.tsx` de la 005
+- [X] T066 [US5] e2e en `apps/web/e2e/publish.spec.ts` (US5), con axe en claro y oscuro a 375 y 1280 px
+- [X] T067 [A] [US5] Puerta A de US5: ejecutar `/puerta-a 006 US5`
 
 ---
 

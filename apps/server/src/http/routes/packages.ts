@@ -4,6 +4,9 @@ import {
   packageEstimateBodySchema,
   packageExportQuerySchema,
   packageGenerateBodySchema,
+  packageRestoreBodySchema,
+  packageVersionParamsSchema,
+  packageVersionsQuerySchema,
   packagesExportQuerySchema,
   packageStudioBodySchema,
   pieceSaveBodySchema,
@@ -103,6 +106,33 @@ export function packageRoutes({ service, work }: PackageRoutesDeps) {
   routes.put('/packages/:id/pieces/:kind', async (c) => {
     const body = await parseBody(c, pieceSaveBodySchema)
     return c.json(work.savePiece(c.req.param('id'), c.req.param('kind'), body))
+  })
+
+  // The history of each piece (US5).
+  routes.get('/packages/:id/versions', (c) => {
+    const query = packageVersionsQuerySchema.safeParse({ kind: c.req.query('kind') })
+    if (!query.success) throw new ApiError({ code: 'validacion', fields: { kind: 'no_valido' } })
+    return c.json(service.listVersions(c.req.param('id'), query.data.kind))
+  })
+
+  const versionParams = (c: Context) => {
+    const params = packageVersionParamsSchema.safeParse({ kind: c.req.param('kind'), version: c.req.param('version') })
+    if (!params.success) {
+      const kind = params.error.issues.some((issue) => issue.path[0] === 'kind')
+      throw new ApiError({ code: 'validacion', fields: kind ? { kind: 'no_valido' } : { version: 'no_valido' } })
+    }
+    return params.data
+  }
+
+  routes.get('/packages/:id/versions/:kind/:version', (c) => {
+    const { kind, version } = versionParams(c)
+    return c.json(service.readVersion(c.req.param('id'), kind, version))
+  })
+
+  routes.post('/packages/:id/versions/:kind/:version/restore', async (c) => {
+    const { kind, version } = versionParams(c)
+    const { baseVersion } = await parseBody(c, packageRestoreBodySchema)
+    return c.json(work.restoreVersion(c.req.param('id'), kind, version, baseVersion))
   })
 
   routes.post('/packages/:id/approve', async (c) => {

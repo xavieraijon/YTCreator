@@ -27,6 +27,7 @@ import { scriptEs } from '../../../strings/script.es.ts'
 import styles from '../channel.module.css'
 import { AiAction } from '../Proposal.tsx'
 import { AskAgain } from './AskAgain.tsx'
+import { History } from './History.tsx'
 import { type PackageAi, usePackageEstimate } from './usePackageAi.ts'
 
 const text = publishEs.cover
@@ -286,6 +287,8 @@ export function CoverStep({ pkg, ai, onChange, onError, onNext }: CoverStepProps
     scriptApproved && idle && titleRoom && !pending && !(isShort && titles === null),
   )
   const shortPrice = usePackageEstimate(pkg, 'paquete_short', scriptApproved && idle && firstShort)
+
+  const historyProps = { pkg, onChange, onError }
 
   const ask: PackageAi['run'] = async (...args) => {
     setAsking(true)
@@ -561,150 +564,157 @@ export function CoverStep({ pkg, ai, onChange, onError, onNext }: CoverStepProps
           ) : (
             <p className={styles.notice}>{text.full}</p>
           )}
+          <History {...historyProps} kind="titulos" busy={busy || pending || editing !== null} />
         </>
       )}
 
-      {isShort
-        ? shortCover !== null && (
-            <ShortCover
-              key={shortCover.version}
-              pkg={pkg}
-              ai={ai}
-              busy={busy}
-              blockTitle={blockTitle}
-              onSave={(content) =>
-                saved(() =>
-                  packagesApi.savePiece(pkg.id, 'portada_short', { baseVersion: shortCover.version, content }),
-                )
-              }
-              onAsk={(op, price, instructions) => void ask(op, price, instructions)}
-              onDirty={setCoverDirty}
-            />
-          )
-        : titles !== null && (
+      {isShort && shortCover !== null && (
+        <>
+          <ShortCover
+            key={shortCover.version}
+            pkg={pkg}
+            ai={ai}
+            busy={busy}
+            blockTitle={blockTitle}
+            onSave={(content) =>
+              saved(() => packagesApi.savePiece(pkg.id, 'portada_short', { baseVersion: shortCover.version, content }))
+            }
+            onAsk={(op, price, instructions) => void ask(op, price, instructions)}
+            onDirty={setCoverDirty}
+          />
+          <History {...historyProps} kind="portada_short" busy={busy || coverDirty} />
+        </>
+      )}
+      {!isShort && titles !== null && (
+        <>
+          <h3>{text.thumbnails}</h3>
+          <p className={styles.why}>{format(text.thumbnailsWhy, { n: PUBLISH_LIMITS.chosen })}</p>
+          {!hasMain ? (
+            <p className={styles.notice}>{text.needsMain}</p>
+          ) : (
             <>
-              <h3>{text.thumbnails}</h3>
-              <p className={styles.why}>{format(text.thumbnailsWhy, { n: PUBLISH_LIMITS.chosen })}</p>
-              {!hasMain ? (
-                <p className={styles.notice}>{text.needsMain}</p>
-              ) : (
+              {thumbnailPrice.error !== null && (
+                <ErrorMessage
+                  live
+                  title={errorText(thumbnailPrice.error)}
+                  action={{ label: es.app.retry, onClick: thumbnailPrice.retry }}
+                />
+              )}
+              {thumbnails !== null && (
                 <>
-                  {thumbnailPrice.error !== null && (
-                    <ErrorMessage
-                      live
-                      title={errorText(thumbnailPrice.error)}
-                      action={{ label: es.app.retry, onClick: thumbnailPrice.retry }}
-                    />
+                  {chosen.length >= PUBLISH_LIMITS.chosen && (
+                    <p role="status">{format(text.chosenFull, { n: PUBLISH_LIMITS.chosen })}</p>
                   )}
-                  {thumbnails !== null && (
-                    <>
-                      {chosen.length >= PUBLISH_LIMITS.chosen && (
-                        <p role="status">{format(text.chosenFull, { n: PUBLISH_LIMITS.chosen })}</p>
-                      )}
-                      <ul className={styles.options}>
-                        {thumbnails.content.concepts.map((concept, index) => {
-                          const n = index + 1
-                          const isEditing = editingConcept?.id === concept.id
-                          return (
-                            <Card as="li" key={concept.id} className={styles.option}>
-                              <h4>{format(text.concept, { n })}</h4>
-                              {isEditing ? (
-                                <>
-                                  {CONCEPT_FIELDS.map((field) => (
-                                    <TextField
-                                      key={field}
-                                      label={conceptLabel[field]}
-                                      value={editingConcept[field]}
-                                      maxLength={conceptMax[field]}
-                                      onChange={(event) =>
-                                        setEditingConcept({ ...editingConcept, [field]: event.target.value })
-                                      }
-                                    />
-                                  ))}
-                                  <div className={styles.actions}>
-                                    <Button
-                                      variant="secondary"
-                                      loading={saving}
-                                      disabled={editingConcept.scene.trim() === ''}
-                                      onClick={() => void saveConcept()}
-                                    >
-                                      {text.save}
-                                    </Button>
-                                    <Button variant="ghost" onClick={() => setEditingConcept(null)}>
-                                      {text.cancel}
-                                    </Button>
+                  <ul className={styles.options}>
+                    {thumbnails.content.concepts.map((concept, index) => {
+                      const n = index + 1
+                      const isEditing = editingConcept?.id === concept.id
+                      return (
+                        <Card as="li" key={concept.id} className={styles.option}>
+                          <h4>{format(text.concept, { n })}</h4>
+                          {isEditing ? (
+                            <>
+                              {CONCEPT_FIELDS.map((field) => (
+                                <TextField
+                                  key={field}
+                                  label={conceptLabel[field]}
+                                  value={editingConcept[field]}
+                                  maxLength={conceptMax[field]}
+                                  onChange={(event) =>
+                                    setEditingConcept({ ...editingConcept, [field]: event.target.value })
+                                  }
+                                />
+                              ))}
+                              <div className={styles.actions}>
+                                <Button
+                                  variant="secondary"
+                                  loading={saving}
+                                  disabled={editingConcept.scene.trim() === ''}
+                                  onClick={() => void saveConcept()}
+                                >
+                                  {text.save}
+                                </Button>
+                                <Button variant="ghost" onClick={() => setEditingConcept(null)}>
+                                  {text.cancel}
+                                </Button>
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <dl>
+                                {CONCEPT_FIELDS.map((field) => (
+                                  <div key={field}>
+                                    <dt>{conceptLabel[field]}</dt>
+                                    <dd>
+                                      {concept[field] || (field === 'bigText' ? text.bigTextNone : text.fieldEmpty)}
+                                    </dd>
                                   </div>
-                                </>
-                              ) : (
-                                <>
-                                  <dl>
-                                    {CONCEPT_FIELDS.map((field) => (
-                                      <div key={field}>
-                                        <dt>{conceptLabel[field]}</dt>
-                                        <dd>
-                                          {concept[field] || (field === 'bigText' ? text.bigTextNone : text.fieldEmpty)}
-                                        </dd>
-                                      </div>
-                                    ))}
-                                  </dl>
-                                  {concept.titleId && (
-                                    <p>{format(text.forTitle, { titulo: titleText(concept.titleId) })}</p>
-                                  )}
-                                  {concept.origin === 'ia' ? <DataSource kind="ia" /> : <p>{text.yours}</p>}
-                                  <Checkbox
-                                    label={text.choose}
-                                    aria-label={format(text.chooseNamed, { n })}
-                                    checked={chosen.includes(concept.id)}
-                                    disabled={
-                                      !idle || (!chosen.includes(concept.id) && chosen.length >= PUBLISH_LIMITS.chosen)
-                                    }
-                                    onCheckedChange={(checked) => toggleConcept(concept.id, checked)}
-                                  />
-                                  <div className={styles.actions}>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      disabled={busy}
-                                      aria-label={format(text.editConcept, { n })}
-                                      onClick={() => setEditingConcept(concept)}
-                                    >
-                                      {text.edit}
-                                    </Button>
-                                  </div>
-                                </>
-                              )}
-                            </Card>
-                          )
-                        })}
-                      </ul>
-                      <TextArea
-                        label={text.instructions}
-                        description={text.instructionsHint}
-                        value={thumbnailInstructions}
-                        maxLength={PUBLISH_LIMITS.instructions}
-                        onChange={(event) => setThumbnailInstructions(event.target.value)}
-                      />
-                    </>
-                  )}
-                  {conceptRoom ? (
-                    <AiAction
-                      label={thumbnails === null ? text.askThumbnails : text.askThumbnailsAgain}
-                      estimate={thumbnailPrice.estimate}
-                      failure={ai.failureFor('miniaturas')}
-                      busy={ai.working === 'miniaturas'}
-                      primary={thumbnails === null}
-                      disabled={busy || pending || !scriptApproved}
-                      onRun={() =>
-                        void ask('miniaturas', thumbnailPrice, thumbnails === null ? undefined : thumbnailInstructions)
-                      }
-                    />
-                  ) : (
-                    <p className={styles.notice}>{text.full}</p>
-                  )}
+                                ))}
+                              </dl>
+                              {/* Going back to an older version may bring an idea for a title that is gone (decision 96). */}
+                              {concept.titleId &&
+                                (titleText(concept.titleId) === '' ? (
+                                  <p>{text.forTitleGone}</p>
+                                ) : (
+                                  <p>{format(text.forTitle, { titulo: titleText(concept.titleId) })}</p>
+                                ))}
+                              {concept.origin === 'ia' ? <DataSource kind="ia" /> : <p>{text.yours}</p>}
+                              <Checkbox
+                                label={text.choose}
+                                aria-label={format(text.chooseNamed, { n })}
+                                checked={chosen.includes(concept.id)}
+                                disabled={
+                                  !idle || (!chosen.includes(concept.id) && chosen.length >= PUBLISH_LIMITS.chosen)
+                                }
+                                onCheckedChange={(checked) => toggleConcept(concept.id, checked)}
+                              />
+                              <div className={styles.actions}>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  disabled={busy}
+                                  aria-label={format(text.editConcept, { n })}
+                                  onClick={() => setEditingConcept(concept)}
+                                >
+                                  {text.edit}
+                                </Button>
+                              </div>
+                            </>
+                          )}
+                        </Card>
+                      )
+                    })}
+                  </ul>
+                  <TextArea
+                    label={text.instructions}
+                    description={text.instructionsHint}
+                    value={thumbnailInstructions}
+                    maxLength={PUBLISH_LIMITS.instructions}
+                    onChange={(event) => setThumbnailInstructions(event.target.value)}
+                  />
                 </>
+              )}
+              {conceptRoom ? (
+                <AiAction
+                  label={thumbnails === null ? text.askThumbnails : text.askThumbnailsAgain}
+                  estimate={thumbnailPrice.estimate}
+                  failure={ai.failureFor('miniaturas')}
+                  busy={ai.working === 'miniaturas'}
+                  primary={thumbnails === null}
+                  disabled={busy || pending || !scriptApproved}
+                  onRun={() =>
+                    void ask('miniaturas', thumbnailPrice, thumbnails === null ? undefined : thumbnailInstructions)
+                  }
+                />
+              ) : (
+                <p className={styles.notice}>{text.full}</p>
               )}
             </>
           )}
+          {/* Without a main title the ideas are not shown, but their versions can still be seen (US5). */}
+          <History {...historyProps} kind="miniaturas" busy={busy || pending || editingConcept !== null} />
+        </>
+      )}
 
       {approved ? (
         <>

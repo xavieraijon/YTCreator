@@ -1,4 +1,5 @@
 import {
+  comparePieces,
   assembleDescription,
   channelProfileSchema,
   chapterTimes,
@@ -543,6 +544,32 @@ export function createPackageService(deps: PackageServiceDeps) {
     }
   }
 
+  // What the AI wrote, as the steps mark it: what it proposed and what was asked for again (principle II).
+  const AI_ORIGINS: readonly string[] = ['ia', 'parte_ia']
+
+  // The history of a piece (US5): without the content, so an old row that no longer reads does not hide the others.
+  const listVersions = (id: string, kind: PackageKind) => versions.summaries(find(id).pkg.id, kind)
+
+  const readVersion = (id: string, kind: PackageKind, number: number) => {
+    const { pkg } = find(id)
+    const older = versions.get(pkg.id, kind, number)
+    const latest = versions.latest(pkg.id, kind)
+    if (!older || !latest) throw new ApiError({ code: 'no_encontrado' })
+    return {
+      version: {
+        version: older.version,
+        origin: older.origin,
+        createdAt: older.createdAt,
+        restoredFrom: older.restoredFrom,
+      },
+      content: older.content,
+      comparison: comparePieces(kind, older.content, latest.content, {
+        older: AI_ORIGINS.includes(older.origin),
+        current: AI_ORIGINS.includes(latest.origin),
+      }),
+    }
+  }
+
   /** The status of the package of a script, for the views of 004 and 005. */
   const scriptPackage = (scriptId: string) => {
     const pkg = packages.getByScript(scriptId)
@@ -557,6 +584,8 @@ export function createPackageService(deps: PackageServiceDeps) {
     summaries,
     openForScript,
     scriptPackage,
+    listVersions,
+    readVersion,
     statusOf,
     settingsOf,
     saveSettings,

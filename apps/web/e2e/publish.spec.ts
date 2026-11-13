@@ -548,3 +548,88 @@ test('the package of a Short: no chapters nor thumbnails, a suggested cover and 
   expect(readFileSync((await download.path())!, 'utf8')).toContain('Cuando parto el pan y se oye crujir.')
   await audit(page)
 })
+
+test('the history of a piece: compare an older version and go back to it, losing none (US5)', async ({
+  page,
+  context,
+}) => {
+  test.setTimeout(300_000)
+  await blockExternal(context)
+  if (!(await api(server, 'GET', '/api/channels/current'))['channel']) await connect(page)
+  const channelId = ((await api(server, 'GET', '/api/channels/current'))['channel'] as { id: string }).id
+  const { id } = await packageToReview(channelId)
+
+  // A description with four versions: the AI's and three edits of the body; then the texts approved again.
+  const pieces = async () =>
+    (await api(server, 'GET', `/api/packages/${id}`))['pieces'] as Record<
+      string,
+      { version: number; content: Record<string, unknown> }
+    >
+  for (const body of ['La segunda versión del cuerpo.', 'La tercera versión.', 'La cuarta versión.']) {
+    const description = (await pieces())['descripcion']!
+    await api(server, 'PUT', `/api/packages/${id}/pieces/descripcion`, {
+      baseVersion: description.version,
+      content: { ...description.content, body },
+    })
+  }
+  const latest = await pieces()
+  await api(server, 'POST', `/api/packages/${id}/approve`, {
+    step: 'textos',
+    versions: Object.fromEntries(
+      ['descripcion', 'capitulos', 'etiquetas', 'comentario'].map((kind) => [kind, latest[kind]!.version]),
+    ),
+  })
+
+  // The whole package approved, as the creator would before going back.
+  await page.goto(`${server.baseURL}/canal/publicaciones/${id}`)
+  await expect(page.getByRole('heading', { name: 'Revisar y copiar', level: 2 })).toBeVisible()
+  await page.getByRole('button', { name: 'Aprobar la publicación' }).click()
+  const approveDialog = page.getByRole('dialog')
+  const done = page.getByText(/^Publicación aprobada/)
+  await expect(approveDialog.or(done)).toBeVisible()
+  if (await approveDialog.isVisible()) await approveDialog.getByRole('button', { name: 'Aprobar igual' }).click()
+  await expect(done).toBeVisible()
+  await page.getByRole('button', { name: 'Descripción', exact: true }).click()
+  await page.getByRole('dialog').getByRole('button', { name: 'Seguir' }).click()
+  await expect(page.getByRole('heading', { name: 'Descripción', level: 2 })).toBeVisible()
+
+  // Every version, from the newest, with where it came from.
+  const history = page.getByText('Historial de la descripción')
+  await history.focus()
+  await page.keyboard.press('Enter')
+  const versions = page.locator('li', { hasText: /^Versión \d/ })
+  await expect(versions).toHaveCount(4)
+  await expect(versions.first()).toContainText('Versión 4 · Tu edición')
+  await expect(versions.first()).toContainText('La actual')
+  await expect(versions.last()).toContainText('Versión 1 · La IA')
+  await audit(page)
+
+  // The second one, compared with the current: only the body changed.
+  await page.getByRole('button', { name: 'Comparar con la actual la versión 2 de la descripción' }).click()
+  const comparison = page.getByRole('group', { name: 'Comparación de la versión 2 con la actual' })
+  await expect(comparison).toBeFocused()
+  await expect(comparison.getByRole('heading', { name: 'Cambiado El resto de la descripción' })).toBeVisible()
+  await expect(comparison.getByText('La segunda versión del cuerpo.')).toBeVisible()
+  await expect(comparison.getByText('La cuarta versión.')).toBeVisible()
+  await audit(page)
+
+  // The app already asked on entering the step (FR-015, decision 68): going back is one more version, with the keyboard.
+  await comparison.getByRole('button', { name: 'Volver a esta versión' }).focus()
+  await page.keyboard.press('Enter')
+  await expect(page.getByText('Has vuelto a la versión 2.', { exact: false })).toBeFocused()
+  await expect(page.getByLabel('El resto de la descripción')).toHaveValue('La segunda versión del cuerpo.')
+
+  // None is lost: the fourth is still there, and the new one says where it came from (SC-008).
+  await expect(versions).toHaveCount(5)
+  await expect(versions.first()).toContainText('Versión 5 · Recuperada')
+  await expect(versions.first()).toContainText('copia de la versión 2')
+  await expect(page.locator('li', { hasText: /^Versión 4 · Tu edición/ })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Aprobar descripción' })).toBeEnabled()
+  await audit(page)
+
+  // Reloading reads it all again from the app's database.
+  await page.reload()
+  await expect(page.getByRole('heading', { name: 'Descripción', level: 2 })).toBeVisible()
+  await page.getByText('Historial de la descripción').click()
+  await expect(versions).toHaveCount(5)
+})

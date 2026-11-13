@@ -123,3 +123,30 @@ export async function approvedShort(t: TestApp, { fromLong = true }: { fromLong?
   expect(approved.status).toBe(200)
   return { scriptId, longScriptId, draft }
 }
+
+interface ReviewedView {
+  id: string
+  format: 'largo' | 'short'
+  warnings: readonly string[]
+  pieces: Record<string, { content: unknown } | null>
+  script: { blocks: readonly { seconds: number }[] }
+  texts: { chapters: unknown; assembled: string | null }
+}
+
+/** How many notices the creator sees before approving the package: the count the server checks (FR-013). */
+export async function warningsOf(t: TestApp, body: object) {
+  const view = body as ReviewedView
+  const { reviewPackage, warningNotices, formatKinds } = await import('@ytcreator/core')
+  const rules = (await call(t, 'GET', `/api/packages/${view.id}/review`)).body['rules']
+  const notices = reviewPackage(
+    {
+      format: view.format,
+      pieces: Object.fromEntries(formatKinds(view.format).map((kind) => [kind, view.pieces[kind]?.content ?? null])),
+      chapters: view.texts.chapters,
+      scriptSeconds: view.script.blocks.reduce((sum, block) => sum + block.seconds, 0),
+      assembled: view.texts.assembled,
+    } as Parameters<typeof reviewPackage>[0],
+    rules as Parameters<typeof reviewPackage>[1],
+  )
+  return warningNotices(notices).length + view.warnings.length
+}

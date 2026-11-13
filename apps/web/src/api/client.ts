@@ -16,6 +16,8 @@ import {
   measureEstimateSchema,
   newIdeaResultSchema,
   packageSummarySchema,
+  packageVersionDetailSchema,
+  packageVersionSummarySchema,
   packageViewSchema,
   publishSettingsViewSchema,
   type PublishSettingsBody,
@@ -29,6 +31,7 @@ import {
   type RestoreBody,
   type PackageApproveBody,
   packageReviewRulesSchema,
+  type PackageRestoreBody,
   type PackageStudioBody,
   type PackageEstimateBody,
   type PackageGenerateBody,
@@ -334,6 +337,13 @@ export const packagesApi = {
     apiClient.file(`${packagePath(id)}/export?format=${format}`),
   downloadAll: (channelId: string, format: 'md' | 'json') =>
     apiClient.file(`${channelPath(channelId)}/packages/export?format=${format}`),
+  // The history of each piece (US5).
+  versions: (id: string, kind: PackageKind, options?: RequestOptions) =>
+    apiClient.get(`${packagePath(id)}/versions?kind=${kind}`, packageVersionSummarySchema.array(), options),
+  version: (id: string, kind: PackageKind, version: number) =>
+    apiClient.get(`${packagePath(id)}/versions/${kind}/${version}`, packageVersionDetailSchema),
+  restore: (id: string, kind: PackageKind, version: number, body: PackageRestoreBody) =>
+    apiClient.post(`${packagePath(id)}/versions/${kind}/${version}/restore`, body, packageViewSchema),
   // The fixed part of every description and the category of the channel (US2).
   settings: (channelId: string, options?: RequestOptions) =>
     apiClient.get(`${channelPath(channelId)}/publish-settings`, publishSettingsViewSchema, options),

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { makeTestApp } from '../helpers.ts'
 import { call } from './flows.ts'
-import { approvedScript, approvedShort, openPackage, type TestApp } from './publish-flows.ts'
+import { approvedScript, approvedShort, openPackage, type TestApp, warningsOf } from './publish-flows.ts'
 
 // The package of a Short: one request for all of it, no chapters and no thumbnails (US4, research.md R9).
 interface Piece<C = Record<string, unknown>> {
@@ -74,24 +74,6 @@ async function withCover() {
   })
   expect(approved.status).toBe(200)
   return { ...made, view: approved.body as View }
-}
-
-async function warningsOf(t: TestApp, view: View) {
-  const { reviewPackage, warningNotices, formatKinds } = await import('@ytcreator/core')
-  const rules = (await call(t, 'GET', `/api/packages/${view['id'] as string}/review`)).body['rules']
-  const notices = reviewPackage(
-    {
-      format: 'short',
-      pieces: Object.fromEntries(
-        formatKinds('short').map((kind) => [kind, view.pieces[kind as Kind]?.content ?? null]),
-      ),
-      chapters: view.texts.chapters,
-      scriptSeconds: view.script.blocks.reduce((sum, block) => sum + block.seconds, 0),
-      assembled: view.texts.assembled,
-    },
-    rules as Parameters<typeof reviewPackage>[1],
-  )
-  return warningNotices(notices).length + view.warnings.length
 }
 
 describe('asking for the package of a Short (US4)', () => {

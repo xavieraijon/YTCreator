@@ -486,3 +486,86 @@ frase), V (el límite de hashtags con su fuente), VI (teclado y axe), XI (este i
 
 `git revert` del commit de esta historia. No hay migraciones nuevas; los prompts nuevos quedan en el lock y se van con
 el revert. Queda pendiente: US5 y Polish; T068 (IA real) necesita la autorización del creador.
+
+## US5 volver a cualquier versión (T062–T066), Puerta A del 2026-11-13
+
+### 1. Resumen
+
+Cada pieza del paquete tiene su historial plegado debajo: todas las versiones, de la más nueva a la más antigua, con
+fecha y origen; comparar una con la actual, elemento a elemento; y «Volver a esta versión», que la copia como la más
+nueva sin perder ninguna. Si la publicación o el paso estaban aprobados, vuelven a borrador. Dos vueltas de revisión.
+
+### 2. Requisitos
+
+| Requisito | Estado | Evidencia | Fecha |
+|---|---|---|---|
+| T062–T063 comparar versiones | Cumplido | `packages/core/test/publish/compare.test.ts` (10 casos: títulos nuevos, quitados y cambiados, principal elegido, ideas de miniatura y elegidas, partes de la descripción, capítulos con orden y minuto, etiquetas añadidas y quitadas, portada y comentario, origen de la IA) | 2026-11-13 |
+| T064 rutas | Cumplido | `apps/server/test/http/packages-versions.test.ts` (8 casos: lista de la más nueva con fecha y origen, errores de petición, abrir con diferencias, volver crea `recuperada` y el historial tiene una más (SC-008), ninguna si es la actual, 409 de otra pestaña, volver sobre la publicación aprobada la devuelve a borrador) | 2026-11-13 |
+| T065 rutas y pantalla | Cumplido | `GET /packages/:id/versions`, `GET …/versions/:kind/:version`, `POST …/restore`; `History.tsx` debajo de cada pieza en `CoverStep.tsx` y `DescriptionStep.tsx`; textos en `publish.es.ts` | 2026-11-13 |
+| T066 e2e con axe | Cumplido | `apps/web/e2e/publish.spec.ts` (US5): cuatro versiones, comparar la segunda con el teclado, volver con el teclado sobre una publicación aprobada, la cuarta sigue, «Recuperada · copia de la versión 2», recargar; axe en claro y oscuro a 375 y 1280 px | 2026-11-13 |
+| Escenario 3 / FR-015 | Cumplido | La app avisa al entrar en el paso de una publicación aprobada (decisión 68) y el paso lo recuerda arriba (decisión 97); el test de rutas comprueba `textos_borrador` | 2026-11-13 |
+
+### 3. Cómo se comprobó
+
+Tras la segunda vuelta: `fnm exec --using=24 -- pnpm lint` (código 0), `typecheck` (código 0) y `test` (código 0:
+195 ficheros, 2572 pasados y 4 omitidos). `test:e2e`: ver el punto 4. El flujo real de la historia con la IA falsa es el
+del e2e de US5.
+
+### 4. Controles
+
+- Pasados: lint, typecheck, test, glosario (dentro de `test`, con `publishEs.history`), `secrets-leak`, axe en claro y
+  oscuro a 375 y 1280 px con la lista y con la comparación abiertas (un texto largo desbordaba a 375 px: corregido con
+  `overflow-wrap`), teclado (abrir el historial, comparar, volver, foco en la comparación y en el aviso) y «Cómo se
+  demuestra».
+- `test:e2e` tras la segunda vuelta: código 0, 97 pasados y 2 omitidos (catálogo) y 54 de 54 (web). Dos ejecuciones
+  anteriores fallaron en el catálogo (tiempo agotado en `a11y.spec.ts` con las pruebas unitarias a la vez, y el
+  `theme.spec.ts` de webkit, intermitente conocido), que no toca este cambio; las limpias pasaron enteras.
+- Tipos de fallo de IA: no aplican; el historial no llama a la IA.
+- No ejecutados: `test:installer`, porque no se toca el instalador; `prefers-reduced-motion` aparte, porque no añade
+  animaciones propias; IA real (T068, necesita al creador).
+
+### 5. Hallazgos
+
+Corregidos (primera vuelta, cuatro revisores):
+- Una idea de miniatura recuperada podía quedar para un título que ya no está y mostrar «Para el título: «»»: lo dice
+  en su tarjeta (decisión 96).
+- Diálogo nuevo al volver, doble con el de entrar en el paso (decisión 68): quitado (decisión 97).
+- La comparación no marcaba lo de la IA, como la 005 (decisión 99, en la segunda vuelta por elemento).
+- El test del paquete aprobado no demostraba nada (recuperaba tras una edición): ahora recupera sobre la publicación
+  aprobada.
+- El historial de las miniaturas desaparecía sin título principal.
+- Comparación desfasada si la pieza cambiaba mientras llegaba; bloques sin título y capítulos sin nombre sin texto; el
+  error de `kind` no válido nombraba `version`; decisiones de US5 sin registrar (94 a 98).
+
+Corregidos (segunda vuelta, lógica y fidelidad):
+- La idea con un título que ya no está no se podía editar (400): el título solo se comprueba si cambia (decisión 96).
+- «Opinión de la IA» en todo, también en lo del creador: va por elemento (decisión 99).
+
+Descartados:
+- Volver a una versión igual a la actual con otro número crea una versión: es lo que dice el contrato y hace la 005
+  (decisión 97).
+- Una fila antigua que ya no se lee da un error interno al abrirla: igual que en la 005; la lista sí se protege.
+
+Abiertos (menores):
+- Las etiquetas que solo cambian de mayúsculas salen como iguales (decisión 94).
+- Las ideas de miniatura se llaman todas «Idea de miniatura» en la comparación (decisión 98): para la pasada con Design.
+- Mientras se vuelve a una versión, guardar otra pieza del paso puede dar un 409 que la pantalla ya explica; no se
+  pierde nada.
+
+### 6. Desviaciones
+
+De más: la marca de la IA por elemento y el aviso de la idea para un título que ya no está. De menos: ninguna.
+
+### 7. Decisiones
+
+Agente: 94 a 99, todas Medio (efecto visible o texto de interfaz). Pendientes del creador: ninguna.
+
+### 8. Constitución
+
+II (ninguna versión se pierde; lo de la IA se marca como su opinión; avisar antes de dejar algo sin aprobar), III (el
+historial no gasta), VI (teclado, foco y axe), XI (este informe).
+
+### 9. Cómo revertir
+
+`git revert` del commit de esta historia. No hay migraciones nuevas: `restored_from` y `recuperada` ya existían.
+Queda pendiente: Polish (T068–T074); T068 (IA real) necesita la autorización del creador.
