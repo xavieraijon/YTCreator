@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import { expect, type Page, test } from '@playwright/test'
 import { auditor } from './audit.ts'
 import { api, profileByApi } from './channel-api.ts'
@@ -153,8 +154,9 @@ test('title and thumbnail from an approved script, with the keyboard, coming bac
   await audit(back)
 })
 
-// A package with its cover approved, through the API: US1 is tested above.
-async function approvedCover(scriptId: string) {
+// A package with its cover approved, through the API: US1 is tested above. With `mainText`, the creator rewrote the
+// main title.
+async function approvedCover(scriptId: string, mainText?: string) {
   const id = (await api(server, 'POST', `/api/scripts/${scriptId}/package`))['id'] as string
   const ask = async (use: string) => {
     const estimate = await api(server, 'POST', `/api/packages/${id}/estimate`, { use })
@@ -168,10 +170,15 @@ async function approvedCover(scriptId: string) {
     >
   }
   const titles = (await ask('titulos'))['titulos']!
-  const main = (titles.content['candidates'] as { id: string }[])[0]!.id
+  const candidates = titles.content['candidates'] as { id: string; text: string }[]
+  const main = candidates[0]!.id
   await api(server, 'PUT', `/api/packages/${id}/pieces/titulos`, {
     baseVersion: titles.version,
-    content: { ...titles.content, main },
+    content: {
+      ...titles.content,
+      candidates: mainText ? [{ ...candidates[0]!, text: mainText }, ...candidates.slice(1)] : candidates,
+      main,
+    },
   })
   const thumbnails = (await ask('miniaturas'))['miniaturas']!
   const chosen = (thumbnails.content['concepts'] as { id: string }[])[0]!.id
@@ -268,4 +275,172 @@ test('the description, its chapters, tags and comment, and the publishing settin
   await audit(page)
   await page.goto(`${server.baseURL}/canal/publicaciones`)
   await expect(page.getByText('Descripción aprobada')).toBeVisible()
+})
+
+// A package with both steps approved, a main title of 110 characters and a last chapter of 5 seconds: what the
+// independent test of US3 starts from (spec.md).
+async function packageToReview(channelId: string) {
+  const longTitle = `Pan de centeno en casa: ${'paso a paso '.repeat(8)}`.slice(0, 110)
+  const id = await approvedCover(await approvedScript(channelId, 'Pan de centeno'), longTitle)
+  const estimate = await api(server, 'POST', `/api/packages/${id}/estimate`, { use: 'descripcion' })
+  await api(server, 'POST', `/api/packages/${id}/generate`, { use: 'descripcion', estimateId: estimate['estimateId'] })
+  await expect
+    .poll(async () => ((await api(server, 'GET', `/api/packages/${id}`))['job'] as { status: string }).status)
+    .toBe('hecho')
+  const view = (await api(server, 'GET', `/api/packages/${id}`)) as {
+    script: { blocks: { seconds: number }[] }
+    pieces: Record<string, { version: number; content: Record<string, unknown> }>
+    texts: { chapters: { startSeconds: number }[] }
+  }
+  const total = view.script.blocks.reduce((sum, block) => sum + block.seconds, 0)
+  const chapters = view.pieces['capitulos']!.content['chapters'] as { startSeconds: number | null; manual: boolean }[]
+  const last = chapters.length - 1
+  // The last one starts 5 seconds before the end: YouTube needs 10 in each chapter.
+  expect(total - 5 - view.texts.chapters[last - 1]!.startSeconds).toBeGreaterThanOrEqual(10)
+  await api(server, 'PUT', `/api/packages/${id}/pieces/capitulos`, {
+    baseVersion: view.pieces['capitulos']!.version,
+    content: {
+      chapters: chapters.map((chapter, index) =>
+        index === last ? { ...chapter, startSeconds: total - 5, manual: true } : chapter,
+      ),
+    },
+  })
+  const texts = ['descripcion', 'capitulos', 'etiquetas', 'comentario']
+  const latest = (await api(server, 'GET', `/api/packages/${id}`))['pieces'] as Record<string, { version: number }>
+  await api(server, 'POST', `/api/packages/${id}/approve`, {
+    step: 'textos',
+    versions: Object.fromEntries(texts.map((kind) => [kind, latest[kind]!.version])),
+  })
+  return { id, longTitle, lastChapter: last + 1 }
+}
+
+test('reviewing, copying with and without the clipboard, approving with notices and downloading (US3)', async ({
+  page,
+  context,
+}) => {
+  test.setTimeout(300_000)
+  await blockExternal(context)
+  if (!(await api(server, 'GET', '/api/channels/current'))['channel']) await connect(page)
+  const channelId = ((await api(server, 'GET', '/api/channels/current'))['channel'] as { id: string }).id
+  const { id, longTitle, lastChapter } = await packageToReview(channelId)
+  await context.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: server.baseURL })
+
+  // With both steps approved it opens on «Revisar y copiar», with the two notices and nothing spent.
+  await page.goto(`${server.baseURL}/canal/publicaciones/${id}`)
+  await expect(page.getByRole('heading', { name: 'Revisar y copiar', level: 2 })).toBeVisible()
+  await expect(page.getByText(`El título «${longTitle}» tiene 110 caracteres`, { exact: false })).toBeVisible()
+  const shortChapter = page.getByText(/dura unos 5 segundos según el guion/)
+  await expect(shortChapter).toBeVisible()
+  await audit(page)
+
+  // Each notice leads to its piece: the title to its step, the chapter to the description, where it is fixed.
+  await page.getByRole('button', { name: 'Corregirlo en «Título y miniatura»' }).first().click()
+  await expect(page.getByRole('heading', { name: 'Título y miniatura', level: 2 })).toBeVisible()
+  await page.getByRole('button', { name: 'Revisar y copiar', exact: true }).click()
+  await page
+    .getByRole('listitem')
+    .filter({ hasText: 'dura unos 5 segundos' })
+    .getByRole('button', { name: 'Corregirlo en «Descripción»' })
+    .click()
+  await expect(page.getByRole('heading', { name: 'Descripción', level: 2 })).toBeVisible()
+  await page.getByLabel(`Minuto del capítulo ${lastChapter}`).fill('')
+  await page.getByRole('button', { name: 'Guardar los capítulos' }).click()
+  await expect(page.getByRole('button', { name: 'Aprobar descripción' })).toBeEnabled()
+  await page.getByRole('button', { name: 'Aprobar descripción' }).click()
+  await page.getByRole('button', { name: 'Seguir con revisar y copiar' }).click()
+  await expect(page.getByRole('heading', { name: 'Revisar y copiar', level: 2 })).toBeVisible()
+  await expect(shortChapter).toHaveCount(0)
+
+  // Copied with the keyboard; the app says so, and what is pasted is the title.
+  const copyTitle = page.getByRole('button', { name: 'Copiar Título' })
+  await copyTitle.focus()
+  await page.keyboard.press('Enter')
+  await expect(page.getByText('Título: copiado. Pégalo en YouTube Studio.')).toBeVisible()
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(longTitle)
+  await page.getByRole('button', { name: 'Copiar Descripción' }).click()
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toMatch(/^0:00 /m)
+  // The thumbnail is copied as its indications, for whoever makes the image.
+  await page.getByRole('button', { name: 'Copiar Miniatura' }).click()
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toMatch(/^Idea \d+: /)
+
+  // Without the clipboard (no permission, or a server without HTTPS) the text is there, selected, to copy by hand.
+  await page.evaluate(() => {
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: { writeText: () => Promise.reject(new DOMException('Sin permiso', 'NotAllowedError')) },
+    })
+  })
+  await page.getByRole('button', { name: 'Copiar Etiquetas' }).click()
+  const manual = page.getByLabel('Etiquetas, para copiar')
+  await expect(manual).toBeFocused()
+  await expect(manual).toHaveAttribute('readonly', '')
+  await expect(page.getByText('pulsa Ctrl+C (⌘C en Mac) para copiarlo', { exact: false })).toBeVisible()
+  const selected = await manual.evaluate((field: HTMLTextAreaElement) => field.selectionEnd - field.selectionStart)
+  expect(selected).toBe(((await manual.inputValue()) as string).length)
+  await audit(page)
+
+  // The guided list: a mark is kept, and it makes no version.
+  const language = page.getByRole('checkbox', { name: /^Idioma:/ })
+  await language.focus()
+  await page.keyboard.press('Space')
+  await expect(language).toBeChecked()
+
+  // A notice is left (the long title): the app says how many before approving, and lets the creator decide.
+  await page.getByRole('button', { name: 'Aprobar la publicación' }).click()
+  const dialog = page.getByRole('dialog')
+  await expect(dialog.getByRole('heading', { name: /avisos? sin resolver/ })).toBeVisible()
+  await audit(page)
+  await dialog.getByRole('button', { name: 'Aprobar igual' }).click()
+  await expect(page.getByText(/^Publicación aprobada con \d+ avisos? sin resolver/)).toBeVisible()
+  await audit(page)
+
+  // On coming back it is still approved, with the mark; any other step warns before a change.
+  await page.reload()
+  await expect(page.getByText(/^Publicación aprobada con \d+ avisos? sin resolver/)).toBeVisible()
+  await expect(page.getByRole('checkbox', { name: /^Idioma:/ })).toBeChecked()
+  // Going to change it asks first; staying changes nothing.
+  await page.getByRole('button', { name: 'Descripción', exact: true }).click()
+  const leave = page.getByRole('dialog')
+  await expect(leave.getByRole('heading', { name: 'Si cambias algo, dejará de estar aprobada' })).toBeVisible()
+  await audit(page)
+  await leave.getByRole('button', { name: 'Quedarme en revisar y copiar' }).click()
+  await expect(page.getByRole('heading', { name: 'Revisar y copiar', level: 2 })).toBeVisible()
+  await page.getByRole('button', { name: 'Descripción', exact: true }).click()
+  await page.getByRole('dialog').getByRole('button', { name: 'Seguir' }).click()
+  await expect(page.getByText('La publicación está aprobada: si cambias algo aquí', { exact: false })).toBeVisible()
+  await page.getByRole('button', { name: 'Revisar y copiar', exact: true }).click()
+
+  // The document reads without the app; the thumbnail brief goes apart.
+  const downloaded = page.waitForEvent('download')
+  await page.getByRole('button', { name: 'Descargar el documento' }).click()
+  const document = await downloaded
+  expect(document.suggestedFilename()).toMatch(/^publicacion-pan-de-centeno-en-casa[a-z0-9-]*\.md$/)
+  const text = readFileSync((await document.path())!, 'utf8')
+  for (const section of ['## Título', '## Descripción', '## Miniatura', '## Etiquetas', '## Ajustes de YouTube Studio'])
+    expect(text).toContain(section)
+  expect(text).toContain('- [x] Idioma:')
+  const data = page.waitForEvent('download')
+  await page.getByRole('button', { name: 'Descargar los datos' }).click()
+  const parsed = JSON.parse(readFileSync((await (await data).path())!, 'utf8')) as {
+    packages: { titles: { main: string } }[]
+  }
+  expect(parsed.packages[0]?.titles.main).toBe(longTitle)
+  const brief = page.waitForEvent('download')
+  await page.getByRole('button', { name: 'Descargar las indicaciones para la miniatura' }).click()
+  const briefText = readFileSync((await (await brief).path())!, 'utf8')
+  expect(briefText).toContain('# Indicaciones para la miniatura')
+  expect(briefText).not.toContain('## Etiquetas')
+
+  // In the queue the idea is ready to publish, and stays there until it is marked as done.
+  await page.goto(`${server.baseURL}/canal/ideas`)
+  await expect(
+    page.getByRole('listitem').filter({ hasText: 'Pan de centeno' }).getByText('Lista para publicar'),
+  ).toBeVisible()
+  await audit(page)
+
+  // Every package of the channel at once.
+  await page.goto(`${server.baseURL}/canal/publicaciones`)
+  const all = page.waitForEvent('download')
+  await page.getByRole('button', { name: 'Descargar todas en un documento' }).click()
+  expect((await all).suggestedFilename()).toMatch(/^publicaciones-[a-z0-9-]+\.md$/)
 })

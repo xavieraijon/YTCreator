@@ -610,16 +610,25 @@ export function createPackageWork(deps: PackageWorkDeps) {
   }
 
   // A step is approved in the versions on screen: if another tab changed one, nothing is approved (R2).
-  const approve = (id: string, { step, versions: sent }: PackageApproveBody): PackageView => {
+  const approve = (id: string, body: PackageApproveBody): PackageView => {
+    const { step, versions: sent } = body
     const found = service.find(id)
     const { pkg } = found
     service.assertIdle(pkg)
     if (!scriptApproved(found)) throw new ApiError({ code: 'sin_aprobar' })
+    if (step === 'paquete') return approvePackage(found, body)
     const latest = versions.latestNumbers(pkg.id)
     if (step === 'textos' && !stepApproved(pkg.format, 'portada', latest, pkg.coverApproved))
       throw new ApiError({ code: 'sin_aprobar' })
     const kinds = stepKinds(pkg.format, step)
     if (kinds.some((kind) => sent[kind] !== latest[kind])) throw new ApiError({ code: 'version_cambiada' })
+    assertNotEmpty(pkg, kinds)
+    const approved: KindVersions = Object.fromEntries(kinds.map((kind) => [kind, latest[kind]!]))
+    packages.approveStep(pkg.id, step, approved)
+    return service.read(pkg.id)
+  }
+
+  const assertNotEmpty = (pkg: PublishPackage, kinds: readonly PackageKind[]) => {
     const empty = kinds.filter((kind) => {
       const piece = versions.latest(pkg.id, kind)
       return !piece || emptyPiece(kind, piece.content)
@@ -629,8 +638,27 @@ export function createPackageWork(deps: PackageWorkDeps) {
         code: 'validacion',
         fields: Object.fromEntries(empty.map((kind) => [kind, 'no_valido' as const])),
       })
+  }
+
+  // The whole package, once both steps are approved in their last versions (R2). No notice stops it, but the creator
+  // approves knowing how many are left: the count on screen has to be the one worked out here (FR-013).
+  const approvePackage = (found: Found, { versions: sent, acknowledgedWarnings }: PackageApproveBody) => {
+    const { pkg, script } = found
+    const latest = versions.latestNumbers(pkg.id)
+    const kinds = formatKinds(pkg.format)
+    if (kinds.some((kind) => sent[kind] !== latest[kind])) throw new ApiError({ code: 'version_cambiada' })
+    if (
+      !stepApproved(pkg.format, 'portada', latest, pkg.coverApproved) ||
+      !stepApproved(pkg.format, 'textos', latest, pkg.textsApproved)
+    )
+      throw new ApiError({ code: 'sin_aprobar' })
+    assertNotEmpty(pkg, kinds)
+    const view = service.read(pkg.id)
+    const warnings = service.warningsCount(view)
+    if ((acknowledgedWarnings ?? 0) !== warnings)
+      throw new ApiError({ code: 'validacion', fields: { acknowledgedWarnings: 'no_valido' } })
     const approved: KindVersions = Object.fromEntries(kinds.map((kind) => [kind, latest[kind]!]))
-    packages.approveStep(pkg.id, step, approved)
+    packages.approvePackage(pkg.id, approved, warnings, script.draftApprovedVersion!)
     return service.read(pkg.id)
   }
 

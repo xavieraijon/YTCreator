@@ -22,7 +22,8 @@ miniatura». «Etiquetas» y «capítulos» son los nombres que usa YouTube Stud
   en borrador», «Título y miniatura aprobados», «Descripción en borrador», «Descripción aprobada», «Publicación
   aprobada»; sin empezar, «Por empezar»), último cambio y «Abrir».
 - Sin guiones aprobados: `EmptyState` que explica que primero hay que aprobar un guion, con «Ir a mis guiones».
-- «Descargar todos» y «Ajustes de publicación».
+- «Descargar todas en un documento», «Descargar todas como datos» (solo si alguna tiene algo) y «Ajustes de
+  publicación».
 
 ## Paquete (`/canal/publicaciones/:id`)
 
@@ -59,13 +60,17 @@ cada uno con su acción («Pedir de nuevo · {coste}», «Usar la nueva», «Ir 
 
 - **Por qué importa**: «Copia cada parte en YouTube Studio en este orden. Lo que YouTube no acepta te lo avisamos antes.»
 - Avisos de la revisión, cada uno con su motivo y un enlace a la pieza.
-- Piezas en el orden de YouTube Studio (título, descripción montada, miniatura, etiquetas, comentario fijado), cada una
+- Piezas en el orden de YouTube Studio (título y los de probar, descripción montada, miniatura o portada del Short como
+  indicaciones, etiquetas, comentario fijado), cada una
   con «Copiar» y un `Toast` «Copiado». Si el navegador no deja, el texto queda seleccionado con la frase «Pulsa Ctrl+C
   (⌘C en Mac) para copiarlo».
 - Lista guiada de YouTube Studio: cuatro `Checkbox` con la respuesta para el canal y el porqué.
-- Descargas: «Descargar todo» y «Descargar las indicaciones para la miniatura».
+- Descargas: «Descargar el documento», «Descargar los datos» y «Descargar las indicaciones para la miniatura» («…para
+  la portada» en un Short).
 - **Principal**: «Aprobar la publicación». Con avisos, un `Dialog` dice cuántos quedan y deja aprobar igual. Con el guion
   sin aprobar, el botón está apagado y una frase lo explica.
+- Con la publicación aprobada, ir a «Título y miniatura» o a «Descripción» pregunta antes con un `Dialog` («Si cambias
+  algo, dejará de estar aprobada»), y esos pasos lo recuerdan arriba mientras siga aprobada.
 
 ### Historial
 

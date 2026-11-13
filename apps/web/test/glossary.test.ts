@@ -47,7 +47,7 @@ describe('glossary of the web (FR-032, principle I)', () => {
     expect(findForbiddenTerms({ ...DESCRIPTION_TEXT, fixedText }, webTerms)).toEqual([])
   })
 
-  it.each(['channel', 'ideas', 'script'])(
+  it.each(['channel', 'ideas', 'script', 'publish'])(
     'nor the texts of a download written by the server (packages/core/src/%s/export.ts)',
     (folder) => {
       const source = readFileSync(new URL(`../../../packages/core/src/${folder}/export.ts`, import.meta.url), 'utf8')
@@ -68,6 +68,37 @@ describe('glossary of the web (FR-032, principle I)', () => {
       expect(findForbiddenTerms(texts, webTerms)).toEqual([])
     },
   )
+
+  it('nor the texts of the guided list of YouTube Studio, which the screen shows as they are (006, R12)', () => {
+    const read = (path: string) =>
+      JSON.parse(readFileSync(new URL(`../../../packages/knowledge/${path}`, import.meta.url), 'utf8')) as {
+        data: Record<string, unknown>
+      }
+    const studio = read('publish/studio.json').data as {
+      madeForKids: { why: string }
+      synthetic: { rule: string; question: string; mustDisclose: string[]; noNeed: string[] }
+      language: { why: string; byRegion: Record<string, string> }
+      category: { why: string; list: string[] }
+    }
+    const texts = {
+      kidsWhy: studio.madeForKids.why,
+      rule: studio.synthetic.rule,
+      question: studio.synthetic.question,
+      ...Object.fromEntries(studio.synthetic.mustDisclose.map((line, index) => [`mustDisclose.${index}`, line])),
+      ...Object.fromEntries(studio.synthetic.noNeed.map((line, index) => [`noNeed.${index}`, line])),
+      languageWhy: studio.language.why,
+      ...studio.language.byRegion,
+      categoryWhy: studio.category.why,
+      ...Object.fromEntries(studio.category.list.map((line, index) => [`category.${index}`, line])),
+      ...Object.fromEntries(
+        (read('market/made-for-kids.json').data['implications'] as string[]).map((line, index) => [
+          `kids.${index}`,
+          line,
+        ]),
+      ),
+    }
+    expect(findForbiddenTerms(texts, webTerms)).toEqual([])
+  })
 
   it('no source of the knowledge files uses one either: they are shown under the figures', () => {
     const labels: Record<string, string> = {}

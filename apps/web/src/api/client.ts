@@ -28,6 +28,8 @@ import {
   scriptVersionSummarySchema,
   type RestoreBody,
   type PackageApproveBody,
+  packageReviewRulesSchema,
+  type PackageStudioBody,
   type PackageEstimateBody,
   type PackageGenerateBody,
   type PieceSaveBody,
@@ -323,6 +325,15 @@ export const packagesApi = {
     apiClient.put(`${packagePath(id)}/pieces/${kind}`, body, packageViewSchema),
   approve: (id: string, body: PackageApproveBody) =>
     apiClient.post(`${packagePath(id)}/approve`, body, packageViewSchema),
+  // The review is worked out here, with the figures the server reads from the knowledge packages (R13).
+  review: (id: string, options?: RequestOptions) =>
+    apiClient.get(`${packagePath(id)}/review`, packageReviewRulesSchema, options),
+  // The marks of the guided list of YouTube Studio: they make no version (R12).
+  studio: (id: string, body: PackageStudioBody) => apiClient.put(`${packagePath(id)}/studio`, body, packageViewSchema),
+  download: (id: string, format: 'md' | 'json' | 'brief') =>
+    apiClient.file(`${packagePath(id)}/export?format=${format}`),
+  downloadAll: (channelId: string, format: 'md' | 'json') =>
+    apiClient.file(`${channelPath(channelId)}/packages/export?format=${format}`),
   // The fixed part of every description and the category of the channel (US2).
   settings: (channelId: string, options?: RequestOptions) =>
     apiClient.get(`${channelPath(channelId)}/publish-settings`, publishSettingsViewSchema, options),

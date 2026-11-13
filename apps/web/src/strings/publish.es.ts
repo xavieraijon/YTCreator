@@ -27,6 +27,12 @@ export const publishEs = {
     toScripts: 'Ir a mis guiones',
     backToChannel: 'Volver al canal',
     settings: 'Ajustes de publicación',
+    downloadAllDocument: 'Descargar todas en un documento',
+    downloadAllData: 'Descargar todas como datos',
+  },
+  // In the queue of ideas (004): the package is approved, the video can be uploaded (R17).
+  queue: {
+    ready: 'Lista para publicar',
   },
   screen: {
     progress: 'Progreso de la publicación',
@@ -45,7 +51,6 @@ export const publishEs = {
     back: 'Volver a mis publicaciones',
     navigation: 'Pasos de la publicación',
     toTexts: 'Seguir con la descripción',
-    reviewLater: 'Aquí repasarás todo y lo copiarás en YouTube Studio.',
     loading: 'Cargando la publicación…',
     hook: 'Gancho del guion: «{gancho}»',
     // What changed since, each with where to fix it (contracts/ui-screens.md, R16).
@@ -63,6 +68,9 @@ export const publishEs = {
     toScript: 'Ir al guion',
     toThumbnails: 'Ver las miniaturas',
     toDescription: 'Ver la descripción',
+    // FR-015: said before any change, while the package is approved.
+    approvedEditing:
+      'La publicación está aprobada: si cambias algo aquí, vuelve a borrador y tendrás que aprobarla de nuevo.',
   },
   // What the AI is doing, while it works (`AiWorking`).
   uses: {
@@ -220,5 +228,121 @@ export const publishEs = {
     save: 'Guardar',
     saved: 'Ajustes guardados.',
     back: 'Volver a mis publicaciones',
+  },
+  // «Revisar y copiar» (contracts/ui-screens.md, research.md R12 to R15).
+  review: {
+    noticesTitle: 'Antes de subirlo',
+    nothing: 'Todo en orden: no hemos visto nada que YouTube no acepte.',
+    nothingHere: 'Aquí no hemos visto nada que YouTube no acepte. Arriba tienes otros avisos de esta publicación.',
+    loading: 'Revisando la publicación…',
+    // Each notice says why, in plain words, and leads to its piece (FR-012).
+    notices: {
+      titulo_largo: 'El título «{titulo}» tiene {n} caracteres y YouTube acepta {max} como mucho: no lo aceptará así.',
+      titulo_movil:
+        'El título «{titulo}» tiene {n} caracteres: en el móvil se corta a partir de unos {max} (es un cálculo nuestro, YouTube no lo publica).',
+      descripcion_larga:
+        'La descripción tiene {n} caracteres y YouTube acepta {max} como mucho: sobran {sobra}. Acórtala o acorta la parte fija.',
+      capitulos_sin_cero: 'El primer capítulo no empieza en 0:00: así YouTube no muestra los capítulos.',
+      capitulos_pocos: 'Hay {n} capítulos y YouTube necesita al menos {min} para mostrarlos.',
+      capitulo_corto:
+        'El capítulo «{nombre}» dura unos {n} segundos según el guion (es una estimación) y YouTube necesita al menos {min} en cada uno: así no muestra los capítulos.',
+      etiquetas_largas:
+        'Las etiquetas suman {n} caracteres, contando las comas y las comillas que YouTube pone a las que tienen espacios, y YouTube acepta {max} en total.',
+      hashtags_muchos: 'Hay {n} hashtags: YouTube solo enseña los {max} primeros encima del título.',
+      sin_parte_fija:
+        'La descripción no tiene parte fija: es donde va el enlace para suscribirse o lo que repites en cada vídeo (es un consejo nuestro, no una regla de YouTube).',
+      miniatura_repite_titulo:
+        'La idea de miniatura {n} repite las palabras del título: funciona mejor si añade algo que el título no dice (es un consejo nuestro, no una regla de YouTube).',
+      pieza_vacia: 'Falta {pieza}: sin eso no se puede aprobar.',
+    },
+    // What is missing, inside the sentence of `pieza_vacia`.
+    missing: {
+      titulos: 'el título principal',
+      miniaturas: 'elegir una idea de miniatura',
+      portada_short: 'la portada',
+      descripcion: 'la descripción',
+      capitulos: 'los capítulos',
+      etiquetas: 'las etiquetas',
+      comentario: 'el comentario fijado',
+    },
+    toStep: 'Corregirlo',
+    toStepNamed: 'Corregirlo en «{paso}»',
+    pieces: 'Para copiar en YouTube Studio',
+    piecesWhy: 'En el orden en que te lo pide YouTube Studio al subir el vídeo.',
+    title: 'Título',
+    alternatives: 'Otros títulos para probar',
+    alternativesWhy: 'Se ponen en YouTube Studio, en «Probar y comparar».',
+    alternativeName: 'Otro título {n}',
+    description: 'Descripción',
+    thumbnail: 'Miniatura',
+    thumbnailWhy: 'La imagen la haces tú. Estas son las ideas que elegiste; puedes copiarlas para quien la haga.',
+    conceptLine: 'Idea {n}: {escena}',
+    bigTextLine: 'Texto grande: «{texto}»',
+    emotionLine: 'Emoción: {texto}',
+    compositionLine: 'Dónde va cada cosa: {texto}',
+    colorsLine: 'Colores: {texto}',
+    cover: 'Portada del Short',
+    coverWhy: 'Se elige en la aplicación de YouTube del móvil al subirlo, entre los fotogramas del vídeo.',
+    coverMoment: 'Momento: {momento}',
+    coverText: 'Texto que se ve: «{texto}»',
+    tags: 'Etiquetas',
+    tagsWhy: 'Se pegan en YouTube Studio tal cual, separadas por comas.',
+    comment: 'Comentario fijado',
+    commentWhy: 'Publícalo tú debajo del vídeo y fíjalo para que salga el primero.',
+    commentEmpty: 'No tienes comentario fijado: es opcional.',
+    copy: 'Copiar',
+    copyNamed: 'Copiar {pieza}',
+    copied: 'Copiado',
+    copiedNamed: '{pieza}: copiado. Pégalo en YouTube Studio.',
+    manualLabel: '{pieza}, para copiar',
+    manual: 'No hemos podido copiarlo solo. Ya está seleccionado: pulsa Ctrl+C (⌘C en Mac) para copiarlo.',
+    studio: 'Ajustes de YouTube Studio',
+    studioWhy: 'Al subir el vídeo, YouTube Studio te pide esto. Márcalo cuando lo tengas; es solo una ayuda.',
+    studioKids: 'Público: {respuesta}',
+    studioKidsYes: 'sí, está hecho para niños',
+    studioKidsNo: 'no, no está hecho para niños',
+    studioKidsUnknown: 'no se ha podido leer el perfil del canal; revísalo y elige tú en YouTube Studio',
+    studioKidsMeans: 'Marcarlo así supone:',
+    studioWhyGuess: '{porque} {supuesto}',
+    studioSynthetic: 'Contenido alterado o sintético: {pregunta}',
+    studioSyntheticYes: 'Hay que avisar si tiene:',
+    studioSyntheticNo: 'No hace falta si solo es:',
+    studioLanguage: 'Idioma: {respuesta}',
+    studioLanguageGuess: 'Lo deducimos de dónde está tu público.',
+    studioCategory: 'Categoría: {respuesta}',
+    studioCategoryGuess: 'Es la que te sugerimos: puedes elegir otra en «Ajustes de publicación».',
+    downloads: 'Descargar',
+    downloadsWhy: 'Para tenerlo fuera de la app o pasárselo a otra persona.',
+    downloadDocument: 'Descargar el documento',
+    downloadData: 'Descargar los datos',
+    downloadThumbnail: 'Descargar las indicaciones para la miniatura',
+    downloadCover: 'Descargar las indicaciones para la portada',
+    approve: 'Aprobar la publicación',
+    approved: 'Publicación aprobada. Si cambias algo, vuelve a borrador.',
+    approvedWarnings: {
+      one: 'Publicación aprobada con 1 aviso sin resolver. Si cambias algo, vuelve a borrador.',
+      other: 'Publicación aprobada con {n} avisos sin resolver. Si cambias algo, vuelve a borrador.',
+    },
+    scriptNotApproved: 'El guion ya no está aprobado: apruébalo de nuevo para poder aprobar la publicación.',
+    scriptReopened: 'El guion ha vuelto a borrador: apruébalo de nuevo antes de subir el vídeo.',
+    countChanged:
+      'Los avisos han cambiado mientras lo mirabas. Revísalos y, si sigues de acuerdo, pulsa otra vez «Aprobar la publicación».',
+    downloadFailed: 'No se ha podido descargar.',
+    hasEmpty: 'Falta alguna parte: complétala para poder aprobar.',
+    warningsTitle: {
+      one: 'Queda 1 aviso sin resolver',
+      other: 'Quedan {n} avisos sin resolver',
+    },
+    warningsBody: 'Puedes aprobarla igual: los avisos son consejos y la decisión es tuya.',
+    warningsReview: 'Revisar los avisos',
+    warningsApprove: 'Aprobar igual',
+    nextStep: 'Cuando lo hayas subido, pulsa «Marcar como hecha» en la idea, en «Próximos vídeos».',
+  },
+  // FR-015: before going to change an approved package (US3, scenario 4).
+  unapprove: {
+    title: 'Si cambias algo, dejará de estar aprobada',
+    body: 'La publicación volverá a borrador y tendrás que aprobarla de nuevo. Mirar no cambia nada.',
+    go: 'Seguir',
+    stay: 'Quedarme en revisar y copiar',
   },
 } as const

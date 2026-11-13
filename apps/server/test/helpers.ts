@@ -215,7 +215,11 @@ export function makeTestApp({
       logger,
       now,
     }),
-    scriptOf: (ideaId: string) => scriptService.ideaScript(ideaId),
+    scriptOf: (ideaId: string) => {
+      const script = scriptService.ideaScript(ideaId)
+      // The package is read when the idea is: it is made later, from the approved script (006, R17).
+      return script ? { ...script, packageStatus: packageService.scriptPackage(script.id)?.status ?? null } : null
+    },
     youtube: ideaYouTube,
     dataApiUnits: market.thresholds.data.dataApi,
     measureBasis: {
@@ -266,6 +270,10 @@ export function makeTestApp({
     profiles: channel.profiles,
     scriptStatus: (ideaId: string) => scriptService.ideaScript(ideaId)?.status ?? null,
     knowledge: publishKnowledge,
+    kids: {
+      implications: market.madeForKids.data.implications,
+      source: { label: market.madeForKids.source[0]!.label, date: market.madeForKids.reviewedAt },
+    },
   })
   const packageWork = createPackageWork({
     service: packageService,

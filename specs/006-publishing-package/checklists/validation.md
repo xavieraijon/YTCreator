@@ -310,3 +310,96 @@ axe), XI (este informe).
 ### 9. Cómo revertir
 
 `git revert` del commit de esta historia. No hay migraciones. Queda pendiente: US3 en adelante.
+
+## US3 revisar, copiar, aprobar y descargar (T043–T053), Puerta A del 2026-11-13
+
+### 1. Resumen
+
+Con los textos aprobados, el paso «Revisar y copiar» calcula sin IA los avisos del paquete (límites de YouTube con su
+fuente, capítulos, etiquetas, consejos nuestros marcados como tales), deja copiar cada pieza en el orden de YouTube
+Studio, con la lista guiada de ajustes, y aprueba la publicación entera, con diálogo si quedan avisos. Se descarga en
+Markdown, JSON e indicaciones de miniatura, una o todas. Tres vueltas de revisión; los medios confirmados están corregidos.
+
+### 2. Requisitos
+
+| Requisito | Estado | Evidencia | Fecha |
+|---|---|---|---|
+| T043–T044 `reviewPackage` y cada regla, SC-007 | Cumplido | `packages/core/test/publish/review.test.ts` (16 casos, con 30 capítulos en menos de 1 s y las comillas de las etiquetas) | 2026-11-13 |
+| T045–T046 exportación | Cumplido | `packages/core/test/publish/export.test.ts`: orden de Studio, bloques literales, JSON legible, indicaciones sin datos del canal, todas las publicaciones, las que no se leen, portada en blanco | 2026-11-13 |
+| T047–T048 lista guiada | Cumplido | `packages/core/test/publish/studio.test.ts`; fuentes y perfil ilegible en `packages-approve.test.ts` | 2026-11-13 |
+| T049–T050 rutas | Cumplido | `apps/server/test/http/packages-approve.test.ts` (13 casos: cifras y fuentes, marcas sin versión, 409 de otra pestaña, aprobar con `sin_aprobar`, `version_cambiada` y avisos que no cuadran, editar lo aprobado, descargas, `packageStatus` de la idea); los tests de la 004 y la 005 siguen pasando | 2026-11-13 |
+| T051 textos | Cumplido | `publish.es.ts`; glosario ampliado a `publish` y a los textos de `studio.json` y `made-for-kids.json` | 2026-11-13 |
+| T052 paso y etiqueta de la cola | Cumplido | `ReviewCopyStep.tsx`, `IdeaQueue.tsx`; e2e US3 | 2026-11-13 |
+| T053 e2e con axe | Cumplido | `apps/web/e2e/publish.spec.ts` (US3): avisos y saltos a la pieza, copiar con y sin portapapeles, marcar con Espacio, aprobar con diálogo, recargar, salir de lo aprobado (quedarse y seguir), descargas md/json/indicaciones, «Lista para publicar» y descargar todo; axe en claro y oscuro a 375 y 1280 px | 2026-11-13 |
+| Short | Parcial | La portada del Short se exporta y revisa; su paquete propio llega con US4 | 2026-11-13 |
+
+### 3. Cómo se comprobó
+
+Tras la tercera vuelta: `fnm exec --using=24 -- pnpm lint` (código 0), `typecheck` (código 0) y `test` (código 0:
+192 ficheros, 2524 pasados y 4 omitidos; la caché de vitest se borró en la segunda). `test:e2e`: ver el punto 4. El flujo real de la
+historia con la IA falsa es el del e2e de US3 y el de `packages-approve.test.ts`.
+
+### 4. Controles
+
+- Pasados: lint, typecheck, test, glosario (con `publish`, `studio.json` y `made-for-kids.json`), `secrets-leak` (dentro
+  de `test`), axe en claro y oscuro a 375 y 1280 px en el paso, teclado (copiar, Espacio en las casillas, diálogos),
+  copia sin portapapeles y «Cómo se demuestra» (avisos, aprobar con avisos, descargar y ver «Lista para publicar»).
+- `test:e2e` tras la segunda vuelta: código 0, 97 de 97 (catálogo) y 52 de 52 (web). Una ejecución anterior falló en
+  `rotation.spec.ts` por servidores de una ejecución solapada; la limpia pasó entera. La corrección de la tercera vuelta
+  solo cambia el texto del documento con el perfil ilegible, cubierto por `export.test.ts`.
+- No ejecutados: `test:installer`, porque no se toca el instalador; los tipos de fallo de IA, porque el paso no llama a
+  la IA; `prefers-reduced-motion` aparte, porque no añade animaciones propias; IA real (T068, necesita al creador).
+
+### 5. Hallazgos
+
+Corregidos (primera vuelta, cuatro revisores):
+- Una sola fuente para todas las cifras: cada aviso lleva la fuente de su cifra (`sources`, decisión 59).
+- Doble clic en aprobar y en las marcas: guardas por referencia.
+- «Lista para publicar» con el guion reabierto: solo si el guion sigue aprobado.
+- Plurales del documento, nombre de las indicaciones de un Short, descarga de todas que fallaba entera por un paquete
+  ilegible (decisión 77), mensaje cuando cambian los avisos al aprobar, lista dentro de un párrafo, puntuación montada
+  en JSX, textos de conocimiento fuera del glosario, contrato de pantallas, «todo en orden» con avisos del paquete,
+  copiar las miniaturas y la portada, diálogo al salir de lo aprobado (FR-015, escenario 4), «estimado» en el capítulo
+  corto, cuánto sobra en la descripción, foco de las casillas y reintento de las descargas.
+
+Corregidos (segunda vuelta):
+- Las marcas de dos pestañas se pisaban (antes descartado): `base` y 409 (decisión 75).
+- Las etiquetas no contaban las comillas que YouTube pone a las que tienen espacios (decisión 78), con tests.
+- Lista guiada sin fuente: cada ajuste oficial la enseña.
+- Perfil ilegible respondía «no está hecho para niños»: ahora no responde (decisión 65).
+- Consejos nuestros que parecían reglas de YouTube (decisión 79); portada en blanco (decisión 80); el documento de todas
+  las publicaciones dice cuántas faltan (decisión 77); textos del documento más claros; clave de las alternativas;
+  claves del glosario; contrato HTTP con `sources` y `base`.
+
+Corregidos (tercera vuelta, lógica y fidelidad):
+- El documento descargado respondía «no está hecho para niños» con el perfil ilegible (los dos): dice lo mismo que la
+  pantalla, con test.
+- La decisión 78 cambia qué respuestas de la IA valen y estaba como Bajo (fidelidad): pasa a Medio.
+
+Abiertos (menores):
+- El «+2» de las comillas va en el código y no en `youtube.json`, y no se ha podido comprobar sin red que la fuente lo
+  diga (fidelidad): se revisa con el paquete de conocimiento en Polish.
+- El prompt de la descripción no dice a la IA que las comillas cuentan (lógica): con 20 etiquetas como máximo es
+  improbable pasar de 500; si pasa, se pide una vez más (decisión 57).
+
+### 6. Desviaciones
+
+De más: las fuentes por cifra y por ajuste, el 409 de las marcas, el diálogo al salir de lo aprobado y el aviso de
+publicaciones que faltan. De menos: en el e2e, el aviso del título se deja sin corregir para probar «Aprobar igual»; el
+paquete del Short llega con US4.
+
+### 7. Decisiones
+
+Agente: 59 a 80. Medio: 59 a 78 (efecto visible, texto de interfaz o coste). Bajo: 79 y 80. Pendientes del creador: ninguna.
+
+### 8. Constitución
+
+I (avisos que dicen qué hacer y llevan a la pieza), II (la app no responde por el creador si el vídeo es para niños; no
+se pisa lo marcado en otra pestaña), III (la revisión no llama a la IA), V (cada cifra y ajuste oficial con su fuente;
+los consejos nuestros dicen que lo son), VI (teclado, axe, copia sin portapapeles), VII (descargas legibles sin la app;
+dicen lo que falta), XI (este informe).
+
+### 9. Cómo revertir
+
+`git revert` del commit de esta historia. No hay migraciones nuevas. Queda pendiente: US4, US5 y Polish; T068 (IA real)
+necesita la autorización del creador.

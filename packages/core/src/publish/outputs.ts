@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import type { IdeaFormat } from '../ideas/model.ts'
-import { PUBLISH_LIMITS } from './model.ts'
+import { PUBLISH_LIMITS, tagsLength } from './model.ts'
 
 // What the AI has to answer for each use of the publishing package (specs/006-publishing-package/contracts/ai-uses.md).
 
@@ -126,9 +126,9 @@ export interface YouTubeTextRules {
 /** As many chapters as YouTube needs to show them, unless the script has fewer blocks (decision 39). */
 const enoughChapters = (chapters: readonly unknown[], blockIds: readonly string[], rules?: YouTubeTextRules) =>
   !rules || chapters.length >= Math.min(rules.chapterMinCount, blockIds.length)
-/** All the tags fit in what YouTube takes, counted with the commas that separate them. */
+/** All the tags fit in what YouTube takes, counted as YouTube counts them (`tagsLength`). */
 const tagsFit = (tags: readonly string[], rules?: YouTubeTextRules) =>
-  !rules || tags.join(',').length <= rules.tagsMaxTotalChars
+  !rules || tagsLength(tags) <= rules.tagsMaxTotalChars
 
 export const descriptionOutputFor = (blockIds: readonly string[], rules?: YouTubeTextRules) =>
   descriptionOutput

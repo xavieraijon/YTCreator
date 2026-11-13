@@ -6,6 +6,7 @@ import { navigate } from '../../../router.ts'
 import { errorText } from '../../../shell/errorText.ts'
 import { es } from '../../../strings/es.ts'
 import { ideasEs } from '../../../strings/ideas.es.ts'
+import { publishEs } from '../../../strings/publish.es.ts'
 import { scriptEs } from '../../../strings/script.es.ts'
 import styles from '../channel.module.css'
 
@@ -94,7 +95,13 @@ export function IdeaQueue({ ideas, busy, onMove, onRemove }: IdeaQueueProps) {
                 {/* The number is written: the cards do not show the one of the list (AS3, which goes next). */}
                 <h3>{format(text.place, { n: String(index + 1), titulo: idea.title })}</h3>
                 <div className={styles.actions}>
-                  {idea.script?.status === 'guion_aprobado' && <Badge>{scriptEs.queue.ready}</Badge>}
+                  {/* The package approved, with its script still approved, says more than the script; the idea stays until marked
+                  done (R17). */}
+                  {idea.script?.packageStatus === 'aprobado' && idea.script.status === 'guion_aprobado' ? (
+                    <Badge>{publishEs.queue.ready}</Badge>
+                  ) : (
+                    idea.script?.status === 'guion_aprobado' && <Badge>{scriptEs.queue.ready}</Badge>
+                  )}
                   <Button
                     variant={index === 0 ? 'primary' : 'secondary'}
                     size="sm"

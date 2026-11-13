@@ -15,6 +15,7 @@ import {
 } from '../publish/model.ts'
 import { PACKAGE_PARTS, PUBLISH_USES } from '../publish/outputs.ts'
 import { PACKAGE_STATUSES, PACKAGE_WARNINGS } from '../publish/status.ts'
+import { STUDIO_KEYS } from '../publish/studio.ts'
 import { DRAFT_BLOCK_TYPES } from '../script/model.ts'
 import { SCRIPT_STATUSES } from '../script/status.ts'
 
@@ -58,6 +59,9 @@ export const packageJobSchema = z.object({
 })
 export type PackageJob = z.infer<typeof packageJobSchema>
 
+// Where a text of the knowledge packages comes from, shown under it (principle V).
+const cited = z.object({ label: z.string(), date: z.string() })
+
 export const packageViewSchema = z.object({
   id,
   channelId: id,
@@ -98,6 +102,43 @@ export const packageViewSchema = z.object({
   // Kept after it ends: on coming back the screen still has to say that it failed.
   job: packageJobSchema.nullable(),
   studioDone: z.array(z.string()),
+  // The guided list of YouTube Studio, from the profile and the knowledge packages (R12): a help, never a blocker.
+  studio: z.array(
+    z.discriminatedUnion('key', [
+      z.object({
+        key: z.literal('publico_infantil'),
+        // `null`: the profile cannot be read, and the app does not answer for the creator.
+        answer: z.boolean().nullable(),
+        why: z.string(),
+        implications: z.array(z.string()),
+        source: cited,
+        implicationsSource: cited,
+      }),
+      z.object({
+        key: z.literal('contenido_sintetico'),
+        answer: z.null(),
+        question: z.string(),
+        why: z.string(),
+        mustDisclose: z.array(z.string()),
+        noNeed: z.array(z.string()),
+        source: cited,
+      }),
+      z.object({
+        key: z.literal('idioma'),
+        answer: z.string(),
+        why: z.string(),
+        assumption: z.literal(true),
+        source: cited.nullable(),
+      }),
+      z.object({
+        key: z.literal('categoria'),
+        answer: z.string(),
+        why: z.string(),
+        assumption: z.boolean(),
+        source: cited.nullable(),
+      }),
+    ]),
+  ),
   // The description as it is copied, put together from its parts (R3 to R6).
   texts: z.object({
     // Each chapter with when it starts: the creator's minute (`manual`) or worked out from the script, an estimate.
@@ -169,11 +210,42 @@ export const pieceSaveBodySchema = z.object({ baseVersion: packageBaseVersionSch
 export type PieceSaveBody = z.infer<typeof pieceSaveBodySchema>
 
 // POST /packages/:id/approve: `versions` are the ones on screen, so nothing changed under the creator approves.
+// The whole package (`paquete`) is approved knowing how many notices are left (FR-013): `acknowledgedWarnings` is
+// the count the screen showed, and it has to be the one the server works out.
+export const PACKAGE_APPROVE_STEPS = [...PACKAGE_STEPS, 'paquete'] as const
 export const packageApproveBodySchema = z.object({
-  step: z.enum(PACKAGE_STEPS),
+  step: z.enum(PACKAGE_APPROVE_STEPS),
   versions: kindVersionsSchema,
+  acknowledgedWarnings: count.optional(),
 })
 export type PackageApproveBody = z.infer<typeof packageApproveBodySchema>
+
+// GET /packages/:id/review: the figures of publish/youtube.json and publish/craft.json the review uses (R13).
+export const packageReviewRulesSchema = z.object({
+  rules: z.object({
+    titleMaxChars: z.number().int().positive(),
+    mobileTitleChars: z.number().int().positive(),
+    descriptionMaxChars: z.number().int().positive(),
+    tagsMaxTotalChars: z.number().int().positive(),
+    chapterMinCount: z.number().int().positive(),
+    chapterMinSeconds: z.number().int().positive(),
+    hashtagsShown: z.number().int().positive(),
+  }),
+  // Where each figure comes from, to show it under its own notice (principle V); `null` is a calculation of ours.
+  sources: z.record(z.string(), z.object({ label: z.string(), date: z.string() }).nullable()),
+})
+export type PackageReviewRules = z.infer<typeof packageReviewRulesSchema>
+
+// PUT /packages/:id/studio: the settings marked as done; only the keys of the list (R12).
+// `base`: the marks the screen had, so another tab's are never written over unsaid (409 `version_cambiada`).
+const studioKeys = z.array(z.enum(STUDIO_KEYS)).max(STUDIO_KEYS.length)
+export const packageStudioBodySchema = z.object({ done: studioKeys, base: studioKeys })
+export type PackageStudioBody = z.infer<typeof packageStudioBodySchema>
+
+// GET /packages/:id/export and /channels/:id/packages/export (R15): the brief only for one package.
+export const PACKAGE_EXPORT_FORMATS = ['md', 'json', 'brief'] as const
+export const packageExportQuerySchema = z.object({ format: z.enum(PACKAGE_EXPORT_FORMATS) })
+export const packagesExportQuerySchema = z.object({ format: z.enum(['md', 'json']) })
 
 // GET and PUT /channels/:id/publish-settings: the fixed part of every description and the category (R6, R12).
 export const publishSettingsViewSchema = z.object({

@@ -10,6 +10,7 @@ import { es } from '../../../strings/es.ts'
 import { publishEs } from '../../../strings/publish.es.ts'
 import { scriptEs } from '../../../strings/script.es.ts'
 import styles from '../channel.module.css'
+import { saveFile } from '../scripts/saveFile.ts'
 
 const text = publishEs.list
 const statusText = ({ format, status }: PackageSummary) =>
@@ -22,6 +23,20 @@ const dateOf = (iso: string) => new Date(iso).toLocaleDateString('es-ES', { day:
 export function PackageList() {
   const [packages, setPackages] = useState<readonly PackageSummary[] | null>(null)
   const [error, setError] = useState<unknown>(null)
+  const [downloadFailed, setDownloadFailed] = useState<{ cause: unknown; kind: 'md' | 'json' } | null>(null)
+
+  // Every package with something in it, at once (FR-023).
+  const downloadAll = async (kind: 'md' | 'json') => {
+    setDownloadFailed(null)
+    try {
+      const current = await channelApi.current()
+      if (!current.channel) return
+      const { blob, name } = await packagesApi.downloadAll(current.channel.id, kind)
+      saveFile(blob, name)
+    } catch (cause) {
+      setDownloadFailed({ cause, kind })
+    }
+  }
 
   const load = useCallback(async (signal?: AbortSignal) => {
     setError(null)
@@ -80,7 +95,24 @@ export function PackageList() {
           ))}
         </ul>
       )}
+      {downloadFailed !== null && (
+        <ErrorMessage
+          live
+          title={errorText(downloadFailed.cause)}
+          action={{ label: es.app.retry, onClick: () => void downloadAll(downloadFailed.kind) }}
+        />
+      )}
       <div className={styles.actions}>
+        {packages !== null && packages.some((pkg) => pkg.status !== 'sin_empezar') && (
+          <>
+            <Button variant="secondary" onClick={() => void downloadAll('md')}>
+              {text.downloadAllDocument}
+            </Button>
+            <Button variant="secondary" onClick={() => void downloadAll('json')}>
+              {text.downloadAllData}
+            </Button>
+          </>
+        )}
         <Button variant="secondary" onClick={() => navigate({ page: 'publishSettings' })}>
           {text.settings}
         </Button>

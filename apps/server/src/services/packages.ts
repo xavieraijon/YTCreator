@@ -7,6 +7,17 @@ import {
   descriptionSources,
   durationSeconds,
   formatChapterTime,
+  formatKinds,
+  briefFileName,
+  packageFileName,
+  packagesFileName,
+  reviewPackage,
+  studioChecklist,
+  warningNotices,
+  type PackageExportItem,
+  type PackageReviewFigures,
+  type PackageReviewNotice,
+  type PieceContents,
   PACKAGE_KINDS,
   packageStatus,
   packageWarnings,
@@ -47,6 +58,8 @@ export interface PackageServiceDeps {
   /** The status of a script as 005 works it out. */
   scriptStatus: (ideaId: string) => ScriptStatus | null
   knowledge: PublishKnowledge
+  /** What marking a video as made for children means, from `market/made-for-kids.json` (R12, never copied). */
+  kids: { implications: readonly string[]; source: { label: string; date: string } }
 }
 
 const LIVE = 'en_curso'
@@ -176,11 +189,16 @@ export function createPackageService(deps: PackageServiceDeps) {
     return (parentPackage && mainTitle(parentPackage)) ?? ideas.get(parent.ideaId)?.title ?? null
   }
 
+  const profileOf = (channelId: string) => {
+    const parsed = channelProfileSchema.safeParse(deps.profiles.getCurrent(channelId)?.profile)
+    return parsed.success ? parsed.data : null
+  }
+
   // A profile that does not read has no @ to build the link with: the default is then empty, as without one.
   const handleOf = (channelId: string) => {
-    const parsed = channelProfileSchema.safeParse(deps.profiles.getCurrent(channelId)?.profile)
+    const name = profileOf(channelId)?.name
     // Only a name the creator chose: a provisional one may not be theirs on YouTube.
-    return parsed.success && parsed.data.name.status === 'elegido' ? parsed.data.name.handle : null
+    return name?.status === 'elegido' ? name.handle : null
   }
 
   // The fixed part of the channel: the one it saved, or the subscription link by default (R6, decision 7).
@@ -253,6 +271,94 @@ export function createPackageService(deps: PackageServiceDeps) {
     }
   }
 
+  // The guided list of YouTube Studio (R12). Without a profile that reads, the audience is not for children and its
+  // language is the general one, as the profile itself starts (003).
+  const studioOf = (channelId: string): PackageView['studio'] => {
+    const audience = profileOf(channelId)?.concept.audience
+    const { studio } = deps.knowledge
+    const cited = (index: number) => {
+      const source = studio.source[index]
+      if (!source) throw new Error('publish/studio.json names a source it does not have')
+      return { label: source.label, date: studio.reviewedAt }
+    }
+    // Each setting with where its answer comes from (principle V); `null`, an assumption that its text already says.
+    const sourceOf = {
+      publico_infantil: cited(studio.data.madeForKids.source),
+      contenido_sintetico: cited(studio.data.synthetic.source),
+      idioma: null,
+      categoria: null,
+    }
+    return studioChecklist(
+      {
+        // Without a profile that reads, the app does not know: it never answers for the creator (principle II).
+        audience: { madeForKids: audience?.madeForKids ?? null, region: audience?.region ?? 'mixto' },
+        category: packages.settings(channelId)?.category ?? null,
+      },
+      studio.data,
+      deps.kids.implications,
+    ).map((item) => ({
+      ...item,
+      source: sourceOf[item.key],
+      ...(item.key === 'publico_infantil' ? { implicationsSource: deps.kids.source } : {}),
+    })) as PackageView['studio']
+  }
+
+  /** The figures of the review, read from `publish/youtube.json` and `publish/craft.json` (R13). */
+  const reviewFigures = (): PackageReviewFigures => {
+    const { youtube, craft } = deps.knowledge
+    return {
+      titleMaxChars: youtube.data.titleMaxChars.value,
+      mobileTitleChars: craft.data.mobileTitleChars.value,
+      descriptionMaxChars: youtube.data.descriptionMaxChars.value,
+      tagsMaxTotalChars: youtube.data.tagsMaxTotalChars.value,
+      chapterMinCount: youtube.data.chapters.minCount.value,
+      chapterMinSeconds: youtube.data.chapters.minSeconds.value,
+      hashtagsShown: youtube.data.hashtags.shownAboveTitle.value,
+    }
+  }
+
+  /** Where each figure of the review comes from: its own source, never another one (principle V). */
+  const reviewSources = () => {
+    const { youtube, craft } = deps.knowledge
+    const citedIn = (file: typeof youtube | typeof craft) => (basis: { source: number } | { assumption: true }) => {
+      if (!('source' in basis)) return null
+      const source = file.source[basis.source]
+      if (!source) throw new Error('A figure of publish/*.json names a source it does not have')
+      return { label: source.label, date: file.reviewedAt }
+    }
+    const cited = citedIn(youtube)
+    const { data } = youtube
+    return {
+      titleMaxChars: cited(data.titleMaxChars),
+      // Today an assumption of `craft.json`: YouTube does not publish it.
+      mobileTitleChars: citedIn(craft)(craft.data.mobileTitleChars),
+      descriptionMaxChars: cited(data.descriptionMaxChars),
+      tagsMaxTotalChars: cited(data.tagsMaxTotalChars),
+      chapterFirstAtZero: cited(data.chapters.firstAtZero),
+      chapterMinCount: cited(data.chapters.minCount),
+      chapterMinSeconds: cited(data.chapters.minSeconds),
+      hashtagsShown: cited(data.hashtags.shownAboveTitle),
+    }
+  }
+
+  /** The review of a package as the screen works it out, so the server counts the same notices (FR-013). */
+  const reviewOf = (view: PackageView): PackageReviewNotice[] =>
+    reviewPackage(
+      {
+        format: view.format,
+        pieces: Object.fromEntries(
+          formatKinds(view.format).map((kind) => [kind, view.pieces[kind]?.content ?? null]),
+        ) as PieceContents,
+        chapters: view.texts.chapters,
+        scriptSeconds: view.script.blocks.reduce((sum, block) => sum + block.seconds, 0),
+        assembled: view.texts.assembled,
+      },
+      reviewFigures(),
+    )
+
+  /** How many notices the creator is told about before approving: the review's and the package's own (FR-013). */
+  const warningsCount = (view: PackageView) => warningNotices(reviewOf(view)).length + view.warnings.length
+
   const view = (pkg: PublishPackage, script: Script, idea: Idea): PackageView => {
     const pieces = piecesOf(pkg)
     const job = jobOf(pkg)
@@ -297,6 +403,7 @@ export function createPackageService(deps: PackageServiceDeps) {
       measured: measuredOf(idea),
       job: job && pkg.jobOp ? { id: job.id, op: pkg.jobOp, status: job.status, failure: job.failure } : null,
       studioDone: pkg.studioDone,
+      studio: studioOf(pkg.channelId),
       texts,
       parentTitle: parentTitleOf(script),
       limits: limitsOf(),
@@ -336,6 +443,98 @@ export function createPackageService(deps: PackageServiceDeps) {
     return { view: view(pkg, script, idea), created: true }
   }
 
+  // The marks of the guided list: a help, so they make no version (R12, FR-017).
+  // `base` is what the screen had: another tab marked something since, and nothing is written over it unsaid.
+  const saveStudio = (id: string, done: readonly string[], base: readonly string[]): PackageView => {
+    const { pkg } = find(id)
+    const same = (one: readonly string[], other: readonly string[]) =>
+      new Set(one).size === new Set(other).size && one.every((key) => other.includes(key))
+    if (!same(base, pkg.studioDone)) throw new ApiError({ code: 'version_cambiada' })
+    packages.setStudioDone(pkg.id, [...new Set(done)])
+    return read(pkg.id)
+  }
+
+  // What is downloaded: the pieces as they are copied, with the main title and the chosen ideas (R15).
+  const exportItem = (view: PackageView): PackageExportItem => {
+    const titles = view.pieces.titulos?.content ?? null
+    const textOf = (titleId: string | null) =>
+      titleId === null ? null : (titles?.candidates.find((candidate) => candidate.id === titleId)?.text ?? null)
+    const thumbnails = view.pieces.miniaturas?.content ?? null
+    const main = textOf(titles?.main ?? null)
+    return {
+      title: main ?? view.idea.title,
+      format: view.format,
+      status: view.status,
+      approvedAt: view.status === 'aprobado' ? view.approvals.packageApprovedAt : null,
+      approvedWarnings: view.status === 'aprobado' ? view.approvals.packageApprovedWarnings : null,
+      mainTitle: main,
+      alternatives: (titles?.alternatives ?? []).flatMap((titleId) => textOf(titleId) ?? []),
+      description: view.texts.assembled,
+      thumbnails:
+        view.format === 'largo' && thumbnails
+          ? thumbnails.chosen.flatMap((conceptId) => {
+              const concept = thumbnails.concepts.find((one) => one.id === conceptId)
+              return concept
+                ? [
+                    {
+                      scene: concept.scene,
+                      bigText: concept.bigText,
+                      emotion: concept.emotion,
+                      composition: concept.composition,
+                      colors: concept.colors,
+                      title: textOf(concept.titleId),
+                    },
+                  ]
+                : []
+            })
+          : [],
+      cover: view.format === 'short' ? (view.pieces.portada_short?.content ?? null) : null,
+      tags: view.pieces.etiquetas?.content.tags ?? [],
+      comment: view.pieces.comentario?.content.text ?? '',
+      studio: view.studio,
+      studioDone: view.studioDone,
+      parentTitle: view.parentTitle,
+    }
+  }
+
+  const exportOne = (id: string) => {
+    const packageView = read(id)
+    const channel = channelOf(packageView.channelId)
+    const item = exportItem(packageView)
+    return {
+      channel,
+      item,
+      fileName: (format: 'md' | 'json' | 'brief') =>
+        format === 'brief' ? briefFileName(item.title, item.format) : packageFileName(item.title, format),
+    }
+  }
+
+  // Every package of the channel that has a piece, the last one touched first (FR-023).
+  const exportAll = (channelId: string) => {
+    const channel = channelOf(channelId)
+    // A package that cannot be read is left out, not the whole download, and the document says how many (VII).
+    let skipped = 0
+    const readable = (id: string) => {
+      try {
+        return [read(id)]
+      } catch {
+        skipped += 1
+        return []
+      }
+    }
+    const items = packages
+      .listByChannel(channel.id)
+      .flatMap((pkg) => readable(pkg.id))
+      .filter((packageView) => packageView.status !== 'sin_empezar')
+      .map(exportItem)
+    return {
+      channel,
+      items,
+      skipped,
+      fileName: (format: 'md' | 'json') => packagesFileName(channel.displayName, format),
+    }
+  }
+
   /** The status of the package of a script, for the views of 004 and 005. */
   const scriptPackage = (scriptId: string) => {
     const pkg = packages.getByScript(scriptId)
@@ -353,6 +552,13 @@ export function createPackageService(deps: PackageServiceDeps) {
     statusOf,
     settingsOf,
     saveSettings,
+    saveStudio,
+    reviewFigures,
+    reviewSources,
+    reviewOf,
+    warningsCount,
+    exportOne,
+    exportAll,
     fixedTextOf,
     paceOf,
     approvedDraftOf,

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  tagsLength,
   chaptersContentSchema,
   commentContentSchema,
   descriptionContentSchema,
@@ -197,5 +198,14 @@ describe('steps and empty pieces (research.md R2, decision 14)', () => {
     expect(emptyPiece('etiquetas', { tags: [] })).toBe(true)
     expect(emptyPiece('etiquetas', { tags: ['pan'] })).toBe(false)
     expect(emptyPiece('comentario', { text: '' })).toBe(false)
+  })
+})
+
+describe('tagsLength', () => {
+  it('counts the commas and the quotes YouTube adds to a tag with spaces', () => {
+    expect(tagsLength([])).toBe(0)
+    expect(tagsLength(['pan'])).toBe(3)
+    expect(tagsLength(['pan de centeno'])).toBe(16)
+    expect(tagsLength(['pan', 'pan de centeno'])).toBe(20)
   })
 })

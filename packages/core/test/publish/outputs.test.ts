@@ -161,6 +161,10 @@ describe('descripcion (contracts/ai-uses.md)', () => {
       strict.safeParse(description({ chapters: three, tags: ['pan casero', 'masa madre', 'receta de pan fácil'] }))
         .success,
     ).toBe(false)
+    // YouTube adds quotes to a tag with spaces: 28 characters without them, 34 with them.
+    expect(
+      strict.safeParse(description({ chapters: three, tags: ['pan casero', 'masa madre', 'pan de'] })).success,
+    ).toBe(false)
   })
 
   it('the pinned comment may be empty (decision 14)', () => {

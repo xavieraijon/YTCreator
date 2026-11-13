@@ -20,14 +20,18 @@ Errores con el formato de `http/errors.ts`. Códigos que se reutilizan de la 005
 |---|---|---|
 | `POST /scripts/:id/package` | | `PackageView`, 201; si ya existe, 200 con el mismo. Exige guion aprobado o paquete previo |
 | `GET /packages/:id` | | `PackageView` |
-| `GET /packages/:id/review` | | `{rules}`: los paquetes `publish/youtube.json` y `publish/craft.json` que usa la revisión |
-| `PUT /packages/:id/studio` | `{done: string[]}` | `PackageView`; no crea versión |
+| `GET /packages/:id/review` | | `{rules, sources}`: las cifras de `publish/youtube.json` y `publish/craft.json` que usa la revisión (`titleMaxChars`, `mobileTitleChars`, `descriptionMaxChars`, `tagsMaxTotalChars`, `chapterMinCount`, `chapterMinSeconds`, `hashtagsShown`) y, por cifra, su fuente `{label, date}` o `null` si es un supuesto nuestro |
+| `PUT /packages/:id/studio` | `{done: string[], base: string[]}` | `PackageView`; no crea versión; `base` son las marcas que tenía la pantalla: 409 `version_cambiada` si ya no son las guardadas (otra pestaña marcó algo); 400 `validacion` con una clave que no es de la lista |
 | `GET /packages/:id/export?format=md\|json\|brief` | | fichero |
 
 `PackageView` lleva la idea, el guion aprobado (bloques con su duración, para los capítulos), el estado, la última
 versión de cada pieza, los capítulos con su minuto calculado, las fuentes, la descripción montada, la lista guiada, los
 avisos, lo medido en la 004 (si hay), el último trabajo con su estado y, en un Short sacado de un vídeo largo, el título
-del vídeo largo.
+del vídeo largo. La lista guiada va en `studio` (cuatro ajustes con su respuesta, su motivo y su fuente `{label, date}`, o `null` si es un supuesto; `publico_infantil` lleva además `implicationsSource` y su respuesta es `null` si el perfil no se puede leer) y sus marcas en
+`studioDone`.
+
+Con `step: paquete`, `versions` lleva todas las piezas del formato y `acknowledgedWarnings` cuenta los avisos de la
+revisión que no impiden aprobar más los avisos del paquete; si no hay ninguno se puede omitir.
 
 ## Versiones
 

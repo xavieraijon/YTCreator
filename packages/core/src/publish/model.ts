@@ -178,6 +178,13 @@ export const formatKinds = (format: IdeaFormat): readonly PackageKind[] => [
   ...STEP_KINDS[format].textos,
 ]
 
+/**
+ * How long the tags are for YouTube: with the commas between them, and with the quotation marks it adds to a tag that
+ * has a space («pan de centeno» counts 16), as the YouTube Data API documents (`publish/youtube.json`, source 1).
+ */
+export const tagsLength = (tags: readonly string[]) =>
+  tags.reduce((sum, tag) => sum + tag.length + (/\s/.test(tag) ? 2 : 0), 0) + Math.max(0, tags.length - 1)
+
 const blank = (text: string) => text.trim() === ''
 
 /** A piece that cannot be approved yet. The pinned comment is optional (decision 14). */

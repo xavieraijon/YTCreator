@@ -12,7 +12,6 @@ import {
   type Idea,
   ideaMeasureUnits,
   ideasOutputFor,
-  type ScriptStatus,
   type YouTubeSource,
 } from '@ytcreator/core'
 import {
@@ -25,6 +24,7 @@ import {
   ideaOrderBodySchema,
   ideaPatchBodySchema,
   ideaQueriesBodySchema,
+  type IdeaView,
   measureEstimateBodySchema,
   newIdeaBodySchema,
 } from '@ytcreator/core/api'
@@ -59,7 +59,7 @@ export interface IdeaRoutesDeps {
   staleDays: number
   measure: IdeaMeasureService
   // Its script, for the queue (005); the bank works without it.
-  scriptOf?: (ideaId: string) => { id: string; status: ScriptStatus; fromVideo: boolean } | null
+  scriptOf?: (ideaId: string) => IdeaView['script']
   youtube: { effectiveSource(): YouTubeSource }
   // The prices of the Data API in thresholds.json (`dataApi`), for the units of «Medir todas» (R2).
   dataApiUnits: { searchUnits: number; otherUnits: number }

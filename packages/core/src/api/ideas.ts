@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { PACKAGE_STATUSES } from '../publish/status.ts'
 import {
   CANDIDATE_DECISIONS,
   IDEA_BATCH_KINDS,
@@ -82,7 +83,15 @@ export const ideaSchema = z.object({
   id,
   // The script of this idea, if it has one (005, data-model.md).
   // `fromVideo`: a Short drawn from a long video, which the bank names as such (005, US7).
-  script: z.object({ id, status: z.enum(SCRIPT_STATUSES), fromVideo: z.boolean() }).nullable(),
+  // `packageStatus`: the status of its publishing package, `null` without one (006, R17).
+  script: z
+    .object({
+      id,
+      status: z.enum(SCRIPT_STATUSES),
+      fromVideo: z.boolean(),
+      packageStatus: z.enum(PACKAGE_STATUSES).nullable(),
+    })
+    .nullable(),
   origin: z.enum(IDEA_ORIGINS),
   batchId: id.nullable(),
   sourceIdeaId: id.nullable(),

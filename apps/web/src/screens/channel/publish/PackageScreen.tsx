@@ -1,6 +1,6 @@
 import type { PackageWarning } from '@ytcreator/core'
 import type { PackageView } from '@ytcreator/core/api'
-import { AiWorking, Button, ErrorMessage, format, Stepper } from '@ytcreator/ui'
+import { AiWorking, Button, Dialog, ErrorMessage, format, Stepper } from '@ytcreator/ui'
 import { useCallback, useEffect, useState } from 'react'
 import { ApiClientError, packagesApi } from '../../../api/client.ts'
 import { navigate } from '../../../router.ts'
@@ -12,6 +12,7 @@ import { scriptEs } from '../../../strings/script.es.ts'
 import styles from '../channel.module.css'
 import { CoverStep } from './CoverStep.tsx'
 import { DescriptionStep } from './DescriptionStep.tsx'
+import { ReviewCopyStep } from './ReviewCopyStep.tsx'
 import { type PackageOp, usePackageAi } from './usePackageAi.ts'
 
 const text = publishEs.screen
@@ -56,6 +57,8 @@ export function PackageScreen({ id }: { readonly id: string }) {
   const [step, setStep] = useState<PackageScreenStep | null>(null)
   const [error, setError] = useState<unknown>(null)
   const [loadFailed, setLoadFailed] = useState(false)
+  // Where the creator wanted to go from an approved package, until they say to go on (FR-015, scenario 4).
+  const [leaving, setLeaving] = useState<PackageScreenStep | null>(null)
 
   const load = useCallback(
     async (signal?: AbortSignal) => {
@@ -104,6 +107,12 @@ export function PackageScreen({ id }: { readonly id: string }) {
     )
   }
 
+  // In an approved package, going where things change asks first: changing anything takes it back to draft.
+  const goTo = (next: PackageScreenStep) => {
+    if (pkg.status === 'aprobado' && step === 'revisar' && next !== 'revisar') setLeaving(next)
+    else setStep(next)
+  }
+
   const reached = PACKAGE_SCREEN_STEPS.indexOf(stepFor(pkg))
   // Which pieces were made for another main title, so that the warning leads to them (R16).
   const titles = pkg.pieces.titulos?.content
@@ -131,7 +140,7 @@ export function PackageScreen({ id }: { readonly id: string }) {
             variant="ghost"
             size="sm"
             aria-current={one === step ? 'step' : undefined}
-            onClick={() => setStep(one)}
+            onClick={() => goTo(one)}
           >
             {labelOf(pkg, one)}
           </Button>
@@ -164,19 +173,25 @@ export function PackageScreen({ id }: { readonly id: string }) {
                 </Button>
               )}
               {warning === 'titulo_cambiado' && staleCover && step !== 'portada' && (
-                <Button variant="secondary" size="sm" onClick={() => setStep('portada')}>
+                <Button variant="secondary" size="sm" onClick={() => goTo('portada')}>
                   {text.toThumbnails}
                 </Button>
               )}
               {((warning === 'titulo_cambiado' && staleTexts) || warning === 'parte_fija_cambiada') &&
                 step !== 'textos' && (
-                  <Button variant="secondary" size="sm" onClick={() => setStep('textos')}>
+                  <Button variant="secondary" size="sm" onClick={() => goTo('textos')}>
                     {text.toDescription}
                   </Button>
                 )}
             </li>
           ))}
         </ul>
+      )}
+      {/* Said before any change, not after: editing takes the approved package back to draft (FR-015). */}
+      {pkg.status === 'aprobado' && step !== 'revisar' && (
+        <p role="status" className={styles.notice}>
+          {text.approvedEditing}
+        </p>
       )}
       {ai.working && <AiWorking variant="panel" label={workingLabel(ai.working)} />}
       {step === 'portada' && (
@@ -186,12 +201,31 @@ export function PackageScreen({ id }: { readonly id: string }) {
         <DescriptionStep pkg={pkg} ai={ai} onChange={onChange} onError={setError} onNext={() => setStep('revisar')} />
       )}
       {step === 'revisar' && (
-        <>
-          <h2>{labelOf(pkg, step)}</h2>
-          <p className={styles.why}>{text.why.revisar}</p>
-          <p className={styles.notice}>{text.reviewLater}</p>
-        </>
+        <ReviewCopyStep pkg={pkg} onChange={onChange} onError={setError} onToStep={goTo} busy={ai.working !== null} />
       )}
+      <Dialog
+        open={leaving !== null}
+        onOpenChange={(open) => !open && setLeaving(null)}
+        size="sm"
+        title={publishEs.unapprove.title}
+        description={publishEs.unapprove.body}
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setLeaving(null)}>
+              {publishEs.unapprove.stay}
+            </Button>
+            <Button
+              variant="primary"
+              onClick={() => {
+                setStep(leaving)
+                setLeaving(null)
+              }}
+            >
+              {publishEs.unapprove.go}
+            </Button>
+          </>
+        }
+      />
       <div className={styles.actions}>
         <Button variant="ghost" onClick={() => navigate({ page: 'packageList' })}>
           {text.back}

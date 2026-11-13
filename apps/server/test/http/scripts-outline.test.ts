@@ -151,6 +151,6 @@ describe('the idea says if it has a script (data-model.md)', () => {
     const { t, id, ideaId, channelId } = await setUp()
     const bank = await call(t, 'GET', `/api/channels/${channelId}/ideas`)
     const idea = (bank.body['ideas'] as { id: string; script: unknown }[]).find((one) => one.id === ideaId)
-    expect(idea?.script).toEqual({ id, status: 'sin_empezar', fromVideo: false })
+    expect(idea?.script).toEqual({ id, status: 'sin_empezar', fromVideo: false, packageStatus: null })
   })
 })
