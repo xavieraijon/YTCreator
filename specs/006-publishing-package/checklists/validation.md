@@ -90,3 +90,110 @@ supuesto marcado, lo medido con origen y fecha), XI (este informe).
 ### 9. Cómo revertir
 
 `git revert` del commit de esta fase. La migración 0007 solo añade tablas. Queda pendiente: US1 en adelante.
+
+## US1 título y miniatura (T019–T026), Puerta A del 2026-11-13
+
+### 1. Resumen
+
+Desde un guion aprobado se proponen títulos (con su motivo y el bloque que cumple la promesa) e ideas de miniatura,
+se elige el principal y hasta dos para probar, se escriben o editan, y se aprueba la portada. Todo pasa por la IA falsa:
+coste antes de pedir, trabajo que sigue con la pestaña cerrada, y sin llamadas a YouTube. Los cuatro revisores
+encontraron un grave (cifras sin comprobar) y varios medios; están corregidos. Queda una pregunta para el creador (P1).
+
+### 2. Requisitos
+
+| Requisito | Estado | Evidencia | Fecha |
+|---|---|---|---|
+| T019–T020 salidas `titulos` y `miniaturas`, sin direcciones web, con prompts y lo medido en la 004 | Cumplido | `packages/core/test/publish/outputs.test.ts`; batería de contrato U4 y U5 (`packages/ai/test/contract/battery.ts`) | 2026-11-13 |
+| T021–T022 rutas de estimación, generación, guardado y aprobación | Cumplido | `apps/server/test/http/packages-cover.test.ts` (26 casos, incluidos los cinco fallos de IA, la dirección web con títulos previos, lo editado que se conserva, la lista llena y las cifras en el motivo) | 2026-11-13 |
+| T023 textos | Cumplido | `publish.es.ts`; glosario en `pnpm test` | 2026-11-13 |
+| T024 entrada desde el guion y «Mis publicaciones» | Cumplido | e2e US1; tests de la 005 en verde | 2026-11-13 |
+| T025 paso «Título y miniatura» | Cumplido | e2e US1; muestra el gancho, lo medido (con fecha, parcial y revisión anterior) y los avisos arriba | 2026-11-13 |
+| T026 e2e con pestaña cerrada, teclado, recarga y axe | Cumplido | `apps/web/e2e/publish.spec.ts`: flechas, espacio y Enter sin perder el foco; axe en claro y oscuro a 375 y 1280 px | 2026-11-13 |
+| Escenario 1 de US1 (ver el gancho del guion) | Cumplido | `CoverStep.tsx`, tras la revisión | 2026-11-13 |
+| Short: título ahora, portada en US4 | Parcial | Decisiones 27 y 34; la aprobación del paso de un Short llega con `portada_short` | 2026-11-13 |
+
+### 3. Cómo se comprobó
+
+Tras la segunda vuelta: `fnm exec --using=24 -- pnpm lint` (código 0), `typecheck` (código 0) y `test` (código 0: 184
+ficheros, 2394 pasados y 4 omitidos). En una pasada anterior `test` dio código 1 por C6 de `claude-code.contract.test.ts` (2550 ms frente a un
+máximo de 2000): mide el tiempo de un proceso bajo carga, no lo toca este cambio y pasa al repetirlo. Antes de las
+correcciones de revisión, `test:e2e` dio 50 de 50 con código 0; tras ellas, también (punto 4). El flujo real de la historia
+con la IA falsa es el del e2e de US1 y el de `packages-cover.test.ts`.
+
+### 4. Controles
+
+- Pasados: lint, typecheck, test, glosario, `secrets-leak` (dentro del e2e), axe en claro y oscuro a 375 y 1280 px en las
+  pantallas nuevas, teclado (flechas en el principal, espacio en las casillas y Enter para aprobar, con el foco en su
+  sitio), los cinco tipos de fallo de IA para `titulos` y `miniaturas`, y «Cómo se demuestra» (pestaña cerrada durante la
+  generación y resultado al volver).
+- `test:e2e` tras las dos vueltas de correcciones: código 0, 97 de 97 y 50 de 50.
+- No ejecutados: `prefers-reduced-motion` aparte, porque el paso no añade animaciones propias (usa `AiWorking`, ya
+  auditado en la 005); `test:installer`, porque no se toca el instalador; IA real, porque necesita la aprobación del
+  creador (T068).
+
+### 5. Hallazgos
+
+Corregidos:
+- Grave (fidelidad): `titulos` y `miniaturas` no pasaban por el control de cifras. Ahora se comprueban `why` y `scene`
+  (decisión 30), con un test que falla sin la corrección.
+- Un título o una idea que el creador reescribe seguía como «Opinión de la IA», con su motivo y su bloque, y «Pedir otros»
+  lo borraba si no estaba elegido (los cuatro). Ahora pasa a ser del creador y se conserva, con test.
+- Pedir otras miniaturas podía dejar una elegida que ya no existía, y pedir otros títulos podía pagar sin que cupiera
+  ninguno (lógica, seguridad, regresión). Lo elegido nunca se recorta y, sin sitio, el botón se apaga y lo dice antes de
+  pagar (decisión 31), con tests.
+- Un título demasiado largo impedía aprobar, en contra de FR-013 (lógica, fidelidad, regresión): ahora es solo un aviso.
+- El corte en el móvil no se marcaba como supuesto (los cuatro): el texto lo dice.
+- Los avisos calculados no se veían y «Ir al guion» no se usaba (lógica, fidelidad, regresión): salen arriba con su acción
+  (decisión 33).
+- Faltaban el gancho del guion (fidelidad, regresión) y la medida parcial (fidelidad).
+- Con las flechas, cada opción guardaba una versión y el foco se perdía (regresión): las elecciones se guardan un momento
+  después del último cambio, sin desactivar los controles (decisión 32); el e2e lo recorre con el teclado.
+- Textos de un Short que hablaban de miniatura (regresión): decisión 34.
+- `role="alert"` repetido dentro de las opciones, el guion y el «·» fuera del catálogo, y cifras escritas a mano en los
+  textos (lógica, fidelidad, regresión): corregido; las cifras salen de `PUBLISH_LIMITS`.
+- Textos en blanco aceptados por la API (lógica): los esquemas recortan los espacios, con test.
+- Reglas de `craft.json` copiadas en los prompts (regresión): quitadas; los prompts ya reciben `craft`.
+- La fuente del máximo podía caer por defecto en otra (fidelidad, regresión): ahora falla al arrancar si no la tiene.
+- Faltaban la batería de contrato de los usos nuevos, el 400 sin principal y la dirección web con contenido previo
+  (fidelidad, lógica, regresión): añadidos.
+- Decisión 28 mal clasificada y módulos fuera del plan (fidelidad): 28 pasa a medio; decisión 29.
+
+Descartados:
+- `Checkbox` se documenta como «se aplica al enviar el formulario» (regresión): es una nota del componente sobre su uso en
+  formularios; aquí la elección se guarda sola, como en la 005 con las afirmaciones, y no cambia su aspecto ni su
+  comportamiento.
+
+Segunda vuelta (lógica, sobre las correcciones), corregidos:
+- Grave: al pedir otros títulos se perdía el título de una miniatura elegida, y desde entonces ningún guardado de
+  miniaturas pasaba (400). Ahora ese título se conserva y solo se comprueba el título de las ideas que cambian (decisión 35),
+  con test que reproduce el caso.
+- Al recortar una cifra en una escena caían las ideas sin texto grande y la respuesta pagada no valía: el recorte solo
+  quita lo que él mismo vacía (decisión 37), con test.
+- «Pedir otras ideas» recortaba en silencio las editadas por el creador: ahora, sin sitio, se apaga antes de pagar
+  (decisión 31), con test.
+- Menores: una elección guardada al salir del paso partía de una versión vieja; se podía elegir entre pulsar «Pedir otros»
+  y que empezara el trabajo; elegir una miniatura borraba el aviso de título cambiado (decisión 36). Corregidos.
+
+Abiertos: ninguno grave ni medio. La regla de «Pedir otros» queda provisional hasta que el creador conteste P1. Tercera
+vuelta: no se lanzó otra revisión; las correcciones de la segunda llevan cada una su test.
+
+### 6. Desviaciones
+
+De más: los avisos arriba con su acción (estaba en `ui-screens.md`, sin tarea) y el código de campo `lleno`. De menos: la
+portada de un Short, que llega con US4.
+
+### 7. Decisiones
+
+Agente: 25 a 37 (medio: 27, 28 y 30 a 37, destacadas aquí; bajo: 26 y 29). Pendiente del creador: P1 (qué pasa
+con las propuestas de la IA que no eligió al pedir otras); la 25 queda provisional con la opción recomendada.
+
+### 8. Constitución
+
+II (lo del creador nunca lo cambia la IA, y lo que reescribe deja de ser de la IA), III (coste antes de pedir, y nada se
+paga si no cabe), IV (salidas validadas, una dirección web no valida), V (cifras comprobadas, supuestos marcados), VI
+(teclado y foco), XI (este informe).
+
+### 9. Cómo revertir
+
+`git revert` del commit de esta historia. No hay migraciones. Queda pendiente: P1, y US2 en adelante.

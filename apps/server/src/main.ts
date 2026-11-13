@@ -31,6 +31,7 @@ import { createIdeaBatchesRepo } from './db/repos/idea-batches.ts'
 import { createIdeaMeasuresRepo } from './db/repos/idea-measures.ts'
 import { createScriptService } from './services/scripts.ts'
 import { createPackageService } from './services/packages.ts'
+import { createPackageWork } from './services/package-work.ts'
 import { createPackagesRepo } from './db/repos/packages.ts'
 import { createPackageVersionsRepo } from './db/repos/package-versions.ts'
 import { createIdeaMeasure } from './services/idea-measure.ts'
@@ -390,7 +391,10 @@ export async function startServer({
     aiRun: channel.aiRun,
     promptFor: channelPrompt,
     knowledge: scriptKnowledge,
+    packageOf: (scriptId: string) => packageService.scriptPackage(scriptId),
   })
+  const packagesRepo = createPackagesRepo(db, now)
+  const packageVersions = createPackageVersionsRepo(db, now)
   const packageService = createPackageService({
     channels: channel.channels,
     ideas: ideasRepo,
@@ -398,9 +402,22 @@ export async function startServer({
     jobsRepo,
     scripts: scriptsRepo,
     scriptVersions,
-    packages: createPackagesRepo(db, now),
-    versions: createPackageVersionsRepo(db, now),
+    packages: packagesRepo,
+    versions: packageVersions,
     scriptStatus: (ideaId: string) => scriptService.ideaScript(ideaId)?.status ?? null,
+    knowledge: publishKnowledge,
+  })
+  const packageWork = createPackageWork({
+    service: packageService,
+    packages: packagesRepo,
+    versions: packageVersions,
+    scriptVersions,
+    profiles: channel.profiles,
+    journeys: channel.journeys,
+    jobs,
+    aiRun: channel.aiRun,
+    promptFor: channelPrompt,
+    knowledge: publishKnowledge,
   })
   app = createApp({
     port,
@@ -439,7 +456,7 @@ export async function startServer({
       now,
     },
     script: { service: scriptService, scripts: scriptsRepo },
-    publish: { service: packageService },
+    publish: { service: packageService, work: packageWork },
     jobs,
     youtubeSettings,
     usage,

@@ -7,6 +7,7 @@ import {
   conceptKnowledge,
   knowledgeFiles,
   loadMarket,
+  loadPublishKnowledge,
   loadScriptKnowledge,
   STALE_AFTER_DAYS,
   warningKnowledge,
@@ -27,6 +28,7 @@ import { createScriptVersionsRepo } from '../src/db/repos/script-versions.ts'
 import { createScriptsRepo } from '../src/db/repos/scripts.ts'
 import { createScriptService } from '../src/services/scripts.ts'
 import { createPackageService } from '../src/services/packages.ts'
+import { createPackageWork } from '../src/services/package-work.ts'
 import { createPackagesRepo } from '../src/db/repos/packages.ts'
 import { createPackageVersionsRepo } from '../src/db/repos/package-versions.ts'
 import { createJourneysRepo } from '../src/db/repos/journeys.ts'
@@ -246,8 +248,10 @@ export function makeTestApp({
     aiRun: aiRun,
     promptFor: promptFor,
     knowledge: scriptKnowledge,
+    packageOf: (scriptId: string) => packageService.scriptPackage(scriptId),
   })
   const script = { service: scriptService, scripts: scriptsRepo }
+  const publishKnowledge = loadPublishKnowledge()
   const packagesRepo = createPackagesRepo(db, now)
   const packageVersions = createPackageVersionsRepo(db, now)
   const packageService = createPackageService({
@@ -260,6 +264,19 @@ export function makeTestApp({
     packages: packagesRepo,
     versions: packageVersions,
     scriptStatus: (ideaId: string) => scriptService.ideaScript(ideaId)?.status ?? null,
+    knowledge: publishKnowledge,
+  })
+  const packageWork = createPackageWork({
+    service: packageService,
+    packages: packagesRepo,
+    versions: packageVersions,
+    scriptVersions,
+    profiles: channel.profiles,
+    journeys: channel.journeys,
+    jobs,
+    aiRun,
+    promptFor,
+    knowledge: publishKnowledge,
   })
   const version = '0.1.0'
   const ytQuota = createYtQuotaRepo(db, now)
@@ -279,7 +296,7 @@ export function makeTestApp({
     channel: { ...channel, now, research, reading },
     ideas,
     script,
-    publish: { service: packageService },
+    publish: { service: packageService, work: packageWork },
     jobs,
     usage,
     now,

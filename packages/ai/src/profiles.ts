@@ -40,6 +40,9 @@ const CHANNEL_USES = {
   enfoques_short: { model: SONNET, timeoutMs: 60_000, maxOutputTokens: 1500 },
   investigacion: { model: SONNET, timeoutMs: 300_000, maxOutputTokens: 8000, web: WEB_LIMITS },
   comprobar_guion: { model: SONNET, timeoutMs: 300_000, maxOutputTokens: 8000, web: WEB_LIMITS },
+  // The publishing package (006, contracts/ai-uses.md).
+  titulos: { model: SONNET, timeoutMs: 90_000, maxOutputTokens: 1500 },
+  miniaturas: { model: SONNET, timeoutMs: 90_000, maxOutputTokens: 2000 },
 } satisfies Record<Exclude<AiUse, 'comprobacion'>, AiProfile>
 
 const withEffort = (effort: AiProfile['effort'], profile: AiProfile): AiProfile => ({ ...profile, effort })
@@ -66,6 +69,8 @@ export const PROFILES: Record<ProviderId, Record<AiUse, AiProfile>> = {
     enfoques_short: withEffort('medium', CHANNEL_USES.enfoques_short),
     investigacion: withEffort('medium', CHANNEL_USES.investigacion),
     comprobar_guion: withEffort('medium', CHANNEL_USES.comprobar_guion),
+    titulos: withEffort('medium', CHANNEL_USES.titulos),
+    miniaturas: withEffort('medium', CHANNEL_USES.miniaturas),
   },
   anthropic: { comprobacion: { model: HAIKU, timeoutMs: 30_000, maxOutputTokens: 16 }, ...CHANNEL_USES },
   // Longer than the 5 s after which the web offers «Cancelar», so `lento` can show it (e2e failures.spec.ts).

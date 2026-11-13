@@ -80,6 +80,10 @@ const CLAIM_FIELDS: Partial<Record<ChannelUse, readonly string[]>> = {
   // A fact is labelled by its links, not trimmed by its figures (R8).
   investigacion: [],
   comprobar_guion: [],
+  // A title or the big text of a thumbnail may well say «3 errores» as a promise; the reasons and the scene may not
+  // bring figures of their own (principle V, decision 30).
+  titulos: ['why'],
+  miniaturas: ['scene'],
 }
 
 // One request can become up to four calls: an answer that does not validate is always asked for again by the adapter

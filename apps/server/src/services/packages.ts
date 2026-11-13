@@ -10,6 +10,7 @@ import {
   type TitlesContent,
 } from '@ytcreator/core'
 import type { PackagePieces, PackageSummary, PackageView } from '@ytcreator/core/api'
+import type { PublishKnowledge } from '@ytcreator/knowledge'
 import type { ChannelsRepo } from '../db/repos/channels.ts'
 import type { IdeaMeasuresRepo } from '../db/repos/idea-measures.ts'
 import type { IdeasRepo } from '../db/repos/ideas.ts'
@@ -31,6 +32,7 @@ export interface PackageServiceDeps {
   versions: PackageVersionsRepo
   /** The status of a script as 005 works it out. */
   scriptStatus: (ideaId: string) => ScriptStatus | null
+  knowledge: PublishKnowledge
 }
 
 const LIVE = 'en_curso'
@@ -154,6 +156,19 @@ export function createPackageService(deps: PackageServiceDeps) {
   // The fixed part the description is checked against; the default of a channel without settings comes with US2.
   const currentFixedText = (channelId: string) => packages.settings(channelId)?.fixedText ?? ''
 
+  const limitsOf = (): PackageView['limits'] => {
+    const { youtube, craft } = deps.knowledge
+    const title = youtube.data.titleMaxChars
+    // The maximum is cited with its own source, never with another one by default (principle V).
+    const source = 'source' in title ? youtube.source[title.source] : undefined
+    if (!source) throw new Error('The maximum length of a title needs its source in publish/youtube.json')
+    return {
+      titleMaxChars: title.value,
+      mobileTitleChars: craft.data.mobileTitleChars.value,
+      youtube: { label: source.label, date: youtube.reviewedAt },
+    }
+  }
+
   const view = (pkg: PublishPackage, script: Script, idea: Idea): PackageView => {
     const pieces = piecesOf(pkg)
     const job = jobOf(pkg)
@@ -199,6 +214,7 @@ export function createPackageService(deps: PackageServiceDeps) {
       job: job && pkg.jobOp ? { id: job.id, op: pkg.jobOp, status: job.status, failure: job.failure } : null,
       studioDone: pkg.studioDone,
       parentTitle: parentTitleOf(script),
+      limits: limitsOf(),
     }
   }
 
@@ -241,7 +257,18 @@ export function createPackageService(deps: PackageServiceDeps) {
     return pkg ? { id: pkg.id, status: statusOf(pkg) } : null
   }
 
-  return { find, assertIdle, view, read, summaries, openForScript, scriptPackage, statusOf, channelOf }
+  return {
+    find,
+    assertIdle,
+    view,
+    read,
+    summaries,
+    openForScript,
+    scriptPackage,
+    statusOf,
+    channelOf,
+    scriptStatusOf: deps.scriptStatus,
+  }
 }
 
 export type PackageService = ReturnType<typeof createPackageService>

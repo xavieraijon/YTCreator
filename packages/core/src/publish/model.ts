@@ -57,7 +57,7 @@ const unique = (values: readonly string[]) => new Set(values).size === values.le
 
 export const titleCandidateSchema = z.object({
   id,
-  text: z.string().min(1).max(PUBLISH_LIMITS.titleText),
+  text: z.string().trim().min(1).max(PUBLISH_LIMITS.titleText),
   why: z.string().max(PUBLISH_LIMITS.why),
   blockId: id.nullable(),
   origin: z.enum(PIECE_ORIGINS),
@@ -83,7 +83,7 @@ export type TitlesContent = z.infer<typeof titlesContentSchema>
 
 export const thumbnailConceptSchema = z.object({
   id,
-  scene: z.string().min(1).max(PUBLISH_LIMITS.scene),
+  scene: z.string().trim().min(1).max(PUBLISH_LIMITS.scene),
   bigText: z.string().max(PUBLISH_LIMITS.bigText),
   emotion: z.string().max(PUBLISH_LIMITS.emotion),
   composition: z.string().max(PUBLISH_LIMITS.composition),

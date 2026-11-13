@@ -172,10 +172,12 @@ export function claimsFeedback(violations: ClaimViolation[]): string {
   return `Tu respuesta anterior tenía afirmaciones sin respaldo. Usa solo cifras y vídeos de <datos>:\n${lines.join('\n')}`
 }
 
-const hasEmptyText = (value: unknown): boolean => {
-  if (value === '') return true
-  if (Array.isArray(value)) return value.some(hasEmptyText)
-  return value !== null && typeof value === 'object' && Object.values(value).some(hasEmptyText)
+const emptyTexts = (value: unknown): number => {
+  if (value === '') return 1
+  if (Array.isArray(value)) return value.reduce((sum: number, item) => sum + emptyTexts(item), 0)
+  if (value !== null && typeof value === 'object')
+    return Object.values(value).reduce((sum: number, item) => sum + emptyTexts(item), 0)
+  return 0
 }
 
 // Lists the creator has to see something in: left empty, an empty text remains for the schema to reject (FR-014).
@@ -189,11 +191,14 @@ function trim(value: unknown, known: Facts, fields?: Fields, key = ''): unknown 
       .join(' ')
   }
   if (Array.isArray(value)) {
-    // An item of a list that loses a text goes away with it: the list may do without it, its fields may not.
+    // An item of a list that loses a text goes away with it: the list may do without it, its fields may not. A text
+    // that was already empty (a thumbnail without big text, 006) is not lost.
     return value
       .filter((item) => !citesUnknownVideo(item, known.videoIds))
-      .map((item) => trim(item, known, fields, key))
-      .filter((item) => !hasEmptyText(item))
+      .flatMap((item) => {
+        const trimmed = trim(item, known, fields, key)
+        return emptyTexts(trimmed) > emptyTexts(item) ? [] : [trimmed]
+      })
   }
   if (value && typeof value === 'object') {
     if (citesUnknownVideo(value, known.videoIds)) {

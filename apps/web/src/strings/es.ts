@@ -254,6 +254,8 @@ export const es = {
       enfoques_short: 'Proponer enfoques para un Short',
       investigacion: 'Investigar un tema en internet',
       comprobar_guion: 'Comprobar el guion en internet',
+      titulos: 'Proponer títulos para un vídeo',
+      miniaturas: 'Proponer ideas de miniatura',
     } satisfies Record<AiUse, string>,
     failed: 'No salió bien',
     knowledge: 'Información que conviene revisar',
@@ -372,6 +374,7 @@ export const es = {
     sin_perfil: 'Primero termina el perfil de tu canal.',
     sin_medida_quemada:
       'Solo se busca otro enfoque para una idea medida que ya está muy contada o con mucha competencia.',
+    lleno: 'Ya no caben más propuestas junto a las que has elegido o escrito tú.',
   } satisfies Record<FieldCode, string>,
 }
 

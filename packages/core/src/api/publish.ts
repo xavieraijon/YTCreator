@@ -6,11 +6,14 @@ import {
   commentContentSchema,
   descriptionContentSchema,
   PACKAGE_ORIGINS,
+  PACKAGE_STEPS,
+  PUBLISH_LIMITS,
   shortCoverContentSchema,
   tagsContentSchema,
   thumbnailsContentSchema,
   titlesContentSchema,
 } from '../publish/model.ts'
+import { PUBLISH_USES } from '../publish/outputs.ts'
 import { PACKAGE_STATUSES, PACKAGE_WARNINGS } from '../publish/status.ts'
 import { DRAFT_BLOCK_TYPES } from '../script/model.ts'
 import { SCRIPT_STATUSES } from '../script/status.ts'
@@ -97,6 +100,13 @@ export const packageViewSchema = z.object({
   studioDone: z.array(z.string()),
   // In a Short drawn from a long video, the title of that video.
   parentTitle: z.string().nullable(),
+  // What the screen warns about, with where each figure comes from (principle V).
+  limits: z.object({
+    titleMaxChars: z.number().int().positive(),
+    // An assumption: no official page gives it.
+    mobileTitleChars: z.number().int().positive(),
+    youtube: z.object({ label: z.string(), date: z.string() }),
+  }),
 })
 export type PackageView = z.infer<typeof packageViewSchema>
 
@@ -113,3 +123,25 @@ export type PackageSummary = z.infer<typeof packageSummarySchema>
 
 // `baseVersion` is the version this edit started from, 0 if there was none (as in 005).
 export const packageBaseVersionSchema = count
+
+// POST /packages/:id/estimate and /generate (contracts/http-api.md, «Con IA»).
+export const packageEstimateBodySchema = z.object({ use: z.enum(PUBLISH_USES) })
+export type PackageEstimateBody = z.infer<typeof packageEstimateBodySchema>
+
+export const packageGenerateBodySchema = z.object({
+  use: z.enum(PUBLISH_USES),
+  estimateId: id,
+  instructions: z.string().trim().max(PUBLISH_LIMITS.instructions).optional(),
+})
+export type PackageGenerateBody = z.infer<typeof packageGenerateBodySchema>
+
+// PUT /packages/:id/pieces/:kind: the content is checked against the schema of its kind by the server.
+export const pieceSaveBodySchema = z.object({ baseVersion: packageBaseVersionSchema, content: z.unknown() })
+export type PieceSaveBody = z.infer<typeof pieceSaveBodySchema>
+
+// POST /packages/:id/approve: `versions` are the ones on screen, so nothing changed under the creator approves.
+export const packageApproveBodySchema = z.object({
+  step: z.enum(PACKAGE_STEPS),
+  versions: kindVersionsSchema,
+})
+export type PackageApproveBody = z.infer<typeof packageApproveBodySchema>

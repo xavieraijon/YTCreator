@@ -35,6 +35,8 @@ export const FIELD_CODES = [
   // The idea bank (004): a channel without a profile, and «Buscar otro enfoque» for an idea that is not burned.
   'sin_perfil',
   'sin_medida_quemada',
+  // The publishing package (006): no room for more titles than the ones chosen or written by the creator.
+  'lleno',
 ] as const
 export type FieldCode = (typeof FIELD_CODES)[number]
 

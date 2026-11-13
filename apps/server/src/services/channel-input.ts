@@ -108,6 +108,8 @@ export function channelInput(
     case 'enfoques_short':
     case 'investigacion':
     case 'comprobar_guion':
+    case 'titulos':
+    case 'miniaturas':
       return {}
   }
 }

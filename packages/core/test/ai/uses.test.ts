@@ -67,6 +67,8 @@ describe('AI uses of the 003', () => {
         'enfoques_short',
         'investigacion',
         'comprobar_guion',
+        'titulos',
+        'miniaturas',
       ].sort(),
     )
   })

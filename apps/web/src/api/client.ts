@@ -1,4 +1,4 @@
-import type { ScriptKind, ChannelOrigin, ChannelUse, JourneyStep, ProposalKind } from '@ytcreator/core'
+import type { PackageKind, ScriptKind, ChannelOrigin, ChannelUse, JourneyStep, ProposalKind } from '@ytcreator/core'
 import {
   apiErrorSchema,
   type ApiErrorBody,
@@ -25,6 +25,10 @@ import {
   scriptVersionDetailSchema,
   scriptVersionSummarySchema,
   type RestoreBody,
+  type PackageApproveBody,
+  type PackageEstimateBody,
+  type PackageGenerateBody,
+  type PieceSaveBody,
   type ApproveDraftBody,
   type ClaimActionBody,
   type DraftSaveBody,
@@ -309,6 +313,14 @@ export const packagesApi = {
     apiClient.get(`${channelPath(channelId)}/packages`, packageSummarySchema.array(), options),
   open: (scriptId: string) => apiClient.post(`${scriptPath(scriptId)}/package`, {}, packageViewSchema),
   get: (id: string, options?: RequestOptions) => apiClient.get(packagePath(id), packageViewSchema, options),
+  estimate: (id: string, body: PackageEstimateBody, options?: RequestOptions) =>
+    apiClient.post(`${packagePath(id)}/estimate`, body, estimateSchema, options),
+  generate: (id: string, body: PackageGenerateBody) =>
+    apiClient.post(`${packagePath(id)}/generate`, body, jobStartedSchema),
+  savePiece: (id: string, kind: PackageKind, body: PieceSaveBody) =>
+    apiClient.put(`${packagePath(id)}/pieces/${kind}`, body, packageViewSchema),
+  approve: (id: string, body: PackageApproveBody) =>
+    apiClient.post(`${packagePath(id)}/approve`, body, packageViewSchema),
 }
 
 // The script of an idea (specs/005-script-and-outline/contracts/http-api.md).

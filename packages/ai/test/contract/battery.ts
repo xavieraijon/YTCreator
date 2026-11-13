@@ -1,6 +1,7 @@
 import {
   CHANNEL_OUTPUTS,
   checkClaims,
+  titlesOutputFor,
   type AiProvider,
   type ChannelUse,
   type Logger,
@@ -31,7 +32,15 @@ export type BaseCase =
 // The channel uses of the 003: valid output, invalid twice and an invented figure (contracts/ai-uses.md, «Pruebas»).
 export const CHANNEL_USES = Object.keys(CHANNEL_OUTPUTS) as ChannelUse[]
 export type UseCase = `use_valid:${ChannelUse}` | `use_invalid_twice:${ChannelUse}` | `use_invented:${ChannelUse}`
-export type ContractCase = BaseCase | UseCase
+// The publishing package (006, contracts/ai-uses.md, «Batería de contrato»): an answer with a web address is asked for
+// once more, and a title that points to a block the script does not have never validates.
+export type PackageCase = 'use_web_address:titulos' | 'use_web_address:miniaturas' | 'use_unknown_block:titulos'
+export const PACKAGE_CASES: readonly PackageCase[] = [
+  'use_web_address:titulos',
+  'use_web_address:miniaturas',
+  'use_unknown_block:titulos',
+]
+export type ContractCase = BaseCase | UseCase | PackageCase
 
 // What the channel readings get: the figures and videos the output may cite.
 export const USE_INPUT = { videos: [{ videoId: 'vid-abc', title: 'Cena en diez minutos', views: 1200 }] }
@@ -42,6 +51,10 @@ export function useOutputs(stub: ContractCase): unknown[] | undefined {
   if (!use) return undefined
   if (kind === 'use_valid') return [fakeChannelOutput(use, USE_INPUT, 'normal')]
   if (kind === 'use_invented') return [fakeChannelOutput(use, USE_INPUT, 'cifra_inventada')]
+  if (kind === 'use_web_address')
+    return [fakeChannelOutput(use, USE_INPUT, 'con_direccion'), fakeChannelOutput(use, USE_INPUT, 'normal')]
+  if (kind === 'use_unknown_block')
+    return [fakeChannelOutput(use, USE_INPUT, 'normal'), fakeChannelOutput(use, USE_INPUT, 'normal')]
   return [fakeChannelOutput(use, USE_INPUT, 'salida_rota'), fakeChannelOutput(use, USE_INPUT, 'salida_rota')]
 }
 
@@ -220,6 +233,32 @@ export function runProviderContract(name: string, factory: ContractFactory, opti
           if (!result.ok) return
           expect(checkClaims(result.value, USE_INPUT).length).toBeGreaterThan(0)
           expect(subject.calls()).toBe(1)
+        },
+      )
+    }
+
+    for (const stub of PACKAGE_CASES) {
+      const use = stub.split(':')[1] as 'titulos' | 'miniaturas'
+      const unknownBlock = stub.startsWith('use_unknown_block')
+      caseIt(
+        stub,
+        unknownBlock
+          ? `U4 ${use}: un bloque que el guion no tiene → invalidOutput tras un único reintento`
+          : `U5 ${use}: una dirección web → no valida y se pide una vez más`,
+        async () => {
+          const { deps } = capturingDeps()
+          const subject = await factory(stub, deps)
+          const result = await subject.provider.generate({
+            use,
+            prompt: { id: use, version: 1, text: 'Prueba de contrato.' },
+            input: USE_INPUT,
+            schema: (unknownBlock
+              ? titlesOutputFor('largo', ['bloque-que-no-existe'])
+              : CHANNEL_OUTPUTS[use]) as z.ZodType<unknown>,
+          })
+          if (unknownBlock) expect(result).toMatchObject({ ok: false, invalidOutput: true })
+          else expect(result).toMatchObject({ ok: true, value: useOutputs(stub)![1] })
+          expect(subject.calls()).toBe(2)
         },
       )
     }

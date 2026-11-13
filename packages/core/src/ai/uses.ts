@@ -20,5 +20,8 @@ export const AI_USES = [
   'enfoques_short',
   'investigacion',
   'comprobar_guion',
+  // The publishing package (006).
+  'titulos',
+  'miniaturas',
 ] as const
 export type AiUse = (typeof AI_USES)[number]
