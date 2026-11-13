@@ -78,6 +78,7 @@ export const publishEs = {
     miniaturas: 'Proponiendo ideas de miniatura',
     descripcion: 'Escribiendo la descripción, los capítulos y las etiquetas',
     parte_paquete: 'Escribiendo de nuevo {parte}',
+    paquete_short: 'Escribiendo la publicación del Short',
   },
   // Each part of the texts, as it is said inside a sentence («Pedir de nuevo los capítulos»).
   parts: {
@@ -145,19 +146,36 @@ export const publishEs = {
     forTitle: 'Para el título: «{titulo}»',
     editConcept: 'Editar la idea {n}',
     shortCover:
-      'La portada de un Short la prepararemos más adelante; por ahora, quédate con el título. En YouTube se elige desde la aplicación del móvil al subirlo.',
+      'Un Short no lleva miniatura: su portada es un momento del vídeo, que eliges al subirlo desde la aplicación de YouTube del móvil.',
+    shortAsk: 'Proponer la publicación del Short',
+    shortAskWhy:
+      'Te proponemos de una vez los títulos, la portada, la descripción con sus hashtags, las etiquetas y un comentario para fijar, todo a partir del guion.',
+    coverTitle: 'Portada sugerida',
+    coverMoment: 'Momento del vídeo',
+    coverMomentHint: 'Qué se ve en ese momento, para encontrarlo al elegir la portada.',
+    coverScreenText: 'Texto que se lee en ese momento',
+    coverScreenTextHint: 'Corto, o vacío si no hay.',
+    coverBlock: 'Está en: «{bloque}»',
     approve: 'Aprobar título y miniatura',
-    approveShort: 'Aprobar el título',
+    approveShort: 'Aprobar título y portada',
     approved: 'Título y miniatura aprobados. Si cambias algo, vuelven a borrador.',
     approvedShort: 'Título y portada aprobados. Si cambias algo, vuelven a borrador.',
     notReady: 'Para aprobar hace falta un título principal y al menos una idea de miniatura elegida.',
-    notReadyShort: 'Para aprobar hace falta un título principal y la portada, que prepararemos más adelante.',
+    notReadyShort: 'Para aprobar hace falta un título principal y el momento de la portada.',
   },
   // «Descripción» (contracts/ui-screens.md): the text under the video, its chapters, the tags and the pinned comment.
   texts: {
     needsCover: 'Aprueba primero el título y la miniatura: la descripción se escribe para ese título.',
-    shortLater:
-      'La descripción de un Short la prepararemos más adelante; por ahora, quédate con el título y la portada.',
+    shortNeedsPackage: 'La descripción de un Short llega con su publicación: pídela primero en «Título y portada».',
+    needsCoverShort:
+      'Cuando apruebes el título y la portada podrás pedir de nuevo cada parte, ya escrita para ese título.',
+    related:
+      'Este Short sale de tu vídeo «{titulo}». La descripción lo nombra, sin enlace: al subir el Short, elige ese vídeo en «Vídeo relacionado» para que quien lo vea pueda ir al vídeo largo.',
+    notReadyShort: 'Para aprobar hacen falta las primeras líneas y al menos una etiqueta.',
+    hashtags: 'Hashtags',
+    hashtagsHint:
+      'Separados por comas o espacios, con «#» o sin él. YouTube enseña los {n} primeros encima del título.',
+    hashtagsWrong: 'Como mucho {max} hashtags, de {largo} caracteres cada uno.',
     ask: 'Proponer descripción',
     askWhy:
       'Te proponemos la descripción, los capítulos, las etiquetas y un comentario para fijar, todo a partir del guion.',

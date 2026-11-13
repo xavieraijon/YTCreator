@@ -86,7 +86,12 @@ const CLAIM_FIELDS: Partial<Record<ChannelUse, readonly string[]>> = {
   miniaturas: ['scene'],
   // What the description says about the video; the names of the chapters and the tags are topics, not figures.
   descripcion: ['firstLines', 'body', 'comment'],
-  parte_paquete: ['firstLines', 'body', 'comment'],
+  // The moment of a Short's cover, asked for alone, is checked like the scene of a thumbnail; the text seen in it may
+  // promise «3 trucos», like the big text of a thumbnail (decision 30).
+  parte_paquete: ['firstLines', 'body', 'comment', 'moment'],
+  // A Short's package in one request: only what its description says, which may be left empty by trimming (the
+  // creator writes it before approving). A trimmed reason or moment would throw the whole paid answer away (decision 93).
+  paquete_short: ['firstLines', 'body', 'comment'],
 }
 
 // One request can become up to four calls: an answer that does not validate is always asked for again by the adapter

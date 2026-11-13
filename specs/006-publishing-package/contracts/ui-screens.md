@@ -40,8 +40,9 @@ cada uno con su acción («Pedir de nuevo · {coste}», «Usar la nueva», «Ir 
   (hasta 2). «Escribir uno mío».
 - Conceptos de miniatura: `Card` con qué se ve, texto grande, emoción, composición, colores y título con el que casa;
   `Checkbox` «Elegir» (hasta 3), editar. Explica que YouTube puede probar hasta tres y quedarse con la que más funcione.
-- En un Short, en su lugar, la portada sugerida: el momento del guion y el texto en pantalla, con una frase que dice que
-  la portada se elige en la app de YouTube del móvil.
+- En un Short, en su lugar, la portada sugerida: el momento del guion y el texto en pantalla, editables y con «Pedir de
+  nuevo», con una frase que dice que la portada se elige en la app de YouTube del móvil. Antes de tenerla, una sola
+  acción: «Proponer la publicación del Short · {coste}», que trae títulos, portada y textos.
 - Acciones: «Proponer títulos · {coste}», «Proponer miniaturas · {coste}» (con el principal elegido), «Pedir otros» con
   indicaciones.
 - **Principal**: según el estado: proponer títulos, proponer miniaturas, «Aprobar título y miniatura».

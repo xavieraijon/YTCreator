@@ -12,6 +12,8 @@ import {
   AI_THUMBNAILS,
   descriptionOutputFor,
   partOutputFor,
+  shortPackageOutputFor,
+  type ShortPackageOutput,
   proposeChapters,
   thumbnailsOutputFor,
   TITLE_COUNTS,
@@ -67,15 +69,19 @@ export interface PackageWorkDeps {
   knowledge: PublishKnowledge
 }
 
-// The kinds the creator can write by hand so far; the others arrive with their stories (US2, US3).
+// The kinds the creator can write by hand.
 const EDITABLE: readonly PackageKind[] = [
   'titulos',
   'miniaturas',
+  'portada_short',
   'descripcion',
   'capitulos',
   'etiquetas',
   'comentario',
 ]
+
+/** What `paquete_short` brings besides the titles: while one is missing, it can be asked for (decision 82). */
+const SHORT_PACKAGE_KINDS = ['portada_short', 'descripcion', 'etiquetas', 'comentario'] as const
 
 /** What a job of the package is doing: a use, or one part asked for again (`parte_paquete:etiquetas`). */
 export const jobOpOf = (use: PublishUse, part?: PackagePart) => (part ? `${use}:${part}` : use)
@@ -196,6 +202,7 @@ export function createPackageWork(deps: PackageWorkDeps) {
       tagsMaxTotalChars: youtube.data.tagsMaxTotalChars.value,
       chapterMinSeconds: youtube.data.chapters.minSeconds.value,
       chapterMinCount: youtube.data.chapters.minCount.value,
+      hashtagsShown: youtube.data.hashtags.shownAboveTitle.value,
     }
   }
   const textRules = () => {
@@ -203,6 +210,7 @@ export function createPackageWork(deps: PackageWorkDeps) {
     return {
       chapterMinCount: youtube.data.chapters.minCount.value,
       tagsMaxTotalChars: youtube.data.tagsMaxTotalChars.value,
+      hashtagsShown: youtube.data.hashtags.shownAboveTitle.value,
     }
   }
 
@@ -232,13 +240,24 @@ export function createPackageWork(deps: PackageWorkDeps) {
   const assertCanAsk = (found: Found, use: PublishUse, part: PackagePart | undefined) => {
     const { pkg } = found
     const kinds = formatKinds(pkg.format)
+    if (use === 'paquete_short') {
+      if (pkg.format !== 'short') throw new ApiError({ code: 'validacion', fields: { use: 'no_valido' } })
+      // Once all of it is there, each piece is asked for again on its own: another tab would pay to write over them
+      // (R9). While a piece is missing (titles made before, or written by hand), it brings what is missing.
+      if (SHORT_PACKAGE_KINDS.every((kind) => versions.latest(pkg.id, kind)))
+        throw new ApiError({ code: 'version_cambiada' })
+      return
+    }
     if (use === 'titulos' || use === 'miniaturas') {
       if (!kinds.includes(use)) throw new ApiError({ code: 'validacion', fields: { use: 'no_valido' } })
+      // A Short's first titles come with its package, in the same request (R9).
+      if (use === 'titulos' && pkg.format === 'short' && !titlesOf(pkg))
+        throw new ApiError({ code: 'validacion', fields: { use: 'no_valido' } })
       assertRoom(pkg, use)
       return
     }
     if (use === 'descripcion') {
-      // A Short gets its texts with `paquete_short` (US4).
+      // A Short gets its texts with `paquete_short` (R9).
       if (pkg.format !== 'largo') throw new ApiError({ code: 'validacion', fields: { use: 'no_valido' } })
       if (!coverApproved(pkg)) throw new ApiError({ code: 'sin_aprobar' })
       // Once the texts are there, each one is asked for again on its own: another tab would pay to write over them.
@@ -285,6 +304,8 @@ export function createPackageWork(deps: PackageWorkDeps) {
       measured: measuredInput(service.view(pkg, script, idea)),
       limits: limitsInput(),
       craft: deps.knowledge.craft.data,
+      // A Short names the long video it comes from, also when its description is asked for again (FR-018).
+      parentTitle: pkg.format === 'short' ? service.view(pkg, script, idea).parentTitle : null,
     }
     const stamp = (instructions: string | null, usageId: string | null) => ({
       draftVersion: draft.version,
@@ -343,7 +364,8 @@ export function createPackageWork(deps: PackageWorkDeps) {
                 ...before,
                 firstLines: output.firstLines,
                 body: output.body,
-                hashtags: pkg.format === 'short' ? (output.hashtags ?? []) : [],
+                // An answer without hashtags leaves the ones there were: they are never emptied unsaid.
+                hashtags: pkg.format === 'short' ? (output.hashtags ?? before.hashtags) : [],
               },
               extra,
               use,
@@ -371,6 +393,79 @@ export function createPackageWork(deps: PackageWorkDeps) {
           case 'portada_short':
             addVersion(pkg, 'portada_short', 'parte_ia', (value as PartOutput<'portada_short'>).cover, extra, use)
         }
+      },
+    }
+  }
+
+  // A Short's package in one request: each piece gets its own version, as if asked for one by one (R9). No main title
+  // is chosen yet, so the texts are not written for one.
+  const shortRequest = (
+    found: Found,
+    profile: ReturnType<typeof profileInput>,
+    draft: ReturnType<typeof approvedDraft>,
+    blocks: { id: string; type: string; title: string; text: string }[],
+  ): Request => {
+    const { pkg, idea, script } = found
+    const view = service.view(pkg, script, idea)
+    return {
+      input: {
+        idea: ideaInput(idea),
+        draft: { blocks },
+        profile,
+        measured: measuredInput(view),
+        limits: limitsInput(),
+        craft: deps.knowledge.craft.data,
+        // The main title of the long video's package, or its idea title: named, never linked (decision 10).
+        parentTitle: view.parentTitle,
+      },
+      schema: shortPackageOutputFor(
+        blocks.map((block) => block.id),
+        textRules(),
+      ),
+      keep: (value, usageId, instructions) => {
+        const output = value as ShortPackageOutput
+        const extra = { draftVersion: draft.version, instructions, usageId }
+        // Titles there were (chosen, or written by the creator) stay, as when asking for more (decision 25).
+        const kept = keptTitles(pkg)
+        const fresh = output.titles.map((title) => ({
+          id: randomUUID(),
+          text: title.text,
+          why: title.why,
+          blockId: title.blockId,
+          origin: 'ia' as const,
+        }))
+        const latest = titlesOf(pkg)
+        addVersion(
+          pkg,
+          'titulos',
+          'ia',
+          {
+            candidates: [...kept, ...fresh.slice(0, PUBLISH_LIMITS.candidates - kept.length)],
+            main: latest?.main ?? null,
+            alternatives: latest?.alternatives ?? [],
+          },
+          extra,
+          'paquete_short',
+        )
+        // Only what is missing: a piece already there is never written over (decision 82).
+        const missing = (kind: PackageKind) => !versions.latest(pkg.id, kind)
+        if (missing('portada_short')) addVersion(pkg, 'portada_short', 'ia', output.cover, extra, 'paquete_short')
+        if (missing('descripcion'))
+          addVersion(
+            pkg,
+            'descripcion',
+            'ia',
+            {
+              firstLines: output.firstLines,
+              body: output.body,
+              hashtags: output.hashtags,
+              fixedText: service.fixedTextOf(pkg.channelId).current,
+            },
+            extra,
+            'paquete_short',
+          )
+        if (missing('etiquetas')) addVersion(pkg, 'etiquetas', 'ia', { tags: output.tags }, extra, 'paquete_short')
+        if (missing('comentario')) addVersion(pkg, 'comentario', 'ia', { text: output.comment }, extra, 'paquete_short')
       },
     }
   }
@@ -430,6 +525,7 @@ export function createPackageWork(deps: PackageWorkDeps) {
     }
 
     if (use === 'descripcion' || use === 'parte_paquete') return textsRequest(found, use, part, profile, draft)
+    if (use === 'paquete_short') return shortRequest(found, profile, draft, blocks)
 
     // A thumbnail goes with a title: the main one has to be chosen first (FR-006).
     const titles = titlesOf(pkg)
@@ -586,6 +682,18 @@ export function createPackageWork(deps: PackageWorkDeps) {
       if (!chaptersInOrder(times, deps.knowledge.youtube.data.chapters.minSeconds.value))
         throw new ApiError({ code: 'validacion', fields: { chapters: 'no_valido' } })
       addVersion(pkg, 'capitulos', 'edicion', { chapters }, keepTitle)
+    } else if (kind === 'portada_short') {
+      const sent = parsed.data as PackageContentOf<'portada_short'>
+      const before = (latest?.content as PackageContentOf<'portada_short'> | undefined) ?? null
+      // Only a block chosen now is checked: one kept from before stays, even if the script changed since (it warns).
+      const blocks = service.approvedDraftOf(script)?.content.blocks ?? []
+      if (
+        sent.blockId !== null &&
+        sent.blockId !== before?.blockId &&
+        !blocks.some((block) => block.id === sent.blockId)
+      )
+        throw new ApiError({ code: 'validacion', fields: { blockId: 'no_valido' } })
+      addVersion(pkg, 'portada_short', 'edicion', sent, keepTitle)
     } else if (kind === 'etiquetas' || kind === 'comentario') {
       addVersion(pkg, kind, 'edicion', parsed.data as PackageContentOf<typeof kind>, keepTitle)
     } else if (kind === 'titulos') {

@@ -6,7 +6,7 @@ import type { DescriptionContent } from './model.ts'
 // never from the AI (research.md R4 and R5).
 
 /** The words the assembled text carries, in the language of the channel (as in the 005 export). */
-export const DESCRIPTION_TEXT = { sources: 'Fuentes:' } as const
+export const DESCRIPTION_TEXT = { sources: 'Fuentes:', related: 'Vídeo completo: «{titulo}»' } as const
 
 /**
  * The fixed part of a channel that has not written its own: the subscription link, built from the @ of the profile;
@@ -61,23 +61,39 @@ export function descriptionSources(facts: readonly Fact[]): DescriptionSource[] 
   return out
 }
 
+const comparable = (text: string) =>
+  text
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim()
+
+/** Whether a text names a title as it is, without minding accents, case or spaces (a Short and its long video). */
+export const mentionsTitle = (text: string, title: string) =>
+  comparable(title) !== '' && comparable(text).includes(comparable(title))
+
 const sourceLine = (source: DescriptionSource) => {
   if (source.url === null) return `- ${source.reference ?? ''}`
   return source.title ? `- ${source.title}: ${source.url}` : `- ${source.url}`
 }
 
 /**
- * The text that is copied into YouTube: first lines, body, chapters, sources, hashtags and the fixed part, in that
- * order, without the parts that are empty.
+ * The text that is copied into YouTube: first lines, body, the long video a Short comes from, chapters, sources,
+ * hashtags and the fixed part, in that order, without the parts that are empty. The long video is named by the app
+ * when the texts do not name it, so a Short drawn from it always does (FR-018), never with a link (decision 10).
  */
 export function assembleDescription(
   content: Pick<DescriptionContent, 'firstLines' | 'body' | 'hashtags' | 'fixedText'>,
   chapters: readonly { title: string; startSeconds: number }[],
   sources: readonly DescriptionSource[],
+  parentTitle: string | null = null,
 ): string {
+  const named = parentTitle === null || mentionsTitle(`${content.firstLines}\n${content.body}`, parentTitle)
   const parts = [
     content.firstLines.trim(),
     content.body.trim(),
+    named ? '' : DESCRIPTION_TEXT.related.replace('{titulo}', parentTitle.trim()),
     chapters.map((chapter) => `${formatChapterTime(chapter.startSeconds)} ${chapter.title.trim()}`).join('\n'),
     sources.length > 0 ? [DESCRIPTION_TEXT.sources, ...sources.map(sourceLine)].join('\n') : '',
     content.hashtags.map((tag) => `#${tag}`).join(' '),

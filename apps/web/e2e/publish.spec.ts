@@ -444,3 +444,107 @@ test('reviewing, copying with and without the clipboard, approving with notices 
   await page.getByRole('button', { name: 'Descargar todas en un documento' }).click()
   expect((await all).suggestedFilename()).toMatch(/^publicaciones-[a-z0-9-]+\.md$/)
 })
+
+// A Short drawn from an approved long video, written and approved through the API (005).
+async function approvedShortFromLong(channelId: string) {
+  const longId = await approvedScript(channelId, 'Pan de espelta')
+  const askOn = async (scriptId: string, use: string) => {
+    const estimate = await api(server, 'POST', `/api/scripts/${scriptId}/estimate`, { use })
+    await api(server, 'POST', `/api/scripts/${scriptId}/generate`, { use, estimateId: estimate['estimateId'] })
+    await expect
+      .poll(async () => ((await api(server, 'GET', `/api/scripts/${scriptId}`))['job'] as { status: string }).status)
+      .toBe('hecho')
+    return api(server, 'GET', `/api/scripts/${scriptId}`)
+  }
+  const long = await askOn(longId, 'enfoques_short')
+  const chosen = await api(server, 'POST', `/api/scripts/${longId}/short-angles/0/choose`, {
+    baseUpdatedAt: long['updatedAt'],
+  })
+  const shortId = chosen['scriptId'] as string
+  const draft = (await askOn(shortId, 'guion_short'))['draft'] as {
+    version: number
+    content: { claims: { status: string }[] }
+  }
+  await api(server, 'POST', `/api/scripts/${shortId}/draft/approve`, {
+    version: draft.version,
+    acknowledgedPending: draft.content.claims.filter((claim) => claim.status === 'pendiente').length,
+  })
+  return shortId
+}
+
+test('the package of a Short: no chapters nor thumbnails, a suggested cover and its long video (US4)', async ({
+  page,
+  context,
+}) => {
+  test.setTimeout(300_000)
+  await blockExternal(context)
+  if (!(await api(server, 'GET', '/api/channels/current'))['channel']) await connect(page)
+  const channelId = ((await api(server, 'GET', '/api/channels/current'))['channel'] as { id: string }).id
+  const shortId = await approvedShortFromLong(channelId)
+
+  // It asks for no chapters nor thumbnail ideas, and says in a sentence how a Short's cover is chosen.
+  await page.goto(`${server.baseURL}/canal/guiones/${shortId}`)
+  await page.getByRole('button', { name: 'Preparar la publicación' }).click()
+  await expect(page.getByRole('heading', { name: 'Título y portada', level: 2 })).toBeVisible()
+  await expect(page.getByText('Un Short no lleva miniatura', { exact: false }).first()).toBeVisible()
+  await expect(page.getByRole('button', { name: /^Proponer miniaturas/ })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: /^Proponer títulos/ })).toHaveCount(0)
+  await audit(page)
+
+  // One request brings it all: titles, the suggested cover and the texts.
+  const ask = page.getByRole('button', { name: /^Proponer la publicación del Short/ })
+  await expect(ask).toContainText('·')
+  await ask.click()
+  const main = page.getByRole('group', { name: 'Principal' })
+  await expect(main.getByRole('radio')).toHaveCount(3, { timeout: 15_000 })
+  await expect(page.getByRole('heading', { name: 'Portada sugerida', level: 3 })).toBeVisible()
+  await expect(page.getByLabel('Momento del vídeo')).not.toHaveValue('')
+  await expect(page.getByRole('button', { name: /^Proponer miniaturas/ })).toHaveCount(0)
+  await audit(page)
+
+  // The creator chooses with the keyboard and rewrites the moment; then approves the step.
+  await main.getByRole('radio').first().focus()
+  await page.keyboard.press('Space')
+  await page.getByLabel('Momento del vídeo').fill('Cuando parto el pan y se oye crujir.')
+  // What is approved is what is on screen: not before saving it.
+  await expect(page.getByRole('button', { name: 'Aprobar título y portada' })).toBeDisabled()
+  await expect(page.getByText('Guarda los cambios antes de aprobar.')).toBeVisible()
+  await page.getByRole('button', { name: 'Guardar la portada' }).click()
+  await expect(page.getByLabel('Momento del vídeo')).toHaveValue('Cuando parto el pan y se oye crujir.')
+  await expect(page.getByRole('button', { name: 'Aprobar título y portada' })).toBeEnabled()
+  await page.getByRole('button', { name: 'Aprobar título y portada' }).click()
+  await expect(page.getByText('Título y portada aprobados', { exact: false })).toBeVisible()
+  await page.getByRole('button', { name: 'Seguir con la descripción' }).click()
+
+  // The description: brief, with its hashtags and the long video named, without chapters.
+  await expect(page.getByRole('heading', { name: 'Descripción', level: 2 })).toBeVisible()
+  await expect(page.getByLabel('Hashtags')).toHaveValue('#pan #receta #shorts')
+  await expect(page.getByText('«Vídeo relacionado»', { exact: false }).first()).toBeVisible()
+  await expect(page.getByText('Este Short sale de tu vídeo «Pan de espelta»', { exact: false })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Capítulos' })).toHaveCount(0)
+  await audit(page)
+  await page.getByLabel('Hashtags').fill('pan, #espelta')
+  await page.getByRole('button', { name: 'Guardar la descripción' }).click()
+  await expect(page.getByLabel('Hashtags')).toHaveValue('#pan #espelta')
+  await page.getByRole('button', { name: 'Aprobar descripción' }).click()
+  await page.getByRole('button', { name: 'Seguir con revisar y copiar' }).click()
+
+  // Reviewed and approved as a long video; the cover goes as indications, with the reminder of the long video.
+  await expect(page.getByRole('heading', { name: 'Revisar y copiar', level: 2 })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Portada del Short', level: 4 })).toBeVisible()
+  await expect(page.getByText('Este Short sale de tu vídeo «Pan de espelta»', { exact: false })).toBeVisible()
+  await audit(page)
+  await page.getByRole('button', { name: 'Aprobar la publicación' }).click()
+  // With notices left (the fake AI writes no sources), the app asks first, as in a long video.
+  const dialog = page.getByRole('dialog')
+  const done = page.getByText(/^Publicación aprobada/)
+  await expect(dialog.or(done)).toBeVisible()
+  if (await dialog.isVisible()) await dialog.getByRole('button', { name: 'Aprobar igual' }).click()
+  await expect(done).toBeVisible()
+  const brief = page.waitForEvent('download')
+  await page.getByRole('button', { name: 'Descargar las indicaciones para la portada' }).click()
+  const download = await brief
+  expect(download.suggestedFilename()).toMatch(/^portada-[a-z0-9-]+\.md$/)
+  expect(readFileSync((await download.path())!, 'utf8')).toContain('Cuando parto el pan y se oye crujir.')
+  await audit(page)
+})

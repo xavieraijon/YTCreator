@@ -49,7 +49,8 @@ En Claude Code, esfuerzo `medium`.
 
 **`parte_paquete`**
 - Entrada: `part` (`descripcion` \| `capitulos` \| `etiquetas` \| `comentario` \| `portada_short`), la versión actual
-  de esa parte, `mainTitle`, `idea`, `draft`, `profile`, `measured`, `limits`, `instructions`.
+  de esa parte, `mainTitle`, `idea`, `draft`, `profile`, `measured`, `limits`, `parentTitle` (en un Short sacado de un
+  vídeo largo; si no, `null`; desde `v2`), `instructions`.
 - Salida: el esquema de esa parte en `descripcion` o en `paquete_short` (para `portada_short`). En `descripcion`, solo
   `firstLines`, `body` y, en un Short, `hashtags`; la parte fija no se toca.
 

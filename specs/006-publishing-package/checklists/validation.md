@@ -403,3 +403,86 @@ dicen lo que falta), XI (este informe).
 
 `git revert` del commit de esta historia. No hay migraciones nuevas. Queda pendiente: US4, US5 y Polish; T068 (IA real)
 necesita la autorización del creador.
+
+## US4 el paquete de un Short (T055–T060), Puerta A del 2026-11-13
+
+### 1. Resumen
+
+Un Short aprobado pide su paquete en una sola petición (`paquete_short`): de 3 a 5 títulos, la portada sugerida (bloque,
+momento y texto en pantalla), descripción con hashtags, etiquetas y comentario, sin capítulos ni miniaturas. Si viene de
+un vídeo largo, la descripción lo nombra siempre («Vídeo completo: «…»»), aunque la IA o el creador no lo hagan. Tres
+vueltas de revisión como máximo; se hicieron dos y los medios confirmados están corregidos.
+
+### 2. Requisitos
+
+| Requisito | Estado | Evidencia | Fecha |
+|---|---|---|---|
+| T055–T056 salida y uso `paquete_short` | Cumplido | `packages/core/test/publish/outputs.test.ts` (3 a 5 títulos de bloques del guion, hasta los hashtags que YouTube enseña, únicos y sin coma ni «#», portada de un bloque que existe, sin direcciones web, textos vacíos tras recortar una cifra); prompt `paquete_short/v1.md` con `parentTitle` y sin enlaces; `parte_paquete/v2.md` | 2026-11-13 |
+| T057–T058 rutas | Cumplido | `apps/server/test/http/packages-short.test.ts` (13 casos: piezas creadas y ninguna de miniaturas ni capítulos, `parentTitle` de la idea, del título principal del largo o nulo, rechazos de `titulos`/`miniaturas`/`descripcion` en un Short y de `paquete_short` en un largo o por segunda vez, títulos pedidos antes, guion sin aprobar, portada pedida otra vez y editada, bloque desconocido, mención añadida por la app, aprobar los pasos y el paquete sin capítulos) | 2026-11-13 |
+| T059 pantallas | Cumplido | `CoverStep.tsx` (portada del Short, guardar antes de aprobar), `DescriptionStep.tsx` (hashtags con su límite y fuente, sin capítulos, recordatorio del vídeo relacionado), `ReviewCopyStep.tsx`, `AskAgain.tsx`, `publish.es.ts` | 2026-11-13 |
+| T060 e2e con axe | Cumplido | `apps/web/e2e/publish.spec.ts` (US4): pedir el paquete, aprobar bloqueado con cambios sin guardar, hashtags, texto del vídeo relacionado, revisar, aprobar y descargar `portada-*.md`; axe en claro y oscuro a 375 y 1280 px | 2026-11-13 |
+| FR-018 vídeo relacionado | Cumplido | `assembleDescription` añade la línea si los textos no lo nombran (decisión 90); `description.test.ts` | 2026-11-13 |
+| Volver a una versión anterior | No cumplido aquí | Es de US5 | 2026-11-13 |
+
+### 3. Cómo se comprobó
+
+Tras la segunda vuelta: `fnm exec --using=24 -- pnpm lint` (código 0), `typecheck` (código 0) y `test` con la caché
+de vitest borrada (código 0: 193 ficheros, 2554 pasados y 4 omitidos). `test:e2e`: ver el punto 4. El flujo real de la
+historia con la IA falsa es el del e2e de US4 y el de `packages-short.test.ts`.
+
+### 4. Controles
+
+- Pasados: lint, typecheck, test, glosario (dentro de `test`, con los textos nuevos de `publish.es.ts`), `secrets-leak`,
+  axe en claro y oscuro a 375 y 1280 px, teclado (grupo de títulos, campos de la portada y los hashtags) y «Cómo se
+  demuestra» (paquete del Short sin capítulos, aprobado y descargado).
+- Tipos de fallo de IA: el paso usa `AiAction`, que ya cubre `sin_sesion`, `cupo_agotado`, `tiempo_agotado`,
+  `contenido_filtrado` y `no_disponible` (tests de la 005 y de US1); el error del paquete solo se enseña mientras falta.
+- `test:e2e` tras la segunda vuelta: código 0, 97 pasados y 2 omitidos (catálogo) y 53 de 53 (web).
+- No ejecutados: `test:installer`, porque no se toca el instalador; `prefers-reduced-motion` aparte, porque no añade
+  animaciones propias; IA real (T068, necesita al creador).
+
+### 5. Hallazgos
+
+Corregidos (primera vuelta, cuatro revisores):
+- Un Short con piezas a medias se quedaba sin salida: `paquete_short` se puede pedir mientras falte alguna, y solo
+  añade las que faltan (decisión 82).
+- Se podía aprobar con la portada sin guardar (decisión 91).
+- La descripción pedida sola no recibía `parentTitle` y el prompt fijaba 3 hashtags: `parte_paquete` v2 (decisión 89),
+  con `hashtagsShown` en los límites (decisión 88).
+- «#» dentro de un hashtag, hashtags repetidos o con coma, y hashtags perdidos al pedir otra descripción (decisión 92).
+- Cifras en el momento de la portada; bloque obsoleto al editar (decisión 87); textos de la pantalla del Short.
+
+Corregidos (segunda vuelta):
+- FR-018 dependía de la IA: la app añade la mención (decisión 90).
+- Riesgo de las decisiones 87 y 92 como Bajo: pasan a Medio.
+- El texto en pantalla de la portada no pasa el control de cifras («3 TRUCOS» es su función, decisión 92).
+- Recortar una cifra podía tirar la respuesta entera ya pagada: el control mira solo los textos de la descripción y el
+  comentario, que pueden quedar vacíos (decisión 93), con test.
+
+Descartados:
+- Envolver en una transacción la conservación de piezas al pedir el paquete: las escrituras son síncronas y un resultado
+  a medias ya tiene salida (decisión 82).
+
+Abiertos (menores):
+- Un título del vídeo largo con «#» o una dirección podría hacer que la IA lo copie y su respuesta no valga: se pide una
+  vez más (decisión 57), y la mención la pone la app sin exigirla al esquema (decisión 90).
+
+### 6. Desviaciones
+
+De más: `parte_paquete` v2 con el título del largo y el límite de hashtags, la mención añadida por la app y el bloqueo
+de aprobar con cambios sin guardar. De menos: volver a una versión anterior es de US5.
+
+### 7. Decisiones
+
+Agente: 81 a 93, todas Medio (efecto visible, texto de interfaz o coste). Pendientes del creador: ninguna.
+
+### 8. Constitución
+
+I (el Short tiene su paso propio y dice qué falta), II (la app no inventa la dirección del largo, decisión 10; no se
+aprueba lo que no se ha guardado), III (una sola petición para el paquete; no se tira una respuesta pagada por una
+frase), V (el límite de hashtags con su fuente), VI (teclado y axe), XI (este informe).
+
+### 9. Cómo revertir
+
+`git revert` del commit de esta historia. No hay migraciones nuevas; los prompts nuevos quedan en el lock y se van con
+el revert. Queda pendiente: US5 y Polish; T068 (IA real) necesita la autorización del creador.

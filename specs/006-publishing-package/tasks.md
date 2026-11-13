@@ -162,13 +162,13 @@ saltar a cada uno, corregirlos, copiar cada pieza, aprobar y descargar un docume
 **Independent Test**: Con proveedor falso y un guion Short aprobado sacado de un vídeo largo, generar el paquete sin
 capítulos, ver la portada sugerida y el vídeo largo mencionado, y aprobarlo.
 
-- [ ] T055 [P] [US4] Test de la salida `paquete_short` en `packages/core/test/publish/outputs.test.ts`: de 3 a 5 títulos, hasta 3 hashtags, `cover.blockId` existente y sin direcciones web
-- [ ] T056 [US4] Implementar la salida y dar de alta el uso `paquete_short` según las convenciones, con su prompt, que recibe `parentTitle` (el título principal del paquete del vídeo largo o, si no hay, el de trabajo de su idea) y no lleva enlaces (decisión 10)
-- [ ] T057 [P] [US4] Test de rutas en `apps/server/test/http/packages-short.test.ts`: `use=paquete_short` crea versiones de `titulos`, `portada_short`, `descripcion`, `etiquetas` y `comentario` y ninguna de `miniaturas` ni `capitulos`; `titulos`, `miniaturas` y `descripcion` rechazan un Short y `paquete_short` un vídeo largo; `parte_paquete` con `portada_short`; aprobar los pasos y el paquete sin capítulos
-- [ ] T058 [US4] Implementar en `apps/server/src/services/packages.ts` las rutas de T057
-- [ ] T059 [US4] Adaptar `CoverStep.tsx`, `DescriptionStep.tsx` y `ReviewCopyStep.tsx` al Short: pasos «Título y portada → Descripción → Revisar y copiar», portada sugerida con la frase de la app del móvil, hashtags, recordatorio de «Vídeo relacionado» y sus textos en `publish.es.ts`
-- [ ] T060 [US4] e2e en `apps/web/e2e/publish.spec.ts` (US4), con axe en claro y oscuro a 375 y 1280 px
-- [ ] T061 [A] [US4] Puerta A de US4: ejecutar `/puerta-a 006 US4`
+- [X] T055 [P] [US4] Test de la salida `paquete_short` en `packages/core/test/publish/outputs.test.ts`: de 3 a 5 títulos, hasta 3 hashtags, `cover.blockId` existente y sin direcciones web
+- [X] T056 [US4] Implementar la salida y dar de alta el uso `paquete_short` según las convenciones, con su prompt, que recibe `parentTitle` (el título principal del paquete del vídeo largo o, si no hay, el de trabajo de su idea) y no lleva enlaces (decisión 10)
+- [X] T057 [P] [US4] Test de rutas en `apps/server/test/http/packages-short.test.ts`: `use=paquete_short` crea versiones de `titulos`, `portada_short`, `descripcion`, `etiquetas` y `comentario` y ninguna de `miniaturas` ni `capitulos`; `titulos`, `miniaturas` y `descripcion` rechazan un Short y `paquete_short` un vídeo largo; `parte_paquete` con `portada_short`; aprobar los pasos y el paquete sin capítulos
+- [X] T058 [US4] Implementar en `apps/server/src/services/packages.ts` las rutas de T057
+- [X] T059 [US4] Adaptar `CoverStep.tsx`, `DescriptionStep.tsx` y `ReviewCopyStep.tsx` al Short: pasos «Título y portada → Descripción → Revisar y copiar», portada sugerida con la frase de la app del móvil, hashtags, recordatorio de «Vídeo relacionado» y sus textos en `publish.es.ts`
+- [X] T060 [US4] e2e en `apps/web/e2e/publish.spec.ts` (US4), con axe en claro y oscuro a 375 y 1280 px
+- [X] T061 [A] [US4] Puerta A de US4: ejecutar `/puerta-a 006 US4`
 
 ---
 

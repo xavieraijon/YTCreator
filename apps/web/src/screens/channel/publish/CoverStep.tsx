@@ -26,6 +26,7 @@ import { publishEs } from '../../../strings/publish.es.ts'
 import { scriptEs } from '../../../strings/script.es.ts'
 import styles from '../channel.module.css'
 import { AiAction } from '../Proposal.tsx'
+import { AskAgain } from './AskAgain.tsx'
 import { type PackageAi, usePackageEstimate } from './usePackageAi.ts'
 
 const text = publishEs.cover
@@ -35,6 +36,66 @@ const CHOICE_DELAY_MS = 400
 type TitleChoice = Pick<TitlesContent, 'main' | 'alternatives'>
 const CONCEPT_FIELDS = ['scene', 'bigText', 'emotion', 'composition', 'colors'] as const
 type ConceptField = (typeof CONCEPT_FIELDS)[number]
+
+interface ShortCoverProps {
+  readonly pkg: PackageView
+  readonly ai: PackageAi
+  readonly busy: boolean
+  readonly blockTitle: (blockId: string | null) => string | null
+  readonly onSave: (content: { blockId: string | null; moment: string; screenText: string }) => Promise<boolean>
+  readonly onAsk: Parameters<typeof AskAgain>[0]['onAsk']
+  readonly onDirty: (dirty: boolean) => void
+}
+
+// The suggested cover of a Short: the moment to choose in the YouTube mobile app and the text seen in it (FR-018).
+// Rendered with the piece's version as its key, so what the creator writes starts again from each new version.
+function ShortCover({ pkg, ai, busy, blockTitle, onSave, onAsk, onDirty }: ShortCoverProps) {
+  const piece = pkg.pieces.portada_short!
+  const [moment, setMoment] = useState(piece.content.moment)
+  const [screenText, setScreenText] = useState(piece.content.screenText)
+  const dirty = moment !== piece.content.moment || screenText !== piece.content.screenText
+  useEffect(() => {
+    onDirty(dirty)
+    return () => onDirty(false)
+  }, [dirty, onDirty])
+  const block = blockTitle(piece.content.blockId)
+  const scriptApproved = pkg.script.status === 'guion_aprobado'
+  return (
+    <div className={styles.form}>
+      <h3>{text.coverTitle}</h3>
+      <p className={styles.why}>{text.shortCover}</p>
+      <TextArea
+        label={text.coverMoment}
+        description={text.coverMomentHint}
+        value={moment}
+        maxLength={PUBLISH_LIMITS.moment}
+        disabled={busy}
+        onChange={(event) => setMoment(event.target.value)}
+      />
+      <TextField
+        label={text.coverScreenText}
+        description={text.coverScreenTextHint}
+        value={screenText}
+        maxLength={PUBLISH_LIMITS.screenText}
+        disabled={busy}
+        onChange={(event) => setScreenText(event.target.value)}
+      />
+      {block && <p>{format(text.coverBlock, { bloque: block })}</p>}
+      {(piece.origin === 'ia' || piece.origin === 'parte_ia') && <DataSource kind="ia" />}
+      <div className={styles.actions}>
+        <Button
+          aria-label={format(publishEs.texts.saveNamed, { parte: publishEs.parts.portada_short })}
+          variant="secondary"
+          disabled={busy || !dirty || moment.trim() === ''}
+          onClick={() => void onSave({ ...piece.content, moment, screenText })}
+        >
+          {publishEs.texts.save}
+        </Button>
+      </div>
+      <AskAgain pkg={pkg} ai={ai} part="portada_short" disabled={busy || dirty || !scriptApproved} onAsk={onAsk} />
+    </div>
+  )
+}
 
 export interface CoverStepProps {
   readonly pkg: PackageView
@@ -202,13 +263,29 @@ export function CoverStep({ pkg, ai, onChange, onError, onNext }: CoverStepProps
   const candidates = titles?.content.candidates ?? []
   const titleText = (id: string | null) => candidates.find((candidate) => candidate.id === id)?.text ?? ''
   // A title over the maximum is a warning, not a lock (FR-013): YouTube itself will say no.
-  const ready = main !== null && !pending && (isShort ? pkg.pieces.portada_short !== null : chosen.length > 0)
+  const shortCover = pkg.pieces.portada_short
+  // What the creator is writing in the cover counts too: what is approved is what is on screen.
+  const [coverDirty, setCoverDirty] = useState(false)
+  const ready =
+    main !== null &&
+    !pending &&
+    !coverDirty &&
+    (isShort ? shortCover !== null && shortCover.content.moment.trim() !== '' : chosen.length > 0)
   // Asking for more titles needs room for the fewest the AI gives next to the ones kept (decision 31).
   const kept = candidates.filter(
     (candidate) => candidate.id === main || alternatives.includes(candidate.id) || candidate.origin === 'creador',
   ).length
   const titleRoom = titles === null || PUBLISH_LIMITS.candidates - kept >= TITLE_COUNTS[pkg.format].min
-  const titlePrice = usePackageEstimate(pkg, 'titulos', scriptApproved && idle && titleRoom && !pending)
+  // A Short's first titles come with its whole package, in one request (R9).
+  // While a piece of it is missing (titles made before, or written by hand), it brings what is missing (decision 82).
+  const firstShort =
+    isShort && (['portada_short', 'descripcion', 'etiquetas', 'comentario'] as const).some((kind) => !pkg.pieces[kind])
+  const titlePrice = usePackageEstimate(
+    pkg,
+    'titulos',
+    scriptApproved && idle && titleRoom && !pending && !(isShort && titles === null),
+  )
+  const shortPrice = usePackageEstimate(pkg, 'paquete_short', scriptApproved && idle && firstShort)
 
   const ask: PackageAi['run'] = async (...args) => {
     setAsking(true)
@@ -306,15 +383,41 @@ export function CoverStep({ pkg, ai, onChange, onError, onNext }: CoverStepProps
         />
       )}
 
-      {titles === null ? (
-        <AiAction
-          label={text.ask}
-          estimate={titlePrice.estimate}
-          failure={ai.failureFor('titulos')}
-          busy={ai.working === 'titulos'}
-          disabled={busy || !scriptApproved}
-          onRun={() => void ask('titulos', titlePrice)}
+      {/* Only while it can be asked for: once the package is there, a late answer is not the creator's concern. */}
+      {firstShort && shortPrice.error !== null && (
+        <ErrorMessage
+          live
+          title={errorText(shortPrice.error)}
+          action={{ label: es.app.retry, onClick: shortPrice.retry }}
         />
+      )}
+
+      {firstShort && (
+        <>
+          <p>{text.shortCover}</p>
+          <p>{text.shortAskWhy}</p>
+          <AiAction
+            label={text.shortAsk}
+            estimate={shortPrice.estimate}
+            failure={ai.failureFor('paquete_short')}
+            busy={ai.working === 'paquete_short'}
+            disabled={busy || !scriptApproved}
+            onRun={() => void ask('paquete_short', shortPrice)}
+          />
+        </>
+      )}
+
+      {titles === null ? (
+        !isShort && (
+          <AiAction
+            label={text.ask}
+            estimate={titlePrice.estimate}
+            failure={ai.failureFor('titulos')}
+            busy={ai.working === 'titulos'}
+            disabled={busy || !scriptApproved}
+            onRun={() => void ask('titulos', titlePrice)}
+          />
+        )
       ) : (
         <>
           <h3>{text.titles}</h3>
@@ -462,7 +565,22 @@ export function CoverStep({ pkg, ai, onChange, onError, onNext }: CoverStepProps
       )}
 
       {isShort
-        ? titles !== null && <p className={styles.notice}>{text.shortCover}</p>
+        ? shortCover !== null && (
+            <ShortCover
+              key={shortCover.version}
+              pkg={pkg}
+              ai={ai}
+              busy={busy}
+              blockTitle={blockTitle}
+              onSave={(content) =>
+                saved(() =>
+                  packagesApi.savePiece(pkg.id, 'portada_short', { baseVersion: shortCover.version, content }),
+                )
+              }
+              onAsk={(op, price, instructions) => void ask(op, price, instructions)}
+              onDirty={setCoverDirty}
+            />
+          )
         : titles !== null && (
             <>
               <h3>{text.thumbnails}</h3>
@@ -600,7 +718,11 @@ export function CoverStep({ pkg, ai, onChange, onError, onNext }: CoverStepProps
       ) : (
         (thumbnails !== null || (isShort && titles !== null)) && (
           <>
-            {!ready && !pending && <p className={styles.notice}>{isShort ? text.notReadyShort : text.notReady}</p>}
+            {coverDirty ? (
+              <p className={styles.notice}>{publishEs.texts.unsaved}</p>
+            ) : (
+              !ready && !pending && <p className={styles.notice}>{isShort ? text.notReadyShort : text.notReady}</p>
+            )}
             <div className={styles.actions}>
               <Button
                 variant="primary"

@@ -251,7 +251,10 @@ export function createPackageService(deps: PackageServiceDeps) {
     return {
       chapters: timed,
       sources,
-      assembled: description ? assembleDescription(description, timed, sources) : null,
+      // A Short names the long video it comes from (FR-018).
+      assembled: description
+        ? assembleDescription(description, timed, sources, pkg.format === 'short' ? parentTitleOf(script) : null)
+        : null,
       fixedText: fixedTextOf(pkg.channelId),
     }
   }
@@ -263,11 +266,16 @@ export function createPackageService(deps: PackageServiceDeps) {
     // The maximum is cited with its own source, never with another one by default (principle V).
     const source = 'source' in title ? youtube.source[title.source] : undefined
     if (!source) throw new Error('The maximum length of a title needs its source in publish/youtube.json')
+    const hashtags = youtube.data.hashtags.shownAboveTitle
+    const hashtagsSource = 'source' in hashtags ? youtube.source[hashtags.source] : undefined
+    if (!hashtagsSource) throw new Error('The hashtags shown need their source in publish/youtube.json')
     return {
       titleMaxChars: title.value,
       mobileTitleChars: craft.data.mobileTitleChars.value,
       descriptionMaxChars: description.value,
       youtube: { label: source.label, date: youtube.reviewedAt },
+      hashtagsShown: hashtags.value,
+      hashtags: { label: hashtagsSource.label, date: youtube.reviewedAt },
     }
   }
 

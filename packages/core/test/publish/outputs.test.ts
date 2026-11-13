@@ -4,6 +4,7 @@ import {
   descriptionOutputFor,
   partOutputFor,
   rejectWebAddresses,
+  shortPackageOutputFor,
   thumbnailsOutput,
   thumbnailsOutputFor,
   titlesOutput,
@@ -194,11 +195,22 @@ describe('parte_paquete (contracts/ai-uses.md)', () => {
     expect(partOutputFor('etiquetas', 'largo', blocks).safeParse({ comment: '¿Y tú?' }).success).toBe(false)
   })
 
-  it('hashtags only in a Short, up to three', () => {
+  it('hashtags only in a Short, up to the ones YouTube shows above the title', () => {
+    const rules = { chapterMinCount: 3, tagsMaxTotalChars: 500, hashtagsShown: 3 }
     const withTags = (hashtags: string[]) => ({ firstLines: 'Hola.', body: 'Cuerpo.', hashtags })
-    expect(partOutputFor('descripcion', 'largo', blocks).safeParse(withTags(['pan'])).success).toBe(false)
-    expect(partOutputFor('descripcion', 'short', blocks).safeParse(withTags(['pan', 'receta'])).success).toBe(true)
-    expect(partOutputFor('descripcion', 'short', blocks).safeParse(withTags(['a', 'b', 'c', 'd'])).success).toBe(false)
+    expect(partOutputFor('descripcion', 'largo', blocks, rules).safeParse(withTags(['pan'])).success).toBe(false)
+    expect(partOutputFor('descripcion', 'short', blocks, rules).safeParse(withTags(['pan', 'receta'])).success).toBe(
+      true,
+    )
+    expect(partOutputFor('descripcion', 'short', blocks, rules).safeParse(withTags(['a', 'b', 'c', 'd'])).success).toBe(
+      false,
+    )
+    // The figure comes from `publish/youtube.json`, not from here.
+    expect(
+      partOutputFor('descripcion', 'short', blocks, { ...rules, hashtagsShown: 4 }).safeParse(
+        withTags(['a', 'b', 'c', 'd']),
+      ).success,
+    ).toBe(true)
   })
 
   it('chapters that cover the script, a cover from a block of it, and no web addresses', () => {
@@ -213,5 +225,55 @@ describe('parte_paquete (contracts/ai-uses.md)', () => {
     expect(partOutputFor('comentario', 'largo', blocks).safeParse({ comment: 'En https://pan.example' }).success).toBe(
       false,
     )
+  })
+})
+
+describe('paquete_short (contracts/ai-uses.md, research.md R9)', () => {
+  const blocks = ['b1', 'b2', 'b3']
+  const rules = { chapterMinCount: 3, tagsMaxTotalChars: 500, hashtagsShown: 3 }
+  const schema = shortPackageOutputFor(blocks, rules)
+  const short = (extra: Record<string, unknown> = {}) => ({
+    titles: titles(3, 'b2'),
+    firstLines: 'Pan en un minuto, sin amasar.',
+    body: 'Sale de mi vídeo largo sobre el pan sin amasar.',
+    hashtags: ['pan', 'receta'],
+    tags: ['pan', 'pan sin amasar', 'receta'],
+    comment: '¿Lo has probado?',
+    cover: { blockId: 'b1', moment: 'El pan recién partido.', screenText: 'SIN AMASAR' },
+    ...extra,
+  })
+
+  it('from 3 to 5 titles, each from a block of the script', () => {
+    expect(schema.safeParse(short()).success).toBe(true)
+    expect(schema.safeParse(short({ titles: titles(5) })).success).toBe(true)
+    expect(schema.safeParse(short({ titles: titles(2) })).success).toBe(false)
+    expect(schema.safeParse(short({ titles: titles(6) })).success).toBe(false)
+    expect(schema.safeParse(short({ titles: titles(3, 'otro') })).success).toBe(false)
+  })
+
+  it('up to the hashtags YouTube shows, none inside the texts', () => {
+    expect(schema.safeParse(short({ hashtags: [] })).success).toBe(true)
+    expect(schema.safeParse(short({ hashtags: ['a', 'b', 'c', 'd'] })).success).toBe(false)
+    expect(schema.safeParse(short({ hashtags: ['#pan'] })).success).toBe(false)
+    // Each one once, and with no comma: the screen splits them by commas and spaces.
+    expect(schema.safeParse(short({ hashtags: ['pan', 'Pan'] })).success).toBe(false)
+    expect(schema.safeParse(short({ hashtags: ['pan,casero'] })).success).toBe(false)
+    expect(schema.safeParse(short({ body: 'Mira esto #pan' })).success).toBe(false)
+  })
+
+  it('a cover from a block that is there, and tags that fit', () => {
+    expect(schema.safeParse(short({ cover: { blockId: 'b9', moment: 'El pan.', screenText: '' } })).success).toBe(false)
+    expect(schema.safeParse(short({ cover: { blockId: 'b1', moment: '  ', screenText: '' } })).success).toBe(false)
+    const long = Array.from({ length: 20 }, (_, index) => `etiqueta larga número ${index}`)
+    expect(schema.safeParse(short({ tags: long })).success).toBe(false)
+  })
+
+  it('no web address anywhere: the app does not know the long video address (decision 10)', () => {
+    expect(schema.safeParse(short({ body: 'El vídeo largo: https://youtu.be/x' })).success).toBe(false)
+    expect(schema.safeParse(short({ comment: 'En www.pan.example' })).success).toBe(false)
+  })
+
+  it('texts left empty by trimming a figure still keep the rest of the package (decision 93)', () => {
+    expect(schema.safeParse(short({ firstLines: '', body: '', comment: '' })).success).toBe(true)
   })
 })

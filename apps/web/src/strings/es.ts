@@ -258,6 +258,7 @@ export const es = {
       miniaturas: 'Proponer ideas de miniatura',
       descripcion: 'Proponer la descripción de un vídeo',
       parte_paquete: 'Pedir de nuevo una parte de la publicación',
+      paquete_short: 'Proponer la publicación de un Short',
     } satisfies Record<AiUse, string>,
     failed: 'No salió bien',
     knowledge: 'Información que conviene revisar',

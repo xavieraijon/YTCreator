@@ -389,6 +389,9 @@ export function ReviewCopyStep({ pkg, onChange, onError, onToStep, busy }: Revie
             <h4>{text.description}</h4>
             <p className={styles.assembled}>{pkg.texts.assembled}</p>
             {copyBlock({ key: 'descripcion', name: text.description, value: pkg.texts.assembled })}
+            {pkg.format === 'short' && pkg.parentTitle !== null && (
+              <p className={styles.notice}>{format(publishEs.texts.related, { titulo: pkg.parentTitle })}</p>
+            )}
           </Card>
         )}
         {pkg.format === 'largo' && chosen.length > 0 && (

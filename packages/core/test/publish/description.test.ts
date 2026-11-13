@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { assembleDescription, descriptionSources, DESCRIPTION_TEXT } from '../../src/publish/description.ts'
+import {
+  assembleDescription,
+  descriptionSources,
+  DESCRIPTION_TEXT,
+  mentionsTitle,
+} from '../../src/publish/description.ts'
 import type { Fact, ScriptSource } from '../../src/script/model.ts'
 
 const source = (extra: Partial<ScriptSource>): ScriptSource => ({
@@ -90,5 +95,29 @@ describe('assembleDescription (research.md R5)', () => {
         [{ title: '', url: 'https://pan.example', reference: null }],
       ),
     ).toBe(`Pan sin amasar, en casa.\n\n${DESCRIPTION_TEXT.sources}\n- https://pan.example`)
+  })
+})
+
+describe('mentionsTitle (FR-018)', () => {
+  it('finds the long video named as it is, without minding accents, case or spaces', () => {
+    expect(mentionsTitle('Lo cuento en «Pan sin amasar».', 'Pan sin amasar')).toBe(true)
+    expect(mentionsTitle('lo cuento en PAN  SÍN amasar', 'Pan sin amasar')).toBe(true)
+    expect(mentionsTitle('Una receta sencilla.', 'Pan sin amasar')).toBe(false)
+    expect(mentionsTitle('Cualquier cosa', '  ')).toBe(false)
+  })
+})
+
+describe('assembleDescription for a Short drawn from a long video (FR-018)', () => {
+  const content = { firstLines: 'Pan en un minuto.', body: 'Un truco rápido.', hashtags: ['pan'], fixedText: '' }
+
+  it('names the long video when the texts do not, without a link', () => {
+    const text = assembleDescription(content, [], [], 'Pan sin amasar')
+    expect(text).toBe('Pan en un minuto.\n\nUn truco rápido.\n\nVídeo completo: «Pan sin amasar»\n\n#pan')
+  })
+
+  it('adds nothing when the texts already name it, or there is no long video', () => {
+    const named = { ...content, body: 'Lo cuento entero en «Pan sin amasar».' }
+    expect(assembleDescription(named, [], [], 'Pan sin amasar')).not.toContain('Vídeo completo')
+    expect(assembleDescription(content, [], [])).not.toContain('Vídeo completo')
   })
 })

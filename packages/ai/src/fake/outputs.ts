@@ -437,7 +437,10 @@ function normal(
         case 'descripcion':
           return {
             firstLines: 'Pan crujiente sin amasar: así lo hago en casa, sin máquina y sin esfuerzo.',
-            body: 'Una receta sencilla para tener pan casero cada semana.',
+            body:
+              typeof input['parentTitle'] === 'string'
+                ? `Una receta sencilla; el vídeo «${input['parentTitle']}» lo cuenta entero.`
+                : 'Una receta sencilla para tener pan casero cada semana.',
             ...(short ? { hashtags: ['pan', 'receta'] } : {}),
           }
         case 'capitulos':
@@ -452,6 +455,29 @@ function normal(
           return {
             cover: { blockId: blocks[0]!, moment: 'El pan recién partido.', screenText: 'SIN AMASAR' },
           }
+      }
+    }
+    case 'paquete_short': {
+      const blocks = draftBlocks(input)
+      const parent = typeof input['parentTitle'] === 'string' ? input['parentTitle'] : null
+      return {
+        titles: ['Pan en un minuto, sin amasar', 'El truco del pan que nadie te cuenta', 'Pan crujiente en casa'].map(
+          (text, index) => ({
+            text,
+            why: 'Se entiende en pocos segundos.',
+            blockId: blocks[index % Math.max(blocks.length, 1)] ?? 'bloque',
+          }),
+        ),
+        firstLines: 'Pan sin amasar en un minuto: el truco para que salga crujiente.',
+        body: parent ? `Lo cuento entero en mi vídeo «${parent}».` : 'Un truco rápido para tener pan casero.',
+        hashtags: ['pan', 'receta', 'shorts'],
+        tags: ['pan sin amasar', 'pan casero', 'receta rápida'],
+        comment: '¿Lo vas a probar este fin de semana?',
+        cover: {
+          blockId: blocks[0] ?? 'bloque',
+          moment: 'El pan recién partido, crujiente.',
+          screenText: 'SIN AMASAR',
+        },
       }
     }
     case 'bloque_guion':
@@ -539,6 +565,8 @@ function invent(use: ChannelUse, output: Record<string, unknown>): Record<string
     }
     case 'descripcion':
       return { ...output, body: add(output.body as string) }
+    case 'paquete_short':
+      return { ...output, body: add(output.body as string) }
     case 'parte_paquete':
       if (typeof output.body === 'string') return { ...output, body: add(output.body) }
       if (typeof output.comment === 'string') return { ...output, comment: add(output.comment) }
@@ -546,7 +574,7 @@ function invent(use: ChannelUse, output: Record<string, unknown>): Record<string
   }
 }
 
-const PACKAGE_USES: readonly ChannelUse[] = ['titulos', 'miniaturas', 'descripcion', 'parte_paquete']
+const PACKAGE_USES: readonly ChannelUse[] = ['titulos', 'miniaturas', 'descripcion', 'parte_paquete', 'paquete_short']
 
 // Puts a web address into the first text of a valid output (research.md R4).
 function withAddress(output: Record<string, unknown>): Record<string, unknown> {

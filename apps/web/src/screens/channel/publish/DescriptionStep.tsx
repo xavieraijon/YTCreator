@@ -2,14 +2,13 @@ import {
   type ChaptersContent,
   emptyPiece,
   type PackageKind,
-  type PackagePart,
   parseChapterTime,
   formatChapterTime,
   PUBLISH_LIMITS,
   stepKinds,
 } from '@ytcreator/core'
 import type { PackageView } from '@ytcreator/core/api'
-import { Button, Card, DataSource, Disclosure, ErrorMessage, format, TextArea, TextField } from '@ytcreator/ui'
+import { Button, Card, DataSource, ErrorMessage, format, TextArea, TextField } from '@ytcreator/ui'
 import { useState } from 'react'
 import { packagesApi } from '../../../api/client.ts'
 import { navigate } from '../../../router.ts'
@@ -19,7 +18,8 @@ import { publishEs } from '../../../strings/publish.es.ts'
 import styles from '../channel.module.css'
 import { AiAction } from '../Proposal.tsx'
 import { coverApproved } from './CoverStep.tsx'
-import { type PackageAi, type PackageOp, partOp, usePackageEstimate } from './usePackageAi.ts'
+import { AskAgain, type AskAgainProps } from './AskAgain.tsx'
+import { type PackageAi, type PackageOp, usePackageEstimate } from './usePackageAi.ts'
 
 const text = publishEs.texts
 
@@ -83,48 +83,16 @@ const tagsOf = (written: string) => [
   ),
 ]
 
-interface AskAgainProps {
-  readonly pkg: PackageView
-  readonly ai: PackageAi
-  readonly part: PackagePart
-  readonly disabled: boolean
-  readonly onAsk: (op: PackageOp, price: ReturnType<typeof usePackageEstimate>, instructions: string) => void
-}
-
-// «Pedir de nuevo · {coste}» for one part, with what to change: only that part is written again (SC-005).
-function AskAgain({ pkg, ai, part, disabled, onAsk }: AskAgainProps) {
-  const op = partOp(part)
-  const failure = ai.failureFor(op)
-  const [open, setOpen] = useState(false)
-  const [instructions, setInstructions] = useState('')
-  const shown = open || failure !== null
-  const price = usePackageEstimate(pkg, op, shown && !disabled)
-  const label = format(text.askAgain, { parte: publishEs.parts[part] })
-  return (
-    <Disclosure summary={label} open={shown} onOpenChange={setOpen}>
-      <p className={styles.why}>{text.askAgainHint}</p>
-      {price.error !== null && (
-        <ErrorMessage live title={errorText(price.error)} action={{ label: es.app.retry, onClick: price.retry }} />
-      )}
-      <TextArea
-        label={format(text.instructionsFor, { parte: publishEs.parts[part] })}
-        description={publishEs.cover.instructionsHint}
-        value={instructions}
-        maxLength={PUBLISH_LIMITS.instructions}
-        onChange={(event) => setInstructions(event.target.value)}
-      />
-      <AiAction
-        label={label}
-        estimate={price.estimate}
-        failure={failure}
-        busy={ai.working === op}
-        primary={false}
-        disabled={disabled}
-        onRun={() => onAsk(op, price, instructions)}
-      />
-    </Disclosure>
-  )
-}
+// A Short's hashtags, written as the creator would: with or without «#», by commas or spaces. Stored without «#».
+const hashtagsOf = (written: string) => [
+  ...new Set(
+    written
+      .split(/[\s,]+/)
+      .map((tag) => tag.replace(/^#+/, ''))
+      .filter((tag) => tag !== ''),
+  ),
+]
+const hashtagsText = (hashtags: readonly string[]) => hashtags.map((tag) => `#${tag}`).join(' ')
 
 // «Descripción»: the text under the video, its chapters, the tags and the pinned comment (contracts/ui-screens.md).
 export function DescriptionStep({ pkg, ai, onChange, onError, onNext }: DescriptionStepProps) {
@@ -136,15 +104,10 @@ export function DescriptionStep({ pkg, ai, onChange, onError, onNext }: Descript
   const idle = ai.working === null && !asking
   const busy = saving || !idle
   const isShort = pkg.format === 'short'
-  const firstPrice = usePackageEstimate(
-    pkg,
-    'descripcion',
-    !isShort &&
-      scriptApproved &&
-      cover &&
-      idle &&
-      (description === null || capitulos === null || etiquetas === null || comentario === null),
-  )
+  const kinds = stepKinds(pkg.format, 'textos')
+  // A Short has no chapters; its texts come with its package (R9).
+  const missing = kinds.some((kind) => pkg.pieces[kind] === null)
+  const firstPrice = usePackageEstimate(pkg, 'descripcion', !isShort && scriptApproved && cover && idle && missing)
 
   const [firstLines, setFirstLines] = useDraft(
     () => description?.content.firstLines ?? '',
@@ -154,8 +117,12 @@ export function DescriptionStep({ pkg, ai, onChange, onError, onNext }: Descript
   const [rows, setRows] = useDraft(() => rowsOf(capitulos?.content), capitulos?.version ?? null)
   const [tags, setTags] = useDraft(() => (etiquetas?.content.tags ?? []).join(', '), etiquetas?.version ?? null)
   const [comment, setComment] = useDraft(() => comentario?.content.text ?? '', comentario?.version ?? null)
+  const [hashtags, setHashtags] = useDraft(
+    () => hashtagsText(description?.content.hashtags ?? []),
+    description?.version ?? null,
+  )
 
-  if (isShort) return <p className={styles.notice}>{text.shortLater}</p>
+  if (isShort && missing) return <p className={styles.notice}>{text.shortNeedsPackage}</p>
   if (!cover && description === null) return <p className={styles.notice}>{text.needsCover}</p>
 
   const saved = async (work: () => Promise<PackageView>) => {
@@ -182,7 +149,7 @@ export function DescriptionStep({ pkg, ai, onChange, onError, onNext }: Descript
     }
   }
 
-  if (description === null || capitulos === null || etiquetas === null || comentario === null) {
+  if (missing || description === null || etiquetas === null || comentario === null) {
     return (
       <section aria-labelledby="texts-title">
         <h2 id="texts-title">{publishEs.screen.steps.textos}</h2>
@@ -207,9 +174,17 @@ export function DescriptionStep({ pkg, ai, onChange, onError, onNext }: Descript
     )
   }
 
-  const descriptionDirty = firstLines !== description.content.firstLines || body !== description.content.body
+  const hashtagsSent = hashtagsOf(hashtags)
+  const hashtagsWrong =
+    hashtagsSent.length > PUBLISH_LIMITS.hashtags ||
+    hashtagsSent.some((tag) => tag.length > PUBLISH_LIMITS.hashtag || tag.includes('#'))
+  const descriptionDirty =
+    firstLines !== description.content.firstLines ||
+    body !== description.content.body ||
+    (isShort && hashtagsSent.join('\n') !== description.content.hashtags.join('\n'))
   const chaptersSent = chaptersOf(rows)
-  const chaptersDirty = JSON.stringify(chaptersSent) !== JSON.stringify(chaptersOf(rowsOf(capitulos.content)))
+  const chaptersDirty =
+    capitulos !== null && JSON.stringify(chaptersSent) !== JSON.stringify(chaptersOf(rowsOf(capitulos.content)))
   // Each start as it would be saved: the minute written, or the estimate there is now.
   const startOfRow = (row: ChapterRow, index: number) =>
     index === 0
@@ -229,7 +204,6 @@ export function DescriptionStep({ pkg, ai, onChange, onError, onNext }: Descript
   const commentDirty = comment !== comentario.content.text
   const dirty = descriptionDirty || chaptersDirty || tagsDirty || commentDirty
 
-  const kinds = stepKinds(pkg.format, 'textos')
   const versions = Object.fromEntries(kinds.map((kind) => [kind, pkg.pieces[kind]?.version ?? 0]))
   const approvedTexts = pkg.approvals.texts
   const approved = cover && approvedTexts !== null && kinds.every((kind) => approvedTexts[kind] === versions[kind])
@@ -254,7 +228,11 @@ export function DescriptionStep({ pkg, ai, onChange, onError, onNext }: Descript
     <section aria-labelledby="texts-title">
       <h2 id="texts-title">{publishEs.screen.steps.textos}</h2>
       <p className={styles.why}>{publishEs.screen.why.textos}</p>
-      {!cover && <p className={styles.notice}>{text.needsCover}</p>}
+      {!cover && <p className={styles.notice}>{isShort ? text.needsCoverShort : text.needsCover}</p>}
+      {/* The app does not know the long video's address: the creator links it when uploading (R9, decision 10). */}
+      {isShort && pkg.parentTitle !== null && (
+        <p className={styles.notice}>{format(text.related, { titulo: pkg.parentTitle })}</p>
+      )}
 
       <Card className={styles.form}>
         <h3>{text.assembled}</h3>
@@ -284,14 +262,38 @@ export function DescriptionStep({ pkg, ai, onChange, onError, onNext }: Descript
           disabled={busy}
           onChange={(event) => setBody(event.target.value)}
         />
+        {isShort && (
+          <>
+            <TextField
+              label={text.hashtags}
+              description={format(text.hashtagsHint, { n: pkg.limits.hashtagsShown })}
+              error={
+                hashtagsWrong
+                  ? format(text.hashtagsWrong, { max: PUBLISH_LIMITS.hashtags, largo: PUBLISH_LIMITS.hashtag })
+                  : undefined
+              }
+              value={hashtags}
+              disabled={busy}
+              onChange={(event) => setHashtags(event.target.value)}
+            />
+            <DataSource kind="conocimiento" label={pkg.limits.hashtags.label} date={pkg.limits.hashtags.date} />
+          </>
+        )}
         {fromAi(description) && <DataSource kind="ia" />}
         <div className={styles.actions}>
           <Button
             aria-label={format(text.saveNamed, { parte: publishEs.parts.descripcion })}
             variant="secondary"
             loading={saving}
-            disabled={busy || !descriptionDirty}
-            onClick={() => void save('descripcion', description.version, { ...description.content, firstLines, body })}
+            disabled={busy || !descriptionDirty || hashtagsWrong}
+            onClick={() =>
+              void save('descripcion', description.version, {
+                ...description.content,
+                firstLines,
+                body,
+                ...(isShort ? { hashtags: hashtagsSent } : {}),
+              })
+            }
           >
             {text.save}
           </Button>
@@ -299,58 +301,62 @@ export function DescriptionStep({ pkg, ai, onChange, onError, onNext }: Descript
         <AskAgain {...askProps} part="descripcion" />
       </div>
 
-      <div className={styles.form}>
-        <h3>{text.chapters}</h3>
-        <p className={styles.why}>{text.chaptersWhy}</p>
-        <p className={styles.notice}>{text.adjustLater}</p>
-        <ol className={styles.options}>
-          {rows.map((row, index) => {
-            const n = index + 1
-            const estimate = pkg.texts.chapters.find((one) => one.id === row.id)
-            const wrong = timeError(row, index)
-            return (
-              <li key={row.id} className={styles.option}>
-                <TextField
-                  label={format(text.chapterName, { n })}
-                  value={row.title}
-                  maxLength={PUBLISH_LIMITS.chapterTitle}
-                  disabled={busy}
-                  onChange={(event) => setRow(index, { title: event.target.value })}
-                />
-                {index === 0 ? (
-                  <p>{text.firstAtZero}</p>
-                ) : (
-                  <TextField
-                    label={format(text.chapterTime, { n })}
-                    description={
-                      estimate && !estimate.manual
-                        ? format(text.chapterTimeEstimated, { tiempo: estimate.time })
-                        : text.chapterTimeHint
-                    }
-                    error={wrong}
-                    value={row.time}
-                    disabled={busy}
-                    onChange={(event) => setRow(index, { time: event.target.value })}
-                  />
-                )}
-              </li>
-            )
-          })}
-        </ol>
-        <div className={styles.actions}>
-          <Button
-            aria-label={format(text.saveNamed, { parte: publishEs.parts.capitulos })}
-            variant="secondary"
-            loading={saving}
-            disabled={busy || !chaptersDirty || badTime || rows.some((row) => row.title.trim() === '')}
-            onClick={() => void save('capitulos', capitulos.version, chaptersSent)}
-          >
-            {text.save}
-          </Button>
-        </div>
-        {fromAi(capitulos) && <DataSource kind="ia" />}
-        <AskAgain {...askProps} part="capitulos" />
-      </div>
+      {capitulos !== null && (
+        <>
+          <div className={styles.form}>
+            <h3>{text.chapters}</h3>
+            <p className={styles.why}>{text.chaptersWhy}</p>
+            <p className={styles.notice}>{text.adjustLater}</p>
+            <ol className={styles.options}>
+              {rows.map((row, index) => {
+                const n = index + 1
+                const estimate = pkg.texts.chapters.find((one) => one.id === row.id)
+                const wrong = timeError(row, index)
+                return (
+                  <li key={row.id} className={styles.option}>
+                    <TextField
+                      label={format(text.chapterName, { n })}
+                      value={row.title}
+                      maxLength={PUBLISH_LIMITS.chapterTitle}
+                      disabled={busy}
+                      onChange={(event) => setRow(index, { title: event.target.value })}
+                    />
+                    {index === 0 ? (
+                      <p>{text.firstAtZero}</p>
+                    ) : (
+                      <TextField
+                        label={format(text.chapterTime, { n })}
+                        description={
+                          estimate && !estimate.manual
+                            ? format(text.chapterTimeEstimated, { tiempo: estimate.time })
+                            : text.chapterTimeHint
+                        }
+                        error={wrong}
+                        value={row.time}
+                        disabled={busy}
+                        onChange={(event) => setRow(index, { time: event.target.value })}
+                      />
+                    )}
+                  </li>
+                )
+              })}
+            </ol>
+            <div className={styles.actions}>
+              <Button
+                aria-label={format(text.saveNamed, { parte: publishEs.parts.capitulos })}
+                variant="secondary"
+                loading={saving}
+                disabled={busy || !chaptersDirty || badTime || rows.some((row) => row.title.trim() === '')}
+                onClick={() => void save('capitulos', capitulos.version, chaptersSent)}
+              >
+                {text.save}
+              </Button>
+            </div>
+            {fromAi(capitulos) && <DataSource kind="ia" />}
+            <AskAgain {...askProps} part="capitulos" />
+          </div>
+        </>
+      )}
 
       <div className={styles.form}>
         <h3>{text.sources}</h3>
@@ -467,7 +473,7 @@ export function DescriptionStep({ pkg, ai, onChange, onError, onNext }: Descript
           {dirty ? (
             <p className={styles.notice}>{text.unsaved}</p>
           ) : (
-            !ready && <p className={styles.notice}>{text.notReady}</p>
+            !ready && <p className={styles.notice}>{isShort ? text.notReadyShort : text.notReady}</p>
           )}
           <div className={styles.actions}>
             <Button

@@ -91,12 +91,17 @@ const aiTags = z
   .refine((tags) => new Set(tags.map((tag) => tag.toLowerCase())).size === tags.length, 'Etiquetas repetidas')
 // The pinned comment is optional (decision 14): trimming a figure out of it must not throw the paid answer away.
 const aiComment = z.string().trim().max(PUBLISH_LIMITS.comment)
+// No comma either: the screen splits what the creator writes by commas and spaces.
 const aiHashtag = z
   .string()
   .trim()
   .min(1)
   .max(PUBLISH_LIMITS.hashtag)
-  .regex(/^[^\s#]+$/)
+  .regex(/^[^\s#,]+$/)
+const aiHashtags = z
+  .array(aiHashtag)
+  .max(PUBLISH_LIMITS.hashtags)
+  .refine((tags) => new Set(tags.map((tag) => tag.toLowerCase())).size === tags.length, 'Hashtags repetidos')
 
 /** The chapters cover every block of the approved script, in its order and each one once (R3). */
 export const coversBlocks = (chapters: readonly { blockIds: readonly string[] }[], blockIds: readonly string[]) => {
@@ -121,6 +126,8 @@ export type DescriptionOutput = z.infer<typeof descriptionOutput>
 export interface YouTubeTextRules {
   readonly chapterMinCount: number
   readonly tagsMaxTotalChars: number
+  /** The hashtags YouTube shows above the title of a Short (`hashtags.shownAboveTitle`). */
+  readonly hashtagsShown?: number
 }
 
 /** As many chapters as YouTube needs to show them, unless the script has fewer blocks (decision 39). */
@@ -129,6 +136,9 @@ const enoughChapters = (chapters: readonly unknown[], blockIds: readonly string[
 /** All the tags fit in what YouTube takes, counted as YouTube counts them (`tagsLength`). */
 const tagsFit = (tags: readonly string[], rules?: YouTubeTextRules) =>
   !rules || tagsLength(tags) <= rules.tagsMaxTotalChars
+/** No more hashtags than YouTube shows above the title: the rest would not be seen (FR-018). */
+const hashtagsFit = (hashtags: readonly string[], rules?: YouTubeTextRules) =>
+  rules?.hashtagsShown === undefined || hashtags.length <= rules.hashtagsShown
 
 export const descriptionOutputFor = (blockIds: readonly string[], rules?: YouTubeTextRules) =>
   descriptionOutput
@@ -136,27 +146,28 @@ export const descriptionOutputFor = (blockIds: readonly string[], rules?: YouTub
     .refine(({ chapters }) => enoughChapters(chapters, blockIds, rules), { message: 'pocos_capitulos' })
     .refine(({ tags }) => tagsFit(tags, rules), { message: 'etiquetas_largas' })
 
+// The frame of the Short that is suggested as its cover: chosen in the YouTube mobile app (FR-018).
+const aiCover = z.object({
+  blockId: z.string().min(1),
+  moment: text(PUBLISH_LIMITS.moment),
+  screenText: z.string().trim().max(PUBLISH_LIMITS.screenText),
+})
+
 /** The parts that can be asked for again one by one (FR-011). */
 export const PACKAGE_PARTS = ['descripcion', 'capitulos', 'etiquetas', 'comentario', 'portada_short'] as const
 export type PackagePart = (typeof PACKAGE_PARTS)[number]
 
 const PART_OUTPUTS = {
-  // The fixed part is never the AI's; hashtags only in a Short, up to the three YouTube shows above the title.
+  // The fixed part is never the AI's; hashtags only in a Short, up to those YouTube shows above the title.
   descripcion: z.object({
     firstLines: text(PUBLISH_LIMITS.firstLines),
     body: text(PUBLISH_LIMITS.body),
-    hashtags: z.array(aiHashtag).max(3).optional(),
+    hashtags: aiHashtags.optional(),
   }),
   capitulos: z.object({ chapters: aiChapters }),
   etiquetas: z.object({ tags: aiTags }),
   comentario: z.object({ comment: aiComment }),
-  portada_short: z.object({
-    cover: z.object({
-      blockId: z.string().min(1),
-      moment: text(PUBLISH_LIMITS.moment),
-      screenText: z.string().trim().max(PUBLISH_LIMITS.screenText),
-    }),
-  }),
+  portada_short: z.object({ cover: aiCover }),
 } as const
 export type PartOutput<P extends PackagePart> = z.infer<(typeof PART_OUTPUTS)[P]>
 
@@ -185,8 +196,11 @@ export function partOutputFor(
       (output) => {
         switch (part) {
           case 'descripcion': {
-            const { firstLines, body, hashtags } = output as PartOutput<'descripcion'>
-            return noHashtags(firstLines, body) && (format === 'short' || (hashtags ?? []).length === 0)
+            const { firstLines, body, hashtags = [] } = output as PartOutput<'descripcion'>
+            return (
+              noHashtags(firstLines, body) &&
+              (format === 'short' ? hashtagsFit(hashtags, rules) : hashtags.length === 0)
+            )
           }
           case 'capitulos': {
             const { chapters } = output as PartOutput<'capitulos'>
@@ -206,11 +220,38 @@ export function partOutputFor(
     )
 }
 
+// A Short's package in one request: titles, a short description, hashtags, tags, comment and its cover (R9).
+// Its texts may be left empty when a figure without a source is trimmed: one sentence never throws all of it away.
+export const shortPackageOutput = z
+  .object({
+    titles: z.array(aiTitle).min(TITLE_COUNTS.short.min).max(TITLE_COUNTS.short.max),
+    firstLines: z.string().trim().max(PUBLISH_LIMITS.firstLines),
+    body: z.string().trim().max(PUBLISH_LIMITS.body),
+    hashtags: aiHashtags,
+    tags: aiTags,
+    comment: aiComment,
+    cover: aiCover,
+  })
+  .refine((output) => !rejectWebAddresses(output), noWebAddress)
+  .refine((output) => noHashtags(output.firstLines, output.body, output.comment), { message: 'con_hashtags' })
+export type ShortPackageOutput = z.infer<typeof shortPackageOutput>
+
+// Every title and the cover come from a block of the approved script, as in a long video (R8).
+export const shortPackageOutputFor = (blockIds: readonly string[], rules?: YouTubeTextRules) =>
+  shortPackageOutput
+    .refine(({ titles }) => titles.every((title) => blockIds.includes(title.blockId)), {
+      message: 'bloque_desconocido',
+    })
+    .refine(({ cover }) => blockIds.includes(cover.blockId), { message: 'bloque_desconocido' })
+    .refine(({ hashtags }) => hashtagsFit(hashtags, rules), { message: 'muchos_hashtags' })
+    .refine(({ tags }) => tagsFit(tags, rules), { message: 'etiquetas_largas' })
+
 export const PUBLISH_OUTPUTS = {
   titulos: titlesOutput,
   miniaturas: thumbnailsOutput,
   descripcion: descriptionOutput,
   parte_paquete: partOutput,
+  paquete_short: shortPackageOutput,
 } as const
 export type PublishUse = keyof typeof PUBLISH_OUTPUTS
 export const PUBLISH_USES = Object.keys(PUBLISH_OUTPUTS) as [PublishUse, ...PublishUse[]]

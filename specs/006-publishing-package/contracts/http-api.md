@@ -53,6 +53,16 @@ revisión que no impiden aprobar más los avisos del paquete; si no hay ninguno 
 `use` es uno de los cinco de [ai-uses.md](./ai-uses.md); `part` solo con `parte_paquete`. El progreso va por el SSE de
 trabajos de la 003, y el resultado se lee con `GET /packages/:id` al terminar.
 
+Qué se puede pedir según el formato (400 `validacion` si no toca):
+- `paquete_short`: solo en un Short y mientras le falte la portada, la descripción, las etiquetas o el comentario (409
+  `version_cambiada` con todo hecho). Suma títulos a los que hubiera y crea solo las piezas que faltan (R9).
+- `titulos`: en un Short, solo cuando ya tiene títulos (los primeros llegan con `paquete_short`).
+- `miniaturas` y `descripcion`: solo en un vídeo largo.
+- `parte_paquete`: una parte del formato que ya existe; salvo `portada_short`, con la portada aprobada.
+
+`PackageView.limits` lleva además `hashtagsShown` (los hashtags que YouTube enseña encima del título de un Short) y
+`hashtags`, su fuente `{label, date}`.
+
 ## Cambios en rutas existentes (aditivos)
 
 - `IdeaView.script` gana `packageStatus`.

@@ -112,6 +112,7 @@ export function channelInput(
     case 'miniaturas':
     case 'descripcion':
     case 'parte_paquete':
+    case 'paquete_short':
       return {}
   }
 }

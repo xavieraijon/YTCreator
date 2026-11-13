@@ -167,6 +167,9 @@ export const packageViewSchema = z.object({
     mobileTitleChars: z.number().int().positive(),
     descriptionMaxChars: z.number().int().positive(),
     youtube: z.object({ label: z.string(), date: z.string() }),
+    // The hashtags YouTube shows above the title of a Short, with their own source (principle V).
+    hashtagsShown: z.number().int().positive(),
+    hashtags: z.object({ label: z.string(), date: z.string() }),
   }),
 })
 export type PackageView = z.infer<typeof packageViewSchema>

@@ -89,3 +89,37 @@ export const reopenScript = (t: TestApp, scriptId: string, draft: Draft) => {
 }
 
 export const openPackage = (t: TestApp, scriptId: string) => call(t, 'POST', `/api/scripts/${scriptId}/package`)
+
+/**
+ * A Short written and approved with the fake AI. `fromLong`: drawn from an approved long video (005), whose idea title is
+ * `Pan sin amasar`; otherwise an idea of its own.
+ */
+export async function approvedShort(t: TestApp, { fromLong = true }: { fromLong?: boolean } = {}) {
+  let scriptId: string
+  let longScriptId: string | null = null
+  if (fromLong) {
+    longScriptId = (await approvedScript(t)).scriptId
+    await ask(t, longScriptId, 'enfoques_short')
+    const chosen = await call(t, 'POST', `/api/scripts/${longScriptId}/short-angles/0/choose`, {
+      baseUpdatedAt: (await readScript(t, longScriptId))['updatedAt'],
+    })
+    expect(chosen.status).toBe(201)
+    scriptId = chosen.body['scriptId'] as string
+  } else {
+    const { channelId } = await finished(t)
+    const made = await call(t, 'POST', `/api/channels/${channelId}/ideas`, {
+      title: 'Pan en un minuto',
+      format: 'short',
+    })
+    const ideaId = (made.body['idea'] as { id: string }).id
+    await call(t, 'PATCH', `/api/ideas/${ideaId}`, { revision: 1, status: 'elegida' })
+    scriptId = (await call(t, 'POST', `/api/ideas/${ideaId}/script`)).body['id'] as string
+  }
+  const draft = (await ask(t, scriptId, 'guion_short'))['draft'] as Draft
+  const approved = await call(t, 'POST', `/api/scripts/${scriptId}/draft/approve`, {
+    version: draft.version,
+    acknowledgedPending: draft.content.claims.filter((one) => one.status === 'pendiente').length,
+  })
+  expect(approved.status).toBe(200)
+  return { scriptId, longScriptId, draft }
+}

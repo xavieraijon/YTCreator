@@ -25,5 +25,6 @@ export const AI_USES = [
   'miniaturas',
   'descripcion',
   'parte_paquete',
+  'paquete_short',
 ] as const
 export type AiUse = (typeof AI_USES)[number]
