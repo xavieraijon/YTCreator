@@ -15,6 +15,8 @@ import {
   ideaSchema,
   measureEstimateSchema,
   newIdeaResultSchema,
+  packageSummarySchema,
+  packageViewSchema,
   scriptSummarySchema,
   scriptSettingsViewSchema,
   scriptViewSchema,
@@ -298,6 +300,16 @@ export const ideasApi = {
 }
 
 const scriptPath = (id: string) => `/api/scripts/${encodeURIComponent(id)}`
+
+const packagePath = (id: string) => `/api/packages/${encodeURIComponent(id)}`
+
+// The publishing package of an approved script (specs/006-publishing-package/contracts/http-api.md).
+export const packagesApi = {
+  list: (channelId: string, options?: RequestOptions) =>
+    apiClient.get(`${channelPath(channelId)}/packages`, packageSummarySchema.array(), options),
+  open: (scriptId: string) => apiClient.post(`${scriptPath(scriptId)}/package`, {}, packageViewSchema),
+  get: (id: string, options?: RequestOptions) => apiClient.get(packagePath(id), packageViewSchema, options),
+}
 
 // The script of an idea (specs/005-script-and-outline/contracts/http-api.md).
 export const scriptsApi = {

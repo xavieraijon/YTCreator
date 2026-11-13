@@ -10,6 +10,8 @@ import { IdeaBank } from './screens/channel/ideas/IdeaBank.tsx'
 import { ScriptList } from './screens/channel/scripts/ScriptList.tsx'
 import { VoiceSettings } from './screens/channel/scripts/VoiceSettings.tsx'
 import { ScriptScreen } from './screens/channel/scripts/ScriptScreen.tsx'
+import { PackageList } from './screens/channel/publish/PackageList.tsx'
+import { PackageScreen } from './screens/channel/publish/PackageScreen.tsx'
 import { Start } from './screens/channel/start/Start.tsx'
 import { ConnectAi } from './screens/connect-later/ConnectAi.tsx'
 import { Home } from './screens/home/Home.tsx'
@@ -69,6 +71,10 @@ function Page({ route, state }: { route: Route; state: OnboardingState | null })
       return <VoiceSettings />
     case 'script':
       return <ScriptScreen key={route.id} id={route.id} />
+    case 'packageList':
+      return <PackageList />
+    case 'package':
+      return <PackageScreen key={route.id} id={route.id} />
     case 'channelStep':
       return <ChannelStep key={href(route)} kind={route.kind} step={route.step} />
     case 'settings':

@@ -26,6 +26,9 @@ import { createIdeasRepo } from '../src/db/repos/ideas.ts'
 import { createScriptVersionsRepo } from '../src/db/repos/script-versions.ts'
 import { createScriptsRepo } from '../src/db/repos/scripts.ts'
 import { createScriptService } from '../src/services/scripts.ts'
+import { createPackageService } from '../src/services/packages.ts'
+import { createPackagesRepo } from '../src/db/repos/packages.ts'
+import { createPackageVersionsRepo } from '../src/db/repos/package-versions.ts'
 import { createJourneysRepo } from '../src/db/repos/journeys.ts'
 import { createLimitsRepo } from '../src/db/repos/limits.ts'
 import { createMeasuresRepo } from '../src/db/repos/measures.ts'
@@ -245,6 +248,19 @@ export function makeTestApp({
     knowledge: scriptKnowledge,
   })
   const script = { service: scriptService, scripts: scriptsRepo }
+  const packagesRepo = createPackagesRepo(db, now)
+  const packageVersions = createPackageVersionsRepo(db, now)
+  const packageService = createPackageService({
+    channels: channel.channels,
+    ideas: ideasRepo,
+    measures: ideaMeasures,
+    jobsRepo,
+    scripts: scriptsRepo,
+    scriptVersions,
+    packages: packagesRepo,
+    versions: packageVersions,
+    scriptStatus: (ideaId: string) => scriptService.ideaScript(ideaId)?.status ?? null,
+  })
   const version = '0.1.0'
   const ytQuota = createYtQuotaRepo(db, now)
   const keyCheck = createFakeKeyCheck()
@@ -263,6 +279,7 @@ export function makeTestApp({
     channel: { ...channel, now, research, reading },
     ideas,
     script,
+    publish: { service: packageService },
     jobs,
     usage,
     now,
@@ -330,6 +347,8 @@ export function makeTestApp({
     script,
     scripts: scriptsRepo,
     scriptVersions,
+    packages: packagesRepo,
+    packageVersions,
     links,
     measures: channel.measures,
     channelProposals: channel.proposals,

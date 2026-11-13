@@ -10,7 +10,9 @@ import {
   conceptKnowledge,
   knowledgeFiles,
   loadMarket,
+  loadPublishKnowledge,
   loadScriptKnowledge,
+  publishKnowledgeFiles,
   scriptKnowledgeFiles,
   promptFor,
   STALE_AFTER_DAYS,
@@ -28,6 +30,9 @@ import { createJobsRepo } from './db/repos/jobs.ts'
 import { createIdeaBatchesRepo } from './db/repos/idea-batches.ts'
 import { createIdeaMeasuresRepo } from './db/repos/idea-measures.ts'
 import { createScriptService } from './services/scripts.ts'
+import { createPackageService } from './services/packages.ts'
+import { createPackagesRepo } from './db/repos/packages.ts'
+import { createPackageVersionsRepo } from './db/repos/package-versions.ts'
 import { createIdeaMeasure } from './services/idea-measure.ts'
 import { createIdeasRepo } from './db/repos/ideas.ts'
 import { createScriptVersionsRepo } from './db/repos/script-versions.ts'
@@ -194,6 +199,8 @@ export async function startServer({
   const market = loadMarket()
   // A broken package of the script stops the start here, not later in front of the creator (principle V).
   const scriptKnowledge = loadScriptKnowledge()
+  // The same for the publishing package (006).
+  const publishKnowledge = loadPublishKnowledge()
   const pricing: Pricing = {
     version: market.pricing.version,
     models: market.pricing.data.models,
@@ -384,6 +391,17 @@ export async function startServer({
     promptFor: channelPrompt,
     knowledge: scriptKnowledge,
   })
+  const packageService = createPackageService({
+    channels: channel.channels,
+    ideas: ideasRepo,
+    measures: ideaMeasures,
+    jobsRepo,
+    scripts: scriptsRepo,
+    scriptVersions,
+    packages: createPackagesRepo(db, now),
+    versions: createPackageVersionsRepo(db, now),
+    scriptStatus: (ideaId: string) => scriptService.ideaScript(ideaId)?.status ?? null,
+  })
   app = createApp({
     port,
     version,
@@ -421,11 +439,16 @@ export async function startServer({
       now,
     },
     script: { service: scriptService, scripts: scriptsRepo },
+    publish: { service: packageService },
     jobs,
     youtubeSettings,
     usage,
     knowledge: {
-      files: () => [...knowledgeFiles(market), ...scriptKnowledgeFiles(scriptKnowledge)],
+      files: () => [
+        ...knowledgeFiles(market),
+        ...scriptKnowledgeFiles(scriptKnowledge),
+        ...publishKnowledgeFiles(publishKnowledge),
+      ],
       staleAfterDays: STALE_AFTER_DAYS,
     },
     youtube: {

@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "reviewedAt": "2026-11-13",
+  "source": [
+    {
+      "label": "Ayuda de YouTube: consejos sobre miniaturas y títulos",
+      "url": "https://support.google.com/youtube/answer/12340300"
+    },
+    {
+      "label": "Ayuda de YouTube: consejos para las descripciones de los vídeos",
+      "url": "https://support.google.com/youtube/answer/12948449"
+    }
+  ],
+  "data": {
+    "titles": [
+      { "text": "El título dice lo que de verdad cuenta el vídeo: nada de prometer lo que no está.", "source": 0 },
+      { "text": "Corto, con las palabras importantes al principio.", "source": 0 },
+      { "text": "Mezcla lo que la gente busca con algo que despierte curiosidad.", "source": 0 },
+      { "text": "Mayúsculas y emojis, pocos y solo para subrayar una emoción o un momento.", "source": 0 },
+      { "text": "Una cifra o un dato concreto suele funcionar mejor que una frase vaga.", "assumption": true }
+    ],
+    "thumbnails": [
+      {
+        "text": "Sencilla: una idea, sin amontonar cosas; regla de los tercios y composición con movimiento.",
+        "source": 0
+      },
+      { "text": "Grande y clara: se ve en pantallas pequeñas, así que tiene que leerse de un vistazo.", "source": 0 },
+      { "text": "Si lleva texto, que sea poco y con una letra fácil de leer.", "source": 0 },
+      { "text": "Quien no te conoce responde mejor a una expresión o una emoción clara.", "source": 0 },
+      {
+        "text": "Colores que contrasten entre sí y con el fondo, para que destaque entre las demás.",
+        "assumption": true
+      },
+      { "text": "La miniatura completa al título: no repite sus palabras, añade lo que falta.", "assumption": true }
+    ],
+    "description": [
+      { "text": "Lo más importante va en las primeras líneas: es lo que se ve sin pulsar «más».", "source": 1 },
+      { "text": "Una o dos palabras clave principales, también en el título.", "source": 1 },
+      { "text": "En los vídeos largos, capítulos para que la gente encuentre cada parte.", "source": 1 },
+      { "text": "La información fija del canal puede ir en una parte que se repite en todos los vídeos.", "source": 1 }
+    ],
+    "comment": [
+      { "text": "Una pregunta concreta sobre el tema invita a comentar más que un «¿qué opinas?».", "assumption": true }
+    ],
+    "mobileTitleChars": { "value": 70, "assumption": true }
+  }
+}

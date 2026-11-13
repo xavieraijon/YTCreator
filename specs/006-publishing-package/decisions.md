@@ -25,6 +25,11 @@ Riesgo según `.specify/memory/riesgo.md`. Lo de riesgo alto no se decide aquí:
 | 17 | 2026-11-13 | Agente | Un Short recibe de 3 a 5 títulos propuestos | FR-003 no distinguía formato (análisis, I5) | De 5 a 8 también en Short | Medio (efecto visible) | Análisis |
 | 18 | 2026-11-13 | Agente | La lista de publicaciones muestra los seis estados del modelo dichos para personas | FR-002 tenía dos y el modelo seis (análisis, I6) | Agruparlos en dos | Medio (texto de interfaz) | Análisis |
 | 19 | 2026-11-13 | Agente | FR-012 nombra dos reglas más: más de 3 hashtags en un Short y miniatura que repite el título | Salen de FR-018 y US1; la regla anti-asunción pide que consten (análisis, S1) | Dejarlas solo en el plan | Medio (efecto visible) | Análisis |
+| 20 | 2026-11-13 | Agente | El paquete toma la última medida `medida` de la idea, aunque luego una medición falle o la idea cambie; lleva su origen, si fue parcial y si es de una versión anterior de la idea | R7 pide «la última medida `medida`»; la 004 enseña así la de una revisión anterior; principio V | Solo la medida de la revisión actual | Medio (efecto visible) | Puerta A |
+| 21 | 2026-11-13 | Agente | Un hashtag admite hasta 100 caracteres, y un capítulo con minuto `manual` debe tener minuto | `data-model.md` no fija la longitud; sin minuto, `manual` no tiene sentido (R3) | Sin límite | Bajo | Puerta A |
+| 22 | 2026-11-13 | Agente | El aviso `sin_fuentes` sale solo cuando ya hay descripción | Antes de escribirla no hay apartado de fuentes del que avisar | Avisar desde el principio | Medio (efecto visible) | Puerta A |
+| 23 | 2026-11-13 | Agente | Las afirmaciones de `studio.json` sobre idioma y categoría van marcadas como supuesto, y el esquema obliga a fuente o supuesto; el consejo de contraste de `craft.json`, también como supuesto | No se encontró página oficial que las respalde; principio V | Dejarlas sin marca | Medio (texto de interfaz) | Puerta A |
+| 24 | 2026-11-13 | Agente | En la lista, un Short dice «Título y portada» en lugar de «Título y miniatura» | Un Short no tiene miniatura (ui-screens.md) | El mismo texto para los dos | Medio (texto de interfaz) | Puerta A |
 
 ## Pendientes del creador
 

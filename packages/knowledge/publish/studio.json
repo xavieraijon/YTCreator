@@ -1,0 +1,69 @@
+{
+  "version": 1,
+  "reviewedAt": "2026-11-13",
+  "source": [
+    {
+      "label": "Ayuda de YouTube: contenido creado para niños",
+      "url": "https://support.google.com/youtube/answer/9528076"
+    },
+    {
+      "label": "Ayuda de YouTube: avisar del contenido alterado o sintético",
+      "url": "https://support.google.com/youtube/answer/14328491"
+    }
+  ],
+  "data": {
+    "madeForKids": {
+      "why": "Marcarlo mal tiene consecuencias legales y quita funciones al vídeo; depende de a quién va dirigido.",
+      "source": 0
+    },
+    "synthetic": {
+      "rule": "Hay que avisar cuando un vídeo tiene contenido realista hecho o cambiado con IA que alguien podría tomar por real.",
+      "mustDisclose": [
+        "Una persona real que parece hacer o decir algo que no hizo",
+        "Una grabación de un hecho o un lugar real que se ha cambiado",
+        "Escenas realistas que no pasaron",
+        "Música generada que es lo principal del vídeo"
+      ],
+      "noNeed": [
+        "Usar IA para escribir el guion, el título o la miniatura",
+        "Filtros, ajustes de color o efectos que no engañan",
+        "Subtítulos",
+        "Contenido que no es realista, como dibujos o videojuegos"
+      ],
+      "question": "¿Has usado voz o imágenes realistas hechas con IA que alguien pueda tomar por reales?",
+      "source": 1
+    },
+    "language": {
+      "why": "El idioma del vídeo y del título ayuda a que YouTube se lo enseñe a quien habla tu idioma.",
+      "basis": { "assumption": true },
+      "byRegion": {
+        "espana": "Español (España)",
+        "latam": "Español (Latinoamérica)",
+        "mixto": "Español"
+      }
+    },
+    "category": {
+      "why": "La categoría ayuda a YouTube a entender de qué va el vídeo. Aquí la eliges una vez para el canal; en YouTube Studio se puede cambiar en cada vídeo.",
+      "basis": { "assumption": true },
+      "list": [
+        "Cine y animación",
+        "Coches y vehículos",
+        "Música",
+        "Mascotas y animales",
+        "Deportes",
+        "Viajes y eventos",
+        "Videojuegos",
+        "Gente y blogs",
+        "Humor",
+        "Entretenimiento",
+        "Noticias y política",
+        "Consejos y estilo",
+        "Educación",
+        "Ciencia y tecnología",
+        "ONG y activismo"
+      ],
+      "listBasis": { "assumption": true },
+      "suggested": { "value": "Educación", "assumption": true }
+    }
+  }
+}

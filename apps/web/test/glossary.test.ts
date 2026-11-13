@@ -5,6 +5,7 @@ import { channelEs } from '../src/strings/channel.es.ts'
 import { es } from '../src/strings/es.ts'
 import { failuresEs } from '../src/strings/failures.es.ts'
 import { ideasEs } from '../src/strings/ideas.es.ts'
+import { publishEs } from '../src/strings/publish.es.ts'
 import { scriptEs } from '../src/strings/script.es.ts'
 import { youtubeFailureActionsEs, youtubeFailuresEs } from '../src/strings/youtube-failures.es.ts'
 
@@ -33,7 +34,7 @@ describe('glossary of the web (FR-032, principle I)', () => {
   it('no text of apps/web/src/strings uses a forbidden term', () => {
     expect(
       findForbiddenTerms(
-        { es, failuresEs, channelEs, ideasEs, scriptEs, youtubeFailuresEs, youtubeFailureActionsEs },
+        { es, failuresEs, channelEs, ideasEs, scriptEs, publishEs, youtubeFailuresEs, youtubeFailureActionsEs },
         webTerms,
       ),
     ).toEqual([])
@@ -63,7 +64,7 @@ describe('glossary of the web (FR-032, principle I)', () => {
 
   it('no source of the knowledge files uses one either: they are shown under the figures', () => {
     const labels: Record<string, string> = {}
-    for (const folder of ['market', 'script']) {
+    for (const folder of ['market', 'script', 'publish']) {
       const dir = new URL(`../../../packages/knowledge/${folder}/`, import.meta.url)
       for (const file of readdirSync(dir).filter((name) => name.endsWith('.json'))) {
         const { source } = JSON.parse(readFileSync(new URL(file, dir), 'utf8')) as { source: { label: string }[] }
