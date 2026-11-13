@@ -98,7 +98,7 @@ supuesto marcado, lo medido con origen y fecha), XI (este informe).
 Desde un guion aprobado se proponen títulos (con su motivo y el bloque que cumple la promesa) e ideas de miniatura,
 se elige el principal y hasta dos para probar, se escriben o editan, y se aprueba la portada. Todo pasa por la IA falsa:
 coste antes de pedir, trabajo que sigue con la pestaña cerrada, y sin llamadas a YouTube. Los cuatro revisores
-encontraron un grave (cifras sin comprobar) y varios medios; están corregidos. Queda una pregunta para el creador (P1).
+encontraron un grave (cifras sin comprobar) y varios medios; están corregidos. El creador contestó la única pregunta abierta (P1, opción A).
 
 ### 2. Requisitos
 
@@ -175,7 +175,7 @@ Segunda vuelta (lógica, sobre las correcciones), corregidos:
 - Menores: una elección guardada al salir del paso partía de una versión vieja; se podía elegir entre pulsar «Pedir otros»
   y que empezara el trabajo; elegir una miniatura borraba el aviso de título cambiado (decisión 36). Corregidos.
 
-Abiertos: ninguno grave ni medio. La regla de «Pedir otros» queda provisional hasta que el creador conteste P1. Tercera
+Abiertos: ninguno grave ni medio. El creador contestó P1 el 2026-11-13 con la opción A, que es la implementada. Tercera
 vuelta: no se lanzó otra revisión; las correcciones de la segunda llevan cada una su test.
 
 ### 6. Desviaciones
@@ -185,8 +185,8 @@ portada de un Short, que llega con US4.
 
 ### 7. Decisiones
 
-Agente: 25 a 37 (medio: 27, 28 y 30 a 37, destacadas aquí; bajo: 26 y 29). Pendiente del creador: P1 (qué pasa
-con las propuestas de la IA que no eligió al pedir otras); la 25 queda provisional con la opción recomendada.
+Creador: 25 (P1, opción A). Agente: 26 a 37 (medio: 27, 28 y 30 a 37, destacadas aquí; bajo: 26 y 29). Pendiente del creador: ninguna; P1
+(qué pasa con las propuestas de la IA que no eligió al pedir otras) la contestó con la opción A, decisión 25.
 
 ### 8. Constitución
 
@@ -196,4 +196,4 @@ paga si no cabe), IV (salidas validadas, una dirección web no valida), V (cifra
 
 ### 9. Cómo revertir
 
-`git revert` del commit de esta historia. No hay migraciones. Queda pendiente: P1, y US2 en adelante.
+`git revert` del commit de esta historia. No hay migraciones. Queda pendiente: US2 en adelante.
