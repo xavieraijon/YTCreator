@@ -62,7 +62,8 @@ Inmutable. Un vídeo largo no tiene `portada_short`; un Short no tiene `miniatur
 
 ```text
 TitlesContent     { candidates: TitleCandidate[], main: id|null, alternatives: id[] }   (1 a 12 candidatos; 0 a 2 alternativos)
-TitleCandidate    { id, text (1-100), why (0-300), blockId|null, origin: ia|creador }
+TitleCandidate    { id, text (1-200), why (0-300), blockId|null, origin: ia|creador }
+  lo que propone la IA, ≤ 100 (outputs); lo que escribe el creador puede pasarse y la revisión avisa (decisión 13)
   main y alternatives apuntan a candidatos distintos y existentes
 
 ThumbnailsContent { concepts: ThumbnailConcept[], chosen: id[] }                         (1 a 6 conceptos; 0 a 3 elegidos)
@@ -84,8 +85,8 @@ CommentContent    { text (0-1000) }
 ```
 
 Al aprobar, ninguna pieza del paso puede estar vacía: `titulos` sin `main`, `miniaturas` sin elegidas,
-`descripcion` sin `firstLines`, `etiquetas` sin ninguna, `comentario` sin texto, `capitulos` sin capítulos en un vídeo
-largo, `portada_short` sin `moment`.
+`descripcion` sin `firstLines`, `etiquetas` sin ninguna, `capitulos` sin capítulos en un vídeo largo, `portada_short` sin
+`moment`. El comentario fijado es opcional: vacío, no se copia ni bloquea (decisión 14).
 
 ## Funciones puras (`packages/core/src/publish/`)
 

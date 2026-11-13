@@ -166,7 +166,8 @@ entiende sin la app.
    cola hasta que el creador la marque como hecha.
 7. **Given** un paquete, **When** lo abre, **Then** ve también un comentario fijado propuesto (una pregunta que invita a
    comentar, editable y copiable) y una lista guiada de los ajustes de YouTube Studio: público infantil, contenido
-   alterado o sintético, idioma y categoría, cada uno con la respuesta que corresponde a su canal y el porqué.
+   alterado o sintético, idioma y categoría, cada uno con la respuesta que corresponde a su canal y el porqué. En
+   contenido alterado o sintético, la regla y la pregunta al creador, porque la app no puede saberlo.
 8. **Given** la lista guiada, **When** el creador marca cada ajuste como hecho, **Then** la marca se guarda en ese
    paquete; la lista es una ayuda y no bloquea la aprobación.
 
@@ -203,8 +204,8 @@ el paquete sin capítulos, ve la portada sugerida y el enlace al vídeo largo, y
 
 1. **Given** un guion Short aprobado, **When** abre su publicación, **Then** la app no le pide capítulos ni conceptos de
    miniatura y le explica en una frase cómo se elige la portada de un Short.
-2. **Given** un Short, **When** se propone el paquete, **Then** tiene título, descripción breve con hasta 3 hashtags,
-   etiquetas y la portada sugerida (el momento del guion y el texto que se ve en ese fotograma).
+2. **Given** un Short, **When** se propone el paquete, **Then** tiene de 3 a 5 títulos propuestos, descripción breve con hasta
+   3 hashtags, etiquetas y la portada sugerida (el momento del guion y el texto que se ve en ese fotograma).
 3. **Given** un Short sacado de un vídeo largo, **When** se propone la descripción, **Then** menciona el vídeo largo y
    la app recuerda que se enlaza con «Vídeo relacionado» al subirlo.
 4. **Given** un paquete de Short, **When** usa editar, pedir de nuevo, revisar, aprobar, volver a una versión o
@@ -280,7 +281,8 @@ en la sección «US5» de `checklists/validation.md`.
 - **El navegador no deja copiar**: la app selecciona el texto y dice cómo copiarlo a mano.
 - **Dos pestañas**: si otra pestaña guardó antes, la app avisa y no pisa el trabajo sin preguntar.
 - **Varios canales**: cada canal ve solo sus paquetes y su parte fija.
-- **Una pieza vacía**: no se puede aprobar, y la app dice por qué.
+- **Una pieza vacía**: no se puede aprobar, y la app dice por qué. El comentario fijado es opcional.
+- **Perfil sin nombre del canal en YouTube**: la parte fija por defecto está vacía, y la app dice cómo añadirlo.
 
 ## Requirements *(mandatory)*
 
@@ -289,8 +291,8 @@ en la sección «US5» de `checklists/validation.md`.
 **Entrada desde el guion**
 
 - **FR-001**: Un guion aprobado de la 005 DEBE ofrecer «Preparar la publicación» como acción principal.
-- **FR-002**: Cada canal DEBE tener una lista de sus paquetes con la idea, el formato, el estado (en preparación,
-  aprobado) y la fecha del último cambio. Cada guion tiene como máximo un paquete.
+- **FR-002**: Cada canal DEBE tener una lista de sus paquetes con la idea, el formato, el estado (título y
+  miniatura en borrador o aprobados, descripción en borrador o aprobada, publicación aprobada) y la fecha del último cambio. Cada guion tiene como máximo un paquete.
 
 **Títulos y miniatura**
 
@@ -321,7 +323,8 @@ en la sección «US5» de `checklists/validation.md`.
 
 - **FR-012**: La app DEBE ofrecer una revisión automática, sin IA, que avise de: título por encima del máximo de YouTube
   o cortado en móvil, descripción por encima del máximo, capítulos que YouTube no mostraría (sin 0:00, pocos o demasiado
-  cortos), etiquetas por encima del límite y parte fija ausente. Cada aviso lleva su motivo y enlaza con la pieza. Las
+  cortos), etiquetas por encima del límite, parte fija ausente, más de 3 hashtags en un Short (FR-018) y miniatura que repite
+  las palabras del título principal (US1). Cada aviso lleva su motivo y enlaza con la pieza. Las
   reglas y sus cifras viven en un paquete versionado con fuente y fecha.
 - **FR-013**: Ningún aviso DEBE impedir aprobar. Si quedan avisos, la app DEBE decir cuántos antes de aprobar.
 - **FR-014**: Cada pieza DEBE poder copiarse con un botón, en el formato que acepta YouTube Studio, y la app DEBE
@@ -337,7 +340,7 @@ en la sección «US5» de `checklists/validation.md`.
 
 **Shorts**
 
-- **FR-018**: El paquete de un Short DEBE tener título, descripción breve con hasta 3 hashtags, etiquetas y la portada
+- **FR-018**: El paquete de un Short DEBE tener título (con 3 a 5 títulos propuestos), descripción breve con hasta 3 hashtags, etiquetas y la portada
   sugerida, sin capítulos ni conceptos de miniatura. Si el Short sale de un vídeo largo, la descripción lo menciona.
 
 **Coste y procesos**
@@ -410,7 +413,8 @@ en la sección «US5» de `checklists/validation.md`.
   más clics consigue; la app solo los prepara.
 - La 007 (subtítulos) podrá proponer los minutos reales de los capítulos a partir del audio; esta feature deja los
   capítulos ligados a sus bloques del guion para que sea posible.
-- La parte fija por defecto lleva el enlace de suscripción directa del canal, como en el proyecto de referencia.
+- La parte fija por defecto lleva el enlace de suscripción directa del canal si el perfil tiene el nombre del canal en
+  YouTube, como en el proyecto de referencia.
 - Los paquetes se escriben en español, como los guiones.
 - La IA es la de la 002 (suscripción de Claude o API de Anthropic); no hay opción gratuita en la v1.
 - Una idea tiene un solo guion y un guion un solo paquete.

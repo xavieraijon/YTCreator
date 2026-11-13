@@ -18,7 +18,9 @@ miniatura». «Etiquetas» y «capítulos» son los nombres que usa YouTube Stud
 ## Lista (`/canal/publicaciones`)
 
 - **Por qué importa**: «Aquí tienes lo que vas a copiar en YouTube al subir cada vídeo.»
-- Una `Card` por paquete: título principal (o de trabajo), formato, estado, último cambio y «Abrir».
+- Una `Card` por paquete: título principal (o de trabajo), formato, estado dicho para personas («Título y miniatura
+  en borrador», «Título y miniatura aprobados», «Descripción en borrador», «Descripción aprobada», «Publicación
+  aprobada»; sin empezar, «Por empezar»), último cambio y «Abrir».
 - Sin guiones aprobados: `EmptyState` que explica que primero hay que aprobar un guion, con «Ir a mis guiones».
 - «Descargar todos» y «Ajustes de publicación».
 

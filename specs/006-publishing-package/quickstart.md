@@ -31,6 +31,7 @@ fnm exec --using=24 -- pnpm test:e2e
 | # | Historia | Qué hacer | Qué debe pasar |
 |---|---|---|---|
 | 1 | US1 | Desde un guion aprobado, «Preparar la publicación», proponer títulos, elegir principal y dos alternativos, proponer miniaturas, editar una, aprobar y recargar | Coste antes de cada petición; cada título con su motivo, su bloque y sus caracteres; aprobado tras recargar |
+| 1b | US1 | Cerrar la pestaña mientras se proponen los títulos y volver | El resultado aparece (FR-020) |
 | 2 | US1 | Abrir publicaciones en un canal sin guiones aprobados | Explica qué falta y lleva a los guiones |
 | 3 | US2 | Proponer descripción con un guion con hechos enlazados | Capítulos desde 0:00 con «estimado»; fuentes solo de la lista de hechos; parte fija al final |
 | 4 | US2 | Pedir de nuevo solo las etiquetas tras editar la descripción | La descripción, carácter a carácter, igual |

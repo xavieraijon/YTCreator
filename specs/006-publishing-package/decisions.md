@@ -18,6 +18,13 @@ Riesgo según `.specify/memory/riesgo.md`. Lo de riesgo alto no se decide aquí:
 | 10 | 2026-11-12 | Agente | La descripción de un Short sacado de un vídeo largo nombra el vídeo largo sin enlace | La app no conoce su dirección en YouTube (research R9) | Pedir el enlace al creador | Medio (efecto visible) | Plan |
 | 11 | 2026-11-12 | Agente | Cada título de la IA señala el bloque del guion que cumple su promesa; si no existe, la salida no valida | Hace comprobable FR-005 (research R8) | Confiar en el prompt | Medio (efecto visible) | Plan |
 | 12 | 2026-11-12 | Agente | En la interfaz se dice «idea de miniatura» e «indicaciones para la miniatura», no «brief» | Principio I, sin jerga | «Brief» | Medio (texto de interfaz) | Plan |
+| 13 | 2026-11-13 | Agente | El título que escribe el creador admite hasta 200 caracteres; lo que propone la IA, hasta 100 | Si no, el aviso de «título por encima del máximo» nunca salta (análisis, I1) | Límite de 100 para todos | Medio (efecto visible) | Análisis |
+| 14 | 2026-11-13 | Agente | El comentario fijado es opcional: vacío, no se copia ni impide aprobar | La spec no lo exige y un creador puede no quererlo (análisis, I2) | Obligatorio | Medio (efecto visible) | Análisis |
+| 15 | 2026-11-13 | Agente | La spec recoge el caso del perfil sin nombre del canal en YouTube (parte fija vacía) | Alinea la spec con la decisión 7 (análisis, I3) | Dejarlo solo en el plan | Medio (efecto visible) | Análisis |
+| 16 | 2026-11-13 | Agente | En la lista guiada, «contenido alterado o sintético» explica la regla y pregunta al creador | Alinea la spec con la decisión 8 (análisis, I4) | Dar una respuesta por defecto | Medio (efecto visible) | Análisis |
+| 17 | 2026-11-13 | Agente | Un Short recibe de 3 a 5 títulos propuestos | FR-003 no distinguía formato (análisis, I5) | De 5 a 8 también en Short | Medio (efecto visible) | Análisis |
+| 18 | 2026-11-13 | Agente | La lista de publicaciones muestra los seis estados del modelo dichos para personas | FR-002 tenía dos y el modelo seis (análisis, I6) | Agruparlos en dos | Medio (texto de interfaz) | Análisis |
+| 19 | 2026-11-13 | Agente | FR-012 nombra dos reglas más: más de 3 hashtags en un Short y miniatura que repite el título | Salen de FR-018 y US1; la regla anti-asunción pide que consten (análisis, S1) | Dejarlas solo en el plan | Medio (efecto visible) | Análisis |
 
 ## Pendientes del creador
 
