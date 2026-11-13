@@ -74,9 +74,13 @@ test('title and thumbnail from an approved script, with the keyboard, coming bac
   await expect(heading(page, 'Mis guiones')).toBeVisible()
 
   // From the approved script.
-  const scriptId = await approvedScript(channelId, 'Pan sin amasar')
-  await page.goto(`${server.baseURL}/canal/guiones/${scriptId}`)
-  await page.getByRole('button', { name: 'Preparar la publicación' }).click()
+  // An approved script is waiting in the list, and it starts from there (as from the script, US4).
+  await approvedScript(channelId, 'Pan sin amasar')
+  await page.goto(`${server.baseURL}/canal/publicaciones`)
+  await expect(page.getByRole('heading', { name: 'Guiones aprobados sin publicación' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Todavía no has preparado ninguna publicación' })).toHaveCount(0)
+  await audit(page)
+  await page.getByRole('button', { name: 'Preparar la publicación de «Pan sin amasar»' }).click()
   await expect(heading(page, 'Pan sin amasar')).toBeVisible()
   await expect(page.getByText('La gente ve el título y la miniatura juntos', { exact: false })).toBeVisible()
   await audit(page)
@@ -133,6 +137,12 @@ test('title and thumbnail from an approved script, with the keyboard, coming bac
   await back.keyboard.press('Space')
   await expect(pick).toBeChecked()
   await audit(back)
+
+  // With an idea open to edit, what would be approved is not what is on screen: it waits (decision 105).
+  await back.getByRole('button', { name: 'Editar la idea 1' }).click()
+  await expect(back.getByRole('button', { name: 'Aprobar título y miniatura' })).toBeDisabled()
+  await expect(back.getByText('Antes de aprobar, guarda la idea de miniatura que estás editando.')).toBeVisible()
+  await back.getByRole('button', { name: 'Cancelar', exact: true }).click()
 
   await back.getByRole('button', { name: 'Aprobar título y miniatura' }).focus()
   await back.keyboard.press('Enter')
@@ -214,7 +224,7 @@ test('the description, its chapters, tags and comment, and the publishing settin
   await propose.click()
   await expect(page.getByRole('heading', { name: 'Así queda la descripción' })).toBeVisible()
   // The script has no facts with a link: it says so instead of making sources up.
-  await expect(page.getByText('La descripción no tiene fuentes', { exact: false })).toBeVisible()
+  await expect(page.getByText('La descripción no dice de dónde salen los datos', { exact: false })).toBeVisible()
   await expect(page.getByText('Ajústalos cuando tengas el vídeo montado.')).toBeVisible()
   await expect(page.getByText('(estimado)', { exact: false }).first()).toBeVisible()
   await audit(page)
@@ -343,6 +353,8 @@ test('reviewing, copying with and without the clipboard, approving with notices 
     .getByRole('button', { name: 'Corregirlo en «Descripción»' })
     .click()
   await expect(page.getByRole('heading', { name: 'Descripción', level: 2 })).toBeVisible()
+  // It takes the creator to the piece to fix, not to the top of the step (decision 109).
+  await expect(page.getByRole('heading', { name: 'Capítulos', level: 3 })).toBeFocused()
   await page.getByLabel(`Minuto del capítulo ${lastChapter}`).fill('')
   await page.getByRole('button', { name: 'Guardar los capítulos' }).click()
   await expect(page.getByRole('button', { name: 'Aprobar descripción' })).toBeEnabled()
@@ -389,7 +401,15 @@ test('reviewing, copying with and without the clipboard, approving with notices 
   await page.getByRole('button', { name: 'Aprobar la publicación' }).click()
   const dialog = page.getByRole('dialog')
   await expect(dialog.getByRole('heading', { name: /avisos? sin resolver/ })).toBeVisible()
+  await expect(dialog.getByRole('listitem').first()).toBeVisible()
   await audit(page)
+  // «Revisar los avisos» takes the creator to them.
+  await dialog.getByRole('button', { name: 'Revisar los avisos' }).click()
+  await expect(dialog).toBeHidden()
+  // The package's own warnings first, at the top, if there are any; otherwise the review's.
+  const top = page.getByRole('list', { name: 'Avisos' })
+  await expect((await top.count()) > 0 ? top : page.getByRole('heading', { name: 'Antes de subirlo' })).toBeFocused()
+  await page.getByRole('button', { name: 'Aprobar la publicación' }).click()
   await dialog.getByRole('button', { name: 'Aprobar igual' }).click()
   await expect(page.getByText(/^Publicación aprobada con \d+ avisos? sin resolver/)).toBeVisible()
   await audit(page)
@@ -508,7 +528,7 @@ test('the package of a Short: no chapters nor thumbnails, a suggested cover and 
   await page.getByLabel('Momento del vídeo').fill('Cuando parto el pan y se oye crujir.')
   // What is approved is what is on screen: not before saving it.
   await expect(page.getByRole('button', { name: 'Aprobar título y portada' })).toBeDisabled()
-  await expect(page.getByText('Guarda los cambios antes de aprobar.')).toBeVisible()
+  await expect(page.getByText('Antes de aprobar, guarda la portada.')).toBeVisible()
   await page.getByRole('button', { name: 'Guardar la portada' }).click()
   await expect(page.getByLabel('Momento del vídeo')).toHaveValue('Cuando parto el pan y se oye crujir.')
   await expect(page.getByRole('button', { name: 'Aprobar título y portada' })).toBeEnabled()
@@ -524,6 +544,16 @@ test('the package of a Short: no chapters nor thumbnails, a suggested cover and 
   await expect(page.getByRole('heading', { name: 'Capítulos' })).toHaveCount(0)
   await audit(page)
   await page.getByLabel('Hashtags').fill('pan, #espelta')
+  // Leaving with it unsaved asks first; staying keeps what was written.
+  let asked = ''
+  page.once('dialog', (confirm) => {
+    asked = confirm.message()
+    void confirm.dismiss()
+  })
+  await page.getByRole('navigation', { name: 'Pasos de la publicación' }).getByRole('button').first().click()
+  await expect.poll(() => asked).toContain('Tienes cambios sin guardar')
+  await expect(page.getByRole('heading', { name: 'Descripción', level: 2 })).toBeVisible()
+  await expect(page.getByLabel('Hashtags')).toHaveValue('pan, #espelta')
   await page.getByRole('button', { name: 'Guardar la descripción' }).click()
   await expect(page.getByLabel('Hashtags')).toHaveValue('#pan #espelta')
   await page.getByRole('button', { name: 'Aprobar descripción' }).click()

@@ -1,15 +1,16 @@
-import type { PackageWarning } from '@ytcreator/core'
+import type { PackageKind, PackageWarning } from '@ytcreator/core'
 import type { PackageView } from '@ytcreator/core/api'
 import { AiWorking, Button, Dialog, ErrorMessage, format, Stepper } from '@ytcreator/ui'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { ApiClientError, packagesApi } from '../../../api/client.ts'
-import { navigate } from '../../../router.ts'
+import { navigate, useLeaveGuard } from '../../../router.ts'
 import { errorText } from '../../../shell/errorText.ts'
 import { Screen } from '../../../shell/Screen.tsx'
 import { es } from '../../../strings/es.ts'
 import { publishEs } from '../../../strings/publish.es.ts'
 import { scriptEs } from '../../../strings/script.es.ts'
 import styles from '../channel.module.css'
+import { pieceAnchor } from './anchors.ts'
 import { CoverStep } from './CoverStep.tsx'
 import { DescriptionStep } from './DescriptionStep.tsx'
 import { ReviewCopyStep } from './ReviewCopyStep.tsx'
@@ -41,7 +42,13 @@ const labelOf = (pkg: PackageView, step: PackageScreenStep) =>
   step === 'portada' && pkg.format === 'short' ? text.steps.portadaShort : text.steps[step]
 
 // The warnings that are fixed in the script (005).
-const SCRIPT_WARNINGS: readonly PackageWarning[] = ['guion_cambiado', 'guion_sin_aprobar', 'pendientes_en_guion']
+// Fixed in the script: the warning takes the creator there (the sources too, decision 110).
+const SCRIPT_WARNINGS: readonly PackageWarning[] = [
+  'guion_cambiado',
+  'guion_sin_aprobar',
+  'pendientes_en_guion',
+  'sin_fuentes',
+]
 
 // What the AI is doing, said for people: a part asked for again says which one.
 const workingLabel = (op: PackageOp) => {
@@ -59,6 +66,15 @@ export function PackageScreen({ id }: { readonly id: string }) {
   const [loadFailed, setLoadFailed] = useState(false)
   // Where the creator wanted to go from an approved package, until they say to go on (FR-015, scenario 4).
   const [leaving, setLeaving] = useState<PackageScreenStep | null>(null)
+  // Something written in a step and not saved yet: going to another step or leaving asks first (novice audit 006, G1).
+  const [dirty, setDirty] = useState(false)
+  // The package's own warnings, at the top: «Revisar los avisos» takes the creator there first (decision 103).
+  const warningsList = useRef<HTMLUListElement>(null)
+  // A new step starts at its top, where its warnings and its heading are; not where the last one was left (decision
+  // 107). From «Corregirlo», at the piece to fix instead (decision 109).
+  const shownStep = useRef<PackageScreenStep | null>(null)
+  const toPiece = useRef<PackageKind | null>(null)
+  useLeaveGuard(dirty ? text.leaveUnsaved : null)
 
   const load = useCallback(
     async (signal?: AbortSignal) => {
@@ -95,6 +111,19 @@ export function PackageScreen({ id }: { readonly id: string }) {
     [dismiss],
   )
 
+  useEffect(() => {
+    // Only on going to another step: the first one shown opens as the page does.
+    if (step !== null && shownStep.current !== null && shownStep.current !== step) {
+      const piece = toPiece.current ? document.getElementById(pieceAnchor(toPiece.current)) : null
+      if (piece) {
+        piece.scrollIntoView({ block: 'center' })
+        piece.focus()
+      } else window.scrollTo({ top: 0 })
+    }
+    toPiece.current = null
+    shownStep.current = step
+  }, [step])
+
   if (!pkg || !step) {
     return (
       <Screen title={publishEs.list.title}>
@@ -108,7 +137,9 @@ export function PackageScreen({ id }: { readonly id: string }) {
   }
 
   // In an approved package, going where things change asks first: changing anything takes it back to draft.
-  const goTo = (next: PackageScreenStep) => {
+  const goTo = (next: PackageScreenStep, piece: PackageKind | null = null) => {
+    if (next !== step && dirty && !window.confirm(text.leaveUnsaved)) return
+    toPiece.current = piece
     if (pkg.status === 'aprobado' && step === 'revisar' && next !== 'revisar') setLeaving(next)
     else setStep(next)
   }
@@ -163,7 +194,7 @@ export function PackageScreen({ id }: { readonly id: string }) {
         <ErrorMessage live title={shared.jobFailed} action={{ label: shared.understood, onClick: ai.dismiss }} />
       )}
       {pkg.warnings.length > 0 && (
-        <ul className={styles.options} aria-label={text.warningsLabel}>
+        <ul ref={warningsList} tabIndex={-1} className={styles.options} aria-label={text.warningsLabel}>
           {pkg.warnings.map((warning) => (
             <li key={warning} className={styles.notice}>
               {text.warnings[warning]}{' '}
@@ -195,13 +226,34 @@ export function PackageScreen({ id }: { readonly id: string }) {
       )}
       {ai.working && <AiWorking variant="panel" label={workingLabel(ai.working)} />}
       {step === 'portada' && (
-        <CoverStep pkg={pkg} ai={ai} onChange={onChange} onError={setError} onNext={() => setStep('textos')} />
+        <CoverStep
+          pkg={pkg}
+          ai={ai}
+          onChange={onChange}
+          onError={setError}
+          onDirty={setDirty}
+          onNext={() => goTo('textos')}
+        />
       )}
       {step === 'textos' && (
-        <DescriptionStep pkg={pkg} ai={ai} onChange={onChange} onError={setError} onNext={() => setStep('revisar')} />
+        <DescriptionStep
+          pkg={pkg}
+          ai={ai}
+          onChange={onChange}
+          onError={setError}
+          onDirty={setDirty}
+          onNext={() => goTo('revisar')}
+        />
       )}
       {step === 'revisar' && (
-        <ReviewCopyStep pkg={pkg} onChange={onChange} onError={setError} onToStep={goTo} busy={ai.working !== null} />
+        <ReviewCopyStep
+          pkg={pkg}
+          onChange={onChange}
+          onError={setError}
+          onToStep={goTo}
+          busy={ai.working !== null}
+          warningsList={warningsList}
+        />
       )}
       <Dialog
         open={leaving !== null}
@@ -211,7 +263,13 @@ export function PackageScreen({ id }: { readonly id: string }) {
         description={publishEs.unapprove.body}
         footer={
           <>
-            <Button variant="ghost" onClick={() => setLeaving(null)}>
+            <Button
+              variant="ghost"
+              onClick={() => {
+                toPiece.current = null
+                setLeaving(null)
+              }}
+            >
               {publishEs.unapprove.stay}
             </Button>
             <Button

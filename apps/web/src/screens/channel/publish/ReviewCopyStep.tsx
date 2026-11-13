@@ -9,7 +9,7 @@ import {
 } from '@ytcreator/core'
 import type { PackageReviewRules, PackageView } from '@ytcreator/core/api'
 import { Button, Card, Checkbox, DataSource, Dialog, ErrorMessage, format, TextArea, useToast } from '@ytcreator/ui'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type RefObject } from 'react'
 import { ApiClientError, packagesApi } from '../../../api/client.ts'
 import { errorText } from '../../../shell/errorText.ts'
 import { es } from '../../../strings/es.ts'
@@ -26,9 +26,11 @@ export interface ReviewCopyStepProps {
   readonly onChange: (pkg: PackageView) => void
   readonly onError: (cause: unknown) => void
   /** Takes the creator to the step where a piece is fixed. */
-  readonly onToStep: (step: FixStep) => void
+  readonly onToStep: (step: FixStep, piece: PackageKind) => void
   /** The AI is working on this package: nothing can be approved meanwhile. */
   readonly busy: boolean
+  /** The list of the package's own warnings, above the steps, when there are any. */
+  readonly warningsList: RefObject<HTMLUListElement | null>
 }
 
 const stepOf = (kind: PackageKind): FixStep =>
@@ -109,7 +111,7 @@ interface Copyable {
 }
 
 // The package, ready to copy: notices, pieces in the order of YouTube Studio, its guided list, approval and downloads.
-export function ReviewCopyStep({ pkg, onChange, onError, onToStep, busy }: ReviewCopyStepProps) {
+export function ReviewCopyStep({ pkg, onChange, onError, onToStep, busy, warningsList }: ReviewCopyStepProps) {
   const { toast } = useToast()
   const [rules, setRules] = useState<PackageReviewRules['rules'] | null>(null)
   const [sources, setSources] = useState<PackageReviewRules['sources']>({})
@@ -125,6 +127,22 @@ export function ReviewCopyStep({ pkg, onChange, onError, onToStep, busy }: Revie
   const [downloadFailed, setDownloadFailed] = useState<{ cause: unknown; kind: 'md' | 'json' | 'brief' } | null>(null)
   const [justApproved, setJustApproved] = useState(false)
   const approvedNote = useRef<HTMLParagraphElement>(null)
+  const noticesHeading = useRef<HTMLHeadingElement>(null)
+  // «Revisar los avisos» takes the creator to them. After the dialog has given the focus back to the button.
+  const reviewing = useRef(false)
+  const review = () => {
+    reviewing.current = true
+    setAsking(false)
+  }
+  useEffect(() => {
+    if (asking || !reviewing.current) return
+    reviewing.current = false
+    // The package's own warnings go first, at the top; the review's are in «Antes de subirlo».
+    const target = warningsList.current ?? noticesHeading.current
+    // Centred: at the top, the sticky header would cover it.
+    target?.scrollIntoView({ block: 'center' })
+    target?.focus()
+  }, [asking, warningsList])
   const { id } = pkg
 
   useEffect(() => {
@@ -153,7 +171,11 @@ export function ReviewCopyStep({ pkg, onChange, onError, onToStep, busy }: Revie
   }, [justApproved])
 
   const notices = rules ? packageNotices(pkg, rules) : []
-  const warnings = warningNotices(notices).length + pkg.warnings.length
+  const warningLines = [
+    ...pkg.warnings.map((warning) => publishEs.screen.warnings[warning]),
+    ...warningNotices(notices).map((notice) => noticeText(notice, pkg)),
+  ]
+  const warnings = warningLines.length
   const hasEmpty = notices.some((notice) => notice.blocking)
   const scriptApproved = pkg.script.status === 'guion_aprobado'
   const approved = pkg.status === 'aprobado'
@@ -316,10 +338,14 @@ export function ReviewCopyStep({ pkg, onChange, onError, onToStep, busy }: Revie
   return (
     <>
       <h2>{publishEs.screen.steps.revisar}</h2>
-      <p className={styles.why}>{publishEs.screen.why.revisar}</p>
+      <p className={styles.why}>
+        {pkg.format === 'short' ? publishEs.screen.why.revisarShort : publishEs.screen.why.revisar}
+      </p>
 
       <section aria-labelledby="package-notices">
-        <h3 id="package-notices">{text.noticesTitle}</h3>
+        <h3 id="package-notices" ref={noticesHeading} tabIndex={-1}>
+          {text.noticesTitle}
+        </h3>
         {failed !== null && (
           <ErrorMessage
             live
@@ -345,7 +371,7 @@ export function ReviewCopyStep({ pkg, onChange, onError, onToStep, busy }: Revie
                       variant="secondary"
                       size="sm"
                       aria-label={format(text.toStepNamed, { paso: stepName(stepOf(notice.kind)) })}
-                      onClick={() => onToStep(stepOf(notice.kind))}
+                      onClick={() => onToStep(stepOf(notice.kind), notice.kind)}
                     >
                       {text.toStep}
                     </Button>
@@ -545,6 +571,11 @@ export function ReviewCopyStep({ pkg, onChange, onError, onToStep, busy }: Revie
             )}
             {!scriptApproved && <p className={styles.notice}>{text.scriptNotApproved}</p>}
             {scriptApproved && hasEmpty && <p className={styles.notice}>{text.hasEmpty}</p>}
+            {scriptApproved && !hasEmpty && rules === null && (
+              <p role="status" className={styles.why}>
+                {failed === null ? text.approveWaiting : text.approveNeedsNotices}
+              </p>
+            )}
             <div className={styles.actions}>
               <Button
                 variant="primary"
@@ -590,7 +621,7 @@ export function ReviewCopyStep({ pkg, onChange, onError, onToStep, busy }: Revie
         description={text.warningsBody}
         footer={
           <>
-            <Button variant="secondary" onClick={() => setAsking(false)}>
+            <Button variant="secondary" onClick={review}>
               {text.warningsReview}
             </Button>
             <Button variant="primary" loading={saving} disabled={saving} onClick={() => void approve()}>
@@ -598,7 +629,13 @@ export function ReviewCopyStep({ pkg, onChange, onError, onToStep, busy }: Revie
             </Button>
           </>
         }
-      />
+      >
+        <ul className={styles.dialogList}>
+          {warningLines.map((line, index) => (
+            <li key={index}>{line}</li>
+          ))}
+        </ul>
+      </Dialog>
     </>
   )
 }

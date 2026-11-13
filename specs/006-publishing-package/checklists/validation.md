@@ -568,4 +568,79 @@ historial no gasta), VI (teclado, foco y axe), XI (este informe).
 ### 9. Cómo revertir
 
 `git revert` del commit de esta historia. No hay migraciones nuevas: `restored_from` y `recuperada` ya existían.
-Queda pendiente: Polish (T068–T074); T068 (IA real) necesita la autorización del creador.
+Polish (T068–T074) se cierra en la sección siguiente.
+
+## Polish (T068–T074), Puerta A del 2026-11-13
+
+### 1. Resumen
+
+Se cierran los casos límite que faltaban (T069), las comprobaciones de glosario, secretos y YouTube (T070), el
+quickstart (T071), la auditoría de novato (T072, cinco rondas, cerrada por el creador con 4 medios abiertos) y el estado
+en `CLAUDE.md` y el `README.md` (T073). T068 (IA real) no se ejecuta: espera la autorización del creador (C1).
+
+### 2. Requisitos
+
+| Requisito | Estado | Evidencia | Fecha |
+|---|---|---|---|
+| T068 prueba con IA real (SC-001, SC-002) | No ejecutado | Necesita la autorización del creador; consta como pendiente C1 en `decisions.md` | 2026-11-13 |
+| T069 casos límite | Cumplido | `apps/server/test/http/packages-edge.test.ts` (13 pruebas): guion aprobado otra vez con otro texto, datos pendientes en el guion, idea a «hecha», «archivada» o «banco», límite de gasto, seis fallos tipados de la IA y la parte fija por canal. Los demás casos ya los cubren otros tests (lo dice la cabecera del fichero) | 2026-11-13 |
+| T070 glosario, secretos y YouTube | Cumplido | `glossary.test.ts` pasa con los textos nuevos; `secrets-leak.spec.ts` sin cambios y en verde en el e2e; ningún servicio ni ruta de paquetes importa un cliente de YouTube (solo leen las cifras de `publish/youtube.json`) | 2026-11-13 |
+| T071 quickstart | Cumplido | Cada recorrido, en su prueba: 1 y 1b, e2e US1; 2, e2e US1 (estado vacío y «Ir a mis guiones»); 3, e2e US2 y `description.test.ts` (SC-004); 4, `packages-texts.test.ts` (SC-005); 5, e2e US2 y `packages-texts.test.ts` («Usar la nueva»); 6 y 7, e2e US3; 8, e2e US4; 9, e2e US5 y `packages-versions.test.ts` (SC-008); 10, `packages-base` y `packages-approve`. Garantías: `chapters.test.ts` (SC-003), `review.test.ts` (30 capítulos en menos de 1 s, SC-007) | 2026-11-13 |
+| T072 auditoría de novato | Cumplido por decisión del creador | `novice-audit.md`: rondas 1 a 5; la 5 con 0 graves y 4 medios abiertos, cerrada así por el creador (decisión 112). Tiempo del guion aprobado al paquete copiado: de 126 a 236 s con la herramienta; las auditoras calculan de 10 a 25 minutos para una persona real (SC-001 con IA real, no comprobado) | 2026-11-13 |
+| T073 `CLAUDE.md` y `README.md` | Cumplido | El README dice qué prepara la publicación y que YTCreator nunca sube nada a YouTube | 2026-11-13 |
+| T074 Puerta A | Cumplido | Este informe | 2026-11-13 |
+
+### 3. Cómo se comprobó
+
+- `fnm exec --using=24 -- pnpm lint`, `typecheck` y `test`: pasan (196 ficheros, 2585 pruebas, 4 saltadas).
+- `fnm exec --using=24 -- pnpm test:e2e`: pasan (catálogo 97 y 2 saltadas; app 54), código de salida 0.
+- Cinco rondas de auditoría con el agente `usuario-novato`, cada una sobre la app recompilada en un puerto y una carpeta
+  nuevos del scratchpad, con la IA y YouTube falsos.
+
+### 4. Controles
+
+- Pasados: lint, typecheck, unitarias, e2e (axe en claro y oscuro a 375 y 1280 px dentro de `publish.spec.ts`), glosario,
+  `secrets-leak`, fallos tipados de la IA (`packages-edge.test.ts`).
+- No ejecutados: `test:installer` (Polish no toca el instalador); T068 con IA real (sin autorización).
+- E2E nuevos: guion listo en «Mis publicaciones», preguntar al salir sin guardar, «Aprobar» apagado con una idea en
+  edición y diciendo qué falta, el diálogo enumera los avisos y «Revisar los avisos» lleva a ellos, «Corregirlo» deja el
+  foco en la pieza.
+
+### 5. Hallazgos
+
+Revisores (una vuelta, los cuatro):
+- Corregidos: el título propio sin añadir no contaba como cambio sin guardar; varios botones principales en «Mis
+  publicaciones»; títulos `h2` dentro de un `h2` y una lista vacía; un fallo de la lista de guiones tumbaba la pantalla;
+  el estado vacío daba un consejo imposible; el README decía «miniatura» (la app propone ideas); el contrato de pantallas
+  no recogía los cambios; T068 no constaba como pendiente; la decisión 100 citaba mal de dónde sale la guarda; la prueba
+  de la idea fuera de la cola no probaba «hecha»; la del límite de gasto no miraba los estados HTTP.
+- Descartados: abrir «Editar» sin cambiar nada cuenta como cambio sin guardar (es una edición abierta; preguntar es lo
+  seguro); el diálogo de avisos no cita la fuente de cada cifra (la cita la sección a la que lleva); la decisión 101 añade
+  comportamiento no pedido (arregla un medio de la auditoría, que la constitución IX exige pasar, como hizo la 005 con sus
+  decisiones 48 a 50; queda en el contrato).
+- Los graves de proceso («se da por cerrado sin auditoría ni informe») eran del momento de la revisión: este informe y
+  la decisión 112 los cierran.
+
+Auditoría: ver `novice-audit.md`. Abiertos: el indicador de pasos, la portada que no lleva a las listas, resaltar el
+elemento exacto en «Corregirlo» y los menores, para la pasada de interfaz con modo Design.
+
+### 6. Desviaciones
+
+De más: «Mis publicaciones» lista los guiones aprobados sin publicación (decisión 101); la guarda de cambios sin guardar
+y «Aprobar» que dice qué falta (100, 105, 106); «Corregirlo» lleva a la pieza (109). De menos: T068.
+
+### 7. Decisiones
+
+Agente: 100 a 111 (Medio, salvo 104 y 111, Bajo). Creador: 112 (cerrar la auditoría así). Pendiente del creador: C1
+(T068 con IA real).
+
+### 8. Constitución
+
+II (nada se pierde sin preguntar; lo aprobado es lo guardado), III (abrir una publicación desde la lista no gasta), VI
+(foco, teclado y axe), IX (auditoría de novato, cerrada por el creador), XI (este informe).
+
+### 9. Cómo revertir
+
+`git revert` del commit de Polish. No hay migraciones. Pendiente: T068 con la autorización del creador, y la pasada de
+interfaz con modo Design para los medios y menores abiertos.
+

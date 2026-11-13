@@ -47,6 +47,7 @@ export function AskAgain({ pkg, ai, part, disabled, onAsk }: AskAgainProps) {
         estimate={price.estimate}
         failure={failure}
         busy={ai.working === op}
+        workingNote={publishEs.workingNote}
         primary={false}
         disabled={disabled}
         onRun={() => onAsk(op, price, instructions)}

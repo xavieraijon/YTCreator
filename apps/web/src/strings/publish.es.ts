@@ -23,8 +23,12 @@ export const publishEs = {
     channelLink: 'Mis publicaciones',
     emptyTitle: 'Todavía no has preparado ninguna publicación',
     emptyBody:
-      'La publicación sale de un guion aprobado. Abre uno de tus guiones aprobados y pulsa «Preparar la publicación»; si aún no tienes ninguno, primero aprueba un guion.',
+      'La publicación sale de un guion aprobado, y todavía no tienes ninguno. Aprueba uno en «Mis guiones» y aquí podrás preparar su publicación.',
     toScripts: 'Ir a mis guiones',
+    readyTitle: 'Guiones aprobados sin publicación',
+    readyWhy: 'Ya puedes preparar lo que copiarás en YouTube para estos vídeos.',
+    prepareNamed: 'Preparar la publicación de «{titulo}»',
+    madeTitle: 'Publicaciones empezadas',
     backToChannel: 'Volver al canal',
     settings: 'Ajustes de publicación',
     downloadAllDocument: 'Descargar todas en un documento',
@@ -36,6 +40,7 @@ export const publishEs = {
   },
   screen: {
     progress: 'Progreso de la publicación',
+    leaveUnsaved: 'Tienes cambios sin guardar en este paso. Si sigues, se pierden. ¿Seguir sin guardarlos?',
     steps: {
       portada: 'Título y miniatura',
       portadaShort: 'Título y portada',
@@ -44,9 +49,12 @@ export const publishEs = {
     },
     why: {
       portada: 'La gente ve el título y la miniatura juntos, y en un segundo decide si pulsa.',
+      portadaShort: 'La gente ve el título y la portada juntos, y en un segundo decide si pulsa.',
       textos:
         'Las dos primeras líneas son lo único que se ve sin pulsar «más»: di de qué va el vídeo con las palabras que busca la gente.',
       revisar: 'Copia cada parte en YouTube Studio en este orden. Lo que YouTube no acepta te lo avisamos antes.',
+      revisarShort:
+        'Copia cada parte al subir el Short, en este orden; la portada se elige en la aplicación de YouTube del móvil. Lo que YouTube no acepta te lo avisamos antes.',
     },
     back: 'Volver a mis publicaciones',
     navigation: 'Pasos de la publicación',
@@ -61,7 +69,7 @@ export const publishEs = {
         'Has cambiado el título principal: parte de lo que tienes se pensó para el anterior. Revísalo o pídelo de nuevo.',
       parte_fija_cambiada: 'La parte fija de tus descripciones ha cambiado desde que se hizo esta.',
       sin_fuentes:
-        'La descripción no tiene fuentes: el guion no tiene datos con un enlace que abra ni referencias escritas por ti.',
+        'La descripción no dice de dónde salen los datos, porque el guion no tiene ninguno con un enlace ni una referencia tuya. Si el vídeo no usa datos de otros, no tienes que hacer nada.',
       pendientes_en_guion: 'El guion tiene datos sin comprobar: revísalos antes de publicar.',
     },
     warningsLabel: 'Avisos',
@@ -90,12 +98,24 @@ export const publishEs = {
     comentario: 'el comentario fijado',
     portada_short: 'la portada',
   },
+  // The same parts after «de»: «del comentario fijado», never «de el».
+  // Next to the button pressed, while the AI writes (decision 108).
+  workingNote: 'La IA lo está escribiendo. Aparecerá en esta página cuando termine; puedes seguir mirándola.',
+  partsOf: {
+    titulos: 'de los títulos',
+    miniaturas: 'de las ideas de miniatura',
+    descripcion: 'de la descripción',
+    capitulos: 'de los capítulos',
+    etiquetas: 'de las etiquetas',
+    comentario: 'del comentario fijado',
+    portada_short: 'de la portada',
+  },
   // From the approved script (005) and the channel.
   entry: {
     prepare: 'Preparar la publicación',
     continue: 'Seguir con la publicación',
     see: 'Ver la publicación',
-    why: 'Con el guion aprobado, preparamos lo que vas a copiar en YouTube: título, miniatura y descripción.',
+    why: 'Con el guion aprobado, preparamos lo que vas a copiar en YouTube: título, ideas de miniatura (en un Short, la portada) y descripción.',
   },
   cover: {
     measured: 'La gente busca «{busqueda}».',
@@ -155,6 +175,7 @@ export const publishEs = {
       'Te proponemos de una vez los títulos, la portada, la descripción con sus hashtags, las etiquetas y un comentario para fijar, todo a partir del guion.',
     coverTitle: 'Portada sugerida',
     coverMoment: 'Momento del vídeo',
+    coverMomentEmpty: 'Escribe qué se ve en ese momento: la portada no puede quedar sin él.',
     coverMomentHint: 'Qué se ve en ese momento, para encontrarlo al elegir la portada.',
     coverScreenText: 'Texto que se lee en ese momento',
     coverScreenTextHint: 'Corto, o vacío si no hay.',
@@ -226,7 +247,18 @@ export const publishEs = {
     approve: 'Aprobar descripción',
     approved: 'Descripción aprobada. Si cambias algo, vuelve a borrador.',
     notReady: 'Para aprobar hacen falta las primeras líneas, al menos un capítulo y al menos una etiqueta.',
-    unsaved: 'Guarda los cambios antes de aprobar.',
+    unsavedNamed: 'Antes de aprobar, guarda {partes}.',
+    // What is left unsaved, after «guarda»: each part is said so that the creator finds it (novice audit, round 3).
+    unsavedParts: {
+      descripcion: 'la descripción',
+      capitulos: 'los capítulos',
+      etiquetas: 'las etiquetas',
+      comentario: 'el comentario fijado',
+      portada: 'la portada',
+      titulo: 'el título que estás editando',
+      idea: 'la idea de miniatura que estás editando',
+      mine: 'el título que estás escribiendo (o bórralo)',
+    },
     toReview: 'Seguir con revisar y copiar',
   },
   // «Ajustes de publicación» (`/canal/publicaciones/ajustes`).
@@ -318,14 +350,15 @@ export const publishEs = {
     manualLabel: '{pieza}, para copiar',
     manual: 'No hemos podido copiarlo solo. Ya está seleccionado: pulsa Ctrl+C (⌘C en Mac) para copiarlo.',
     studio: 'Ajustes de YouTube Studio',
-    studioWhy: 'Al subir el vídeo, YouTube Studio te pide esto. Márcalo cuando lo tengas; es solo una ayuda.',
+    studioWhy:
+      'Al subir el vídeo, YouTube Studio te pide esto. Cada casilla es para marcar que ya lo has respondido allí: marcarla no responde nada.',
     studioKids: 'Público: {respuesta}',
     studioKidsYes: 'sí, está hecho para niños',
     studioKidsNo: 'no, no está hecho para niños',
     studioKidsUnknown: 'no se ha podido leer el perfil del canal; revísalo y elige tú en YouTube Studio',
     studioKidsMeans: 'Marcarlo así supone:',
     studioWhyGuess: '{porque} {supuesto}',
-    studioSynthetic: 'Contenido alterado o sintético: {pregunta}',
+    studioSynthetic: 'Contenido alterado o sintético (lo respondes tú en YouTube Studio): {pregunta}',
     studioSyntheticYes: 'Hay que avisar si tiene:',
     studioSyntheticNo: 'No hace falta si solo es:',
     studioLanguage: 'Idioma: {respuesta}',
@@ -356,19 +389,22 @@ export const publishEs = {
     },
     warningsBody: 'Puedes aprobarla igual: los avisos son consejos y la decisión es tuya.',
     warningsReview: 'Revisar los avisos',
+    approveWaiting: 'Podrás aprobarla en cuanto termine la revisión de «Antes de subirlo».',
+    approveNeedsNotices:
+      'Para aprobarla hace falta la revisión de «Antes de subirlo»: pulsa «Volver a intentarlo» en esa parte.',
     warningsApprove: 'Aprobar igual',
     nextStep: 'Cuando lo hayas subido, pulsa «Marcar como hecha» en la idea, en «Próximos vídeos».',
   },
   // The history of each piece (US5), as the one of the script (005).
   history: {
-    title: 'Historial de {parte}',
+    title: 'Historial {parte}',
     version: 'Versión {n}',
     current: 'La actual',
     from: 'copia de la versión {n}',
     line: '{version} · {origen} · {fecha}',
     lineFrom: '{version} · {origen} · {fecha} · {copia}',
     see: 'Comparar con la actual',
-    seeNamed: 'Comparar con la actual la versión {n} de {parte}',
+    seeNamed: 'Comparar con la actual la versión {n} {parte}',
     restore: 'Volver a esta versión',
     restored: 'Has vuelto a la versión {n}. La que tenías sigue aquí, en el historial.',
     busy: 'Guarda o deshaz lo que estás escribiendo para poder volver a esta versión.',

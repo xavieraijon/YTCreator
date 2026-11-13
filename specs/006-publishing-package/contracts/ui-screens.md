@@ -21,7 +21,10 @@ miniatura». «Etiquetas» y «capítulos» son los nombres que usa YouTube Stud
 - Una `Card` por paquete: título principal (o de trabajo), formato, estado dicho para personas («Título y miniatura
   en borrador», «Título y miniatura aprobados», «Descripción en borrador», «Descripción aprobada», «Publicación
   aprobada»; sin empezar, «Por empezar»), último cambio y «Abrir».
-- Sin guiones aprobados: `EmptyState` que explica que primero hay que aprobar un guion, con «Ir a mis guiones».
+- Guiones aprobados sin paquete, antes de los paquetes: «Guiones aprobados sin publicación», una `Card` por guion con
+  «Preparar la publicación de «título»», que abre el paquete sin llamar a la IA (decisión 101, auditoría de novato).
+- Sin paquetes ni guiones aprobados: `EmptyState` que explica que primero hay que aprobar un guion, con «Ir a mis
+  guiones».
 - «Descargar todas en un documento», «Descargar todas como datos» (solo si alguna tiene algo) y «Ajustes de
   publicación».
 
@@ -68,10 +71,13 @@ cada uno con su acción («Pedir de nuevo · {coste}», «Usar la nueva», «Ir 
 - Lista guiada de YouTube Studio: cuatro `Checkbox` con la respuesta para el canal y el porqué.
 - Descargas: «Descargar el documento», «Descargar los datos» y «Descargar las indicaciones para la miniatura» («…para
   la portada» en un Short).
-- **Principal**: «Aprobar la publicación». Con avisos, un `Dialog` dice cuántos quedan y deja aprobar igual. Con el guion
-  sin aprobar, el botón está apagado y una frase lo explica.
+- **Principal**: «Aprobar la publicación». Con avisos, un `Dialog` dice cuántos quedan, los enumera y deja aprobar
+  igual; «Revisar los avisos» lo cierra y lleva a «Antes de subirlo» (decisión 103). Con el guion sin aprobar, o
+  mientras se carga la revisión, el botón está apagado y una frase lo explica (decisión 102).
 - Con la publicación aprobada, ir a «Título y miniatura» o a «Descripción» pregunta antes con un `Dialog` («Si cambias
   algo, dejará de estar aprobada»), y esos pasos lo recuerdan arriba mientras siga aprobada.
+- En cualquier paso, salir con cambios sin guardar (otro paso, «Seguir con…», otra pantalla, atrás o cerrar la
+  pestaña) pregunta antes con la confirmación del navegador (decisión 100).
 
 ### Historial
 

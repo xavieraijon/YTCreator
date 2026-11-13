@@ -110,6 +110,15 @@
     font-size: var(--s-font-size-sm);
   }
 
+  /* What a dialog asks about, one line each (the warnings before approving a package, 006). */
+  .dialogList {
+    display: grid;
+    gap: var(--s-space-2);
+    margin: 0;
+    padding-inline-start: var(--s-space-5);
+    overflow-wrap: anywhere;
+  }
+
   /* Inline, inside what is said: a mark is read as part of the sentence and pressed like a button. */
   .claim {
     appearance: none;

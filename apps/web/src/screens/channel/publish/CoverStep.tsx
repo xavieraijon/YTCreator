@@ -18,7 +18,7 @@ import {
   TextArea,
   TextField,
 } from '@ytcreator/ui'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { packagesApi } from '../../../api/client.ts'
 import { errorText } from '../../../shell/errorText.ts'
 import { es } from '../../../strings/es.ts'
@@ -27,7 +27,9 @@ import { scriptEs } from '../../../strings/script.es.ts'
 import styles from '../channel.module.css'
 import { AiAction } from '../Proposal.tsx'
 import { AskAgain } from './AskAgain.tsx'
+import { pieceAnchor } from './anchors.ts'
 import { History } from './History.tsx'
+import { listOf } from './listOf.ts'
 import { type PackageAi, usePackageEstimate } from './usePackageAi.ts'
 
 const text = publishEs.cover
@@ -55,7 +57,8 @@ function ShortCover({ pkg, ai, busy, blockTitle, onSave, onAsk, onDirty }: Short
   const [moment, setMoment] = useState(piece.content.moment)
   const [screenText, setScreenText] = useState(piece.content.screenText)
   const dirty = moment !== piece.content.moment || screenText !== piece.content.screenText
-  useEffect(() => {
+  // Before the screen is painted, so that «Aprobar» is off before any click can reach it.
+  useLayoutEffect(() => {
     onDirty(dirty)
     return () => onDirty(false)
   }, [dirty, onDirty])
@@ -63,11 +66,15 @@ function ShortCover({ pkg, ai, busy, blockTitle, onSave, onAsk, onDirty }: Short
   const scriptApproved = pkg.script.status === 'guion_aprobado'
   return (
     <div className={styles.form}>
-      <h3>{text.coverTitle}</h3>
+      <h3 id={pieceAnchor('portada_short')} tabIndex={-1}>
+        {text.coverTitle}
+      </h3>
       <p className={styles.why}>{text.shortCover}</p>
       <TextArea
         label={text.coverMoment}
         description={text.coverMomentHint}
+        // Saving is off while it is empty: it says why (novice audit, round 5).
+        error={moment.trim() === '' ? text.coverMomentEmpty : undefined}
         value={moment}
         maxLength={PUBLISH_LIMITS.moment}
         disabled={busy}
@@ -103,6 +110,8 @@ export interface CoverStepProps {
   readonly ai: PackageAi
   readonly onChange: (pkg: PackageView) => void
   readonly onError: (cause: unknown) => void
+  /** Whether something written here is not saved yet: the screen asks before leaving the step. */
+  readonly onDirty: (dirty: boolean) => void
   readonly onNext: () => void
 }
 
@@ -122,7 +131,7 @@ export function coverApproved(pkg: PackageView): boolean {
 }
 
 // «Título y miniatura»: what makes people click (contracts/ui-screens.md).
-export function CoverStep({ pkg, ai, onChange, onError, onNext }: CoverStepProps) {
+export function CoverStep({ pkg, ai, onChange, onError, onDirty, onNext }: CoverStepProps) {
   const titles = pkg.pieces.titulos
   const thumbnails = pkg.pieces.miniaturas
   const isShort = pkg.format === 'short'
@@ -267,10 +276,13 @@ export function CoverStep({ pkg, ai, onChange, onError, onNext }: CoverStepProps
   const shortCover = pkg.pieces.portada_short
   // What the creator is writing in the cover counts too: what is approved is what is on screen.
   const [coverDirty, setCoverDirty] = useState(false)
+  // What the creator wrote and would lose; the optional instructions for the AI are not counted (decision 100).
+  // Nor is it approved: what is approved is what is saved, so it waits like «Descripción» (decision 105).
+  const unsaved = coverDirty || editing !== null || editingConcept !== null || mine.trim() !== ''
   const ready =
     main !== null &&
     !pending &&
-    !coverDirty &&
+    !unsaved &&
     (isShort ? shortCover !== null && shortCover.content.moment.trim() !== '' : chosen.length > 0)
   // Asking for more titles needs room for the fewest the AI gives next to the ones kept (decision 31).
   const kept = candidates.filter(
@@ -289,6 +301,10 @@ export function CoverStep({ pkg, ai, onChange, onError, onNext }: CoverStepProps
   const shortPrice = usePackageEstimate(pkg, 'paquete_short', scriptApproved && idle && firstShort)
 
   const historyProps = { pkg, onChange, onError }
+  useLayoutEffect(() => {
+    onDirty(unsaved)
+    return () => onDirty(false)
+  }, [unsaved, onDirty])
 
   const ask: PackageAi['run'] = async (...args) => {
     setAsking(true)
@@ -364,7 +380,7 @@ export function CoverStep({ pkg, ai, onChange, onError, onNext }: CoverStepProps
   return (
     <section aria-labelledby="cover-title">
       <h2 id="cover-title">{isShort ? publishEs.screen.steps.portadaShort : publishEs.screen.steps.portada}</h2>
-      <p className={styles.why}>{publishEs.screen.why.portada}</p>
+      <p className={styles.why}>{isShort ? publishEs.screen.why.portadaShort : publishEs.screen.why.portada}</p>
       {pkg.idea.hook && <p>{format(publishEs.screen.hook, { gancho: pkg.idea.hook })}</p>}
 
       {measured ? (
@@ -404,6 +420,7 @@ export function CoverStep({ pkg, ai, onChange, onError, onNext }: CoverStepProps
             estimate={shortPrice.estimate}
             failure={ai.failureFor('paquete_short')}
             busy={ai.working === 'paquete_short'}
+            workingNote={publishEs.workingNote}
             disabled={busy || !scriptApproved}
             onRun={() => void ask('paquete_short', shortPrice)}
           />
@@ -417,13 +434,16 @@ export function CoverStep({ pkg, ai, onChange, onError, onNext }: CoverStepProps
             estimate={titlePrice.estimate}
             failure={ai.failureFor('titulos')}
             busy={ai.working === 'titulos'}
+            workingNote={publishEs.workingNote}
             disabled={busy || !scriptApproved}
             onRun={() => void ask('titulos', titlePrice)}
           />
         )
       ) : (
         <>
-          <h3>{text.titles}</h3>
+          <h3 id={pieceAnchor('titulos')} tabIndex={-1}>
+            {text.titles}
+          </h3>
           <RadioGroup
             label={text.main}
             description={text.mainHint}
@@ -557,6 +577,7 @@ export function CoverStep({ pkg, ai, onChange, onError, onNext }: CoverStepProps
               estimate={titlePrice.estimate}
               failure={ai.failureFor('titulos')}
               busy={ai.working === 'titulos'}
+              workingNote={publishEs.workingNote}
               primary={false}
               disabled={busy || pending || !scriptApproved}
               onRun={() => void ask('titulos', titlePrice, instructions)}
@@ -587,7 +608,9 @@ export function CoverStep({ pkg, ai, onChange, onError, onNext }: CoverStepProps
       )}
       {!isShort && titles !== null && (
         <>
-          <h3>{text.thumbnails}</h3>
+          <h3 id={pieceAnchor('miniaturas')} tabIndex={-1}>
+            {text.thumbnails}
+          </h3>
           <p className={styles.why}>{format(text.thumbnailsWhy, { n: PUBLISH_LIMITS.chosen })}</p>
           {!hasMain ? (
             <p className={styles.notice}>{text.needsMain}</p>
@@ -700,6 +723,7 @@ export function CoverStep({ pkg, ai, onChange, onError, onNext }: CoverStepProps
                   estimate={thumbnailPrice.estimate}
                   failure={ai.failureFor('miniaturas')}
                   busy={ai.working === 'miniaturas'}
+                  workingNote={publishEs.workingNote}
                   primary={thumbnails === null}
                   disabled={busy || pending || !scriptApproved}
                   onRun={() =>
@@ -728,8 +752,17 @@ export function CoverStep({ pkg, ai, onChange, onError, onNext }: CoverStepProps
       ) : (
         (thumbnails !== null || (isShort && titles !== null)) && (
           <>
-            {coverDirty ? (
-              <p className={styles.notice}>{publishEs.texts.unsaved}</p>
+            {unsaved ? (
+              <p className={styles.notice}>
+                {format(publishEs.texts.unsavedNamed, {
+                  partes: listOf([
+                    coverDirty && publishEs.texts.unsavedParts.portada,
+                    editing !== null && publishEs.texts.unsavedParts.titulo,
+                    editingConcept !== null && publishEs.texts.unsavedParts.idea,
+                    mine.trim() !== '' && publishEs.texts.unsavedParts.mine,
+                  ]),
+                })}
+              </p>
             ) : (
               !ready && !pending && <p className={styles.notice}>{isShort ? text.notReadyShort : text.notReady}</p>
             )}

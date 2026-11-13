@@ -136,7 +136,7 @@ export function History({ pkg, kind, busy, onChange, onError }: HistoryProps) {
   const currentNow = useRef<number | null>(null)
   const { id } = pkg
   const current = pkg.pieces[kind]?.version ?? null
-  const part = publishEs.parts[kind]
+  const part = publishEs.partsOf[kind]
 
   useEffect(() => {
     if (!open || current === null) return

@@ -190,13 +190,13 @@ y comprobar que la cuarta sigue en el historial.
 
 ## Phase 8: Polish & Cross-Cutting
 
-- [ ] T068 Prueba con IA real, **solo con la autorización del creador** (riesgo alto): un paquete de vídeo largo y uno de Short con la conexión autorizada, guardando en `checklists/validation.md` el coste real, el tiempo y si los títulos caben en el móvil (SC-002). Sin autorización, consta como no ejecutada y no bloquea nada más
-- [ ] T069 [P] Comprobar los casos límite de la spec que falten con su test: guion reabierto o vuelto a borrador, idea fuera de la cola, bloques muy cortos, parte fija demasiado larga, afirmaciones pendientes en el guion, límite de gasto, fallos tipados de la IA, dos pestañas y varios canales, en `apps/server/test/http/packages-edge.test.ts`
-- [ ] T070 [P] Revisar que los textos nuevos pasan el glosario, que `apps/web/e2e/secrets-leak.spec.ts` sigue igual y que ninguna ruta de la feature llama a YouTube
-- [ ] T071 Recorrer el [quickstart](./quickstart.md) entero con IA falsa y guardar el resultado en `checklists/validation.md`
-- [ ] T072 Auditoría de novato de la publicación con el agente `usuario-novato`, en `specs/006-publishing-package/novice-audit.md`. Debe dar 0 graves y como mucho 3 medios, y anotar el tiempo del guion aprobado al paquete copiado (SC-001). Los menores visuales van a la pasada del modo Design
-- [ ] T073 Actualizar `CLAUDE.md` (estado de la 006) y `README.md` si cambia algo de cara al creador
-- [ ] T074 [A] Puerta A de Polish: ejecutar `/puerta-a 006 Polish`
+- [ ] T068 (no ejecutada: espera la autorización del creador, C1) Prueba con IA real, **solo con la autorización del creador** (riesgo alto): un paquete de vídeo largo y uno de Short con la conexión autorizada, guardando en `checklists/validation.md` el coste real, el tiempo y si los títulos caben en el móvil (SC-002). Sin autorización, consta como no ejecutada y no bloquea nada más
+- [X] T069 [P] Comprobar los casos límite de la spec que falten con su test: guion reabierto o vuelto a borrador, idea fuera de la cola, bloques muy cortos, parte fija demasiado larga, afirmaciones pendientes en el guion, límite de gasto, fallos tipados de la IA, dos pestañas y varios canales, en `apps/server/test/http/packages-edge.test.ts`
+- [X] T070 [P] Revisar que los textos nuevos pasan el glosario, que `apps/web/e2e/secrets-leak.spec.ts` sigue igual y que ninguna ruta de la feature llama a YouTube
+- [X] T071 Recorrer el [quickstart](./quickstart.md) entero con IA falsa y guardar el resultado en `checklists/validation.md`
+- [X] T072 Auditoría de novato de la publicación con el agente `usuario-novato`, en `specs/006-publishing-package/novice-audit.md`. Debe dar 0 graves y como mucho 3 medios, y anotar el tiempo del guion aprobado al paquete copiado (SC-001). Los menores visuales van a la pasada del modo Design
+- [X] T073 Actualizar `CLAUDE.md` (estado de la 006) y `README.md` si cambia algo de cara al creador
+- [X] T074 [A] Puerta A de Polish: ejecutar `/puerta-a 006 Polish`
 
 ---
 

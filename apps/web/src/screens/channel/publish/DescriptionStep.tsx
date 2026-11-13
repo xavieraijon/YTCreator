@@ -9,13 +9,15 @@ import {
 } from '@ytcreator/core'
 import type { PackageView } from '@ytcreator/core/api'
 import { Button, Card, DataSource, ErrorMessage, format, TextArea, TextField } from '@ytcreator/ui'
-import { useState } from 'react'
+import { useLayoutEffect, useState } from 'react'
 import { packagesApi } from '../../../api/client.ts'
 import { navigate } from '../../../router.ts'
 import { errorText } from '../../../shell/errorText.ts'
 import { es } from '../../../strings/es.ts'
 import { publishEs } from '../../../strings/publish.es.ts'
 import styles from '../channel.module.css'
+import { pieceAnchor } from './anchors.ts'
+import { listOf } from './listOf.ts'
 import { AiAction } from '../Proposal.tsx'
 import { coverApproved } from './CoverStep.tsx'
 import { AskAgain, type AskAgainProps } from './AskAgain.tsx'
@@ -29,6 +31,8 @@ export interface DescriptionStepProps {
   readonly ai: PackageAi
   readonly onChange: (pkg: PackageView) => void
   readonly onError: (cause: unknown) => void
+  /** Whether something written here is not saved yet: the screen asks before leaving the step. */
+  readonly onDirty: (dirty: boolean) => void
   readonly onNext: () => void
 }
 
@@ -96,7 +100,7 @@ const hashtagsOf = (written: string) => [
 const hashtagsText = (hashtags: readonly string[]) => hashtags.map((tag) => `#${tag}`).join(' ')
 
 // «Descripción»: the text under the video, its chapters, the tags and the pinned comment (contracts/ui-screens.md).
-export function DescriptionStep({ pkg, ai, onChange, onError, onNext }: DescriptionStepProps) {
+export function DescriptionStep({ pkg, ai, onChange, onError, onDirty, onNext }: DescriptionStepProps) {
   const { descripcion: description, capitulos, etiquetas, comentario } = pkg.pieces
   const scriptApproved = pkg.script.status === 'guion_aprobado'
   const cover = coverApproved(pkg)
@@ -122,6 +126,25 @@ export function DescriptionStep({ pkg, ai, onChange, onError, onNext }: Descript
     () => hashtagsText(description?.content.hashtags ?? []),
     description?.version ?? null,
   )
+
+  const hashtagsSent = hashtagsOf(hashtags)
+  const descriptionDirty =
+    description !== null &&
+    (firstLines !== description.content.firstLines ||
+      body !== description.content.body ||
+      (isShort && hashtagsSent.join('\n') !== description.content.hashtags.join('\n')))
+  const chaptersSent = chaptersOf(rows)
+  const chaptersDirty =
+    capitulos !== null && JSON.stringify(chaptersSent) !== JSON.stringify(chaptersOf(rowsOf(capitulos.content)))
+  const tagsSent = tagsOf(tags)
+  const tagsDirty = etiquetas !== null && tagsSent.join('\n') !== etiquetas.content.tags.join('\n')
+  const commentDirty = comentario !== null && comment !== comentario.content.text
+  const dirty = descriptionDirty || chaptersDirty || tagsDirty || commentDirty
+  // Before the screen is painted, so that no click can approve or leave in between.
+  useLayoutEffect(() => {
+    onDirty(dirty)
+    return () => onDirty(false)
+  }, [dirty, onDirty])
 
   if (isShort && missing) return <p className={styles.notice}>{text.shortNeedsPackage}</p>
   if (!cover && description === null) return <p className={styles.notice}>{text.needsCover}</p>
@@ -168,6 +191,7 @@ export function DescriptionStep({ pkg, ai, onChange, onError, onNext }: Descript
           estimate={firstPrice.estimate}
           failure={ai.failureFor('descripcion')}
           busy={ai.working === 'descripcion'}
+          workingNote={publishEs.workingNote}
           disabled={busy || !scriptApproved || !cover}
           onRun={() => void ask('descripcion', firstPrice)}
         />
@@ -175,17 +199,9 @@ export function DescriptionStep({ pkg, ai, onChange, onError, onNext }: Descript
     )
   }
 
-  const hashtagsSent = hashtagsOf(hashtags)
   const hashtagsWrong =
     hashtagsSent.length > PUBLISH_LIMITS.hashtags ||
     hashtagsSent.some((tag) => tag.length > PUBLISH_LIMITS.hashtag || tag.includes('#'))
-  const descriptionDirty =
-    firstLines !== description.content.firstLines ||
-    body !== description.content.body ||
-    (isShort && hashtagsSent.join('\n') !== description.content.hashtags.join('\n'))
-  const chaptersSent = chaptersOf(rows)
-  const chaptersDirty =
-    capitulos !== null && JSON.stringify(chaptersSent) !== JSON.stringify(chaptersOf(rowsOf(capitulos.content)))
   // Each start as it would be saved: the minute written, or the estimate there is now.
   const startOfRow = (row: ChapterRow, index: number) =>
     index === 0
@@ -199,11 +215,7 @@ export function DescriptionStep({ pkg, ai, onChange, onError, onNext }: Descript
     return before !== null && start <= before ? text.timeOrder : undefined
   }
   const badTime = rows.some((row, index) => timeError(row, index) !== undefined)
-  const tagsSent = tagsOf(tags)
   const tagsWrong = tagsSent.length > PUBLISH_LIMITS.tags || tagsSent.some((tag) => tag.length > PUBLISH_LIMITS.tag)
-  const tagsDirty = tagsSent.join('\n') !== etiquetas.content.tags.join('\n')
-  const commentDirty = comment !== comentario.content.text
-  const dirty = descriptionDirty || chaptersDirty || tagsDirty || commentDirty
 
   const versions = Object.fromEntries(kinds.map((kind) => [kind, pkg.pieces[kind]?.version ?? 0]))
   const approvedTexts = pkg.approvals.texts
@@ -248,7 +260,9 @@ export function DescriptionStep({ pkg, ai, onChange, onError, onNext }: Descript
       </Card>
 
       <div className={styles.form}>
-        <h3>{text.descriptionText}</h3>
+        <h3 id={pieceAnchor('descripcion')} tabIndex={-1}>
+          {text.descriptionText}
+        </h3>
         <TextArea
           label={text.firstLines}
           description={text.firstLinesHint}
@@ -308,7 +322,9 @@ export function DescriptionStep({ pkg, ai, onChange, onError, onNext }: Descript
       {capitulos !== null && (
         <>
           <div className={styles.form}>
-            <h3>{text.chapters}</h3>
+            <h3 id={pieceAnchor('capitulos')} tabIndex={-1}>
+              {text.chapters}
+            </h3>
             <p className={styles.why}>{text.chaptersWhy}</p>
             <p className={styles.notice}>{text.adjustLater}</p>
             <ol className={styles.options}>
@@ -414,7 +430,9 @@ export function DescriptionStep({ pkg, ai, onChange, onError, onNext }: Descript
       </div>
 
       <div className={styles.form}>
-        <h3>{text.tags}</h3>
+        <h3 id={pieceAnchor('etiquetas')} tabIndex={-1}>
+          {text.tags}
+        </h3>
         <p className={styles.why}>{text.tagsWhy}</p>
         <TextArea
           label={text.tagsField}
@@ -441,7 +459,9 @@ export function DescriptionStep({ pkg, ai, onChange, onError, onNext }: Descript
       </div>
 
       <div className={styles.form}>
-        <h3>{text.comment}</h3>
+        <h3 id={pieceAnchor('comentario')} tabIndex={-1}>
+          {text.comment}
+        </h3>
         <p className={styles.why}>{text.commentWhy}</p>
         <TextArea
           label={text.comment}
@@ -478,7 +498,16 @@ export function DescriptionStep({ pkg, ai, onChange, onError, onNext }: Descript
       ) : (
         <>
           {dirty ? (
-            <p className={styles.notice}>{text.unsaved}</p>
+            <p className={styles.notice}>
+              {format(text.unsavedNamed, {
+                partes: listOf([
+                  descriptionDirty && text.unsavedParts.descripcion,
+                  chaptersDirty && text.unsavedParts.capitulos,
+                  tagsDirty && text.unsavedParts.etiquetas,
+                  commentDirty && text.unsavedParts.comentario,
+                ]),
+              })}
+            </p>
           ) : (
             !ready && <p className={styles.notice}>{isShort ? text.notReadyShort : text.notReady}</p>
           )}
