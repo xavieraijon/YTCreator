@@ -32,6 +32,8 @@ export const speechEngineViewSchema = z.object({
   /** The chosen model («Modo experto»); the recommended one by default. */
   model: z.string(),
   models: z.array(z.object({ id: z.string(), sizeBytes: positive, installed: z.boolean(), recommended: z.boolean() })),
+  /** What is still to download for the chosen model, to say it before starting (FR-002, decision 21). */
+  missingBytes: count,
   job: z
     .object({
       id,
@@ -42,6 +44,10 @@ export const speechEngineViewSchema = z.object({
     .nullable(),
 })
 export type SpeechEngineView = z.infer<typeof speechEngineViewSchema>
+
+/** POST /speech/engine: the job that downloads, or the view when nothing was missing. */
+export const speechEngineStartResultSchema = z.union([z.object({ jobId: id }), speechEngineViewSchema])
+export type SpeechEngineStartResult = z.infer<typeof speechEngineStartResultSchema>
 
 export const speechEngineStartBodySchema = z.object({ model: z.string().min(1).optional() })
 export const speechEngineModelBodySchema = z.object({ model: z.string().min(1) })

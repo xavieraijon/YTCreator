@@ -17,6 +17,9 @@ const SETTINGS = {
   'youtube.ytdlp_version': z.string().min(1),
   // YouTube stopped taking the saved key (P15 a): it is no longer used until another one is saved.
   'youtube.api_key_rejected': z.enum(['1', '0']).transform((v) => v === '1'),
+  // The model chosen in «Modo experto» and how fast each one ran on this machine, as JSON (007, data-model.md).
+  'speech.model': z.string().min(1),
+  'speech.speed': z.string().min(2),
 }
 
 type Settings = typeof SETTINGS

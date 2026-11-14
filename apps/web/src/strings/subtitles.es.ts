@@ -1,4 +1,5 @@
-// Texts of the subtitles (specs/007-subtitles/contracts/ui-screens.md).
+// Texts of the subtitles (specs/007-subtitles/contracts/ui-screens.md). Words: «subtítulos» (not «transcripción»),
+// «el programa que escucha el audio» (not «motor», nor «modelo» outside «Modo experto»), «fichero de subtítulos».
 export const subtitlesEs = {
   screen: {
     title: 'Subtítulos',
@@ -13,5 +14,137 @@ export const subtitlesEs = {
     en_marcha: 'En marcha',
     borrador: 'Borrador',
     aprobados: 'Aprobados',
+  },
+  // From the approved script (005): the way in.
+  entry: {
+    make: 'Hacer los subtítulos',
+    see: 'Ver los subtítulos',
+    state: 'Subtítulos: {estado}',
+    // Inside the sentence above, so in lower case here and not by code (another language would not do it so).
+    states: {
+      sin_hacer: 'sin hacer',
+      en_marcha: 'en marcha',
+      borrador: 'borrador',
+      aprobados: 'aprobados',
+    },
+  },
+  // The program that listens, downloaded once (R1, R2).
+  engine: {
+    title: 'El programa que escucha el audio',
+    needed: 'Para escuchar el audio hace falta descargar una vez un programa de unos {tamano}.',
+    why: 'Se queda en tu equipo: las próximas veces no hace falta descargarlo.',
+    download: 'Descargarlo',
+    downloading: 'Descargando el programa que escucha el audio',
+    ready: 'El programa que escucha el audio ya está listo.',
+    expert: 'Modo experto',
+    modelLegend: 'Modelo de voz',
+    modelOption: '{nombre}: {tamano}',
+    megabytes: '{n} MB',
+    gigabytes: '{n} GB',
+    modelOther: 'otro',
+    recommended: '{nombre} (recomendado)',
+    modelWhy: 'El recomendado acierta más; el pequeño va más rápido en equipos lentos.',
+    modelMissing: 'Este modelo no está descargado. Descárgalo para usarlo.',
+    downloadModel: 'Descargar este modelo',
+    useModel: 'Usar este modelo',
+    modelInUse: 'Se usa el modelo «{nombre}».',
+    models: {
+      'large-v3-turbo-q5_0': 'grande',
+      'small-q5_1': 'pequeño',
+    } as Record<string, string>,
+    failureTitle: 'No se ha podido descargar el programa',
+    failures: {
+      descarga: 'No se ha podido descargar. Comprueba tu conexión a internet y vuelve a intentarlo.',
+      hash: 'Lo descargado no es lo que esperábamos, así que no lo hemos usado. Vuelve a intentarlo.',
+      permisos: 'No se ha podido guardar en tu equipo. Revisa que la carpeta de la aplicación se pueda escribir.',
+      espacio: 'No queda espacio en el disco. Libera espacio y vuelve a intentarlo.',
+      interrumpido: 'La descarga se ha parado antes de terminar. Vuelve a intentarlo: sigue donde se quedó.',
+      interno: 'Algo ha fallado al descargar. Vuelve a intentarlo.',
+    } as Record<string, string>,
+    retry: 'Volver a intentarlo',
+  },
+  // 1. Choosing the file (no subtitles yet).
+  choose: {
+    pick: 'Elegir el vídeo o el audio',
+    need: 'Hace falta el vídeo ya montado o solo su audio.',
+    local: 'Lo escucha tu propio equipo: el vídeo no sale de aquí y no cuesta nada.',
+    empty: 'No se ha oído ninguna palabra en el último fichero. Comprueba que tiene voz y elige otro.',
+    preparing: 'Preparando el audio…',
+    uploading: 'Guardando el audio…',
+    file: 'Fichero: {nombre}',
+    duration: 'Dura {duracion}.',
+    estimate: 'Tardará unos {minutos} minutos.',
+    estimateOne: 'Tardará un minuto, más o menos.',
+    estimateShort: 'Tardará menos de un minuto.',
+    start: 'Empezar',
+    other: 'Elegir otro fichero',
+    shortTooLong:
+      'Este vídeo dura {duracion} y un Short puede durar hasta {maximo}. Si dura más, YouTube no lo trata como un Short.',
+    failureTitle: 'No se ha podido usar este fichero',
+    failures: {
+      no_se_puede_leer:
+        'Este fichero no se puede leer aquí. Exporta solo el audio desde tu editor (MP3, WAV o M4A) y elígelo.',
+      sin_sonido: 'Este fichero no tiene sonido. Elige el vídeo montado o su audio.',
+      demasiado_largo: 'Este fichero dura más de 3 horas. Elige uno más corto.',
+      cancelado: 'Has parado la preparación del audio.',
+      interno: 'No se ha podido preparar el audio de este fichero. Prueba con otro.',
+    } as Record<string, string>,
+  },
+  // 2. Running.
+  running: {
+    label: 'Escuchando el audio',
+    preparing: 'Preparando el audio…',
+    listening: 'Escuchando: {porcentaje} %',
+    leave: 'Puedes seguir con otra cosa o cerrar: te esperamos aquí con los subtítulos.',
+    queued: 'Hay otros subtítulos en marcha. Estos empiezan cuando terminen.',
+    stop: 'Parar',
+    stopTitle: '¿Parar los subtítulos?',
+    stopBody: 'Lo escuchado hasta ahora se pierde. Podrás volver a empezar cuando quieras.',
+    stopConfirm: 'Parar',
+    stopKeep: 'Seguir escuchando',
+  },
+  // When the recognition did not end well (contracts/speech-recognizer.md).
+  failed: {
+    title: 'No se han podido hacer los subtítulos',
+    failures: {
+      sin_motor: 'Falta el programa que escucha el audio.',
+      sin_modelo: 'Falta una parte del programa que escucha el audio.',
+      audio_no_valido: 'No se ha podido leer el audio.',
+      sin_memoria:
+        'Tu equipo se ha quedado sin memoria. Cierra otros programas y vuelve a empezar o, en «Modo experto», elige la opción «pequeño».',
+      interrumpido: 'Se ha parado antes de terminar.',
+      cancelado: 'Has parado los subtítulos.',
+      interno: 'Algo ha fallado al escuchar el audio.',
+    } as Record<string, string>,
+    again: 'Volver a empezar',
+    other: 'Elegir otro fichero',
+  },
+  // 3. Reviewing (read-only and download in US1).
+  review: {
+    title: 'Tus subtítulos',
+    from: 'Hechos con «{nombre}», que dura {duracion}.',
+    download: 'Descargar los subtítulos',
+    downloadWhy: 'Es el fichero de subtítulos que se sube a YouTube Studio, en «Subtítulos».',
+    formatLegend: 'Tipo de fichero',
+    formats: {
+      srt: 'El habitual (.srt), el que recomendamos',
+      vtt: 'Para la web (.vtt)',
+      sbv: 'El antiguo de YouTube (.sbv)',
+    },
+    filterLegend: 'Qué subtítulos ver',
+    toReview: 'Para revisar ({n})',
+    all: 'Todos ({n})',
+    listLabel: 'Subtítulos',
+    empty: 'No se ha oído ninguna palabra en este audio. Comprueba que el fichero tiene voz y elige otro.',
+    noneToReview: 'No queda nada por revisar.',
+    at: '{inicio} a {fin}',
+    marks: {
+      del_guion: 'Escrito como en tu guion; se oyó «{oido}».',
+      poca_seguridad: 'No se oyó bien.',
+      lectura_rapida: 'Se lee demasiado rápido.',
+      fuera_de_limites: 'Se sale de los límites de lectura.',
+      cambio_ia: 'Cambio de la IA; antes ponía «{oido}».',
+    },
+    scriptChanged: 'El guion ha cambiado desde que se hicieron estos subtítulos.',
   },
 } as const

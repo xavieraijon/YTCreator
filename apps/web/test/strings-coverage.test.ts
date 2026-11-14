@@ -7,8 +7,16 @@ import {
   SUBTITLE_STATUSES,
   YOUTUBE_FAILURES,
 } from '@ytcreator/core'
-import { AI_RUN_FAILURES, API_ERROR_CODES, FIELD_CODES, GUARDS } from '@ytcreator/core/api'
+import {
+  AI_RUN_FAILURES,
+  API_ERROR_CODES,
+  ENGINE_DOWNLOAD_FAILURES,
+  FIELD_CODES,
+  GUARDS,
+  RECOGNITION_JOB_FAILURES,
+} from '@ytcreator/core/api'
 import { describe, expect, it } from 'vitest'
+import type { ExtractFailure } from '../src/audio/extract.ts'
 import { flattenStrings } from '../../../packages/ui/test/forbidden-terms.ts'
 import { channelEs } from '../src/strings/channel.es.ts'
 import { es } from '../src/strings/es.ts'
@@ -50,6 +58,13 @@ describe('strings coverage (FR-027, SC-007)', () => {
     expect(sorted(Object.keys(scriptEs.status))).toEqual(sorted(SCRIPT_STATUSES))
     expect(sorted(Object.keys(publishEs.status))).toEqual(sorted(PACKAGE_STATUSES))
     expect(sorted(Object.keys(subtitlesEs.status))).toEqual(sorted(SUBTITLE_STATUSES))
+  })
+
+  it('every failure of the subtitles has a text (007)', () => {
+    for (const code of RECOGNITION_JOB_FAILURES) expect(subtitlesEs.failed.failures[code], code).toBeTruthy()
+    for (const code of ENGINE_DOWNLOAD_FAILURES) expect(subtitlesEs.engine.failures[code], code).toBeTruthy()
+    const extract: ExtractFailure[] = ['no_se_puede_leer', 'sin_sonido', 'demasiado_largo', 'cancelado', 'interno']
+    for (const code of extract) expect(subtitlesEs.choose.failures[code], code).toBeTruthy()
   })
 
   it('every provider label key resolves to a text, with no orphans', () => {

@@ -10,6 +10,8 @@ function makeApp(devOrigin?: string) {
   app.get('/api/health', (c) => c.json({ app: 'ytcreator' }))
   app.post('/api/thing', (c) => c.json({ ok: true }))
   app.delete('/api/thing', (c) => c.json({ ok: true }))
+  app.put('/api/scripts/:id/subtitles/audio', (c) => c.json({ ok: true }))
+  app.put('/api/thing', (c) => c.json({ ok: true }))
   return app
 }
 
@@ -52,6 +54,17 @@ describe('guard', () => {
     await expectForbidden(await send('POST', { ...LOCAL, 'content-type': 'text/plain' }, '{}'))
     await expectForbidden(await send('POST', { ...LOCAL, 'content-type': 'application/x-www-form-urlencoded' }, 'a=1'))
     expect((await send('POST', { ...LOCAL, 'content-type': 'application/json; charset=utf-8' }, '{}')).status).toBe(200)
+  })
+
+  it('takes a WAV only as the audio of the subtitles, and from the app itself', async () => {
+    const app = makeApp()
+    const put = (path: string, headers: Record<string, string>) =>
+      app.request(`http://127.0.0.1:${PORT}${path}`, { method: 'PUT', headers, body: 'RIFF' })
+    const wav = { ...LOCAL, 'content-type': 'audio/wav' }
+    expect((await put('/api/scripts/s1/subtitles/audio', wav)).status).toBe(200)
+    await expectForbidden(await put('/api/thing', wav))
+    await expectForbidden(await put('/api/scripts/s1/subtitles/audio', { ...wav, origin: 'https://evil.example' }))
+    await expectForbidden(await put('/api/scripts/s1/subtitles/audio', { ...wav, 'content-type': 'text/plain' }))
   })
 
   it('accepts a mutation without body', async () => {

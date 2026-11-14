@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { expect, type Page, test } from '@playwright/test'
 import { auditor } from './audit.ts'
-import { api, profileByApi } from './channel-api.ts'
+import { api, approvedScriptByApi, profileByApi } from './channel-api.ts'
 import { blockExternal, connectAccount, heading, startServer, toConnect, type TestServer } from './server.ts'
 
 // The publishing package, story by story (specs/006-publishing-package/quickstart.md).
@@ -31,31 +31,6 @@ async function connect(page: Page) {
   await profileByApi(server)
 }
 
-// A script written and approved with the fake AI, through the API: the script has its own journeys (005).
-async function approvedScript(channelId: string, title: string) {
-  const { idea } = (await api(server, 'POST', `/api/channels/${channelId}/ideas`, { title, format: 'largo' })) as {
-    idea: { id: string; revision: number }
-  }
-  await api(server, 'PATCH', `/api/ideas/${idea.id}`, { revision: idea.revision, status: 'elegida' })
-  const scriptId = (await api(server, 'POST', `/api/ideas/${idea.id}/script`))['id'] as string
-  const ask = async (use: string) => {
-    const estimate = await api(server, 'POST', `/api/scripts/${scriptId}/estimate`, { use })
-    await api(server, 'POST', `/api/scripts/${scriptId}/generate`, { use, estimateId: estimate['estimateId'] })
-    await expect
-      .poll(async () => ((await api(server, 'GET', `/api/scripts/${scriptId}`))['job'] as { status: string }).status)
-      .toBe('hecho')
-    return api(server, 'GET', `/api/scripts/${scriptId}`)
-  }
-  const outline = (await ask('escaleta'))['outline'] as { version: number }
-  await api(server, 'POST', `/api/scripts/${scriptId}/outline/approve`, { version: outline.version })
-  const draft = (await ask('guion'))['draft'] as { version: number; content: { claims: { status: string }[] } }
-  await api(server, 'POST', `/api/scripts/${scriptId}/draft/approve`, {
-    version: draft.version,
-    acknowledgedPending: draft.content.claims.filter((claim) => claim.status === 'pendiente').length,
-  })
-  return scriptId
-}
-
 test('title and thumbnail from an approved script, with the keyboard, coming back to it (US1)', async ({
   page,
   context,
@@ -75,7 +50,7 @@ test('title and thumbnail from an approved script, with the keyboard, coming bac
 
   // From the approved script.
   // An approved script is waiting in the list, and it starts from there (as from the script, US4).
-  await approvedScript(channelId, 'Pan sin amasar')
+  await approvedScriptByApi(server, channelId, 'Pan sin amasar')
   await page.goto(`${server.baseURL}/canal/publicaciones`)
   await expect(page.getByRole('heading', { name: 'Guiones aprobados sin publicación' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Todavía no has preparado ninguna publicación' })).toHaveCount(0)
@@ -212,7 +187,7 @@ test('the description, its chapters, tags and comment, and the publishing settin
   // The server is shared: when US1 ran first, the AI and the channel are already there.
   if (!(await api(server, 'GET', '/api/channels/current'))['channel']) await connect(page)
   const channelId = ((await api(server, 'GET', '/api/channels/current'))['channel'] as { id: string }).id
-  const id = await approvedCover(await approvedScript(channelId, 'Masa madre en casa'))
+  const id = await approvedCover(await approvedScriptByApi(server, channelId, 'Masa madre en casa'))
 
   // With the cover approved it opens on the description, with its price on the button.
   await page.goto(`${server.baseURL}/canal/publicaciones/${id}`)
@@ -291,7 +266,7 @@ test('the description, its chapters, tags and comment, and the publishing settin
 // independent test of US3 starts from (spec.md).
 async function packageToReview(channelId: string) {
   const longTitle = `Pan de centeno en casa: ${'paso a paso '.repeat(8)}`.slice(0, 110)
-  const id = await approvedCover(await approvedScript(channelId, 'Pan de centeno'), longTitle)
+  const id = await approvedCover(await approvedScriptByApi(server, channelId, 'Pan de centeno'), longTitle)
   const estimate = await api(server, 'POST', `/api/packages/${id}/estimate`, { use: 'descripcion' })
   await api(server, 'POST', `/api/packages/${id}/generate`, { use: 'descripcion', estimateId: estimate['estimateId'] })
   await expect
@@ -467,7 +442,7 @@ test('reviewing, copying with and without the clipboard, approving with notices 
 
 // A Short drawn from an approved long video, written and approved through the API (005).
 async function approvedShortFromLong(channelId: string) {
-  const longId = await approvedScript(channelId, 'Pan de espelta')
+  const longId = await approvedScriptByApi(server, channelId, 'Pan de espelta')
   const askOn = async (scriptId: string, use: string) => {
     const estimate = await api(server, 'POST', `/api/scripts/${scriptId}/estimate`, { use })
     await api(server, 'POST', `/api/scripts/${scriptId}/generate`, { use, estimateId: estimate['estimateId'] })

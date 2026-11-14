@@ -47,7 +47,9 @@ Spec-Driven Development with GitHub Spec Kit (`/speckit-*`).
   `specs/006-publishing-package/checklists/validation.md`. Branch deleted (local and remote).
 - 007 `subtitles`: spec and plan on branch `007-subtitles` (2026-11-14). Local recognition with whisper.cpp downloaded
   on first use, audio taken from the video in the browser (mediabunny), optional AI review, real chapter minutes for 006. Decisions 1–17 in `specs/007-subtitles/decisions.md`; 79 tasks. Setup and Foundational (T001–T021) closed with
-  Puerta A on 2026-11-14 (report in `specs/007-subtitles/checklists/validation.md`). Next: US1 (T022 on).
+  Puerta A on 2026-11-14 (report in `specs/007-subtitles/checklists/validation.md`). US1 (T022–T041) closed with Puerta
+  A on 2026-11-14 (decisions 25–32); open for the creator: P1–P4 in its `decisions.md` (P4 = T032, launching the macOS
+  build: without it the engine download fails on a Mac). Next: US2 (T042 on).
 - AI: Claude only for now (Claude Code subscription, and the Anthropic API behind «Más opciones»). No other provider
   is planned (creator, 2026-11-14).
 - Commands (Node 24, `fnm exec --using=24 --`): `pnpm dev` (server + web), `pnpm lint`, `pnpm typecheck`,

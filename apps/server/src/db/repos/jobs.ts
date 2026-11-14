@@ -55,8 +55,9 @@ export function createJobsRepo(db: DatabaseSync, now: () => Date = () => new Dat
   )
   const selectByJourney = db.prepare('SELECT * FROM background_job WHERE journey_id = ? ORDER BY started_at, rowid')
   const insert = db.prepare(
-    "INSERT INTO background_job (id, journey_id, channel_id, kind, status, progress, started_at) VALUES (?, ?, ?, ?, 'en_curso', ?, ?)",
+    'INSERT INTO background_job (id, journey_id, channel_id, kind, status, progress, started_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
   )
+  const updateRunning = db.prepare("UPDATE background_job SET status = 'en_curso' WHERE id = ? AND status = 'en_cola'")
   const selectByChannel = db.prepare(
     'SELECT * FROM background_job WHERE channel_id = ? AND kind = ? ORDER BY started_at, rowid',
   )
@@ -86,13 +87,15 @@ export function createJobsRepo(db: DatabaseSync, now: () => Date = () => new Dat
       return (selectByJourney.all(journeyId) as unknown as Row[]).map(fromRow)
     },
 
-    start(job: NewJob): Job {
+    // `en_cola` waits its turn (007, R5): `begin` starts it.
+    start(job: NewJob, status: 'en_curso' | 'en_cola' = 'en_curso'): Job {
       const id = randomUUID()
       insert.run(
         id,
         job.journeyId,
         job.channelId ?? null,
         job.kind,
+        status,
         JSON.stringify({
           done: 0,
           total: job.total ?? 0,
@@ -109,6 +112,11 @@ export function createJobsRepo(db: DatabaseSync, now: () => Date = () => new Dat
       if (!current) return null
       updateProgress.run(JSON.stringify({ ...current.progress, done, total: total ?? current.progress.total }), id)
       return get(id)
+    },
+
+    /** A queued job starts; false if it was no longer waiting (cancelled meanwhile). */
+    begin(id: string): boolean {
+      return Number(updateRunning.run(id).changes) > 0
     },
 
     finish(id: string): Job | null {

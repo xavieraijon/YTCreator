@@ -145,4 +145,52 @@
   .alert {
     color: var(--s-color-danger-fg);
   }
+
+  /* The subtitles of a video, one per row: its time, its lines and its marks (007). */
+  .cueList {
+    display: grid;
+    gap: var(--s-space-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .cue {
+    display: grid;
+    gap: var(--s-space-1);
+    padding-block-end: var(--s-space-3);
+    border-block-end: var(--s-border-width-default) solid var(--s-color-border-subtle);
+  }
+
+  .cueTime {
+    margin: 0;
+    color: var(--s-color-text-secondary);
+    font-size: var(--s-font-size-sm);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .cueText {
+    display: grid;
+    margin: 0;
+  }
+
+  .cueLine {
+    display: block;
+  }
+
+  /* In words, whole: a mark quotes what was heard, so it wraps instead of being cut (decision 27). */
+  .cueMarks {
+    display: grid;
+    gap: var(--s-space-1);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: var(--s-font-size-sm);
+  }
+
+  .cueMarks > li {
+    padding-inline-start: var(--s-space-2);
+    border-inline-start: var(--s-border-width-strong) solid var(--s-color-warning-border);
+    overflow-wrap: anywhere;
+  }
 }

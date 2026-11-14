@@ -17,7 +17,16 @@ export interface TestServer {
   restart(scenario?: string): Promise<void>
 }
 
-export async function startServer({ port, scenario = 'ok' }: { port: number; scenario?: string }): Promise<TestServer> {
+export async function startServer({
+  port,
+  scenario = 'ok',
+  speech,
+}: {
+  port: number
+  scenario?: string
+  /** The fake speech recognizer (`YTCREATOR_FAKE_SPEECH`) and, if given, how slowly it moves (ms per step of five). */
+  speech?: { scenario: string; stepMs?: number }
+}): Promise<TestServer> {
   const baseURL = `http://127.0.0.1:${port}`
   const home = mkdtempSync(join(tmpdir(), 'ytcreator-e2e-'))
   let child: ChildProcess | null = null
@@ -36,6 +45,8 @@ export async function startServer({ port, scenario = 'ok' }: { port: number; sce
         ...process.env,
         YTCREATOR_FAKE_AI: fakeAi,
         YTCREATOR_FAKE_YOUTUBE: '1',
+        ...(speech ? { YTCREATOR_FAKE_SPEECH: speech.scenario } : {}),
+        ...(speech?.stepMs ? { YTCREATOR_FAKE_SPEECH_STEP_MS: String(speech.stepMs) } : {}),
         YTCREATOR_PORT: String(port),
         HOME: home,
         XDG_DATA_HOME: join(home, '.local', 'share'),

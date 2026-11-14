@@ -1,5 +1,13 @@
-import { subtitlesStatus, type ScriptStatus } from '@ytcreator/core'
-import type { SubtitlesView } from '@ytcreator/core/api'
+import {
+  countToReview,
+  cueMarks,
+  exportSubtitles,
+  type ScriptStatus,
+  type SubtitleLimits,
+  subtitlesFileName,
+  subtitlesStatus,
+} from '@ytcreator/core'
+import type { SubtitleExportFormat, SubtitlesView } from '@ytcreator/core/api'
 import type { SubtitlesKnowledge } from '@ytcreator/knowledge'
 import type { ChannelsRepo } from '../db/repos/channels.ts'
 import type { IdeasRepo } from '../db/repos/ideas.ts'
@@ -19,6 +27,10 @@ export interface SubtitlesServiceDeps {
   /** The status of a script as 005 works it out. */
   scriptStatus: (ideaId: string) => ScriptStatus | null
   knowledge: SubtitlesKnowledge
+  /** The main title of the script's publishing package (006), to name the file; null without one. */
+  mainTitle?: (scriptId: string) => string | null
+  /** Where a waiting recognition is in the queue (1 is next). */
+  queuePosition?: (jobId: string) => number | null
 }
 
 // What every route of the subtitles needs: reading them (specs/007-subtitles/contracts/http-api.md).
@@ -54,6 +66,15 @@ export function createSubtitlesService(deps: SubtitlesServiceDeps) {
     }
   }
 
+  const valuesOf = (limits: SubtitlesView['limits']): SubtitleLimits => ({
+    maxLines: limits.maxLines.value,
+    maxCharsPerLine: limits.maxCharsPerLine.value,
+    maxCharsPerSecond: limits.maxCharsPerSecond.value,
+    minSeconds: limits.minSeconds.value,
+    maxSeconds: limits.maxSeconds.value,
+    minGapSeconds: limits.minGapSeconds.value,
+  })
+
   const jobOf = (track: SubtitleTrack | null) => {
     if (!track?.jobId || !track.jobOp) return null
     const job = jobsRepo.get(track.jobId)
@@ -65,6 +86,9 @@ export function createSubtitlesService(deps: SubtitlesServiceDeps) {
     const latest = track ? versions.latest(track.id) : null
     const current = jobOf(track)
     const approvedDraft = script.draftApprovedVersion
+    const limits = limitsOf(script.format)
+    const cues = latest?.content.cues ?? []
+    const marks = cueMarks(cues, valuesOf(limits))
     return {
       scriptId: script.id,
       channelId: script.channelId,
@@ -88,9 +112,9 @@ export function createSubtitlesService(deps: SubtitlesServiceDeps) {
             content: latest.content,
           }
         : null,
-      // The reading marks are worked out in US1 (R10); until then, only what was kept with each cue.
-      marks: {},
-      toReview: latest ? latest.content.cues.filter((cue) => cue.flags.length > 0 && !cue.reviewed).length : 0,
+      // Worked out every time, never kept (R10).
+      marks,
+      toReview: countToReview(cues, marks),
       audio:
         track && track.audioSeconds !== null
           ? { available: track.audioFile !== null, seconds: track.audioSeconds, sourceName: track.sourceName }
@@ -103,7 +127,7 @@ export function createSubtitlesService(deps: SubtitlesServiceDeps) {
         approvedDraft !== null &&
         latest.draftVersion !== approvedDraft,
       replacements: track?.replacements ?? [],
-      limits: limitsOf(script.format),
+      limits,
       job: current
         ? {
             id: current.job.id,
@@ -111,14 +135,39 @@ export function createSubtitlesService(deps: SubtitlesServiceDeps) {
             status: current.job.status,
             progress: { done: current.job.progress.done, total: current.job.progress.total },
             failure: current.job.failure,
-            queuePosition: null,
+            queuePosition: current.job.status === 'en_cola' ? (deps.queuePosition?.(current.job.id) ?? null) : null,
           }
         : null,
       aiProposal: null,
     }
   }
 
-  return { view }
+  /** The file of the last version, named after the video (R14); 404 without subtitles. */
+  const exportFile = (scriptId: string, format: SubtitleExportFormat) => {
+    const { script, idea, track } = find(scriptId)
+    const latest = track ? versions.latest(track.id) : null
+    if (!latest) throw new ApiError({ code: 'no_encontrado' })
+    return {
+      text: exportSubtitles(latest.content.cues, format),
+      fileName: subtitlesFileName(deps.mainTitle?.(script.id) ?? null, idea.title, format),
+    }
+  }
+
+  /** For the view of the script (005): null until the creator starts its subtitles. */
+  const statusOf = (scriptId: string): { status: SubtitlesView['status'] } | null => {
+    const track = tracks.getByScript(scriptId)
+    if (!track) return null
+    const latest = versions.latestNumber(track.id)
+    const current = jobOf(track)
+    const status = subtitlesStatus({
+      latest,
+      approved: track.approvedVersion,
+      job: current?.op === 'reconocer' ? current.job.status : null,
+    })
+    return { status }
+  }
+
+  return { view, exportFile, statusOf }
 }
 
 export type SubtitlesService = ReturnType<typeof createSubtitlesService>

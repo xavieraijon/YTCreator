@@ -1,3 +1,8 @@
 // Subtitles of a video (specs/007-subtitles).
 export * from './model.ts'
 export * from './status.ts'
+export * from './segment.ts'
+export * from './align.ts'
+export * from './flags.ts'
+export * from './export.ts'
+export * from './hint.ts'

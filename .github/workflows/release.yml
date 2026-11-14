@@ -61,7 +61,7 @@ jobs:
       # Nor the fake speech recognizer: its switch, its adapter and its test audios (007).
       - name: No fake speech
         run: |
-          if grep -n -E 'YTCREATOR_FAKE_SPEECH|createFakeRecognizer|fakeSpeechWords|bienvenidos al canal|arina de fuersa|nos veis desde casa' \
+          if grep -n -E 'YTCREATOR_FAKE_SPEECH|createFakeRecognizer|fakeSpeechWords|bienvenidos al canal|arina de fuersa|nos veis desde casa|descargas.ytcreator.test' \
             apps/server/dist/server.mjs; then
             echo "server.mjs still contains the fake speech recognizer" >&2
             exit 1

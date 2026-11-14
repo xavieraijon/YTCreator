@@ -20,6 +20,10 @@ import {
   packageVersionSummarySchema,
   packageViewSchema,
   subtitlesViewSchema,
+  subtitlesAudioResultSchema,
+  speechEngineViewSchema,
+  speechEngineStartResultSchema,
+  type SubtitleExportFormat,
   publishSettingsViewSchema,
   type PublishSettingsBody,
   scriptSummarySchema,
@@ -179,8 +183,36 @@ export function createApiClient({ fetch = globalThis.fetch.bind(globalThis), bas
     }
   }
 
+  // A file as the body, as it is (the audio of the subtitles, 007): errors answer like any other call.
+  async function upload<T>(path: string, blob: Blob, type: string, schema: Parser<T>, { signal }: RequestOptions = {}) {
+    let response: Response
+    try {
+      response = await fetch(`${baseUrl}${path}`, {
+        method: 'PUT',
+        headers: { accept: 'application/json', 'content-type': type },
+        body: blob,
+        ...(signal ? { signal } : {}),
+      })
+    } catch {
+      throw new ApiClientError(signal?.aborted ? 'cancelada' : 'red', null, null)
+    }
+    const data: unknown = await response.json().catch(() => undefined)
+    if (!response.ok) {
+      const parsed = apiErrorSchema.safeParse(data)
+      throw parsed.success
+        ? new ApiClientError('api', response.status, parsed.data.error)
+        : new ApiClientError('respuesta', response.status, null)
+    }
+    try {
+      return schema.parse(data)
+    } catch {
+      throw new ApiClientError('respuesta', response.status, null)
+    }
+  }
+
   return {
     file,
+    upload,
     get: <T>(path: string, schema: Parser<T>, options?: RequestOptions) =>
       request('GET', path, undefined, schema, options),
     post: <T>(path: string, body: unknown, schema: Parser<T>, options?: RequestOptions) =>
@@ -356,6 +388,29 @@ export const packagesApi = {
 export const subtitlesApi = {
   get: (scriptId: string, options?: RequestOptions) =>
     apiClient.get(`${scriptPath(scriptId)}/subtitles`, subtitlesViewSchema, options),
+  /** The WAV taken out in the browser; `name` is the file the creator chose, to show it. */
+  uploadAudio: (scriptId: string, wav: Blob, name: string, options?: RequestOptions) =>
+    apiClient.upload(
+      `${scriptPath(scriptId)}/subtitles/audio?name=${encodeURIComponent(name)}`,
+      wav,
+      'audio/wav',
+      subtitlesAudioResultSchema,
+      options,
+    ),
+  recognize: (scriptId: string) => apiClient.post(`${scriptPath(scriptId)}/subtitles/recognize`, {}, jobStartedSchema),
+  cancel: (scriptId: string) => apiClient.post(`${scriptPath(scriptId)}/subtitles/cancel`, {}, subtitlesViewSchema),
+  download: (scriptId: string, format: SubtitleExportFormat) =>
+    apiClient.file(`${scriptPath(scriptId)}/subtitles/export?format=${format}`),
+  audioUrl: (scriptId: string) => `${scriptPath(scriptId)}/subtitles/audio`,
+}
+
+// The program that listens to the audio, downloaded the first time (007, R1 and R2).
+export const speechEngineApi = {
+  get: (options?: RequestOptions) => apiClient.get('/api/speech/engine', speechEngineViewSchema, options),
+  /** 202 with the job, or the view when everything is already there. */
+  start: (model?: string) =>
+    apiClient.post('/api/speech/engine', model ? { model } : {}, speechEngineStartResultSchema),
+  choose: (model: string) => apiClient.put('/api/speech/engine/model', { model }, speechEngineViewSchema),
 }
 
 // The script of an idea (specs/005-script-and-outline/contracts/http-api.md).

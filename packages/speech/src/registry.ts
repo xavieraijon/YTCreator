@@ -23,7 +23,8 @@ export function createSpeechRecognizer({ env, real, allowFake = true, log }: Spe
       throw new Error(`YTCREATOR_FAKE_SPEECH no válido: «${value}». Usa 1, un escenario o fallo-<código>.`)
     const recognizer = createFakeRecognizer({
       scenario: value === '1' ? 'hola' : value,
-      stepMs: 200,
+      // The e2e slows it down to reload in the middle (decision 26).
+      stepMs: Number(env.YTCREATOR_FAKE_SPEECH_STEP_MS) || 200,
       ...(log ? { log } : {}),
     })
     return { recognizer, fake: true }

@@ -141,6 +141,8 @@ describe('the base of the subtitles (contracts/http-api.md)', () => {
           cue('b', 2, ['poca_seguridad']),
           cue('c', 4, ['del_guion']),
           cue('d', 6, ['poca_seguridad'], true),
+          // Too short on screen: marked though nothing was kept with it (R10).
+          { ...cue('e', 8, []), end: 8.4 },
         ],
         words: [],
         audioSeconds: 10,
@@ -150,7 +152,8 @@ describe('the base of the subtitles (contracts/http-api.md)', () => {
     expect(view.body).toMatchObject({
       status: 'borrador',
       latest: { version: 1, origin: 'reconocimiento', draftVersion: draft.version },
-      toReview: 2,
+      marks: { e: ['fuera_de_limites'] },
+      toReview: 3,
       audio: { available: true, seconds: 10, sourceName: 'final.mp4' },
       scriptChanged: false,
     })
