@@ -38,7 +38,7 @@ describe('migrate', () => {
   it('applies every migration once and records it', () => {
     expect(migrate(db, MIGRATIONS)).toEqual({ applied: [] })
     const rows = db.prepare('SELECT version FROM schema_migrations').all()
-    expect(rows.map((r) => r.version)).toEqual([1, 2, 3, 4, 5, 6])
+    expect(rows.map((r) => r.version)).toEqual([1, 2, 3, 4, 5, 6, 7])
   })
 
   it('creates the wizard row in bienvenida with revision 0', () => {
@@ -101,6 +101,6 @@ describe('migrate', () => {
         .prepare('SELECT version FROM schema_migrations')
         .all()
         .map((r) => r.version),
-    ).toEqual([1, 2, 3, 4, 5, 6])
+    ).toEqual([1, 2, 3, 4, 5, 6, 7])
   })
 })

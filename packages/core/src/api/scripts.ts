@@ -14,6 +14,7 @@ import {
 import { itemComparisonSchema } from '../script/compare.ts'
 import { SCRIPT_USES, shortAngleViewSchema } from '../script/outputs.ts'
 import { SCRIPT_STATUSES, SCRIPT_WARNINGS } from '../script/status.ts'
+import { PACKAGE_STATUSES } from '../publish/status.ts'
 
 // The script routes (specs/005-script-and-outline/contracts/http-api.md).
 const id = z.string().min(1)
@@ -105,6 +106,8 @@ export const scriptViewSchema = z.object({
     maxReviewedAt: z.string().nullable(),
   }),
   voice: scriptSettingsViewSchema,
+  // Its publishing package, once opened (006, contracts/http-api.md).
+  package: z.object({ id, status: z.enum(PACKAGE_STATUSES) }).nullable(),
 })
 export type ScriptView = z.infer<typeof scriptViewSchema>
 

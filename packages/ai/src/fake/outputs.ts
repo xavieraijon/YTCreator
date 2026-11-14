@@ -14,6 +14,8 @@ export type FakeOutputMode =
   | 'sin_web'
   // ...or it searches and finds nothing reliable.
   | 'sin_resultados'
+  // The publishing package (006): an answer that writes a web address, which never validates (research.md R4).
+  | 'con_direccion'
 
 // Reserved names (RFC 2606): nothing here can ever reach a real site. `createFakeLinkCheck` answers for them.
 export const FAKE_LINKS = {
@@ -156,6 +158,14 @@ function ideaDrafts(input: Record<string, unknown>, attempt: number, mode: FakeO
   }
   return drafts
 }
+
+// The ids of the blocks of the approved script the package uses get (`draft.blocks`).
+// The blocks of the draft in the input; one stand-in when there is none (the contract batteries send no script).
+const draftBlocks = (input: Record<string, unknown>) => {
+  const ids = ((input['draft'] as { blocks?: { id: string }[] } | undefined)?.blocks ?? []).map((block) => block.id)
+  return ids.length > 0 ? ids : ['bloque']
+}
+const CHAPTER_NAMES = ['Empezamos', 'Lo que necesitas', 'El truco', 'Paso a paso', 'El resultado', 'Para terminar']
 
 function normal(
   use: ChannelUse,
@@ -375,6 +385,101 @@ function normal(
         ],
       }
     }
+    case 'titulos': {
+      const blocks = ((input['draft'] as { blocks?: { id: string }[] } | undefined)?.blocks ?? []).map(
+        (block) => block.id,
+      )
+      const count = input['format'] === 'short' ? 3 : 5
+      const texts = [
+        'Pan sin amasar: el truco que nadie te cuenta',
+        'Así sale el pan de verdad en casa',
+        'El error que arruina tu pan casero',
+        'Pan crujiente sin esfuerzo, paso a paso',
+        'Lo que pasa si dejas la masa una noche',
+      ]
+      return {
+        titles: texts.slice(0, count).map((text, index) => ({
+          text,
+          why: 'Promete lo que el vídeo cumple y despierta curiosidad.',
+          blockId: blocks[index % Math.max(blocks.length, 1)] ?? 'bloque',
+        })),
+      }
+    }
+    case 'miniaturas': {
+      const alternatives = Array.isArray(input['alternatives']) ? input['alternatives'].length : 0
+      const index = (wanted: number) => Math.min(wanted, alternatives)
+      return {
+        concepts: [0, 1, 2].map((wanted) => ({
+          scene: 'Una barra de pan recién hecha, partida por la mitad.',
+          bigText: 'SIN AMASAR',
+          emotion: 'Sorpresa',
+          composition: 'El pan ocupa la mitad izquierda; la cara, la derecha.',
+          colors: 'Dorado del pan sobre un fondo azul oscuro.',
+          titleIndex: index(wanted),
+        })),
+      }
+    }
+    case 'descripcion': {
+      const blocks = draftBlocks(input)
+      return {
+        firstLines: 'Pan sin amasar en casa: el truco para que salga crujiente sin esfuerzo.',
+        body: 'Te enseño paso a paso cómo hacer pan casero sin amasar, con lo que tienes en la cocina.',
+        chapters: blocks.map((id, index) => ({ title: CHAPTER_NAMES[index % CHAPTER_NAMES.length]!, blockIds: [id] })),
+        tags: ['pan sin amasar', 'pan casero', 'receta de pan', 'pan crujiente', 'masa madre'],
+        comment: '¿Cuál es el error que más te ha pasado haciendo pan en casa?',
+      }
+    }
+    case 'parte_paquete': {
+      const blocks = draftBlocks(input)
+      const short = (input['idea'] as { format?: string } | undefined)?.format === 'short'
+      // Without `part` (the contract batteries), the description: the part a figure can go in.
+      switch (input['part'] ?? 'descripcion') {
+        case 'descripcion':
+          return {
+            firstLines: 'Pan crujiente sin amasar: así lo hago en casa, sin máquina y sin esfuerzo.',
+            body:
+              typeof input['parentTitle'] === 'string'
+                ? `Una receta sencilla; el vídeo «${input['parentTitle']}» lo cuenta entero.`
+                : 'Una receta sencilla para tener pan casero cada semana.',
+            ...(short ? { hashtags: ['pan', 'receta'] } : {}),
+          }
+        case 'capitulos':
+          return {
+            chapters: blocks.map((id, index) => ({ title: `Paso ${index + 1}`, blockIds: [id] })),
+          }
+        case 'etiquetas':
+          return { tags: ['pan fácil', 'hacer pan en casa', 'pan sin máquina', 'receta casera'] }
+        case 'comentario':
+          return { comment: '¿Qué pan te gustaría que hiciéramos en el próximo vídeo?' }
+        default:
+          return {
+            cover: { blockId: blocks[0]!, moment: 'El pan recién partido.', screenText: 'SIN AMASAR' },
+          }
+      }
+    }
+    case 'paquete_short': {
+      const blocks = draftBlocks(input)
+      const parent = typeof input['parentTitle'] === 'string' ? input['parentTitle'] : null
+      return {
+        titles: ['Pan en un minuto, sin amasar', 'El truco del pan que nadie te cuenta', 'Pan crujiente en casa'].map(
+          (text, index) => ({
+            text,
+            why: 'Se entiende en pocos segundos.',
+            blockId: blocks[index % Math.max(blocks.length, 1)] ?? 'bloque',
+          }),
+        ),
+        firstLines: 'Pan sin amasar en un minuto: el truco para que salga crujiente.',
+        body: parent ? `Lo cuento entero en mi vídeo «${parent}».` : 'Un truco rápido para tener pan casero.',
+        hashtags: ['pan', 'receta', 'shorts'],
+        tags: ['pan sin amasar', 'pan casero', 'receta rápida'],
+        comment: '¿Lo vas a probar este fin de semana?',
+        cover: {
+          blockId: blocks[0] ?? 'bloque',
+          moment: 'El pan recién partido, crujiente.',
+          screenText: 'SIN AMASAR',
+        },
+      }
+    }
     case 'bloque_guion':
       return {
         text: 'Este bloque está escrito de nuevo. Lo agradecen dos millones de personas.',
@@ -450,7 +555,35 @@ function invent(use: ChannelUse, output: Record<string, unknown>): Record<string
     }
     case 'comprobar_guion':
       return { checks: [{ claimId: 'marca', verdict: 'sin_fuente', sources: [], proposal: add('Otra redacción.') }] }
+    case 'titulos': {
+      const [first, ...rest] = output.titles as { why: string }[]
+      return { titles: [{ ...first, why: add(first!.why) }, ...rest] }
+    }
+    case 'miniaturas': {
+      const [first, ...rest] = output.concepts as { scene: string }[]
+      return { concepts: [{ ...first, scene: add(first!.scene) }, ...rest] }
+    }
+    case 'descripcion':
+      return { ...output, body: add(output.body as string) }
+    case 'paquete_short':
+      return { ...output, body: add(output.body as string) }
+    case 'parte_paquete':
+      if (typeof output.body === 'string') return { ...output, body: add(output.body) }
+      if (typeof output.comment === 'string') return { ...output, comment: add(output.comment) }
+      return output
   }
+}
+
+const PACKAGE_USES: readonly ChannelUse[] = ['titulos', 'miniaturas', 'descripcion', 'parte_paquete', 'paquete_short']
+
+// Puts a web address into the first text of a valid output (research.md R4).
+function withAddress(output: Record<string, unknown>): Record<string, unknown> {
+  const [key, value] = Object.entries(output)[0]!
+  if (typeof value === 'string') return { ...output, [key]: `${value} Más en https://pan.example` }
+  if (!Array.isArray(value)) return output
+  const [first, ...rest] = value as Record<string, unknown>[]
+  const [field, text] = Object.entries(first!).find(([, one]) => typeof one === 'string')!
+  return { ...output, [key]: [{ ...first, [field]: `${String(text)} Más en https://pan.example` }, ...rest] }
 }
 
 // `attempt` counts the calls of one request: `pilar_invalido` fails the first and gives a valid second.
@@ -462,5 +595,7 @@ export function fakeChannelOutput(
 ): unknown {
   if (mode === 'salida_rota') return BROKEN_OUTPUT
   const output = normal(use, input, attempt, mode)
+  // Only the package refuses addresses: the uses before it are left as they are.
+  if (mode === 'con_direccion') return PACKAGE_USES.includes(use) ? withAddress(output) : output
   return mode === 'cifra_inventada' ? invent(use, output) : output
 }

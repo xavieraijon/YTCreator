@@ -190,4 +190,18 @@ describe('figures checked only in some fields (004, contracts/ai-uses.md)', () =
     expect(was).toBe(true)
     expect(trimmed).toEqual({ title: 'Llegar a 1.000 suscriptores', why: 'Uno.' })
   })
+
+  it('keeps an item whose empty text was already empty, and drops one that the trimming empties', () => {
+    const { output } = trimClaims(
+      {
+        concepts: [
+          { scene: 'Una cocina.', bigText: '' },
+          { scene: 'Mueve 250.000 visitas.', bigText: 'YA' },
+        ],
+      },
+      {},
+      ['scene'],
+    )
+    expect(output).toEqual({ concepts: [{ scene: 'Una cocina.', bigText: '' }] })
+  })
 })

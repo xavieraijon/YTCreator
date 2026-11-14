@@ -110,6 +110,8 @@ export interface AiActionProps {
   readonly primary?: boolean
   /** Not to be pressed now, for a reason the screen says (as while a measure is being saved). */
   readonly disabled?: boolean
+  /** Said next to the button while it works, when the panel that says so may be out of sight (006, decision 108). */
+  readonly workingNote?: string
   readonly onRun: () => void
 }
 
@@ -121,6 +123,7 @@ export function AiAction({
   busy = false,
   primary = true,
   disabled = false,
+  workingNote,
   onRun,
 }: AiActionProps) {
   const blockedBy = estimate?.blockedBy ?? null
@@ -151,6 +154,8 @@ export function AiAction({
           {costLabel(label, estimate)}
         </Button>
       </div>
+      {/* Not a live region: the panel above already announces it. */}
+      {busy && workingNote && <p className={styles.why}>{workingNote}</p>}
     </div>
   )
 }

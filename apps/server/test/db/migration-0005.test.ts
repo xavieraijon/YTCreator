@@ -140,6 +140,6 @@ describe('migration 0005 (the idea bank)', () => {
       .prepare('SELECT version FROM schema_migrations ORDER BY version')
       .all()
       .map((r) => r.version)
-    expect(versions).toEqual([1, 2, 3, 4, 5, 6])
+    expect(versions).toEqual([1, 2, 3, 4, 5, 6, 7])
   })
 })

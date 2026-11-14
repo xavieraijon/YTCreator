@@ -2,6 +2,7 @@ import {
   EXISTING_CHANNEL_STEPS,
   FAILURE_REASONS,
   NEW_CHANNEL_STEPS,
+  PACKAGE_STATUSES,
   SCRIPT_STATUSES,
   YOUTUBE_FAILURES,
 } from '@ytcreator/core'
@@ -11,6 +12,7 @@ import { flattenStrings } from '../../../packages/ui/test/forbidden-terms.ts'
 import { channelEs } from '../src/strings/channel.es.ts'
 import { es } from '../src/strings/es.ts'
 import { failuresEs } from '../src/strings/failures.es.ts'
+import { publishEs } from '../src/strings/publish.es.ts'
 import { scriptEs } from '../src/strings/script.es.ts'
 import { youtubeFailureActionsEs, youtubeFailuresEs } from '../src/strings/youtube-failures.es.ts'
 
@@ -44,6 +46,7 @@ describe('strings coverage (FR-027, SC-007)', () => {
 
   it('every state of a script has a text (005)', () => {
     expect(sorted(Object.keys(scriptEs.status))).toEqual(sorted(SCRIPT_STATUSES))
+    expect(sorted(Object.keys(publishEs.status))).toEqual(sorted(PACKAGE_STATUSES))
   })
 
   it('every provider label key resolves to a text, with no orphans', () => {
@@ -67,7 +70,15 @@ describe('strings coverage (FR-027, SC-007)', () => {
   })
 
   it('no text is empty or has a malformed placeholder', () => {
-    const all = flattenStrings({ es, failuresEs, channelEs, youtubeFailuresEs, youtubeFailureActionsEs, scriptEs })
+    const all = flattenStrings({
+      es,
+      failuresEs,
+      channelEs,
+      youtubeFailuresEs,
+      youtubeFailureActionsEs,
+      scriptEs,
+      publishEs,
+    })
     expect(all.filter(({ value }) => value.trim() === '')).toEqual([])
     expect(all.filter(({ value }) => /\{(?!\w+\})|(?<!\{\w*)\}/.test(value))).toEqual([])
   })

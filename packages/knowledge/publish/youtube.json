@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "reviewedAt": "2026-11-13",
+  "source": [
+    {
+      "label": "Ayuda de YouTube: añadir detalles a los vídeos (título y descripción)",
+      "url": "https://support.google.com/youtube/answer/57404"
+    },
+    {
+      "label": "Documentación para desarrolladores de YouTube: vídeos (etiquetas)",
+      "url": "https://developers.google.com/youtube/v3/docs/videos"
+    },
+    {
+      "label": "Ayuda de YouTube: capítulos de vídeo",
+      "url": "https://support.google.com/youtube/answer/9884579"
+    },
+    {
+      "label": "Ayuda de YouTube: hashtags en vídeos",
+      "url": "https://support.google.com/youtube/answer/6390658"
+    },
+    {
+      "label": "Ayuda de YouTube: probar títulos y miniaturas",
+      "url": "https://support.google.com/youtube/answer/13861714"
+    }
+  ],
+  "data": {
+    "titleMaxChars": { "value": 100, "source": 0 },
+    "descriptionMaxChars": { "value": 5000, "source": 0 },
+    "tagsMaxTotalChars": { "value": 500, "source": 1 },
+    "chapters": {
+      "minCount": { "value": 3, "source": 2 },
+      "minSeconds": { "value": 10, "source": 2 },
+      "firstAtZero": { "source": 2 }
+    },
+    "hashtags": {
+      "shownAboveTitle": { "value": 3, "source": 3 },
+      "ignoredAbove": { "value": 60, "source": 3 }
+    },
+    "testAndCompare": {
+      "maxTitles": { "value": 3, "source": 4 },
+      "maxThumbnails": { "value": 3, "source": 4 }
+    }
+  }
+}

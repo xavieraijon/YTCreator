@@ -66,6 +66,9 @@ export function createIdeaMeasuresRepo(db: DatabaseSync, now: () => Date = () =>
   const selectLatest = db.prepare(
     'SELECT * FROM idea_measure WHERE idea_id = ? ORDER BY measured_at DESC, rowid DESC LIMIT 1',
   )
+  const selectLatestMeasured = db.prepare(
+    `SELECT * FROM idea_measure WHERE idea_id = ? AND status = 'medida' ORDER BY measured_at DESC, rowid DESC LIMIT 1`,
+  )
   const selectLatestByChannel = db.prepare(
     `SELECT m.* FROM idea_measure m JOIN idea i ON i.id = m.idea_id WHERE i.channel_id = ?
      ORDER BY m.measured_at, m.rowid`,
@@ -101,6 +104,12 @@ export function createIdeaMeasuresRepo(db: DatabaseSync, now: () => Date = () =>
 
     latest(ideaId: string): IdeaMeasure | null {
       const row = selectLatest.get(ideaId) as Row | undefined
+      return row ? fromRow(row) : null
+    },
+
+    // The last one that did measure: a later failure does not take away what YouTube said (006, R7).
+    latestMeasured(ideaId: string): IdeaMeasure | null {
+      const row = selectLatestMeasured.get(ideaId) as Row | undefined
       return row ? fromRow(row) : null
     },
 

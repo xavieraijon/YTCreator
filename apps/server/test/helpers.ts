@@ -7,6 +7,7 @@ import {
   conceptKnowledge,
   knowledgeFiles,
   loadMarket,
+  loadPublishKnowledge,
   loadScriptKnowledge,
   STALE_AFTER_DAYS,
   warningKnowledge,
@@ -26,6 +27,10 @@ import { createIdeasRepo } from '../src/db/repos/ideas.ts'
 import { createScriptVersionsRepo } from '../src/db/repos/script-versions.ts'
 import { createScriptsRepo } from '../src/db/repos/scripts.ts'
 import { createScriptService } from '../src/services/scripts.ts'
+import { createPackageService } from '../src/services/packages.ts'
+import { createPackageWork } from '../src/services/package-work.ts'
+import { createPackagesRepo } from '../src/db/repos/packages.ts'
+import { createPackageVersionsRepo } from '../src/db/repos/package-versions.ts'
 import { createJourneysRepo } from '../src/db/repos/journeys.ts'
 import { createLimitsRepo } from '../src/db/repos/limits.ts'
 import { createMeasuresRepo } from '../src/db/repos/measures.ts'
@@ -210,7 +215,11 @@ export function makeTestApp({
       logger,
       now,
     }),
-    scriptOf: (ideaId: string) => scriptService.ideaScript(ideaId),
+    scriptOf: (ideaId: string) => {
+      const script = scriptService.ideaScript(ideaId)
+      // The package is read when the idea is: it is made later, from the approved script (006, R17).
+      return script ? { ...script, packageStatus: packageService.scriptPackage(script.id)?.status ?? null } : null
+    },
     youtube: ideaYouTube,
     dataApiUnits: market.thresholds.data.dataApi,
     measureBasis: {
@@ -243,8 +252,41 @@ export function makeTestApp({
     aiRun: aiRun,
     promptFor: promptFor,
     knowledge: scriptKnowledge,
+    packageOf: (scriptId: string) => packageService.scriptPackage(scriptId),
   })
   const script = { service: scriptService, scripts: scriptsRepo }
+  const publishKnowledge = loadPublishKnowledge()
+  const packagesRepo = createPackagesRepo(db, now)
+  const packageVersions = createPackageVersionsRepo(db, now)
+  const packageService = createPackageService({
+    channels: channel.channels,
+    ideas: ideasRepo,
+    measures: ideaMeasures,
+    jobsRepo,
+    scripts: scriptsRepo,
+    scriptVersions,
+    packages: packagesRepo,
+    versions: packageVersions,
+    profiles: channel.profiles,
+    scriptStatus: (ideaId: string) => scriptService.ideaScript(ideaId)?.status ?? null,
+    knowledge: publishKnowledge,
+    kids: {
+      implications: market.madeForKids.data.implications,
+      source: { label: market.madeForKids.source[0]!.label, date: market.madeForKids.reviewedAt },
+    },
+  })
+  const packageWork = createPackageWork({
+    service: packageService,
+    packages: packagesRepo,
+    versions: packageVersions,
+    scriptVersions,
+    profiles: channel.profiles,
+    journeys: channel.journeys,
+    jobs,
+    aiRun,
+    promptFor,
+    knowledge: publishKnowledge,
+  })
   const version = '0.1.0'
   const ytQuota = createYtQuotaRepo(db, now)
   const keyCheck = createFakeKeyCheck()
@@ -263,6 +305,7 @@ export function makeTestApp({
     channel: { ...channel, now, research, reading },
     ideas,
     script,
+    publish: { service: packageService, work: packageWork },
     jobs,
     usage,
     now,
@@ -330,6 +373,8 @@ export function makeTestApp({
     script,
     scripts: scriptsRepo,
     scriptVersions,
+    packages: packagesRepo,
+    packageVersions,
     links,
     measures: channel.measures,
     channelProposals: channel.proposals,

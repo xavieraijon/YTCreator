@@ -5,6 +5,8 @@ import { channelEs } from '../src/strings/channel.es.ts'
 import { es } from '../src/strings/es.ts'
 import { failuresEs } from '../src/strings/failures.es.ts'
 import { ideasEs } from '../src/strings/ideas.es.ts'
+import { defaultFixedText, DESCRIPTION_TEXT } from '../../../packages/core/src/publish/description.ts'
+import { publishEs } from '../src/strings/publish.es.ts'
 import { scriptEs } from '../src/strings/script.es.ts'
 import { youtubeFailureActionsEs, youtubeFailuresEs } from '../src/strings/youtube-failures.es.ts'
 
@@ -33,13 +35,19 @@ describe('glossary of the web (FR-032, principle I)', () => {
   it('no text of apps/web/src/strings uses a forbidden term', () => {
     expect(
       findForbiddenTerms(
-        { es, failuresEs, channelEs, ideasEs, scriptEs, youtubeFailuresEs, youtubeFailureActionsEs },
+        { es, failuresEs, channelEs, ideasEs, scriptEs, publishEs, youtubeFailuresEs, youtubeFailureActionsEs },
         webTerms,
       ),
     ).toEqual([])
   })
 
-  it.each(['channel', 'ideas', 'script'])(
+  it('nor the words the server puts in a description (packages/core/src/publish/description.ts)', () => {
+    // The link itself is copied as it is: only the words around it are read.
+    const fixedText = defaultFixedText('micanal').replace(/https:\/\/\S+/, '')
+    expect(findForbiddenTerms({ ...DESCRIPTION_TEXT, fixedText }, webTerms)).toEqual([])
+  })
+
+  it.each(['channel', 'ideas', 'script', 'publish'])(
     'nor the texts of a download written by the server (packages/core/src/%s/export.ts)',
     (folder) => {
       const source = readFileSync(new URL(`../../../packages/core/src/${folder}/export.ts`, import.meta.url), 'utf8')
@@ -61,9 +69,40 @@ describe('glossary of the web (FR-032, principle I)', () => {
     },
   )
 
+  it('nor the texts of the guided list of YouTube Studio, which the screen shows as they are (006, R12)', () => {
+    const read = (path: string) =>
+      JSON.parse(readFileSync(new URL(`../../../packages/knowledge/${path}`, import.meta.url), 'utf8')) as {
+        data: Record<string, unknown>
+      }
+    const studio = read('publish/studio.json').data as {
+      madeForKids: { why: string }
+      synthetic: { rule: string; question: string; mustDisclose: string[]; noNeed: string[] }
+      language: { why: string; byRegion: Record<string, string> }
+      category: { why: string; list: string[] }
+    }
+    const texts = {
+      kidsWhy: studio.madeForKids.why,
+      rule: studio.synthetic.rule,
+      question: studio.synthetic.question,
+      ...Object.fromEntries(studio.synthetic.mustDisclose.map((line, index) => [`mustDisclose.${index}`, line])),
+      ...Object.fromEntries(studio.synthetic.noNeed.map((line, index) => [`noNeed.${index}`, line])),
+      languageWhy: studio.language.why,
+      ...studio.language.byRegion,
+      categoryWhy: studio.category.why,
+      ...Object.fromEntries(studio.category.list.map((line, index) => [`category.${index}`, line])),
+      ...Object.fromEntries(
+        (read('market/made-for-kids.json').data['implications'] as string[]).map((line, index) => [
+          `kids.${index}`,
+          line,
+        ]),
+      ),
+    }
+    expect(findForbiddenTerms(texts, webTerms)).toEqual([])
+  })
+
   it('no source of the knowledge files uses one either: they are shown under the figures', () => {
     const labels: Record<string, string> = {}
-    for (const folder of ['market', 'script']) {
+    for (const folder of ['market', 'script', 'publish']) {
       const dir = new URL(`../../../packages/knowledge/${folder}/`, import.meta.url)
       for (const file of readdirSync(dir).filter((name) => name.endsWith('.json'))) {
         const { source } = JSON.parse(readFileSync(new URL(file, dir), 'utf8')) as { source: { label: string }[] }

@@ -1,4 +1,4 @@
-import type { ScriptKind, ChannelOrigin, ChannelUse, JourneyStep, ProposalKind } from '@ytcreator/core'
+import type { PackageKind, ScriptKind, ChannelOrigin, ChannelUse, JourneyStep, ProposalKind } from '@ytcreator/core'
 import {
   apiErrorSchema,
   type ApiErrorBody,
@@ -15,6 +15,12 @@ import {
   ideaSchema,
   measureEstimateSchema,
   newIdeaResultSchema,
+  packageSummarySchema,
+  packageVersionDetailSchema,
+  packageVersionSummarySchema,
+  packageViewSchema,
+  publishSettingsViewSchema,
+  type PublishSettingsBody,
   scriptSummarySchema,
   scriptSettingsViewSchema,
   scriptViewSchema,
@@ -23,6 +29,13 @@ import {
   scriptVersionDetailSchema,
   scriptVersionSummarySchema,
   type RestoreBody,
+  type PackageApproveBody,
+  packageReviewRulesSchema,
+  type PackageRestoreBody,
+  type PackageStudioBody,
+  type PackageEstimateBody,
+  type PackageGenerateBody,
+  type PieceSaveBody,
   type ApproveDraftBody,
   type ClaimActionBody,
   type DraftSaveBody,
@@ -298,6 +311,45 @@ export const ideasApi = {
 }
 
 const scriptPath = (id: string) => `/api/scripts/${encodeURIComponent(id)}`
+
+const packagePath = (id: string) => `/api/packages/${encodeURIComponent(id)}`
+
+// The publishing package of an approved script (specs/006-publishing-package/contracts/http-api.md).
+export const packagesApi = {
+  list: (channelId: string, options?: RequestOptions) =>
+    apiClient.get(`${channelPath(channelId)}/packages`, packageSummarySchema.array(), options),
+  open: (scriptId: string) => apiClient.post(`${scriptPath(scriptId)}/package`, {}, packageViewSchema),
+  get: (id: string, options?: RequestOptions) => apiClient.get(packagePath(id), packageViewSchema, options),
+  estimate: (id: string, body: PackageEstimateBody, options?: RequestOptions) =>
+    apiClient.post(`${packagePath(id)}/estimate`, body, estimateSchema, options),
+  generate: (id: string, body: PackageGenerateBody) =>
+    apiClient.post(`${packagePath(id)}/generate`, body, jobStartedSchema),
+  savePiece: (id: string, kind: PackageKind, body: PieceSaveBody) =>
+    apiClient.put(`${packagePath(id)}/pieces/${kind}`, body, packageViewSchema),
+  approve: (id: string, body: PackageApproveBody) =>
+    apiClient.post(`${packagePath(id)}/approve`, body, packageViewSchema),
+  // The review is worked out here, with the figures the server reads from the knowledge packages (R13).
+  review: (id: string, options?: RequestOptions) =>
+    apiClient.get(`${packagePath(id)}/review`, packageReviewRulesSchema, options),
+  // The marks of the guided list of YouTube Studio: they make no version (R12).
+  studio: (id: string, body: PackageStudioBody) => apiClient.put(`${packagePath(id)}/studio`, body, packageViewSchema),
+  download: (id: string, format: 'md' | 'json' | 'brief') =>
+    apiClient.file(`${packagePath(id)}/export?format=${format}`),
+  downloadAll: (channelId: string, format: 'md' | 'json') =>
+    apiClient.file(`${channelPath(channelId)}/packages/export?format=${format}`),
+  // The history of each piece (US5).
+  versions: (id: string, kind: PackageKind, options?: RequestOptions) =>
+    apiClient.get(`${packagePath(id)}/versions?kind=${kind}`, packageVersionSummarySchema.array(), options),
+  version: (id: string, kind: PackageKind, version: number) =>
+    apiClient.get(`${packagePath(id)}/versions/${kind}/${version}`, packageVersionDetailSchema),
+  restore: (id: string, kind: PackageKind, version: number, body: PackageRestoreBody) =>
+    apiClient.post(`${packagePath(id)}/versions/${kind}/${version}/restore`, body, packageViewSchema),
+  // The fixed part of every description and the category of the channel (US2).
+  settings: (channelId: string, options?: RequestOptions) =>
+    apiClient.get(`${channelPath(channelId)}/publish-settings`, publishSettingsViewSchema, options),
+  saveSettings: (channelId: string, body: PublishSettingsBody) =>
+    apiClient.put(`${channelPath(channelId)}/publish-settings`, body, publishSettingsViewSchema),
+}
 
 // The script of an idea (specs/005-script-and-outline/contracts/http-api.md).
 export const scriptsApi = {

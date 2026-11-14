@@ -10,7 +10,9 @@ import {
   conceptKnowledge,
   knowledgeFiles,
   loadMarket,
+  loadPublishKnowledge,
   loadScriptKnowledge,
+  publishKnowledgeFiles,
   scriptKnowledgeFiles,
   promptFor,
   STALE_AFTER_DAYS,
@@ -28,6 +30,10 @@ import { createJobsRepo } from './db/repos/jobs.ts'
 import { createIdeaBatchesRepo } from './db/repos/idea-batches.ts'
 import { createIdeaMeasuresRepo } from './db/repos/idea-measures.ts'
 import { createScriptService } from './services/scripts.ts'
+import { createPackageService } from './services/packages.ts'
+import { createPackageWork } from './services/package-work.ts'
+import { createPackagesRepo } from './db/repos/packages.ts'
+import { createPackageVersionsRepo } from './db/repos/package-versions.ts'
 import { createIdeaMeasure } from './services/idea-measure.ts'
 import { createIdeasRepo } from './db/repos/ideas.ts'
 import { createScriptVersionsRepo } from './db/repos/script-versions.ts'
@@ -194,6 +200,8 @@ export async function startServer({
   const market = loadMarket()
   // A broken package of the script stops the start here, not later in front of the creator (principle V).
   const scriptKnowledge = loadScriptKnowledge()
+  // The same for the publishing package (006).
+  const publishKnowledge = loadPublishKnowledge()
   const pricing: Pricing = {
     version: market.pricing.version,
     models: market.pricing.data.models,
@@ -383,6 +391,38 @@ export async function startServer({
     aiRun: channel.aiRun,
     promptFor: channelPrompt,
     knowledge: scriptKnowledge,
+    packageOf: (scriptId: string) => packageService.scriptPackage(scriptId),
+  })
+  const packagesRepo = createPackagesRepo(db, now)
+  const packageVersions = createPackageVersionsRepo(db, now)
+  const packageService = createPackageService({
+    channels: channel.channels,
+    ideas: ideasRepo,
+    measures: ideaMeasures,
+    jobsRepo,
+    scripts: scriptsRepo,
+    scriptVersions,
+    packages: packagesRepo,
+    versions: packageVersions,
+    profiles: channel.profiles,
+    scriptStatus: (ideaId: string) => scriptService.ideaScript(ideaId)?.status ?? null,
+    knowledge: publishKnowledge,
+    kids: {
+      implications: market.madeForKids.data.implications,
+      source: { label: market.madeForKids.source[0]!.label, date: market.madeForKids.reviewedAt },
+    },
+  })
+  const packageWork = createPackageWork({
+    service: packageService,
+    packages: packagesRepo,
+    versions: packageVersions,
+    scriptVersions,
+    profiles: channel.profiles,
+    journeys: channel.journeys,
+    jobs,
+    aiRun: channel.aiRun,
+    promptFor: channelPrompt,
+    knowledge: publishKnowledge,
   })
   app = createApp({
     port,
@@ -410,7 +450,11 @@ export async function startServer({
       jobs: jobsRepo,
       staleDays: market.thresholds.data.ideas.staleDays,
       measure: ideaMeasure,
-      scriptOf: (ideaId: string) => scriptService.ideaScript(ideaId),
+      scriptOf: (ideaId: string) => {
+        const script = scriptService.ideaScript(ideaId)
+        // The package is read when the idea is: it is made later, from the approved script (006, R17).
+        return script ? { ...script, packageStatus: packageService.scriptPackage(script.id)?.status ?? null } : null
+      },
       youtube,
       dataApiUnits: market.thresholds.data.dataApi,
       measureBasis: {
@@ -421,11 +465,16 @@ export async function startServer({
       now,
     },
     script: { service: scriptService, scripts: scriptsRepo },
+    publish: { service: packageService, work: packageWork },
     jobs,
     youtubeSettings,
     usage,
     knowledge: {
-      files: () => [...knowledgeFiles(market), ...scriptKnowledgeFiles(scriptKnowledge)],
+      files: () => [
+        ...knowledgeFiles(market),
+        ...scriptKnowledgeFiles(scriptKnowledge),
+        ...publishKnowledgeFiles(publishKnowledge),
+      ],
       staleAfterDays: STALE_AFTER_DAYS,
     },
     youtube: {

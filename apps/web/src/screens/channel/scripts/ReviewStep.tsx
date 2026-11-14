@@ -3,10 +3,11 @@ import type { ScriptReviewView, ScriptView } from '@ytcreator/core/api'
 import { SCRIPT_LIMITS } from '@ytcreator/core'
 import { Button, Card, DataSource, Dialog, Disclosure, ErrorMessage, format, TextArea } from '@ytcreator/ui'
 import { useEffect, useRef, useState } from 'react'
-import { ApiClientError, scriptsApi } from '../../../api/client.ts'
+import { ApiClientError, packagesApi, scriptsApi } from '../../../api/client.ts'
 import { navigate } from '../../../router.ts'
 import { errorText } from '../../../shell/errorText.ts'
 import { es } from '../../../strings/es.ts'
+import { publishEs } from '../../../strings/publish.es.ts'
 import { scriptEs } from '../../../strings/script.es.ts'
 import styles from '../channel.module.css'
 import { AiAction } from '../Proposal.tsx'
@@ -69,6 +70,7 @@ export function ReviewStep({ script, ai, onChange, onError, onToBlock, onToDraft
   const [attempt, setAttempt] = useState(0)
   const [asking, setAsking] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [opening, setOpening] = useState(false)
   const [changedElsewhere, setChangedElsewhere] = useState(false)
   const [justApproved, setJustApproved] = useState(false)
   const approvedNote = useRef<HTMLParagraphElement>(null)
@@ -99,6 +101,18 @@ export function ReviewStep({ script, ai, onChange, onError, onToBlock, onToDraft
   useEffect(() => {
     if (justApproved) approvedNote.current?.focus()
   }, [justApproved])
+
+  const openPackage = async () => {
+    setOpening(true)
+    try {
+      const pkg = script.package ?? (await packagesApi.open(script.id))
+      navigate({ page: 'package', id: pkg.id })
+    } catch (cause) {
+      onError(cause)
+    } finally {
+      setOpening(false)
+    }
+  }
 
   const draft = script.draft
   if (!draft) return <p className={styles.notice}>{scriptEs.draft.none}</p>
@@ -227,13 +241,26 @@ export function ReviewStep({ script, ai, onChange, onError, onToBlock, onToDraft
         <DataSource kind="conocimiento" label={text.shortsBasis} date={script.limits.maxReviewedAt} />
       )}
       {approved ? (
-        <p role="status" tabIndex={-1} ref={approvedNote}>
-          {script.draftApprovedPending
-            ? format(script.draftApprovedPending === 1 ? text.approvedPending.one : text.approvedPending.other, {
-                n: script.draftApprovedPending,
-              })
-            : text.approved}
-        </p>
+        <>
+          <p role="status" tabIndex={-1} ref={approvedNote}>
+            {script.draftApprovedPending
+              ? format(script.draftApprovedPending === 1 ? text.approvedPending.one : text.approvedPending.other, {
+                  n: script.draftApprovedPending,
+                })
+              : text.approved}
+          </p>
+          {/* The next step of the video: its publishing package (006, contracts/ui-screens.md). */}
+          <p className={styles.why}>{publishEs.entry.why}</p>
+          <div className={styles.actions}>
+            <Button variant="primary" loading={opening} onClick={() => void openPackage()}>
+              {script.package === null
+                ? publishEs.entry.prepare
+                : script.package.status === 'aprobado'
+                  ? publishEs.entry.see
+                  : publishEs.entry.continue}
+            </Button>
+          </div>
+        </>
       ) : (
         <>
           {changedElsewhere && (

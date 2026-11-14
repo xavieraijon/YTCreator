@@ -34,6 +34,7 @@ const OUTPUT_MODES: readonly string[] = [
   'pilar_invalido',
   'sin_web',
   'sin_resultados',
+  'con_direccion',
 ]
 
 function isFailureKind(kind: string): kind is FailureKind {

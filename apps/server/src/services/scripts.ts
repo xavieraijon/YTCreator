@@ -98,6 +98,8 @@ export interface ScriptServiceDeps {
   aiRun: AiRunService
   promptFor: (use: ScriptUse) => PromptRef
   knowledge: ScriptKnowledge
+  /** The publishing package of a script (006); bound late, since the package service reads the scripts. */
+  packageOf?: (scriptId: string) => ScriptView['package']
 }
 
 const LIVE = 'en_curso'
@@ -282,6 +284,7 @@ export function createScriptService(deps: ScriptServiceDeps) {
         maxReviewedAt: script.format === 'largo' ? null : deps.shortsReviewedAt,
       },
       voice: voiceOf(script.channelId),
+      package: deps.packageOf?.(script.id) ?? null,
     }
   }
 
