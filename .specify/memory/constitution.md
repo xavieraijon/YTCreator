@@ -1,11 +1,11 @@
 <!--
 Sync Impact Report
-- Versión: 2.0.0 → 2.1.0 (MINOR: se añade un principio)
-- Principios añadidos: XI. Autonomía demostrada
-- Secciones modificadas: Flujo de desarrollo (condiciones de cierre de una feature)
-- Plantillas: `.specify/templates/overrides/spec-template.md` (cinco campos por historia) y
-  `overrides/tasks-template.md` (tarea de Puerta A)
-- Afecta a: 003, solo en lo que queda (US4, US5 y pulido). 001, 002 y lo ya entregado de 003 no se reescriben.
+- Versión: 2.1.0 → 2.1.1 (PATCH: aclaración de redacción)
+- Principios modificados: IV. La IA, detrás de un puerto. Se quita el plan de otros proveedores (el primero era
+  Gemini con Google AI Pro): por ahora solo Claude. La regla de añadir un proveedor con un adaptador se mantiene.
+- Secciones añadidas o retiradas: ninguna
+- Plantillas: ninguna cambia
+- Afecta a: nada entregado; la 002 ya dejaba otros proveedores fuera de la v1.
 - TODOs: ninguno
 -->
 
@@ -61,8 +61,7 @@ Esta constitución define lo que **no se negocia**. Las specs, los planes y el c
     responsabilidad».
   - **API de Anthropic**, la vía recomendada en un VPS.
 
-  La v1 NO incluye ninguna opción gratuita. Las suscripciones de otros proveedores (la primera, Gemini con Google
-  AI Pro) llegarán como adaptadores nuevos en una feature posterior.
+  La v1 NO incluye ninguna opción gratuita. Por ahora solo se usa Claude: no hay otros proveedores previstos.
 
   Añadir un proveedor DEBE consistir en escribir un adaptador y registrarlo, sin tocar el dominio.
 - Los prompts DEBEN vivir en ficheros versionados, separados del código, y ser **agnósticos del modelo**: nada
@@ -206,4 +205,4 @@ no solo al final. La atención del creador se concentra según riesgo y decision
   - **PATCH**: aclaraciones de redacción.
 - Cada revisión de código DEBE comprobar el cumplimiento de la constitución.
 
-**Versión**: 2.1.0 | **Ratificada**: 2026-10-26 | **Última enmienda**: 2026-11-04
+**Versión**: 2.1.1 | **Ratificada**: 2026-10-26 | **Última enmienda**: 2026-11-14

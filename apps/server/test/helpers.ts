@@ -48,7 +48,7 @@ import { createApp } from '../src/http/app.ts'
 import { createMemoryLogger } from '../src/logging.ts'
 import { createFileStore } from '../src/secrets/file-store.ts'
 import { createAiConnectionsService } from '../src/services/ai-connections.ts'
-import { createAiRunService } from '../src/services/ai-run.ts'
+import { type ActiveAi, createAiRunService, type PromptRef } from '../src/services/ai-run.ts'
 import { createClaudeRepair, type InstallerRunner } from '../src/services/claude-repair.ts'
 import { createJobsService } from '../src/services/jobs.ts'
 import { createNameCheck } from '../src/services/name-check.ts'
@@ -80,6 +80,11 @@ export interface TestAppOptions {
   installer?: InstallerRunner // the Claude Code installer; by default it ends well at once
   readerVersion?: string | null // the YouTube reader installed; none by default
   readerUpdate?: () => Promise<ReaderUpdateResult> // «Actualizar el lector»; by default it ends well at once
+  /**
+   * Only for `pnpm test:real-ai` (T068 of 006): the AI the channel uses and its real prompts, while it returns one;
+   * `null` falls back to the connection set up through the API (the fake one).
+   */
+  aiOverride?: { active: () => ActiveAi | null; promptFor: (use: string) => PromptRef | null }
 }
 
 const cleanups: (() => void)[] = []
@@ -97,6 +102,7 @@ export function makeTestApp({
   installer,
   readerVersion = null,
   readerUpdate,
+  aiOverride,
 }: TestAppOptions = {}) {
   const dir = mkdtempSync(join(tmpdir(), 'ytc-server-'))
   const db = openDatabase(':memory:')
@@ -141,14 +147,15 @@ export function makeTestApp({
   const jobs = createJobsService({ jobs: jobsRepo, logger })
   const market = loadMarket()
   // The prompts of the channel uses arrive with each story; the fake provider does not read them.
-  const promptFor = (use: string) => ({ id: use, version: 1, text: `Prompt de prueba de ${use}.` })
+  const testPrompt = (use: string) => ({ id: use, version: 1, text: `Prompt de prueba de ${use}.` })
+  const promptFor = (use: string) => aiOverride?.promptFor(use) ?? testPrompt(use)
   const aiRun = createAiRunService({
     usage,
     limits,
     pricing: PRICING,
     logger,
     now,
-    active: () => ai.activeAi(),
+    active: () => aiOverride?.active() ?? ai.activeAi(),
     promptFor,
   })
   const channel = {
@@ -246,7 +253,7 @@ export function makeTestApp({
     versions: scriptVersions,
     shortMaxSeconds: market.shorts.data.maxDurationSeconds,
     shortsReviewedAt: market.shorts.reviewedAt,
-    webResearch: () => ai.activeAi()?.webResearch ?? false,
+    webResearch: () => (aiOverride?.active() ?? ai.activeAi())?.webResearch ?? false,
     links,
     now,
     aiRun: aiRun,

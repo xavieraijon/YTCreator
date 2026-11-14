@@ -641,6 +641,55 @@ II (nada se pierde sin preguntar; lo aprobado es lo guardado), III (abrir una pu
 
 ### 9. Cómo revertir
 
-`git revert` del commit de Polish. No hay migraciones. Pendiente: T068 con la autorización del creador, y la pasada de
+`git revert` del commit de Polish. No hay migraciones. Pendiente: la pasada de
 interfaz con modo Design para los medios y menores abiertos.
 
+
+## Prueba real (T068), 2026-11-14
+
+Autorizada por el creador (decisión 113, C1 resuelto) y ejecutada en su terminal con la suscripción de Claude Code; la
+API no se llamó. Prueba: `apps/server/test/real/package-ai.real.test.ts` (`pnpm test:real-ai -t "publishing package"`).
+El canal se prepara con la IA falsa, como en el resto de pruebas; desde el guion, cada encargo va a Claude Code real con
+los prompts, entradas y esquemas de la aplicación, a través de los servicios reales. Resultado: **pasa** (1 prueba, 90 s).
+
+### Encargos
+
+| Encargo | Resultado | Tiempo | Tokens (entrada/salida) |
+|---------|-----------|--------|-------------------------|
+| `escaleta` (005) | hecho | 14 s | 2 / 1271 |
+| `guion` (005) | hecho | 30 s | 2 / 3318 |
+| `titulos` | hecho | 8 s | 2 / 761 |
+| `miniaturas` | hecho | 8 s | 2 / 857 |
+| `descripcion` (descripción, capítulos, etiquetas y comentario) | hecho | 8 s | 2 / 988 |
+| `enfoques_short` (005) | hecho | 6 s | 2 / 465 |
+| `guion_short` (005) | hecho | 8 s | 2 / 876 |
+| `paquete_short` | hecho | 8 s | 2 / 907 |
+
+**Coste real:** 0 € en todas las llamadas; gastan cupo de la suscripción, no dinero. La entrada que informa la CLI
+(2 tokens) no cuenta la parte en caché, así que no mide el tamaño real del contexto; la salida sí es la real.
+
+### Criterios de éxito
+
+| Criterio | Resultado | Evidencia |
+|----------|-----------|-----------|
+| SC-001: paquete en menos de 15 minutos | Cumplido en la parte de la máquina | Vídeo largo: 24 s de IA y servidor (títulos, miniaturas y textos). Short: 8 s. No incluye lo que tarda una persona en leer y elegir |
+| SC-002: 100 % de títulos dentro del máximo de YouTube (100) | Cumplido | 7 de 7 en el vídeo largo y 4 de 4 en el Short |
+| SC-002: al menos la mitad caben en el móvil (70, cifra supuesta) | Cumplido | 11 de 11; el más largo tiene 64 caracteres |
+
+### Calidad observada
+
+- Títulos: variados y fieles al guion; cada uno da un porqué concreto (cuatro ingredientes, tres señales del reposo,
+  olla con tapa).
+- Miniaturas: tres conceptos con escena, texto grande, emoción y colores con contraste explicado. La revisión avisó de
+  `miniatura_repite_titulo` porque el primer concepto («SIN AMASAR») repite el título elegido: funciona como se diseñó.
+- Textos del vídeo largo: seis capítulos desde 0:00 que cuadran con el guion, 15 etiquetas, un comentario fijado con
+  pregunta y la descripción montada en 1054 caracteres con enlace de suscripción.
+- Short: portada en un momento del guion con texto en pantalla, tres hashtags, y una descripción que nombra el vídeo
+  largo por su título. La revisión no dio avisos.
+- `sin_fuentes` en los dos paquetes: es lo esperado, porque la prueba no hace investigación.
+
+### Lo que no cubre
+
+- La API de Anthropic, que es secundaria (005, T087) y no se llamó.
+- YouTube real: las medidas del nicho son las falsas.
+- Lo que tarda una persona en leer y elegir; SC-001 solo se mide en la parte de la máquina.
