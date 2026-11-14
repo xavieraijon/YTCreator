@@ -39,12 +39,12 @@ Spec-Driven Development with GitHub Spec Kit (`/speckit-*`).
   minors go to the UI pass with Design mode. Open for the creator in its `decisions.md`: P2 (digits) and P3 (`WebFetch`).
   The server log hides links as well as keys. Report in `specs/005-script-and-outline/checklists/validation.md`.
   Branch deleted (local and remote).
-- 006 `publishing-package`: **complete on branch `006-publishing-package`, pending PR**. Foundational, US1–US5 and Polish
+- 006 `publishing-package`: **complete and merged into `main`** (PR #8, 2026-11-14). Foundational, US1–US5 and Polish
   closed with Puerta A on 2026-11-13. Novice audit (`specs/006-publishing-package/novice-audit.md`) closed by the
   creator after round 5 with 0 graves and 4 open mediums (decision 112): step indicator, home not leading to the lists,
   highlighting the exact item from «Corregirlo» (all for the UI pass with Design mode), and re-approving after a fix or a
   restore (as the spec asks). T068 (real AI) not run: it needs the creator's authorization (C1). Report in
-  `specs/006-publishing-package/checklists/validation.md`.
+  `specs/006-publishing-package/checklists/validation.md`. Branch deleted (local and remote).
 - Provider subscriptions beyond Claude are a later feature, not part of 002. First one planned: Gemini
   (Google AI Pro, with its CLI).
 - Commands (Node 24, `fnm exec --using=24 --`): `pnpm dev` (server + web), `pnpm lint`, `pnpm typecheck`,
