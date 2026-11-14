@@ -1,0 +1,16 @@
+{
+  "name": "@ytcreator/speech",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test:real-speech": "vitest run --config vitest.real.config.ts"
+  },
+  "dependencies": {
+    "@ytcreator/core": "workspace:*",
+    "zod": "^4.6.7"
+  }
+}

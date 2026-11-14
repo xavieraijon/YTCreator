@@ -58,6 +58,15 @@ jobs:
             exit 1
           fi
 
+      # Nor the fake speech recognizer: its switch, its adapter and its test audios (007).
+      - name: No fake speech
+        run: |
+          if grep -n -E 'YTCREATOR_FAKE_SPEECH|createFakeRecognizer|fakeSpeechWords|bienvenidos al canal|arina de fuersa|nos veis desde casa' \
+            apps/server/dist/server.mjs; then
+            echo "server.mjs still contains the fake speech recognizer" >&2
+            exit 1
+          fi
+
       # The tarball's root is what ends up in $APP_HOME/versions/<v>: bin/ytcreator runs ../server.mjs, and
       # server.mjs looks for VERSION and web/ next to itself (cli.ts).
       - name: Package

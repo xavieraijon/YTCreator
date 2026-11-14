@@ -19,6 +19,7 @@ import {
   packageVersionDetailSchema,
   packageVersionSummarySchema,
   packageViewSchema,
+  subtitlesViewSchema,
   publishSettingsViewSchema,
   type PublishSettingsBody,
   scriptSummarySchema,
@@ -349,6 +350,12 @@ export const packagesApi = {
     apiClient.get(`${channelPath(channelId)}/publish-settings`, publishSettingsViewSchema, options),
   saveSettings: (channelId: string, body: PublishSettingsBody) =>
     apiClient.put(`${channelPath(channelId)}/publish-settings`, body, publishSettingsViewSchema),
+}
+
+// The subtitles of a script (specs/007-subtitles/contracts/http-api.md). Each story adds its calls.
+export const subtitlesApi = {
+  get: (scriptId: string, options?: RequestOptions) =>
+    apiClient.get(`${scriptPath(scriptId)}/subtitles`, subtitlesViewSchema, options),
 }
 
 // The script of an idea (specs/005-script-and-outline/contracts/http-api.md).

@@ -38,6 +38,19 @@ describe('jobs repo', () => {
     expect(jobs.get(done.id)?.status).toBe('hecho')
   })
 
+  it('on start-up, a job waiting in the queue becomes interrupted too (007, R5)', () => {
+    const db = freshDb()
+    const repo = createJobsRepo(db, clock.now)
+    db.prepare(
+      `INSERT INTO channel (id, origin, name_status, created_at, updated_at) VALUES ('c', 'nuevo', 'provisional', ?, ?)`,
+    ).run(clock.now().toISOString(), clock.now().toISOString())
+    db.prepare(
+      `INSERT INTO background_job (id, channel_id, kind, status, started_at) VALUES ('q', 'c', 'reconocer_voz', 'en_cola', ?)`,
+    ).run(clock.now().toISOString())
+    expect(repo.interruptRunning()).toBe(1)
+    expect(repo.get('q')).toMatchObject({ status: 'interrumpido', kind: 'reconocer_voz', channelId: 'c' })
+  })
+
   it('lists the running jobs of a journey', () => {
     const running = jobs.start({ journeyId, kind: 'medir_nichos' })
     jobs.finish(jobs.start({ journeyId, kind: 'ia' }).id)

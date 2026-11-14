@@ -63,7 +63,7 @@ export function createJobsRepo(db: DatabaseSync, now: () => Date = () => new Dat
   const updateProgress = db.prepare('UPDATE background_job SET progress = ? WHERE id = ?')
   const updateEnd = db.prepare('UPDATE background_job SET status = ?, failure = ?, finished_at = ? WHERE id = ?')
   const interrupt = db.prepare(
-    "UPDATE background_job SET status = 'interrumpido', finished_at = ? WHERE status = 'en_curso'",
+    "UPDATE background_job SET status = 'interrumpido', finished_at = ? WHERE status IN ('en_cola', 'en_curso')",
   )
 
   const get = (id: string): Job | null => {
@@ -121,7 +121,7 @@ export function createJobsRepo(db: DatabaseSync, now: () => Date = () => new Dat
       return get(id)
     },
 
-    // On start-up nothing is running yet, so whatever says `en_curso` was cut short.
+    // On start-up nothing is running yet, so whatever says `en_curso` or waits `en_cola` was cut short (R5).
     interruptRunning(): number {
       return Number(interrupt.run(now().toISOString()).changes)
     },

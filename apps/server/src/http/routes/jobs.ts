@@ -36,7 +36,8 @@ export function jobsRoutes(jobs: JobsService) {
 
       const job = jobs.get(id)!
       push({ type: 'progress', done: job.progress.done, total: job.progress.total })
-      if (job.status !== 'en_curso') push(finalEvent(job))
+      // Running or waiting in the queue (007, R5): its end comes later through the subscription.
+      if (job.status !== 'en_curso' && job.status !== 'en_cola') push(finalEvent(job))
       await ended
       unsubscribe()
     })

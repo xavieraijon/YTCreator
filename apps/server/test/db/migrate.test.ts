@@ -1,6 +1,6 @@
 import type { DatabaseSync } from 'node:sqlite'
 import { beforeEach, describe, expect, it } from 'vitest'
-import { MIGRATIONS, migrate } from '../../src/db/migrate.ts'
+import { FOREIGN_KEYS_OFF, MIGRATIONS, migrate } from '../../src/db/migrate.ts'
 import { openDatabase } from '../../src/db/open.ts'
 
 const NOW = '2026-10-28T10:00:00.000Z'
@@ -38,7 +38,7 @@ describe('migrate', () => {
   it('applies every migration once and records it', () => {
     expect(migrate(db, MIGRATIONS)).toEqual({ applied: [] })
     const rows = db.prepare('SELECT version FROM schema_migrations').all()
-    expect(rows.map((r) => r.version)).toEqual([1, 2, 3, 4, 5, 6, 7])
+    expect(rows.map((r) => r.version)).toEqual([1, 2, 3, 4, 5, 6, 7, 8])
   })
 
   it('creates the wizard row in bienvenida with revision 0', () => {
@@ -101,6 +101,34 @@ describe('migrate', () => {
         .prepare('SELECT version FROM schema_migrations')
         .all()
         .map((r) => r.version),
-    ).toEqual([1, 2, 3, 4, 5, 6, 7])
+    ).toEqual([1, 2, 3, 4, 5, 6, 7, 8])
+  })
+  it('rebuilds a table other tables point at with the keys off, and turns them on again', () => {
+    const fresh = openDatabase(':memory:')
+    const base = [
+      { version: 1, sql: 'CREATE TABLE p (id TEXT PRIMARY KEY); CREATE TABLE c (p_id TEXT REFERENCES p (id));' },
+    ]
+    migrate(fresh, base)
+    fresh.exec(`INSERT INTO p VALUES ('a'); INSERT INTO c VALUES ('a')`)
+    const rebuild = `${FOREIGN_KEYS_OFF}
+      CREATE TABLE p_new (id TEXT PRIMARY KEY, extra TEXT); INSERT INTO p_new (id) SELECT id FROM p;
+      DROP TABLE p; ALTER TABLE p_new RENAME TO p;`
+    expect(migrate(fresh, [...base, { version: 2, sql: rebuild }])).toEqual({ applied: [2] })
+    expect(fresh.prepare('PRAGMA foreign_keys').get()).toEqual({ foreign_keys: 1 })
+    expect(() => fresh.exec(`DELETE FROM p WHERE id = 'a'`)).toThrow()
+  })
+
+  it('rolls back a rebuild that leaves a broken key, and turns the keys on again', () => {
+    const fresh = openDatabase(':memory:')
+    const base = [
+      { version: 1, sql: 'CREATE TABLE p (id TEXT PRIMARY KEY); CREATE TABLE c (p_id TEXT REFERENCES p (id));' },
+    ]
+    migrate(fresh, base)
+    fresh.exec(`INSERT INTO p VALUES ('a'); INSERT INTO c VALUES ('a')`)
+    const lossy = `${FOREIGN_KEYS_OFF}
+      CREATE TABLE p_new (id TEXT PRIMARY KEY); DROP TABLE p; ALTER TABLE p_new RENAME TO p;`
+    expect(() => migrate(fresh, [...base, { version: 2, sql: lossy }])).toThrow(/foreign keys in: c/)
+    expect(fresh.prepare('SELECT id FROM p').all()).toEqual([{ id: 'a' }])
+    expect(fresh.prepare('PRAGMA foreign_keys').get()).toEqual({ foreign_keys: 1 })
   })
 })

@@ -26,6 +26,16 @@ export default defineConfig({
           exclude: ['test/**/*.real.test.ts'],
         },
       },
+      {
+        define: allowFakeAi,
+        test: {
+          name: 'speech',
+          root: 'packages/speech',
+          environment: 'node',
+          include: ['test/**/*.test.ts'],
+          exclude: ['test/**/*.real.test.ts'],
+        },
+      },
       { test: { name: 'catalog', root: 'apps/catalog', environment: 'node', include: ['test/**/*.test.ts'] } },
       {
         define: allowFakeAi,

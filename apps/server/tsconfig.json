@@ -9,6 +9,7 @@
     { "path": "../../packages/core" },
     { "path": "../../packages/ai" },
     { "path": "../../packages/knowledge" },
-    { "path": "../../packages/youtube" }
+    { "path": "../../packages/youtube" },
+    { "path": "../../packages/speech" }
   ]
 }

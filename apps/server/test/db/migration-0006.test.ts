@@ -121,6 +121,6 @@ describe('migration 0006 (the script)', () => {
       .prepare('SELECT version FROM schema_migrations ORDER BY version')
       .all()
       .map((r) => r['version'])
-    expect(versions).toEqual([1, 2, 3, 4, 5, 6, 7])
+    expect(versions).toEqual([1, 2, 3, 4, 5, 6, 7, 8])
   })
 })

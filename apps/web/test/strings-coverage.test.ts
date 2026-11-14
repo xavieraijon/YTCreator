@@ -4,6 +4,7 @@ import {
   NEW_CHANNEL_STEPS,
   PACKAGE_STATUSES,
   SCRIPT_STATUSES,
+  SUBTITLE_STATUSES,
   YOUTUBE_FAILURES,
 } from '@ytcreator/core'
 import { AI_RUN_FAILURES, API_ERROR_CODES, FIELD_CODES, GUARDS } from '@ytcreator/core/api'
@@ -13,6 +14,7 @@ import { channelEs } from '../src/strings/channel.es.ts'
 import { es } from '../src/strings/es.ts'
 import { failuresEs } from '../src/strings/failures.es.ts'
 import { publishEs } from '../src/strings/publish.es.ts'
+import { subtitlesEs } from '../src/strings/subtitles.es.ts'
 import { scriptEs } from '../src/strings/script.es.ts'
 import { youtubeFailureActionsEs, youtubeFailuresEs } from '../src/strings/youtube-failures.es.ts'
 
@@ -47,6 +49,7 @@ describe('strings coverage (FR-027, SC-007)', () => {
   it('every state of a script has a text (005)', () => {
     expect(sorted(Object.keys(scriptEs.status))).toEqual(sorted(SCRIPT_STATUSES))
     expect(sorted(Object.keys(publishEs.status))).toEqual(sorted(PACKAGE_STATUSES))
+    expect(sorted(Object.keys(subtitlesEs.status))).toEqual(sorted(SUBTITLE_STATUSES))
   })
 
   it('every provider label key resolves to a text, with no orphans', () => {
@@ -78,6 +81,7 @@ describe('strings coverage (FR-027, SC-007)', () => {
       youtubeFailureActionsEs,
       scriptEs,
       publishEs,
+      subtitlesEs,
     })
     expect(all.filter(({ value }) => value.trim() === '')).toEqual([])
     expect(all.filter(({ value }) => /\{(?!\w+\})|(?<!\{\w*)\}/.test(value))).toEqual([])

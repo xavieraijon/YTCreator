@@ -76,7 +76,7 @@ export function createJobsService({ jobs, logger }: { jobs: JobsRepo; logger: Lo
       }
     },
 
-    // On start-up nothing is running yet: whatever says `en_curso` was cut short.
+    // On start-up nothing is running yet: whatever says `en_curso` or waits `en_cola` was cut short (decision 12).
     interruptRunning: () => jobs.interruptRunning(),
   }
 }

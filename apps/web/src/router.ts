@@ -20,6 +20,7 @@ export type Route =
   | { readonly page: 'packageList' }
   | { readonly page: 'package'; readonly id: string }
   | { readonly page: 'publishSettings' }
+  | { readonly page: 'subtitles'; readonly scriptId: string }
   | { readonly page: 'channelStep'; readonly kind: ChannelOrigin; readonly step: JourneyStep }
   | { readonly page: 'settings' }
   | { readonly page: 'aiSettings' }
@@ -59,6 +60,7 @@ export function parseRoute(pathname: string): Route {
     if (second === 'publicaciones' && third === 'ajustes' && !fourth) return { page: 'publishSettings' }
     // `ajustes` is kept for the publishing settings (US2): it is never the id of a package.
     if (second === 'publicaciones' && third && third !== 'ajustes' && !fourth) return { page: 'package', id: third }
+    if (second === 'subtitulos' && third && !fourth) return { page: 'subtitles', scriptId: third }
     const kind = KIND_BY_SEGMENT[second]
     if (kind && third && !fourth && isJourneyStep(kind, third)) return { page: 'channelStep', kind, step: third }
   }
@@ -104,6 +106,8 @@ export function href(route: Target): string {
       return `/canal/publicaciones/${encodeURIComponent(route.id)}`
     case 'publishSettings':
       return '/canal/publicaciones/ajustes'
+    case 'subtitles':
+      return `/canal/subtitulos/${encodeURIComponent(route.scriptId)}`
     case 'channelStep':
       return `/canal/${route.kind}/${route.step}`
     case 'settings':

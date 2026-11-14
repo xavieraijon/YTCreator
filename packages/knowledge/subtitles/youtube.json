@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "reviewedAt": "2026-11-14",
+  "source": [
+    {
+      "label": "Ayuda de YouTube: archivos de subtítulos y subtítulos opcionales compatibles",
+      "url": "https://support.google.com/youtube/answer/2734698"
+    }
+  ],
+  "data": {
+    "formats": [
+      { "id": "srt", "extension": ".srt", "source": 0 },
+      { "id": "vtt", "extension": ".vtt", "source": 0 },
+      { "id": "sbv", "extension": ".sbv", "source": 0 }
+    ],
+    "byDefault": "srt"
+  }
+}

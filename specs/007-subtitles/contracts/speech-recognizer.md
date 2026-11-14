@@ -34,7 +34,7 @@ llevan su puntuación pegada, como la da el modelo.
 | Código | Cuándo | Texto para el creador (resumen) |
 |---|---|---|
 | `sin_motor` | falta `whisper-cli` o no arranca | «Falta el programa que escucha el audio» + «Instalarlo» |
-| `sin_modelo` | falta el modelo | «Falta el modelo de voz» + «Descargarlo» |
+| `sin_modelo` | falta el modelo | «Falta una parte del programa que escucha el audio» + «Descargarlo» (decisión 13) |
 | `audio_no_valido` | el motor no puede leer el audio | «No se ha podido leer el audio» + «Elegir otro fichero» |
 | `sin_memoria` | el proceso muere por memoria | «Tu equipo se ha quedado sin memoria» + sugerencia del modelo pequeño |
 | `interrumpido` | se canceló o se cerró la app | «Se ha parado antes de terminar» + «Volver a empezar» |

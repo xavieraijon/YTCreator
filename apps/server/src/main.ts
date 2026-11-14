@@ -11,13 +11,16 @@ import {
   knowledgeFiles,
   loadMarket,
   loadPublishKnowledge,
+  loadSubtitlesKnowledge,
   loadScriptKnowledge,
   publishKnowledgeFiles,
+  subtitlesKnowledgeFiles,
   scriptKnowledgeFiles,
   promptFor,
   STALE_AFTER_DAYS,
   warningKnowledge,
 } from '@ytcreator/knowledge'
+import { createSpeechRecognizer } from '@ytcreator/speech'
 import { createKeyCheck, createYouTubeAdapters } from '@ytcreator/youtube'
 // Bundled with the server: the same pinned reader as the installer of this release (R2).
 import readerVersionsJson from '../../../installer/versions.json?raw'
@@ -34,6 +37,9 @@ import { createPackageService } from './services/packages.ts'
 import { createPackageWork } from './services/package-work.ts'
 import { createPackagesRepo } from './db/repos/packages.ts'
 import { createPackageVersionsRepo } from './db/repos/package-versions.ts'
+import { createSubtitleTracksRepo } from './db/repos/subtitle-tracks.ts'
+import { createSubtitleVersionsRepo } from './db/repos/subtitle-versions.ts'
+import { createSubtitlesService } from './services/subtitles.ts'
 import { createIdeaMeasure } from './services/idea-measure.ts'
 import { createIdeasRepo } from './db/repos/ideas.ts'
 import { createScriptVersionsRepo } from './db/repos/script-versions.ts'
@@ -202,6 +208,8 @@ export async function startServer({
   const scriptKnowledge = loadScriptKnowledge()
   // The same for the publishing package (006).
   const publishKnowledge = loadPublishKnowledge()
+  // And for the subtitles (007).
+  const subtitlesKnowledge = loadSubtitlesKnowledge()
   const pricing: Pricing = {
     version: market.pricing.version,
     models: market.pricing.data.models,
@@ -424,6 +432,22 @@ export async function startServer({
     promptFor: channelPrompt,
     knowledge: publishKnowledge,
   })
+  const subtitlesService = createSubtitlesService({
+    channels: channel.channels,
+    ideas: ideasRepo,
+    scripts: scriptsRepo,
+    tracks: createSubtitleTracksRepo(db, now),
+    versions: createSubtitleVersionsRepo(db, now),
+    jobsRepo,
+    scriptStatus: (ideaId: string) => scriptService.ideaScript(ideaId)?.status ?? null,
+    knowledge: subtitlesKnowledge,
+  })
+  const speech = createSpeechRecognizer({
+    env,
+    // The whisper.cpp adapter arrives with US1 (T034); until then the engine is simply not there.
+    real: () => ({ recognize: async () => ({ ok: false, failure: 'sin_motor' }) }),
+    log: (line) => logger.info('speech', { line }),
+  })
   app = createApp({
     port,
     version,
@@ -466,6 +490,7 @@ export async function startServer({
     },
     script: { service: scriptService, scripts: scriptsRepo },
     publish: { service: packageService, work: packageWork },
+    subtitles: { service: subtitlesService, recognizer: speech.recognizer },
     jobs,
     youtubeSettings,
     usage,
@@ -474,6 +499,7 @@ export async function startServer({
         ...knowledgeFiles(market),
         ...scriptKnowledgeFiles(scriptKnowledge),
         ...publishKnowledgeFiles(publishKnowledge),
+        ...subtitlesKnowledgeFiles(subtitlesKnowledge),
       ],
       staleAfterDays: STALE_AFTER_DAYS,
     },

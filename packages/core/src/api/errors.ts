@@ -18,6 +18,13 @@ export const API_ERROR_CODES = [
   'version_cambiada',
   'sin_aprobar',
   'sin_internet',
+  // The subtitles (007, contracts/http-api.md).
+  'sin_motor',
+  'sin_modelo',
+  'sin_audio',
+  'audio_no_valido',
+  'audio_largo',
+  'sin_espacio',
 ] as const
 export type ApiErrorCode = (typeof API_ERROR_CODES)[number]
 
@@ -67,4 +74,10 @@ export const HTTP_STATUS_BY_CODE: Record<ApiErrorCode, number> = {
   version_cambiada: 409,
   sin_aprobar: 409,
   sin_internet: 409,
+  sin_motor: 409,
+  sin_modelo: 409,
+  sin_audio: 409,
+  audio_no_valido: 400,
+  audio_largo: 413,
+  sin_espacio: 507,
 }

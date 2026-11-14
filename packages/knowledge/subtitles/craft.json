@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "reviewedAt": "2026-11-14",
+  "source": [
+    {
+      "label": "Netflix: guía de subtítulos para el español (Latinoamérica y España)",
+      "url": "https://partnerhelp.netflixstudios.com/hc/en-us/articles/217349997-Spanish-Latin-America-Spain-Timed-Text-Style-Guide"
+    },
+    {
+      "label": "Netflix: requisitos generales de los subtítulos",
+      "url": "https://partnerhelp.netflixstudios.com/hc/en-us/articles/215758617-Timed-Text-Style-Guide-General-Requirements"
+    },
+    {
+      "label": "Netflix: pautas de tiempos de los subtítulos",
+      "url": "https://partnerhelp.netflixstudios.com/hc/en-us/articles/360051554394-Timed-Text-Style-Guide-Subtitle-Timing-Guidelines"
+    }
+  ],
+  "data": {
+    "long": {
+      "maxLines": { "value": 2, "source": 0 },
+      "maxCharsPerLine": { "value": 42, "source": 0 },
+      "maxCharsPerSecond": { "value": 17, "source": 0 },
+      "minSeconds": { "value": 0.833, "source": 1 },
+      "maxSeconds": { "value": 7, "source": 1 },
+      "minGapSeconds": { "value": 0.083, "source": 2 }
+    },
+    "short": {
+      "maxLines": { "value": 1, "assumption": true },
+      "maxCharsPerLine": { "value": 32, "assumption": true },
+      "maxCharsPerSecond": { "value": 17, "source": 0 },
+      "minSeconds": { "value": 0.833, "source": 1 },
+      "maxSeconds": { "value": 7, "source": 1 },
+      "minGapSeconds": { "value": 0.083, "source": 2 }
+    },
+    "lowConfidence": { "value": 0.5, "assumption": true },
+    "speed": {
+      "factors": {
+        "darwin-arm64": { "ggml-large-v3-turbo-q5_0.bin": 0.15, "ggml-small-q5_1.bin": 0.06 },
+        "darwin-x64": { "ggml-large-v3-turbo-q5_0.bin": 1.0, "ggml-small-q5_1.bin": 0.4 },
+        "linux-x64": { "ggml-large-v3-turbo-q5_0.bin": 1.0, "ggml-small-q5_1.bin": 0.4 },
+        "linux-arm64": { "ggml-large-v3-turbo-q5_0.bin": 1.5, "ggml-small-q5_1.bin": 0.6 }
+      },
+      "fallback": 1.0,
+      "assumption": true
+    }
+  }
+}

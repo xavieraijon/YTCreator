@@ -8,6 +8,7 @@ import {
   knowledgeFiles,
   loadMarket,
   loadPublishKnowledge,
+  loadSubtitlesKnowledge,
   loadScriptKnowledge,
   STALE_AFTER_DAYS,
   warningKnowledge,
@@ -31,6 +32,11 @@ import { createPackageService } from '../src/services/packages.ts'
 import { createPackageWork } from '../src/services/package-work.ts'
 import { createPackagesRepo } from '../src/db/repos/packages.ts'
 import { createPackageVersionsRepo } from '../src/db/repos/package-versions.ts'
+import { createSubtitleTracksRepo } from '../src/db/repos/subtitle-tracks.ts'
+import { createSubtitleVersionsRepo } from '../src/db/repos/subtitle-versions.ts'
+import { createSubtitlesService } from '../src/services/subtitles.ts'
+// Imported straight from its file: the package only exports the registry (the fake stays out of the build).
+import { createFakeRecognizer } from '../../../packages/speech/src/fake/fake-recognizer.ts'
 import { createJourneysRepo } from '../src/db/repos/journeys.ts'
 import { createLimitsRepo } from '../src/db/repos/limits.ts'
 import { createMeasuresRepo } from '../src/db/repos/measures.ts'
@@ -294,6 +300,19 @@ export function makeTestApp({
     promptFor,
     knowledge: publishKnowledge,
   })
+  const subtitleTracks = createSubtitleTracksRepo(db, now)
+  const subtitleVersions = createSubtitleVersionsRepo(db, now)
+  const subtitlesService = createSubtitlesService({
+    channels: channel.channels,
+    ideas: ideasRepo,
+    scripts: scriptsRepo,
+    tracks: subtitleTracks,
+    versions: subtitleVersions,
+    jobsRepo,
+    scriptStatus: (ideaId: string) => scriptService.ideaScript(ideaId)?.status ?? null,
+    knowledge: loadSubtitlesKnowledge(),
+  })
+  const recognizer = createFakeRecognizer()
   const version = '0.1.0'
   const ytQuota = createYtQuotaRepo(db, now)
   const keyCheck = createFakeKeyCheck()
@@ -313,6 +332,7 @@ export function makeTestApp({
     ideas,
     script,
     publish: { service: packageService, work: packageWork },
+    subtitles: { service: subtitlesService, recognizer },
     jobs,
     usage,
     now,
@@ -382,6 +402,9 @@ export function makeTestApp({
     scriptVersions,
     packages: packagesRepo,
     packageVersions,
+    subtitleTracks,
+    subtitleVersions,
+    recognizer,
     links,
     measures: channel.measures,
     channelProposals: channel.proposals,
