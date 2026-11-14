@@ -190,7 +190,7 @@ y comprobar que la cuarta sigue en el historial.
 
 ## Phase 8: Polish & Cross-Cutting
 
-- [ ] T068 (no ejecutada: espera la autorización del creador, C1) Prueba con IA real, **solo con la autorización del creador** (riesgo alto): un paquete de vídeo largo y uno de Short con la conexión autorizada, guardando en `checklists/validation.md` el coste real, el tiempo y si los títulos caben en el móvil (SC-002). Sin autorización, consta como no ejecutada y no bloquea nada más
+- [X] T068 (ejecutada el 2026-11-14 con Claude Code, decisión 113; resultados en `checklists/validation.md`) Prueba con IA real, **solo con la autorización del creador** (riesgo alto): un paquete de vídeo largo y uno de Short con la conexión autorizada, guardando en `checklists/validation.md` el coste real, el tiempo y si los títulos caben en el móvil (SC-002). Sin autorización, consta como no ejecutada y no bloquea nada más
 - [X] T069 [P] Comprobar los casos límite de la spec que falten con su test: guion reabierto o vuelto a borrador, idea fuera de la cola, bloques muy cortos, parte fija demasiado larga, afirmaciones pendientes en el guion, límite de gasto, fallos tipados de la IA, dos pestañas y varios canales, en `apps/server/test/http/packages-edge.test.ts`
 - [X] T070 [P] Revisar que los textos nuevos pasan el glosario, que `apps/web/e2e/secrets-leak.spec.ts` sigue igual y que ninguna ruta de la feature llama a YouTube
 - [X] T071 Recorrer el [quickstart](./quickstart.md) entero con IA falsa y guardar el resultado en `checklists/validation.md`
@@ -208,7 +208,7 @@ y comprobar que la cuarta sigue en el historial.
 - **US4 (6)** reutiliza los pasos de US1 a US3.
 - **US5 (7)** solo depende de que haya versiones: puede ir después de US1, en paralelo con US2 a US4 si se reparten
   ficheros.
-- **Polish (8)**, al final. **T068** espera a la autorización del creador.
+- **Polish (8)**, al final. **T068** se ejecutó el 2026-11-14 con la autorización del creador (decisión 113).
 
 ## Parallel Example: Foundational
 

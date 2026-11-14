@@ -43,7 +43,7 @@ Spec-Driven Development with GitHub Spec Kit (`/speckit-*`).
   closed with Puerta A on 2026-11-13. Novice audit (`specs/006-publishing-package/novice-audit.md`) closed by the
   creator after round 5 with 0 graves and 4 open mediums (decision 112): step indicator, home not leading to the lists,
   highlighting the exact item from «Corregirlo» (all for the UI pass with Design mode), and re-approving after a fix or a
-  restore (as the spec asks). T068 (real AI) not run: it needs the creator's authorization (C1). Report in
+  restore (as the spec asks). T068 (real AI) run on 2026-11-14 with Claude Code: passed, 0 €, 11/11 titles fit on mobile (decision 113). Report in
   `specs/006-publishing-package/checklists/validation.md`. Branch deleted (local and remote).
 - Provider subscriptions beyond Claude are a later feature, not part of 002. First one planned: Gemini
   (Google AI Pro, with its CLI).
