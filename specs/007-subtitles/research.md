@@ -14,9 +14,11 @@ plano) y la 006 (capítulos ligados a bloques, vuelta a borrador del paquete).
   - **Linux** (`linux-x64`, `linux-arm64`): los paquetes oficiales `whisper-bin-ubuntu-*.tar.gz` de esa versión. Traen
     `whisper-cli` y sus bibliotecas (`libwhisper.so`, `libggml*.so`); se ejecuta con `LD_LIBRARY_PATH` en su carpeta.
   - **macOS** (`darwin-arm64`, `darwin-x64`): whisper.cpp no publica un programa para Mac (solo un `xcframework`). Un
-    trabajo nuevo de `release.yml` lo compila desde la misma etiqueta en ejecutores de macOS (Apple Silicon con Metal
-    incrustado; Intel solo con CPU), enlazado de forma estática, y lo adjunta a la versión de YTCreator con su SHA256
-    (decisión 5 del creador).
+    flujo aparte, `.github/workflows/whisper-macos.yml` (se lanza a mano), lo compila desde la misma etiqueta en
+    ejecutores de macOS (Apple Silicon con Metal incrustado; Intel solo con CPU), enlazado de forma estática, y lo
+    publica una sola vez en una versión propia del repositorio, `whisper-cpp-b5454`. `versions.json` fija esas
+    direcciones y sus SHA256, como las de `yt-dlp` (decisión 5 del creador). No se compila en cada versión de YTCreator:
+    `versions.json` no puede conocer de antemano el SHA256 de lo que se compila en esa misma versión.
 
   La app lo descarga la primera vez que el creador hace subtítulos (decisión 1), con el patrón de
   `reader-update.ts`: fichero temporal, comprobación del SHA256 y solo entonces se pone en su sitio en

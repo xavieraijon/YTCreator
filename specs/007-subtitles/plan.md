@@ -17,7 +17,7 @@ con el guion y localiza los bloques. La IA solo entra si el creador pide la revi
 - **Reconocimiento** (`packages/speech`, nuevo, como `packages/youtube`): el adaptador de `whisper-cli` y uno falso
   determinista, con una batería de contrato común (R6).
 - **Motor**: `installer/versions.json` gana `whisperCpp` y `whisperModels`; la descarga al primer uso sigue el patrón de
-  `reader-update.ts` (R1, R2); `release.yml` compila `whisper-cli` para Mac (R1).
+  `reader-update.ts` (R1, R2); un flujo propio, `whisper-macos.yml`, compila `whisper-cli` para Mac una vez por versión de whisper.cpp (R1).
 - **Conocimiento**: `subtitles/craft.json` (límites de lectura, umbrales, factores de velocidad; R7, R8, R10) y
   `subtitles/youtube.json` (formatos admitidos, R14), y un prompt (`revision_subtitulos`).
 - **Servidor**: migración `0008_subtitles.sql`, repos `subtitle-tracks` y `subtitle-versions`, servicios `subtitles` y
@@ -163,7 +163,8 @@ apps/web/src/
 └── api/client.ts                # + subtitlesApi
 
 installer/versions.json          # + whisperCpp, whisperModels
-.github/workflows/release.yml    # + compilación de whisper-cli para Mac
+.github/workflows/whisper-macos.yml  # compila whisper-cli para Mac (a mano, una vez por versión)
+.github/workflows/release.yml        # + comprobación de que el reconocimiento falso no entra
 apps/web/e2e/subtitles.spec.ts
 ```
 
@@ -175,5 +176,5 @@ binario en un paquete propio, como `yt-dlp` en `packages/youtube`.
 | Añadido | Por qué hace falta | Alternativa más simple descartada |
 |---------|--------------------|-----------------------------------|
 | Paquete `packages/speech` | La constitución pide que los binarios externos se usen a través de adaptadores, y el falso tiene que poder sustituir al real en las pruebas y la e2e | Ponerlo en `apps/server`: mezclaría el proceso con el servidor y no tendría batería de contrato propia, al contrario que `packages/youtube` |
-| Compilar `whisper-cli` para Mac en `release.yml` | whisper.cpp no publica un programa para Mac, y la instalación debe ser de un paso (VII; decisión 5) | Homebrew: un paso más que un novato no sabe dar |
+| Compilar `whisper-cli` para Mac en un flujo propio | whisper.cpp no publica un programa para Mac, y la instalación debe ser de un paso (VII; decisión 5) | Homebrew: un paso más que un novato no sabe dar |
 | Reconstruir `background_job` | Su `CHECK` no admite los tipos nuevos ni el estado `en_cola` | Reutilizar el tipo `ia`: mezclaría trabajos con coste y sin coste en las mismas pantallas y cuentas |

@@ -46,7 +46,7 @@ Spec-Driven Development with GitHub Spec Kit (`/speckit-*`).
   restore (as the spec asks). T068 (real AI) run on 2026-11-14 with Claude Code: passed, 0 €, 11/11 titles fit on mobile (decision 113). Report in
   `specs/006-publishing-package/checklists/validation.md`. Branch deleted (local and remote).
 - 007 `subtitles`: spec and plan on branch `007-subtitles` (2026-11-14). Local recognition with whisper.cpp downloaded
-  on first use, audio taken from the video in the browser (mediabunny), optional AI review, real chapter minutes for 006. Decisions 1–8 in `specs/007-subtitles/decisions.md`. Next: `/speckit-tasks`.
+  on first use, audio taken from the video in the browser (mediabunny), optional AI review, real chapter minutes for 006. Decisions 1–8 in `specs/007-subtitles/decisions.md`; 79 tasks. Next: `/speckit-implement`.
 - AI: Claude only for now (Claude Code subscription, and the Anthropic API behind «Más opciones»). No other provider
   is planned (creator, 2026-11-14).
 - Commands (Node 24, `fnm exec --using=24 --`): `pnpm dev` (server + web), `pnpm lint`, `pnpm typecheck`,
