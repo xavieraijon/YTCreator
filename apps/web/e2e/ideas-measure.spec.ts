@@ -103,7 +103,7 @@ test('measures the bank: four semaphores, a failure, an opportunity, coming back
   const bare = card(back, 'Sin búsquedas')
   await bare.getByRole('button', { name: '¿Tiene hueco? «Sin búsquedas»' }).click()
   await bare.getByRole('button', { name: /^Preparar la medida/ }).click()
-  await expect(back.getByText('Búsquedas preparadas. Ya puedes ver si tiene hueco.')).toBeVisible()
+  await expect(back.getByText('Búsquedas preparadas. Ya puedes ver si tiene hueco.', { exact: true })).toBeVisible()
   await expect(bare.getByRole('button', { name: '¿Tiene hueco? «Sin búsquedas»' })).toBeVisible()
   await expect(bare.getByText('Para medirla hacen falta sus búsquedas en YouTube.')).toHaveCount(0)
   await audit(back)
