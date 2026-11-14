@@ -45,8 +45,8 @@ Spec-Driven Development with GitHub Spec Kit (`/speckit-*`).
   highlighting the exact item from «Corregirlo» (all for the UI pass with Design mode), and re-approving after a fix or a
   restore (as the spec asks). T068 (real AI) run on 2026-11-14 with Claude Code: passed, 0 €, 11/11 titles fit on mobile (decision 113). Report in
   `specs/006-publishing-package/checklists/validation.md`. Branch deleted (local and remote).
-- Provider subscriptions beyond Claude are a later feature, not part of 002. First one planned: Gemini
-  (Google AI Pro, with its CLI).
+- AI: Claude only for now (Claude Code subscription, and the Anthropic API behind «Más opciones»). No other provider
+  is planned (creator, 2026-11-14).
 - Commands (Node 24, `fnm exec --using=24 --`): `pnpm dev` (server + web), `pnpm lint`, `pnpm typecheck`,
   `pnpm test`, `pnpm test:installer`, `pnpm test:e2e`, `pnpm format`; catalog with
   `pnpm --filter @ytcreator/catalog dev`.
