@@ -40,6 +40,23 @@ export function cueMarks(cues: readonly Cue[], limits: SubtitleLimits): Record<s
 export const hasLowConfidence = (words: readonly HeardWord[], threshold: number): boolean =>
   words.some((word) => word.p < threshold)
 
+/** «Entendió poco»: the figures of the knowledge package (assumptions of this app, decision 58). */
+export interface HeardLittleRule {
+  readonly lowConfidence: number
+  readonly lowShare: number
+  readonly wordsPerMinute: number
+}
+
+/**
+ * Whether the recognition understood little of the audio (spec, edge case «Audio en otro idioma o casi sin voz»): then
+ * every subtitle is marked to be looked at. Nothing heard is the other case, «casi sin voz», not this one.
+ */
+export function heardLittle(words: readonly HeardWord[], audioSeconds: number, rule: HeardLittleRule): boolean {
+  if (words.length === 0 || audioSeconds <= 0) return false
+  const low = words.filter((word) => word.p < rule.lowConfidence).length
+  return low / words.length >= rule.lowShare || words.length / (audioSeconds / 60) < rule.wordsPerMinute
+}
+
 /** The cues with some mark, kept or worked out, that the creator has not marked as reviewed. */
 export const countToReview = (cues: readonly Cue[], marks: Record<string, readonly ComputedCueMark[]>): number =>
   cues.filter((cue) => !cue.reviewed && (cue.flags.length > 0 || (marks[cue.id]?.length ?? 0) > 0)).length

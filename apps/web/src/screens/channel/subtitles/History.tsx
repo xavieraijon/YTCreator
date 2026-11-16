@@ -72,6 +72,7 @@ export function History({
                   subtitulos: plural(text.cues, one.cueCount),
                 })}
               </p>
+              {one.version === view.approvedVersion && <p>{text.approved}</p>}
               {one.version === version ? (
                 <p className={styles.why}>{text.current}</p>
               ) : (

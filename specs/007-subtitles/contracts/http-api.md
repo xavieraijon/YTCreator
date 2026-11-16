@@ -33,6 +33,7 @@ Fallos de la descarga: `descarga`, `hash`, `permisos` y `espacio` (los de `reade
 | `GET /scripts/:id/subtitles/versions` | | `[{version, origin, createdAt, cueCount}]` |
 | `GET /scripts/:id/subtitles/versions/:n` | | la versión completa |
 | `GET /scripts/:id/subtitles/export?format=srt\|vtt\|sbv` | | el fichero, `Content-Disposition` con el nombre del vídeo (R14) |
+| `GET /channels/:id/subtitles/export` | | JSON `{exportedAt, channel:{id, displayName}, subtitles:[{scriptId, idea, mainTitle, format, approvedVersion, approvedAt, srt, versions:[{version, origin, createdAt, restoredFrom, draftVersion, audioSeconds, cues}]}]}` con los subtítulos de cada guion del canal (todas las versiones, la más antigua primero, y el SRT de la última); sin audio ni palabras oídas. `subtitulos-<canal>.json`. 404 si el canal no existe (R17, FR-020; decisión 59) |
 
 ## La revisión de la IA
 
@@ -55,4 +56,4 @@ El guion (idea, formato, versión aprobada), el estado (data-model, «Estados»)
 las marcas calculadas, el número «para revisar», si hay audio y su duración, el nombre del fichero de origen, la versión
 aprobada, `scriptChanged` (si el guion aprobado cambió después de reconocer), los límites de lectura con su fuente, el
 último trabajo con su estado y su avance, la propuesta de la IA pendiente, si la hay, y `packageId`, el paquete de la
-006 del guion o `null` (adonde van los minutos reales, US3). Con US5: `newAudio` (hay un audio nuevo subido sin oír, que también se puede borrar), `reapply` (`{corrections, count}`, los cambios en todos que se ofrecen otra vez tras otro fichero, o `null`; decisión 54) y, en el trabajo, `finishedAt` (para decir un fallo del fichero nuevo solo si pasó después de la última versión; decisión 55).
+006 del guion o `null` (adonde van los minutos reales, US3). Con US5: `newAudio` (hay un audio nuevo subido sin oír, que también se puede borrar), `reapply` (`{corrections, count}`, los cambios en todos que se ofrecen otra vez tras otro fichero, o `null`; decisión 54) y, en el trabajo, `finishedAt` (para decir un fallo del fichero nuevo solo si pasó después de la última versión; decisión 55). En Polish: `heardLittle` (el reconocimiento entendió poco: otro idioma o casi sin voz; decisión 58).

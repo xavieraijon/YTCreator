@@ -214,6 +214,9 @@ plano) y la 006 (capítulos ligados a bloques, vuelta a borrador del paquete).
 - **Decisión**: los subtítulos de cada guion entran en la exportación de datos del canal como `.srt` y `.json` (todas
   las versiones), junto al guion y al paquete (FR-020). El audio no se exporta: es un fichero del creador que ya está en
   su carpeta de trabajo.
+- **Cómo quedó (decisión 59)**: cada parte de la app tiene su propia exportación y cambiar el formato de una existente
+  es riesgo alto, así que los subtítulos tienen la suya: `GET /channels/:id/subtitles/export`, un JSON con todas las
+  versiones de cada guion y el texto SRT de la última. Cada `.srt` se sigue descargando desde sus subtítulos.
 
 ## R18. Interfaz
 

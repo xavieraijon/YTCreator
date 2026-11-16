@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { exportSubtitles, subtitlesFileName } from '../../src/subtitles/export.ts'
+import { channelSubtitlesFileName, exportSubtitles, subtitlesFileName } from '../../src/subtitles/export.ts'
 import type { Cue } from '../../src/subtitles/model.ts'
 
 const cue = (id: string, start: number, end: number, text: string): Cue => ({
@@ -59,5 +59,12 @@ describe('the name of the file', () => {
   it('from the idea when there is no package title, and a name when nothing is left', () => {
     expect(subtitlesFileName(null, 'Mañana, pan', 'sbv')).toBe('subtitulos-manana-pan.sbv')
     expect(subtitlesFileName('  ', '¿?', 'srt')).toBe('subtitulos-del-video.srt')
+  })
+})
+
+describe('the name of the file of the whole channel (R17)', () => {
+  it('from the name of the channel, as the export of the scripts', () => {
+    expect(channelSubtitlesFileName('Pan de Ávila')).toBe('subtitulos-pan-de-avila.json')
+    expect(channelSubtitlesFileName(null)).toBe('subtitulos-de-mi-canal.json')
   })
 })

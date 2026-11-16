@@ -42,7 +42,9 @@ queda más.»
 ### 3. Revisar
 
 - Acción principal según el estado: «Aprobar los subtítulos» (borrador) o «Descargar los subtítulos» (aprobados).
-- Filtro «Para revisar (N)» / «Todos».
+- Filtro «Para revisar (N)» / «Todos», con cómo sale uno de «Para revisar» (decisión 60).
+- Si el reconocimiento entendió poco (otro idioma, casi sin voz): «Se ha entendido poco de este audio…» y todos marcados
+  (decisión 58).
 - Una lista de subtítulos: tiempo de inicio, texto y sus marcas en palabras («Escrito como en tu guion; se oyó
   “…”», «No se oyó bien», «Se lee demasiado rápido», «Cambio de la IA: …»). Cada uno con «Oír», «Editar» y, en el
   menú, «Partir aquí», «Juntar con el siguiente» y «Dar por revisado».
@@ -67,8 +69,11 @@ queda más.»
 
 - Una lista (decisión 49): cada capítulo con su minuto ahora (estimado, escrito por ti o minuto real), el minuto en el
   audio (o «No aparece en el audio») y la diferencia, con una casilla si cambia; marcadas por defecto las que cambian
-  más de 2 s, salvo las escritas a mano y las que suenan fuera de orden, que lo dicen (decisión 51).
-- «Poner los minutos marcados» (secundaria: la principal de la pantalla es aprobar o descargar). Si los textos o el
+  más de 2 s, salvo las escritas a mano y las que suenan fuera de orden, que lo dicen (decisión 51), y solo las que
+  se pueden poner juntas (decisión 60). Un capítulo que suena fuera de orden también deja escribir su minuto.
+- Lo que no se puede poner (fuera de orden o demasiado cerca, contando que los estimados se mueven con un minuto nuevo)
+  se dice en cada capítulo y debajo antes de pedir nada, y el botón no se puede pulsar (decisión 60).
+- «Poner estos minutos» (secundaria: la principal de la pantalla es aprobar o descargar). Si los textos o el
   paquete estaban aprobados: «Tu publicación volverá a borrador y tendrás que aprobarla otra vez», antes de confirmar.
 - «No aparece en el audio»: quitarlo de la publicación (su parte del guion se une al capítulo anterior), escribir su
   minuto a mano o dejarlo como está.

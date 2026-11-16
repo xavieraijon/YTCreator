@@ -24,15 +24,20 @@ export function exportSubtitles(cues: readonly Cue[], format: SubtitleExportForm
   return format === 'vtt' ? `WEBVTT\n${body ? `\n${body}` : ''}` : body
 }
 
+const slug = (text: string | null) =>
+  (text ?? '')
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+
 /** The name of the file: the main title of the package or, without one, the idea's, in plain letters. */
 export function subtitlesFileName(mainTitle: string | null, ideaTitle: string, format: SubtitleExportFormat): string {
-  const slug = (text: string | null) =>
-    (text ?? '')
-      .normalize('NFD')
-      .replace(/\p{M}/gu, '')
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '')
   const base = slug(mainTitle) || slug(ideaTitle) || 'del-video'
   return `subtitulos-${base}.${format}`
 }
+
+/** The file with the subtitles of every script of the channel (R17, FR-020), as `guiones-<canal>.json` in 005. */
+export const channelSubtitlesFileName = (displayName: string | null): string =>
+  `subtitulos-${slug(displayName) || 'de-mi-canal'}.json`

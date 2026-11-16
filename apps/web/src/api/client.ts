@@ -409,6 +409,8 @@ export const subtitlesApi = {
   download: (scriptId: string, format: SubtitleExportFormat) =>
     apiClient.file(`${scriptPath(scriptId)}/subtitles/export?format=${format}`),
   audioUrl: (scriptId: string) => `${scriptPath(scriptId)}/subtitles/audio`,
+  // Every subtitle of the channel, with all its versions, for its data (R17, FR-020).
+  downloadAll: (channelId: string) => apiClient.file(`${channelPath(channelId)}/subtitles/export`),
   // What the creator changes (US2): each one is a new version made from `baseVersion`.
   save: (scriptId: string, baseVersion: number, cues: unknown[]) =>
     apiClient.put(`${scriptPath(scriptId)}/subtitles`, { baseVersion, content: { cues } }, subtitlesViewSchema),

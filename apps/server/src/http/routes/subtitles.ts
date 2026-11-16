@@ -187,5 +187,14 @@ export function subtitleRoutes({ service, engine, recognition, edit, chapters }:
     })
   })
 
+  // Every subtitle of the channel for its data export (R17, FR-020): its own file, the other exports stay as they are.
+  routes.get('/channels/:id/subtitles/export', (c) => {
+    const { fileName, data } = service.exportChannel(c.req.param('id'))
+    return c.body(`${JSON.stringify(data, null, 2)}\n`, 200, {
+      'Content-Type': 'application/json; charset=utf-8',
+      'Content-Disposition': `attachment; filename="${fileName}"`,
+    })
+  })
+
   return routes
 }

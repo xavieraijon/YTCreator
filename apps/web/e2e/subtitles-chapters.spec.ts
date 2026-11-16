@@ -201,9 +201,9 @@ test('the real minutes of the chapters: see them, accept part of them and approv
   await expect(third).toHaveAccessibleName('Poner el minuto real de «El truco»')
 
   // The package was approved: it says so before (AS4).
-  await tabTo(page, section.getByRole('button', { name: 'Poner los minutos marcados' }))
+  await tabTo(page, section.getByRole('button', { name: 'Poner estos minutos' }))
   await page.keyboard.press('Enter')
-  const confirm = page.getByRole('dialog', { name: '¿Poner los minutos marcados?' })
+  const confirm = page.getByRole('dialog', { name: '¿Poner estos minutos?' })
   await expect(confirm.getByText('Tu publicación volverá a borrador y tendrás que aprobarla otra vez.')).toBeVisible()
   await audit(page)
   await tabTo(page, confirm.getByRole('button', { name: 'Poner los minutos' }))

@@ -21,7 +21,8 @@ de tu vídeo: qué cuentas y en qué orden.»
 - Una `Card` por guion: título de la idea, formato, estado, último cambio y «Abrir».
 - Sin guiones ni cola: `EmptyState` que explica que primero hay que elegir una idea, con «Ir al banco de ideas».
 - Con guiones: «¿Otro vídeo?…» con «Ir al banco de ideas» (decisión 50).
-- «Descargar todos» y «Voz del canal».
+- «Descargar todos» y «Voz del canal». Con la 007, también «Descargar todos los subtítulos como datos» (decisión 59 de
+  la 007).
 
 ## Guion (`/canal/guiones/:id`)
 

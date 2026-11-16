@@ -248,6 +248,7 @@ export function ReviewStep({
             action={againFix}
           />
         ))}
+      {view.heardLittle && <p className={styles.notice}>{text.heardLittle}</p>}
       {view.scriptChanged && (
         <>
           <p className={styles.notice}>{text.scriptChanged}</p>
@@ -364,6 +365,7 @@ export function ReviewStep({
               { value: 'todos', label: format(text.all, { n: cues.length }) },
             ]}
           />
+          {pending.length > 0 && <p className={styles.why}>{text.toReviewHow}</p>}
           <p className={styles.why}>{canListen ? text.keysHelp : text.keysHelpNoAudio}</p>
           {shown.length === 0 ? (
             <p>{text.noneToReview}</p>

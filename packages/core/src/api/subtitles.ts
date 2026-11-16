@@ -103,6 +103,8 @@ export const subtitlesViewSchema = z.object({
   latest: subtitleVersionMetaSchema.extend({ content: subtitlesContentSchema('largo') }).nullable(),
   marks: z.record(z.string(), z.array(z.enum(COMPUTED_CUE_MARKS))),
   toReview: count,
+  /** The recognition understood little (another language, nearly no voice): all of it is marked to be looked at. */
+  heardLittle: z.boolean(),
   audio: z
     .object({ available: z.boolean(), seconds: z.number().positive(), sourceName: z.string().nullable() })
     .nullable(),

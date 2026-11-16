@@ -36,6 +36,12 @@ export const SUBTITLES_SCHEMAS = {
       short: limits,
       // Below this mean probability a word is marked «no se oyó bien» (R10).
       lowConfidence: z.object({ value: z.number().gt(0).lt(1), assumption: z.literal(true) }),
+      // «Entendió poco» (decision 58): this share of the words or more under `lowConfidence`, or fewer words a minute.
+      heardLittle: z.object({
+        lowShare: z.number().gt(0).lte(1),
+        wordsPerMinute: z.number().positive(),
+        assumption: z.literal(true),
+      }),
       // Seconds of work per second of audio, by `<platform>-<arch>` and model, before this machine is measured (R7).
       speed: z.object({
         factors: z.record(

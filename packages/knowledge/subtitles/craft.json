@@ -33,6 +33,7 @@
       "minGapSeconds": { "value": 0.083, "source": 2 }
     },
     "lowConfidence": { "value": 0.5, "assumption": true },
+    "heardLittle": { "lowShare": 0.5, "wordsPerMinute": 30, "assumption": true },
     "speed": {
       "factors": {
         "darwin-arm64": { "ggml-large-v3-turbo-q5_0.bin": 0.15, "ggml-small-q5_1.bin": 0.06 },

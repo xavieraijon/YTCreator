@@ -1,7 +1,9 @@
 import {
   countToReview,
   cueMarks,
+  channelSubtitlesFileName,
   exportSubtitles,
+  heardLittle,
   reapply,
   type ScriptStatus,
   type SubtitleLimits,
@@ -144,6 +146,15 @@ export function createSubtitlesService(deps: SubtitlesServiceDeps) {
       // Worked out every time, never kept (R10).
       marks,
       toReview: countToReview(cues, marks),
+      // Only while it is true that all of them were marked: the threshold can change with the knowledge package.
+      heardLittle:
+        latest !== null &&
+        cues.length > 0 &&
+        cues.every((cue) => cue.flags.includes('poca_seguridad')) &&
+        heardLittle(latest.content.words, latest.content.audioSeconds, {
+          lowConfidence: knowledge.craft.data.lowConfidence.value,
+          ...knowledge.craft.data.heardLittle,
+        }),
       audio:
         track && track.audioSeconds !== null
           ? {
@@ -194,6 +205,62 @@ export function createSubtitlesService(deps: SubtitlesServiceDeps) {
     }
   }
 
+  /**
+   * The subtitles of every script of the channel, for its data export (R17, FR-020): each with all its versions and
+   * the SRT of the last one, so they can be read without the app. Never the audio, nor the words heard.
+   */
+  const exportChannel = (channelId: string) => {
+    const channel = channels.get(channelId)
+    if (!channel) throw new ApiError({ code: 'no_encontrado' })
+    const items = scripts.listByChannel(channel.id).flatMap((script) => {
+      const track = tracks.getByScript(script.id)
+      const idea = ideas.get(script.ideaId)
+      if (!track || !idea) return []
+      // Oldest first; a row that no longer reads is left out rather than stopping the export of the others.
+      const all = versions
+        .summaries(track.id)
+        .reverse()
+        .flatMap(({ version }) => {
+          try {
+            const one = versions.get(track.id, version)
+            return one ? [one] : []
+          } catch {
+            return []
+          }
+        })
+      const last = all.at(-1)
+      if (!last) return []
+      return [
+        {
+          scriptId: script.id,
+          idea: idea.title,
+          mainTitle: deps.mainTitle?.(script.id) ?? null,
+          format: script.format,
+          approvedVersion: track.approvedVersion,
+          approvedAt: track.approvedAt,
+          srt: exportSubtitles(last.content.cues, 'srt'),
+          versions: all.map((one) => ({
+            version: one.version,
+            origin: one.origin,
+            createdAt: one.createdAt,
+            restoredFrom: one.restoredFrom,
+            draftVersion: one.draftVersion,
+            audioSeconds: one.content.audioSeconds,
+            cues: one.content.cues,
+          })),
+        },
+      ]
+    })
+    return {
+      fileName: channelSubtitlesFileName(channel.displayName),
+      data: {
+        exportedAt: new Date().toISOString(),
+        channel: { id: channel.id, displayName: channel.displayName },
+        subtitles: items,
+      },
+    }
+  }
+
   /** For the view of the script (005): null until the creator starts its subtitles. */
   const statusOf = (scriptId: string): { status: SubtitlesView['status'] } | null => {
     const track = tracks.getByScript(scriptId)
@@ -217,7 +284,7 @@ export function createSubtitlesService(deps: SubtitlesServiceDeps) {
 
   const limitValues = (format: 'largo' | 'short'): SubtitleLimits => valuesOf(limitsOf(format))
 
-  return { view, reapplyOffer, exportFile, statusOf, find, assertIdle, limitValues }
+  return { view, reapplyOffer, exportFile, exportChannel, statusOf, find, assertIdle, limitValues }
 }
 
 export type SubtitlesService = ReturnType<typeof createSubtitlesService>

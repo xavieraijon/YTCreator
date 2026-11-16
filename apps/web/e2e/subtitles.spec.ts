@@ -281,7 +281,9 @@ test('reviewing with the keyboard: listen, edit, split, join, change in all, the
   await page.keyboard.press('Enter')
   // Version 1 still has subtitles to review: it says how many before approving.
   const approve = page.getByRole('dialog', { name: '¿Aprobar los subtítulos?' })
-  await expect(approve.getByText(/por revisar\. Puedes aprobarlos igualmente\./)).toBeVisible()
+  await expect(
+    approve.getByText(/por revisar: no los? has dado por revisados?\. Puedes aprobarlos igualmente\./),
+  ).toBeVisible()
   await tabTo(page, approve.getByRole('button', { name: 'Aprobar', exact: true }))
   await page.keyboard.press('Enter')
   await expect(page.getByText(/Subtítulos aprobados el/)).toBeVisible()

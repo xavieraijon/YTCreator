@@ -100,8 +100,18 @@ test('the subtitles of a Short: the warning before starting, one line, and no ch
   await press(page, 'Descargarlo')
   await expect(page.getByRole('button', { name: 'Elegir el vídeo o el audio' })).toBeVisible({ timeout: 30_000 })
 
-  // A file longer than a Short: said before «Empezar», with the maximum and where it comes from; nothing is refused.
+  // A video without sound, and a file that is not a video: said in plain words before starting (spec, «Casos límite»).
   const file = page.locator('input[type="file"]')
+  await file.setInputFiles(fixture('sin-sonido.mp4'))
+  await expect(page.getByText('Este fichero no tiene sonido. Elige el vídeo montado o su audio.')).toBeVisible({
+    timeout: 30_000,
+  })
+  await expect(page.getByRole('button', { name: 'Empezar', exact: true })).toHaveCount(0)
+  await audit(page)
+  await file.setInputFiles({ name: 'notas.mp4', mimeType: 'video/mp4', buffer: Buffer.from('no es un vídeo') })
+  await expect(page.getByText(/Este fichero no se puede leer aquí\./)).toBeVisible({ timeout: 30_000 })
+
+  // A file longer than a Short: said before «Empezar», with the maximum and where it comes from; nothing is refused.
   await file.setInputFiles({ name: 'largo.wav', mimeType: 'audio/wav', buffer: silentWav(200) })
   await expect(page.getByText('Dura 3 min 20 s.')).toBeVisible({ timeout: 30_000 })
   await expect(
@@ -155,4 +165,18 @@ test('the subtitles of a Short: the warning before starting, one line, and no ch
   const blocks = srt.trim().split(/\r?\n\r?\n/)
   expect(blocks.length).toBeGreaterThan(0)
   for (const block of blocks) expect(block.split(/\r?\n/)).toHaveLength(3)
+
+  // Every subtitle of the channel, from the list of scripts, as data anyone can read (R17, FR-020).
+  await page.goto(`${server.baseURL}/canal/guiones`)
+  await expect(heading(page, 'Mis guiones')).toBeVisible()
+  const all = page.waitForEvent('download')
+  await press(page, 'Descargar todos los subtítulos como datos')
+  const data = JSON.parse(readFileSync((await (await all).path())!, 'utf8')) as {
+    subtitles: { scriptId: string; approvedVersion: number | null; srt: string }[]
+  }
+  expect(data.subtitles).toHaveLength(1)
+  expect(data.subtitles[0]).toMatchObject({ scriptId })
+  expect(data.subtitles[0]!.approvedVersion).not.toBeNull()
+  expect(data.subtitles[0]!.srt).toContain('-->')
+  await audit(page)
 })

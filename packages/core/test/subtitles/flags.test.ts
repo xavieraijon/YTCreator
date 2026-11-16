@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { countToReview, cueMarks, hasLowConfidence, readingMarks } from '../../src/subtitles/flags.ts'
+import { countToReview, cueMarks, hasLowConfidence, heardLittle, readingMarks } from '../../src/subtitles/flags.ts'
 import type { Cue } from '../../src/subtitles/model.ts'
 import type { SubtitleLimits } from '../../src/subtitles/segment.ts'
 
@@ -60,6 +60,25 @@ describe('«no se oyó bien»', () => {
     expect(hasLowConfidence([word(0.9), word(0.49)], 0.5)).toBe(true)
     expect(hasLowConfidence([word(0.9), word(0.5)], 0.5)).toBe(false)
     expect(hasLowConfidence([], 0.5)).toBe(false)
+  })
+})
+
+describe('«entendió poco» (another language, nearly no voice)', () => {
+  const words = (n: number, p: number) => Array.from({ length: n }, (_, i) => ({ text: 'pan', start: i, end: i, p }))
+  const rule = { lowConfidence: 0.5, lowShare: 0.5, wordsPerMinute: 30 }
+
+  it('when half the words or more were heard under the threshold', () => {
+    expect(heardLittle([...words(5, 0.2), ...words(5, 0.9)], 4, rule)).toBe(true)
+    expect(heardLittle([...words(4, 0.2), ...words(6, 0.9)], 4, rule)).toBe(false)
+  })
+
+  it('when under 30 words a minute were heard', () => {
+    expect(heardLittle(words(29, 0.9), 60, rule)).toBe(true)
+    expect(heardLittle(words(30, 0.9), 60, rule)).toBe(false)
+  })
+
+  it('nothing heard is another case («casi sin voz» asks for another file), not this one', () => {
+    expect(heardLittle([], 60, rule)).toBe(false)
   })
 })
 

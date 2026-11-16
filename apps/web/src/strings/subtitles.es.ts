@@ -80,7 +80,7 @@ export const subtitlesEs = {
     other: 'Elegir otro fichero',
     // Another file when there are subtitles already (US5, AS1).
     again:
-      'Se harán unos subtítulos nuevos con este fichero. Los de ahora se guardan en el historial y puedes volver a ellos.',
+      'Se harán unos subtítulos nuevos con este fichero. Los de ahora se guardan en el historial y puedes volver a ellos. Lo que cambiaste a mano en un subtítulo no pasa a los nuevos; tus cambios en todos sí se pueden repetir.',
     againApproved: 'Los nuevos estarán en borrador hasta que los apruebes.',
     back: 'Volver a mis subtítulos',
     shortTooLong:
@@ -139,6 +139,9 @@ export const subtitlesEs = {
     },
     filterLegend: 'Qué subtítulos ver',
     toReview: 'Para revisar ({n})',
+    // How one leaves «Para revisar» (novice audit, round 1): it was not said anywhere.
+    toReviewHow:
+      'Un subtítulo sale de «Para revisar» cuando pulsas «Editar» y luego «Guardar» o «Dar por revisado». «Cambiar en todos» no los da por revisados.',
     all: 'Todos ({n})',
     listLabel: 'Subtítulos',
     empty: 'No se ha oído ninguna palabra en este audio. Comprueba que el fichero tiene voz y elige otro.',
@@ -147,22 +150,26 @@ export const subtitlesEs = {
     marks: {
       del_guion: 'Escrito como en tu guion; se oyó «{oido}».',
       poca_seguridad: 'No se oyó bien.',
-      lectura_rapida: 'Se lee demasiado rápido.',
-      fuera_de_limites: 'Se sale de los límites de lectura.',
+      lectura_rapida: 'Se lee demasiado rápido: acorta el texto o alarga el tiempo que se ve.',
+      fuera_de_limites:
+        'Se sale de los límites de lectura: tiene demasiadas líneas o letras, o se ve demasiado o muy poco tiempo.',
       cambio_ia: 'Cambio de la IA; antes ponía «{oido}».',
       cambio_ia_oido: 'Cambio de la IA en cómo se escribe.',
       solapado: 'Empieza antes de que acabe el anterior: se verían los dos a la vez.',
     },
     reviewed: 'Revisado',
     scriptChanged: 'El guion ha cambiado desde que se hicieron estos subtítulos.',
+    // Another language or nearly no voice (spec, edge case): all of it is marked to be looked at.
+    heardLittle:
+      'Se ha entendido poco de este audio: quizá está en otro idioma o casi no hay voz. Por eso todos los subtítulos se marcaron para revisar.',
     // Approving (FR-013): any change after it makes them a draft again.
     approve: 'Aprobar los subtítulos',
     approved:
       'Subtítulos aprobados el {fecha}. Si cambias algo, volverán a borrador y tendrás que aprobarlos otra vez.',
     approveTitle: '¿Aprobar los subtítulos?',
     approvePending: {
-      one: 'Queda 1 subtítulo por revisar. Puedes aprobarlos igualmente.',
-      other: 'Quedan {n} subtítulos por revisar. Puedes aprobarlos igualmente.',
+      one: 'Queda 1 subtítulo por revisar: no lo has dado por revisado. Puedes aprobarlos igualmente.',
+      other: 'Quedan {n} subtítulos por revisar: no los has dado por revisados. Puedes aprobarlos igualmente.',
     },
     approveConfirm: 'Aprobar',
     approveKeep: 'Seguir revisando',
@@ -242,6 +249,7 @@ export const subtitlesEs = {
       version: 'Versión {n}, {fecha}',
       cues: { one: '1 subtítulo', other: '{n} subtítulos' },
       current: 'La que ves ahora',
+      approved: 'La que aprobaste',
       restore: 'Volver a esta',
       restoreLabel: 'Volver a esta: la versión {n}',
       line: '{origen} · {subtitulos}',
@@ -298,29 +306,35 @@ export const subtitlesEs = {
       real: 'En el audio: {tiempo} · {diferencia}',
       notFound: 'No aparece en el audio: puede que lo cortaras al montar el vídeo.',
       outOfOrder:
-        'En el audio suena antes que un capítulo anterior: si pones este minuto, los capítulos no quedan en orden y YouTube no los mostraría. Decide qué minuto poner.',
+        'En el audio suena antes que un capítulo anterior: con este minuto, los capítulos no quedarían en orden y YouTube no los mostraría. Escribe abajo el minuto que quieras o déjalo como está.',
+      breaksOrder:
+        'Así, este capítulo no queda en orden con el de al lado, o queda a menos de {n} s de él (el mínimo de YouTube entre capítulos).',
+      notInOrder:
+        'Así los capítulos no quedan en orden o quedan demasiado juntos, y YouTube no los mostraría. Desmarca o cambia los que lo dicen para poder ponerlos. Si no sale ninguna combinación, deja los capítulos como están: ya valen para YouTube.',
       difference: { later: '{n} s más tarde', earlier: '{n} s antes', same: 'Igual' },
       put: 'Poner el minuto real de «{titulo}»',
       handWritten: 'Lo escribiste tú: márcalo solo si quieres cambiarlo.',
       remove: 'Quitar «{titulo}» de la publicación',
       removeHelp: 'Su parte del guion se une al capítulo anterior.',
       write: 'Minuto de «{titulo}»',
+      // For one heard out of order: instead of its real minute (the box goes when that one is marked).
+      writeInstead: 'O escribe otro minuto para «{titulo}»',
       writeHelp: 'Escríbelo como 1:05, o déjalo vacío para no cambiarlo.',
       writeInvalid: 'Escríbelo como 1:05 (minutos y segundos).',
       first: 'El primero siempre empieza en 0:00.',
-      apply: 'Poner los minutos marcados',
+      apply: 'Poner estos minutos',
       nothing: 'Todos los capítulos ya están en su minuto.',
       done: {
         one: 'Hemos cambiado 1 capítulo de tu publicación.',
         other: 'Hemos cambiado {n} capítulos de tu publicación.',
       },
       toPackage: 'Ver la publicación',
-      confirmTitle: '¿Poner los minutos marcados?',
+      confirmTitle: '¿Poner estos minutos?',
       confirmBody: 'Tu publicación volverá a borrador y tendrás que aprobarla otra vez.',
       confirm: 'Poner los minutos',
       keep: 'No ponerlos',
       order:
-        'Con esos minutos los capítulos no quedan en orden, o quedan demasiado cerca de un capítulo que escribiste tú, y YouTube no los mostraría. Desmarca o cambia los que avisan.',
+        'Con esos minutos, algún capítulo queda demasiado cerca de otro y YouTube no los mostraría. Desmarca alguno o escribe un minuto más separado.',
       tooLate: 'Ese minuto es más largo que el audio, que dura {tiempo}.',
       stale:
         'Los capítulos de tu publicación han cambiado mientras mirabas. Te enseñamos cómo están ahora: vuelve a marcar los que quieras poner.',

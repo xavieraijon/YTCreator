@@ -13,6 +13,7 @@ import { type FileHandle, open } from 'node:fs/promises'
 import { basename, join } from 'node:path'
 import {
   align,
+  heardLittle,
   type Logger,
   type ScriptStatus,
   SUBTITLE_LIMITS,
@@ -339,10 +340,14 @@ export function createSubtitlesRecognition(deps: SubtitlesRecognitionDeps) {
     // Stopped (or the app closing) just as it ended: nothing is kept (spec, «El creador cancela»).
     if (signal.aborted) return { failure: 'interrumpido' }
     const audioSeconds = Math.round(audio.seconds * 1000) / 1000
-    const cues = segment(align(heard.words, text), limitsOf(script.format), {
-      audioSeconds,
-      lowConfidence: knowledge.craft.data.lowConfidence.value,
-    })
+    const lowConfidence = knowledge.craft.data.lowConfidence.value
+    const segmented = segment(align(heard.words, text), limitsOf(script.format), { audioSeconds, lowConfidence })
+    // Little understood: the whole result is marked to be looked at (spec, «Audio en otro idioma o casi sin voz»).
+    const cues = heardLittle(heard.words, audioSeconds, { lowConfidence, ...knowledge.craft.data.heardLittle })
+      ? segmented.map((cue) =>
+          cue.flags.includes('poca_seguridad') ? cue : { ...cue, flags: [...cue.flags, 'poca_seguridad' as const] },
+        )
+      : segmented
     // Another file where nothing is heard does not take the place of the subtitles there are, nor of their audio (US5,
     // principle II); the first one does, and the screen asks for another file (US1, «casi sin voz»).
     if (cues.length === 0 && versions.latestNumber(track.id) !== null) return { failure: 'sin_voz' }

@@ -6,6 +6,7 @@ import { ApiClientError, packagesApi, subtitlesApi } from '../../../api/client.t
 import { navigate } from '../../../router.ts'
 import { subtitlesEs } from '../../../strings/subtitles.es.ts'
 import styles from '../channel.module.css'
+import { type Accepted, markedAtFirst, outOfOrder, unplaceable } from './chapterOrder.ts'
 
 const text = subtitlesEs.review.chapters
 
@@ -18,43 +19,11 @@ const approvedPackage = (pkg: PackageView) =>
   pkg.approvals.texts !== null ||
   pkg.approvals.package !== null
 
-/** Within this, a difference is what the audio can tell (SC-005): it is shown, but not marked at first. */
-const PRECISION_SECONDS = 2
-
 const differenceText = (chapter: SubtitleChapter) => {
   if (chapter.real === null) return ''
   const delta = chapter.real - chapter.estimated
   if (delta === 0) return text.difference.same
   return format(delta > 0 ? text.difference.later : text.difference.earlier, { n: Math.abs(delta) })
-}
-
-/** Chapters heard before one that comes earlier in the script: the edit changed their order. */
-const outOfOrder = (chapters: readonly SubtitleChapter[]) => {
-  const out = new Set<string>()
-  let latest = 0
-  chapters.forEach((one, index) => {
-    if (index === 0 || one.real === null) return
-    if (one.real <= latest) out.add(one.chapterId)
-    latest = Math.max(latest, one.real)
-  })
-  return out
-}
-
-/** Marked at first: the ones that change beyond what the audio can tell, except those written by hand or out of order. */
-const markedAtFirst = (chapters: readonly SubtitleChapter[]) => {
-  const disordered = outOfOrder(chapters)
-  return new Set(
-    chapters
-      .filter(
-        (one, index) =>
-          index > 0 &&
-          one.real !== null &&
-          Math.abs(one.real - one.estimated) > PRECISION_SECONDS &&
-          !one.manual &&
-          !disordered.has(one.chapterId),
-      )
-      .map((one) => one.chapterId),
-  )
 }
 
 const codeOf = (cause: unknown) => (cause instanceof ApiClientError ? cause.body?.code : undefined)
@@ -81,6 +50,8 @@ export function RealChapters({
 }) {
   const [chapters, setChapters] = useState<SubtitleChapter[] | null>(null)
   const [pkg, setPkg] = useState<PackageView | null>(null)
+  // YouTube's shortest chapter (006): between two minutes that are not real ones (decision 46).
+  const [minSeconds, setMinSeconds] = useState(1)
   const [marked, setMarked] = useState<Set<string>>(new Set())
   const [removed, setRemoved] = useState<Set<string>>(new Set())
   const [written, setWritten] = useState<Record<string, string>>({})
@@ -96,11 +67,16 @@ export function RealChapters({
   useEffect(() => {
     const controller = new AbortController()
     const { signal } = controller
-    Promise.all([subtitlesApi.chapters(scriptId, { signal }), packagesApi.get(packageId, { signal })])
-      .then(([proposal, view]) => {
+    Promise.all([
+      subtitlesApi.chapters(scriptId, { signal }),
+      packagesApi.get(packageId, { signal }),
+      packagesApi.review(packageId, { signal }),
+    ])
+      .then(([proposal, view, review]) => {
         setChapters(proposal)
         setPkg(view)
-        setMarked(markedAtFirst(proposal))
+        setMinSeconds(review.rules.chapterMinSeconds)
+        setMarked(markedAtFirst(proposal, review.rules.chapterMinSeconds))
         setRemoved(new Set())
         setWritten({})
       })
@@ -126,19 +102,28 @@ export function RealChapters({
       return format(text.tooLate, { tiempo: formatChapterTime(audioSeconds) })
     return undefined
   }
-  const badWritten = Object.keys(written).some(
-    (chapterId) => !removed.has(chapterId) && writtenError(chapterId) !== undefined,
-  )
-  const accept = (chapters ?? []).flatMap((one) => {
-    if (one.real !== null) return marked.has(one.chapterId) ? [{ chapterId: one.chapterId, seconds: one.real }] : []
-    if (removed.has(one.chapterId)) return []
+
+  const disordered = outOfOrder(chapters ?? [])
+  const accept = (chapters ?? []).flatMap((one): Accepted[] => {
+    if (one.real !== null && marked.has(one.chapterId)) return [{ chapterId: one.chapterId, seconds: one.real }]
+    // A minute is written for one not in the audio, or for one heard before an earlier chapter.
+    if (removed.has(one.chapterId) || (one.real !== null && !disordered.has(one.chapterId))) return []
     const seconds = writtenSeconds(one.chapterId)
     return seconds === undefined || seconds === null ? [] : [{ chapterId: one.chapterId, seconds }]
   })
   const remove = [...removed]
   const changes = accept.length + remove.length
   const capitulos = pkg?.pieces.capitulos ?? null
-  const disordered = outOfOrder(chapters ?? [])
+  // Only the fields on screen count: one hidden by marking its real minute (or removing it) is not sent.
+  const badWritten = (chapters ?? []).some(
+    (one) =>
+      !removed.has(one.chapterId) &&
+      !marked.has(one.chapterId) &&
+      (one.real === null || disordered.has(one.chapterId)) &&
+      writtenError(one.chapterId) !== undefined,
+  )
+  // Said before asking, never after the confirmation: these minutes would be refused (novice audit, round 1).
+  const notInOrder = unplaceable(chapters ?? [], accept, removed, minSeconds)
 
   const reloadStale = () => {
     setStale(true)
@@ -248,6 +233,19 @@ export function RealChapters({
                       />
                     </>
                   )}
+                  {disordered.has(one.chapterId) && !marked.has(one.chapterId) && (
+                    <TextField
+                      label={format(text.writeInstead, { titulo: one.title })}
+                      description={text.writeHelp}
+                      value={written[one.chapterId] ?? ''}
+                      disabled={busy}
+                      error={writtenError(one.chapterId)}
+                      onChange={(event) => setWritten((before) => ({ ...before, [one.chapterId]: event.target.value }))}
+                    />
+                  )}
+                  {notInOrder.has(one.chapterId) && (
+                    <p className={styles.notice}>{format(text.breaksOrder, { n: minSeconds })}</p>
+                  )}
                 </>
               )}
             </li>
@@ -256,16 +254,22 @@ export function RealChapters({
         {chapters.every((one, index) => index === 0 || one.real === one.estimated) && (
           <p className={styles.why}>{text.nothing}</p>
         )}
-        {order && (
-          <p role="alert" className={styles.alert}>
-            {text.order}
+        {notInOrder.size > 0 ? (
+          <p role="status" className={styles.notice}>
+            {text.notInOrder}
           </p>
+        ) : (
+          order && (
+            <p role="alert" className={styles.alert}>
+              {text.order}
+            </p>
+          )
         )}
         <div className={styles.actions}>
           <Button
             variant="secondary"
             loading={busy}
-            disabled={busy || changes === 0 || badWritten || capitulos === null}
+            disabled={busy || changes === 0 || badWritten || notInOrder.size > 0 || capitulos === null}
             onClick={() => void ask()}
           >
             {text.apply}

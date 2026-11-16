@@ -21,6 +21,8 @@ export const scriptEs = {
     another: '¿Otro vídeo? Su guion sale de una idea del banco.',
     downloadAll: 'Descargar todos como documento',
     downloadAllData: 'Descargar todos como datos',
+    // The subtitles of every video, with all their versions (007, R17).
+    downloadAllSubtitles: 'Descargar todos los subtítulos como datos',
     backToChannel: 'Volver a mi canal',
   },
   uses: {

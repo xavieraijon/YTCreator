@@ -2,7 +2,7 @@ import type { ScriptSummary } from '@ytcreator/core/api'
 import { Badge, Button, Card, EmptyState, ErrorMessage, format } from '@ytcreator/ui'
 import { FileText } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
-import { channelApi, scriptsApi } from '../../../api/client.ts'
+import { channelApi, scriptsApi, subtitlesApi } from '../../../api/client.ts'
 import { navigate } from '../../../router.ts'
 import { errorText } from '../../../shell/errorText.ts'
 import { Screen } from '../../../shell/Screen.tsx'
@@ -33,14 +33,21 @@ export function ScriptList() {
     }
   }, [])
 
-  const [downloadFailed, setDownloadFailed] = useState<{ cause: unknown; kind: 'md' | 'json' } | null>(null)
+  const [downloadFailed, setDownloadFailed] = useState<{
+    cause: unknown
+    kind: 'md' | 'json' | 'subtitles'
+  } | null>(null)
 
-  const downloadAll = async (kind: 'md' | 'json') => {
+  const downloadAll = async (kind: 'md' | 'json' | 'subtitles') => {
     setError(null)
+    setDownloadFailed(null)
     try {
       const current = await channelApi.current()
       if (!current.channel) return
-      const { blob, name } = await scriptsApi.downloadAll(current.channel.id, kind)
+      const { blob, name } =
+        kind === 'subtitles'
+          ? await subtitlesApi.downloadAll(current.channel.id)
+          : await scriptsApi.downloadAll(current.channel.id, kind)
       saveFile(blob, name)
     } catch (cause) {
       setDownloadFailed({ cause, kind })
@@ -114,6 +121,9 @@ export function ScriptList() {
             </Button>
             <Button variant="secondary" onClick={() => void downloadAll('json')}>
               {text.downloadAllData}
+            </Button>
+            <Button variant="secondary" onClick={() => void downloadAll('subtitles')}>
+              {text.downloadAllSubtitles}
             </Button>
           </>
         )}
