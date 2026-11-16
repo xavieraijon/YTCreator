@@ -797,3 +797,34 @@ Los cuatro revisores coincidieron en que T077 no estaba cerrada. Sus demás hall
 
 - Revertir el commit de T075: vuelven los tiempos sin silencios.
 - Pendiente: T076 con tu permiso, P1 a P5 y P3 (solo `small-q5_1`).
+
+## T076: prueba con la IA real de la revisión de los subtítulos (2026-11-16)
+
+### 1. Resumen
+
+- Autorizada por el creador («Haz la prueba real») y ejecutada en su terminal con la suscripción de Claude Code; la API no se llamó. **Pasa** (1 prueba, 4,2 s).
+- La IA propone 5 cambios a los subtítulos de T075 con 6 errores añadidos, y **ninguno cambia lo dicho**, tampoco en la frase improvisada.
+- No ejecutado: subir un fichero a YouTube Studio (SC-003), que solo puede hacer el creador.
+
+### 2. Requisitos
+
+| Requisito | Estado | Evidencia | Fecha |
+|---|---|---|---|
+| Ningún cambio aceptado altera lo dicho (FR-011, R11) | Cumplido | 0 de 5 propuestas cambian las palabras (sin contar mayúsculas, tildes, signos ni las dos faltas añadidas) | 2026-11-16 |
+| Corrige lo que el reconocimiento escribe mal | Cumplido | «Mesclad» → «Mezclad», «enarinada» → «enharinada», «decia» → «decía», «como» → «cómo» (interrogativo) y el punto final de c6. No propuso la coma tras «casa» (c2), que es opcional | 2026-11-16 |
+| La frase improvisada se respeta | Cumplido | En c8 solo la tilde de «decía»; «prisas», «abuela» y «triste» quedan como se dijeron | 2026-11-16 |
+| Aceptar crea una versión `ia` con los mismos tiempos | Cumplido | Versión 2, origen `ia`, tiempos idénticos a la 1 | 2026-11-16 |
+| Coste y tiempo | Cumplido | 0 € (estimación 0 céntimos, cupo de la suscripción); 4 s para 13 subtítulos; 367 tokens de salida. Claude Code informó solo 2 de entrada (el resto lo cuenta como caché), así que la cifra de entrada no sirve para medir | 2026-11-16 |
+| SC-003 (YouTube Studio acepta el fichero) | No ejecutado | Necesita que el creador suba a YouTube Studio un `.srt` descargado de un vídeo suyo | — |
+
+### 3. Cómo se comprobó
+
+`apps/server/test/real/subtitles-ai.real.test.ts` (`pnpm test:real-ai -t "review of the subtitles"`). El guion de T075 se escribe sobre un borrador de la IA falsa (mismos bloques) y se aprueba. Los subtítulos son los que oyó whisper en T075, con 6 errores añadidos. Desde la revisión, el encargo va a Claude Code real con el prompt, la entrada y el esquema de la app, a través de los servicios reales. Antes se comprobó la preparación con un token falso (`sin_sesion`, sin gasto).
+
+### 4. Controles
+
+`pnpm typecheck` pasa con la prueba nueva. La prueba está fuera del CI, como las demás `*.real.test.ts`.
+
+### 5. Pendiente
+
+SC-003, del creador. El resto de T076 está hecho.

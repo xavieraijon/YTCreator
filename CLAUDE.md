@@ -51,8 +51,9 @@ Spec-Driven Development with GitHub Spec Kit (`/speckit-*`).
   by the creator after round 3 (decision 61), with «find the subtitles from home» for the UI pass with Design mode.
   T075 (real speech, `pnpm test:real-speech`) passed on 2026-11-16 on branch `007-real-speech`: it found and fixed word
   times that ignored the silences cut by the voice detection (decision 62). The repo was made public on
-  2026-11-16 so the macOS binary downloads (decision 64, closes P7). Open for the creator: T076 (real AI, needs
-  permission), P1–P5 and P3 (only `small-q5_1`). Report in `specs/007-subtitles/checklists/validation.md`.
+  2026-11-16 so the macOS binary downloads (decision 64, closes P7). T076 (real AI, subscription) passed the same day:
+  5 proposals, none changes what was said. Open for the creator: SC-003 (upload a downloaded `.srt` to YouTube Studio),
+  P1–P5 and P3 (only `small-q5_1`). Report in `specs/007-subtitles/checklists/validation.md`.
 - AI: Claude only for now (Claude Code subscription, and the Anthropic API behind «Más opciones»). No other provider
   is planned (creator, 2026-11-14).
 - Commands (Node 24, `fnm exec --using=24 --`): `pnpm dev` (server + web), `pnpm lint`, `pnpm typecheck`,
