@@ -21,6 +21,10 @@ import {
   packageViewSchema,
   subtitlesViewSchema,
   subtitlesAudioResultSchema,
+  subtitlesReplaceCountSchema,
+  subtitleVersionDetailSchema,
+  subtitleVersionSummarySchema,
+  type SubtitleUse,
   speechEngineViewSchema,
   speechEngineStartResultSchema,
   type SubtitleExportFormat,
@@ -402,6 +406,28 @@ export const subtitlesApi = {
   download: (scriptId: string, format: SubtitleExportFormat) =>
     apiClient.file(`${scriptPath(scriptId)}/subtitles/export?format=${format}`),
   audioUrl: (scriptId: string) => `${scriptPath(scriptId)}/subtitles/audio`,
+  // What the creator changes (US2): each one is a new version made from `baseVersion`.
+  save: (scriptId: string, baseVersion: number, cues: unknown[]) =>
+    apiClient.put(`${scriptPath(scriptId)}/subtitles`, { baseVersion, content: { cues } }, subtitlesViewSchema),
+  replaceCount: (scriptId: string, body: { baseVersion: number; from: string; to: string }) =>
+    apiClient.post(`${scriptPath(scriptId)}/subtitles/replace`, { ...body, dryRun: true }, subtitlesReplaceCountSchema),
+  replace: (scriptId: string, body: { baseVersion: number; from: string; to: string }) =>
+    apiClient.post(`${scriptPath(scriptId)}/subtitles/replace`, body, subtitlesViewSchema),
+  restore: (scriptId: string, body: { baseVersion: number; version: number }) =>
+    apiClient.post(`${scriptPath(scriptId)}/subtitles/restore`, body, subtitlesViewSchema),
+  approve: (scriptId: string, version: number) =>
+    apiClient.post(`${scriptPath(scriptId)}/subtitles/approve`, { version }, subtitlesViewSchema),
+  versions: (scriptId: string, options?: RequestOptions) =>
+    apiClient.get(`${scriptPath(scriptId)}/subtitles/versions`, subtitleVersionSummarySchema.array(), options),
+  version: (scriptId: string, version: number) =>
+    apiClient.get(`${scriptPath(scriptId)}/subtitles/versions/${version}`, subtitleVersionDetailSchema),
+  // The AI's review (R11).
+  estimate: (scriptId: string, use: SubtitleUse, options?: RequestOptions) =>
+    apiClient.post(`${scriptPath(scriptId)}/subtitles/estimate`, { use }, estimateSchema, options),
+  generate: (scriptId: string, body: { use: SubtitleUse; estimateId: string; baseVersion: number }) =>
+    apiClient.post(`${scriptPath(scriptId)}/subtitles/generate`, body, jobStartedSchema),
+  decide: (scriptId: string, body: { baseVersion: number; accept: string[] }) =>
+    apiClient.post(`${scriptPath(scriptId)}/subtitles/ai-proposal`, body, subtitlesViewSchema),
 }
 
 // The program that listens to the audio, downloaded the first time (007, R1 and R2).

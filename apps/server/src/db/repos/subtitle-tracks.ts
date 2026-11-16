@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import type { DatabaseSync } from 'node:sqlite'
 import { type IdeaFormat, type Replacement, replacementsSchema, type SubtitleJobOp } from '@ytcreator/core'
+import { z } from 'zod'
 
 // The subtitles of each script: its audio, the approved version and the replacements to apply again
 // (specs/007-subtitles/data-model.md).
@@ -18,8 +19,30 @@ export interface SubtitleTrack {
   speedModel: string | null
   jobId: string | null
   jobOp: SubtitleJobOp | null
+  aiProposal: SubtitleAiProposal | null
   createdAt: string
   updatedAt: string
+}
+
+// What the AI proposed for one version: kept until the creator accepts or discards it (R11). A row that no longer
+// fits is read as no proposal: it is never applied half understood.
+const aiProposalSchema = z.object({
+  baseVersion: z.number().int().positive(),
+  changes: z.array(z.object({ cueId: z.string().min(1), text: z.string(), reason: z.string() })),
+  usageIds: z.array(z.string()),
+  promptId: z.string().nullable(),
+  promptVersion: z.number().int().positive().nullable(),
+})
+export type SubtitleAiProposal = z.infer<typeof aiProposalSchema>
+
+const proposalOf = (raw: string | null): SubtitleAiProposal | null => {
+  if (raw === null) return null
+  try {
+    const parsed = aiProposalSchema.safeParse(JSON.parse(raw))
+    return parsed.success ? parsed.data : null
+  } catch {
+    return null
+  }
 }
 
 export interface SubtitleAudio {
@@ -43,6 +66,7 @@ interface Row {
   speed_model: string | null
   job_id: string | null
   job_op: SubtitleJobOp | null
+  ai_proposal: string | null
   created_at: string
   updated_at: string
 }
@@ -64,6 +88,7 @@ const fromRow = (row: Row): SubtitleTrack => ({
   speedModel: row.speed_model,
   jobId: row.job_id,
   jobOp: row.job_op,
+  aiProposal: proposalOf(row.ai_proposal),
   createdAt: row.created_at,
   updatedAt: row.updated_at,
 })
@@ -86,6 +111,7 @@ export function createSubtitleTracksRepo(db: DatabaseSync, now: () => Date = () 
   const updateSpeedModel = db.prepare('UPDATE subtitle_track SET speed_model = ? WHERE id = ?')
   // Asking for something is not a change: a failed attempt must not move «último cambio» (as in 006).
   const updateJob = db.prepare('UPDATE subtitle_track SET job_id = ?, job_op = ? WHERE id = ?')
+  const updateProposal = db.prepare('UPDATE subtitle_track SET ai_proposal = ? WHERE id = ?')
   const updateTouched = db.prepare('UPDATE subtitle_track SET updated_at = ? WHERE id = ?')
 
   const get = (id: string): SubtitleTrack | null => {
@@ -137,6 +163,10 @@ export function createSubtitleTracksRepo(db: DatabaseSync, now: () => Date = () 
 
     setJob(id: string, jobId: string | null, op: SubtitleJobOp): void {
       updateJob.run(jobId, op, id)
+    },
+
+    setAiProposal(id: string, proposal: SubtitleAiProposal | null): void {
+      updateProposal.run(proposal === null ? null : JSON.stringify(aiProposalSchema.parse(proposal)), id)
     },
 
     touch(id: string): void {

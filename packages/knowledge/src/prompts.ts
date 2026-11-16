@@ -9,6 +9,9 @@ export const SPOKEN_WRITING = spokenWriting.trim()
 // What is said out loud is written for the audience, not for the creator (005, research.md R13).
 const SPOKEN_USES: readonly string[] = ['guion', 'guion_short', 'bloque_guion']
 
+// No new text: checking the connection, and fixing how the subtitles are written (007, contracts/ai-uses.md).
+const WITHOUT_WRITING: readonly string[] = ['comprobacion', 'revision_subtitulos']
+
 const writingRulesOf = (use: string) => (SPOKEN_USES.includes(use) ? SPOKEN_WRITING : HUMAN_WRITING)
 
 export interface Prompt {
@@ -45,7 +48,7 @@ export function parsePrompt(raw: string): Prompt {
   }
   const body = match[2]!.trim()
   if (promptHash(body) !== sha256) throw new Error(`El hash de ${id}@${version} no coincide con su texto`)
-  const text = use === 'comprobacion' ? body : `${body}\n\n${writingRulesOf(use)}`
+  const text = WITHOUT_WRITING.includes(use) ? body : `${body}\n\n${writingRulesOf(use)}`
   return { id, version, use, sha256, body, text }
 }
 

@@ -188,6 +188,51 @@
     font-size: var(--s-font-size-sm);
   }
 
+  /* The subtitle as a button: it reads like the text it is, and edits it (007). */
+  .cueButton {
+    display: grid;
+    gap: var(--s-space-1);
+    inline-size: 100%;
+    padding: var(--s-space-2);
+    border: var(--s-border-width-default) solid transparent;
+    border-radius: var(--s-radius-md);
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+  }
+
+  .cueButton:hover:not(:disabled) {
+    border-color: var(--s-color-border-subtle);
+  }
+
+  .cueButton:focus-visible {
+    outline: var(--s-focus-ring-width) solid var(--s-color-border-focus);
+    outline-offset: var(--s-focus-ring-offset);
+  }
+
+  .cueButton:disabled {
+    cursor: default;
+  }
+
+  .cueEdit {
+    color: var(--s-color-text-accent);
+    font-size: var(--s-font-size-sm);
+    text-decoration: underline;
+  }
+
+  .cueEditor {
+    display: grid;
+    gap: var(--s-space-3);
+  }
+
+  .cueTimes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-space-3);
+  }
+
   .cueMarks > li {
     padding-inline-start: var(--s-space-2);
     border-inline-start: var(--s-border-width-strong) solid var(--s-color-warning-border);

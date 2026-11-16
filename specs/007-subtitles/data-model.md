@@ -26,6 +26,7 @@ Los subtítulos de un guion. Se crea al subir el primer audio.
 | `speed_model` | TEXT NULL | modelo con el que se hizo la última versión de reconocimiento |
 | `job_id` | TEXT NULL | → `background_job`; el último trabajo de reconocimiento o de revisión de la IA |
 | `job_op` | TEXT NULL | `reconocer` \| `revision_ia` |
+| `ai_proposal` | TEXT NULL | JSON de la propuesta de la IA pendiente: `{baseVersion, changes: [{cueId, text, reason}], usageIds, promptId, promptVersion}`; solo vale para la versión `baseVersion` (migración 0009, decisión 34) |
 | `created_at`, `updated_at` | TEXT | ISO |
 
 ### `subtitle_version`

@@ -46,6 +46,8 @@ const CHANNEL_USES = {
   descripcion: { model: SONNET, timeoutMs: 120_000, maxOutputTokens: 4000 },
   parte_paquete: { model: SONNET, timeoutMs: 90_000, maxOutputTokens: 2500 },
   paquete_short: { model: SONNET, timeoutMs: 90_000, maxOutputTokens: 2500 },
+  // The subtitles (007, contracts/ai-uses.md): per batch of up to 200 cues.
+  revision_subtitulos: { model: SONNET, timeoutMs: 120_000, maxOutputTokens: 6000 },
 } satisfies Record<Exclude<AiUse, 'comprobacion'>, AiProfile>
 
 const withEffort = (effort: AiProfile['effort'], profile: AiProfile): AiProfile => ({ ...profile, effort })
@@ -77,6 +79,7 @@ export const PROFILES: Record<ProviderId, Record<AiUse, AiProfile>> = {
     descripcion: withEffort('medium', CHANNEL_USES.descripcion),
     parte_paquete: withEffort('medium', CHANNEL_USES.parte_paquete),
     paquete_short: withEffort('medium', CHANNEL_USES.paquete_short),
+    revision_subtitulos: withEffort('low', CHANNEL_USES.revision_subtitulos),
   },
   anthropic: { comprobacion: { model: HAIKU, timeoutMs: 30_000, maxOutputTokens: 16 }, ...CHANNEL_USES },
   // Longer than the 5 s after which the web offers «Cancelar», so `lento` can show it (e2e failures.spec.ts).

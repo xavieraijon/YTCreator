@@ -20,7 +20,8 @@ Un uso nuevo en `AI_USES`, `revision_subtitulos`, con prompt `v1` en
 |---|---|---|---|
 | `revision_subtitulos` | Sonnet 5.5 | 120 s por tanda | 6.000 |
 
-**Entrada**: `{ cues: [{id, text}] (≤ 200), script: {blocks: [{id, text}]}, glossary: string[] }`. Sin tiempos.
+**Entrada**: `{ cues: [{id, text}] (≤ 200), script: {blocks: [{id, text}]}, glossary: string[], maxLines }`. Sin
+tiempos. `glossary` son los textos «por» de «Cambiar en todos» (decisión 36).
 
 **Salida**: `{ changes: [{ id, text, reason }] }`, con `reason` de hasta 120 caracteres en español llano («falta el punto
 final», «nombre propio con mayúscula»).
@@ -29,9 +30,12 @@ final», «nombre propio con mayúscula»).
 
 - un `id` que no está en la tanda, o repetido;
 - un `text` vacío o igual al que había;
-- un cambio con más de un 30 % de distancia de edición respecto al texto que había;
-- una palabra nueva que no estaba en el texto ni en el guion (salvo cambios de mayúsculas, tildes o signos);
-- un `text` que pasa de 2 líneas (1 en un Short).
+- un cambio con más de un 30 % de distancia de edición respecto al texto que había, salvo si solo cambia mayúsculas,
+  tildes o signos (decisión 41);
+- una palabra nueva que no estaba en el texto, en el guion ni en `glossary` (salvo cambios de mayúsculas, tildes o
+  signos);
+- una cifra distinta de las dichas, aunque sea la del guion (decisión 41);
+- un `text` que pasa de 2 líneas (1 en un Short) o de 300 caracteres.
 
 ## Escenarios del proveedor falso
 

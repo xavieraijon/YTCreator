@@ -98,8 +98,18 @@ export function createSubtitlesRecognition(deps: SubtitlesRecognitionDeps) {
   const trackOf = (script: Script): SubtitleTrack =>
     tracks.getByScript(script.id) ??
     tracks.create({ channelId: script.channelId, scriptId: script.id, format: script.format })
+  // The AI reviewing them counts too: a new recognition would take its place in the track and leave it unseen (US2).
+  const reviewing = (scriptId: string) => {
+    const track = tracks.getByScript(scriptId)
+    if (track?.jobOp !== 'revision_ia' || !track.jobId) return false
+    const status = jobs.get(track.jobId)?.status
+    return status === 'en_curso' || status === 'en_cola'
+  }
   const busy = (scriptId: string) =>
-    uploading.has(scriptId) || running?.scriptId === scriptId || waiting.some((one) => one.scriptId === scriptId)
+    uploading.has(scriptId) ||
+    running?.scriptId === scriptId ||
+    waiting.some((one) => one.scriptId === scriptId) ||
+    reviewing(scriptId)
 
   const limitsOf = (format: 'largo' | 'short'): SubtitleLimits => {
     const figures = knowledge.craft.data[format === 'largo' ? 'long' : 'short']

@@ -27,10 +27,12 @@ export function readingMarks(cue: Pick<Cue, 'start' | 'end' | 'text'>, limits: S
 /** The worked-out marks of a version, only for the cues that have some. */
 export function cueMarks(cues: readonly Cue[], limits: SubtitleLimits): Record<string, ComputedCueMark[]> {
   const marks: Record<string, ComputedCueMark[]> = {}
-  for (const cue of cues) {
+  cues.forEach((cue, i) => {
     const found = readingMarks(cue, limits)
+    // Over the one before it: both would be on screen at once (AS2 of US2).
+    if (i > 0 && cue.start < cues[i - 1]!.end - EPSILON) found.push('solapado')
     if (found.length > 0) marks[cue.id] = found
-  }
+  })
   return marks
 }
 

@@ -113,6 +113,7 @@ export function channelInput(
     case 'descripcion':
     case 'parte_paquete':
     case 'paquete_short':
+    case 'revision_subtitulos':
       return {}
   }
 }

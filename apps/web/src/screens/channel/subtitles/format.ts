@@ -22,6 +22,16 @@ export function clockText(seconds: number): string {
   return h > 0 ? `${h}:${String(m).padStart(2, '0')}:${ss},${d}` : `${m}:${ss},${d}`
 }
 
+/** `m:ss,d`, `h:mm:ss,d` or `m:ss` back to seconds (a point works as the comma); null when it is not a time. */
+export function parseClock(text: string): number | null {
+  const match = /^\s*(?:(\d+):)?(\d+):([0-5]\d)(?:[,.](\d{1,3}))?\s*$/.exec(text)
+  if (!match) return null
+  const [, h, m, s, fraction] = match
+  if (h !== undefined && Number(m) > 59) return null
+  const seconds = Number(h ?? 0) * 3600 + Number(m) * 60 + Number(s) + Number(`0.${fraction ?? '0'}`)
+  return Math.round(seconds * 1000) / 1000
+}
+
 /** «Tardará unos N minutos» (R7): never seconds, always «unos». */
 export function estimateText(seconds: number): string {
   const text = subtitlesEs.choose

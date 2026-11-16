@@ -40,6 +40,7 @@ import { createPackageVersionsRepo } from './db/repos/package-versions.ts'
 import { createSubtitleTracksRepo } from './db/repos/subtitle-tracks.ts'
 import { createSubtitleVersionsRepo } from './db/repos/subtitle-versions.ts'
 import { createSubtitlesService } from './services/subtitles.ts'
+import { createSubtitlesEdit } from './services/subtitles-edit.ts'
 import { createSubtitlesRecognition } from './services/subtitles-recognize.ts'
 import { createSpeechEngine, createSpeechEngineService, speechVersionsSchema } from './services/speech-engine.ts'
 import { fakeSpeechDownloads } from './services/speech-engine-fake.ts'
@@ -540,6 +541,17 @@ export async function startServer({
       recognizer: speech.recognizer,
       engine: speechEngine,
       recognition: subtitlesRecognition,
+      edit: createSubtitlesEdit({
+        service: subtitlesService,
+        tracks: subtitleTracks,
+        versions: subtitleVersions,
+        scriptVersions,
+        journeys: channel.journeys,
+        jobs,
+        aiRun: channel.aiRun,
+        promptFor: channelPrompt,
+        now,
+      }),
     },
     jobs,
     youtubeSettings,

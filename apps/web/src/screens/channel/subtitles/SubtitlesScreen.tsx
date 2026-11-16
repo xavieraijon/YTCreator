@@ -67,7 +67,7 @@ export function SubtitlesScreen({ scriptId }: { readonly scriptId: string }) {
       {listening ? (
         <RunningStep view={{ ...view, job }} onChanged={reload} />
       ) : view.latest && view.latest.content.cues.length > 0 ? (
-        <ReviewStep view={{ ...view, latest: view.latest }} />
+        <ReviewStep view={{ ...view, latest: view.latest }} onView={setView} onReload={reload} />
       ) : (
         <ChooseStep view={view} engine={engine} onEngineChanged={reload} onStarted={reload} />
       )}

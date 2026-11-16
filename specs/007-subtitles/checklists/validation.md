@@ -233,3 +233,110 @@ Los cuatro revisores no encontraron nada grave. Los medios y menores confirmados
 - `lint`, `typecheck`, `test` (2771) y `test:installer` (29) pasan.
 - Sigue sin probarse el reconocimiento real con el modelo, que queda para T076.
 - Cierra P4 y el hallazgo abierto de que en Mac el fallo decía «Comprueba tu conexión».
+
+## US2: revisar, corregir y aprobar (T042–T050), Puerta A del 2026-11-16
+
+### 1. Resumen
+
+El creador ya puede repasar los subtítulos: oír cada trozo, editar el texto y los tiempos (`m:ss,d`), partir, juntar, dar por revisado, cambiar una palabra en todos (con el número antes), pedir la revisión de la IA por tandas de 200 (coste antes; acepta cada cambio), volver a cualquier versión y aprobarlos. Todo con el teclado.
+
+Los revisores encontraron tres graves en la revisión por tandas: el presupuesto se miraba tanda a tanda, las estimaciones caducaban en vídeos largos, y la regla del 30 % rechazaba arreglos de subtítulos cortos. Están corregidos con test, igual que los medios confirmados (decisiones 34 a 43).
+
+**Resultado: pasada, condicionada a P4 (aspecto e interacción de «Revisar») y P5 (tandas ya pagadas si falla una tardía).** La IA real no está probada (T076).
+
+### 2. Requisitos
+
+| Requisito | Estado | Evidencia | Fecha |
+|-----------|--------|-----------|-------|
+| AS1, FR-008 | Cumplido | Cada subtítulo es un botón: Intro edita, Espacio oye su trozo, las flechas pasan al siguiente o al anterior (decisión 38). Partir, juntar y dar por revisado parten de lo escrito. `edit.test.ts` y e2e de US2 | 2026-11-16 |
+| AS2, FR-010 | Cumplido | Un solape o un subtítulo fuera de límites se guarda con su marca calculada (`solapado`, decisión 42). `edit.test.ts`, `subtitles-edit.test.ts` | 2026-11-16 |
+| AS3, FR-009 | Cumplido | «Se cambiará N subtítulos» antes; una sola versión nueva; la corrección queda en `replacements`. Test de rutas y e2e | 2026-11-16 |
+| AS4, FR-012 | Cumplido | «Volver a esta» crea `recuperada` y el historial conserva todas. Test de rutas y e2e | 2026-11-16 |
+| AS5, FR-013 | Cumplido | El editor y el historial avisan antes con subtítulos aprobados. Editar o recuperar los devuelve a borrador; guardar sin cambios no (decisión 37). Test de rutas y e2e | 2026-11-16 |
+| AS6, FR-011 | Cumplido con la IA falsa | Coste antes en el botón; propuesta con el texto de antes y su motivo; nada se acepta sin marcarlo; versión `ia` con los tiempos intactos y `cambio_ia`. Salida estricta: id, distancia, palabra nueva, cifra, líneas y longitud. `review.test.ts`, test de rutas y e2e | 2026-11-16 |
+| AS7, FR-010 | Cumplido | «Para revisar (N)» y «Todos». E2E | 2026-11-16 |
+| Principio III con varias tandas | Cumplido | La revisión entera es una operación: los límites se comprueban con la suma, antes de pagar (decisión 35). Test | 2026-11-16 |
+| Revisión con la IA real | No ejecutado | Necesita T076 y el permiso del creador | — |
+
+### 3. Cómo se comprobó
+
+- `pnpm lint` y `pnpm typecheck`: 0.
+- `pnpm test`: 218 ficheros, 2835 pasan y 4 se saltan.
+- `pnpm test:e2e`: catálogo con 97 pasan y 2 se saltan; web con 56 pasan.
+- Tras el último cambio (el aviso del historial): los tests de la web (301) y `subtitles.spec.ts` (US1 y US2) se repitieron y pasan, y lint y typecheck dan 0.
+- Flujo con los falsos: el e2e de US2 hace subtítulos con `con-errores` y recorre, solo con el teclado, oír, editar, Escape, partir, juntar, «Cambiar en todos», la revisión de la IA (`ok`, aceptando uno y dejando los demás), volver a la versión 1, aprobar con el aviso de lo que queda por revisar, recargar y el aviso de vuelta a borrador.
+
+### 4. Controles
+
+- **Pasados:**
+  - lint, typecheck, test y test:e2e;
+  - glosario y fuga de secretos;
+  - axe en claro y oscuro a 375 y 1280 px con movimiento reducido, en seis estados de «Revisar» (lista, edición, diálogo de «Cambiar en todos», propuesta de la IA, historial, aprobados);
+  - teclado con Tab, foco visible y el foco que vuelve al subtítulo;
+  - los cinco fallos tipados de la IA, más `limite_de_gasto`, `respuesta_invalida` (`reescribe`, `id_inventado`, `cifra_inventada`) y el bloqueo por la suma de tandas: ninguno toca los subtítulos ni deja propuesta.
+- **No aplica:** `test:installer`, porque el instalador no cambia y la migración 0009 solo añade una columna (migración probada).
+- **No ejecutado:** la revisión con Claude real (T076).
+
+### 5. Hallazgos
+
+**Confirmados y corregidos:**
+- Las tandas se comprobaban contra los límites una a una. Ahora la suma de las reservas se compara al estimar y otra vez antes de pagar (test).
+- Las estimaciones de las tandas tardías caducaban en vídeos largos. Ahora cada tanda posterior pide la suya al empezar (test).
+- El 30 % rechazaba «si» → «Sí.». Ahora los cambios que solo tocan mayúsculas, tildes o signos siempre valen (test).
+- Una cifra del guion podía sustituir a la dicha. Ahora se rechaza (test).
+- Las palabras del glosario se rechazaban. Ahora se admiten (test).
+- Un texto de más de 300 caracteres pasaba la salida y luego no se podía guardar. Ahora se rechaza (test).
+- Un reconocimiento podía pisar una revisión en marcha. Ahora da 409 `en_curso` (test).
+- Partir, juntar y dar por revisado tiraban lo escrito en el editor. Ahora parten de ello.
+- Guardar sin cambios creaba una versión y desaprobaba. Ya no (test).
+- La corrección número 201 dejaba la versión hecha y daba un 500. Ahora se valida antes y da 400 (test).
+- Las casillas salían marcadas. Ahora no, y cada una dice de qué subtítulo es.
+- Había dos acciones principales a la vez. Ahora una.
+- La marca de la IA citaba lo oído en vez del texto anterior. Ahora no lo cita si hay las dos marcas.
+- El aviso de vuelta a borrador no salía al cambiar. Ahora sale en el editor y en el historial.
+- El error del coste salía sobre toda la pantalla. Ahora sale dentro de «Revisar con la IA».
+- El fallo de una descarga había perdido su botón «Descargar». Recuperado.
+- El aviso de otra pestaña prometía algo que no cumplía. Texto corregido.
+- `<audio>` con `<track>` vacío. Ahora el audio se crea en código.
+- Textos compuestos en el componente, el 100 repetido a mano y una regla CSS muerta. Corregidos.
+- Referencias a FR equivocadas. Corregidas.
+- El contrato `ai-uses.md` y `data-model.md` estaban desfasados. Actualizados.
+- La conexión del e2e se marcaba antes de hacerse. Corregido.
+
+**Descartados:**
+- El texto de `contenido_filtrado` («prueba a decirlo de otra forma») es el común de los fallos de la IA. En la revisión no hay indicaciones, pero el texto no engaña. Se deja para la pasada de diseño.
+
+**Abiertos (menores):**
+- La versión `ia` enlaza solo el consumo de la primera tanda. Todas quedan en `ai_usage` (decisión 35).
+- Oír un trozo con `preload="none"` no está probado en Safari.
+
+### 6. Desviaciones
+
+- Cada subtítulo es un botón. Partir y juntar están en la edición, no en un menú (decisión 38, P4).
+- Casillas en vez de «Aceptar» y «Rechazar» por cambio (decisión 39, P4).
+- Reglas de la salida afinadas, con el contrato actualizado (decisión 41).
+- «Cambiar en todos» distingue mayúsculas (decisión 42).
+
+### 7. Decisiones
+
+- **Del agente:** 34 a 43.
+- **Del creador, pendientes:**
+  - P1 a P3, que siguen;
+  - P4: el aspecto y la interacción de «Revisar»;
+  - P5: qué pasa con las tandas ya pagadas si falla una tardía.
+
+### 8. Constitución
+
+- **I:** una acción principal, avisos en llano y cada error con su botón.
+- **II:** la IA propone, el creador marca cada cambio, y la marca y el texto de antes quedan a la vista.
+- **III:** coste antes. Los límites se comprueban con la revisión entera y se vuelven a comprobar antes de pagar.
+- **IV:** el uso nuevo pasa por el puerto, con salida estricta y escenarios del falso.
+- **V:** ninguna cifra cambia.
+- **VI:** axe, teclado y movimiento reducido.
+- **XI:** este informe.
+
+### 9. Cómo revertir
+
+- Revertir el commit de US2.
+- La migración 0009 solo añade `ai_proposal`. Revertir el código no la deshace: en una base ya migrada, la columna se queda sin usar.
+- Pendiente: P4 y P5, T076 (IA y motor reales) y US3 en adelante.

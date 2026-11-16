@@ -135,7 +135,7 @@ export function normalizeWord(text: string): string {
 const numberOf = (texts: readonly string[]): number | null =>
   texts.length === 1 && digitsOf(texts[0]!) !== null ? digitsOf(texts[0]!) : spanishNumber(texts)
 
-function editDistance(a: string, b: string): number {
+export function editDistance(a: string, b: string): number {
   let previous = Array.from({ length: b.length + 1 }, (_, j) => j)
   for (let i = 1; i <= a.length; i++) {
     const current = [i]

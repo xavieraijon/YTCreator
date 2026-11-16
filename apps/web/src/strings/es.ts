@@ -259,6 +259,7 @@ export const es = {
       descripcion: 'Proponer la descripción de un vídeo',
       parte_paquete: 'Pedir de nuevo una parte de la publicación',
       paquete_short: 'Proponer la publicación de un Short',
+      revision_subtitulos: 'Revisar los subtítulos con la IA',
     } satisfies Record<AiUse, string>,
     failed: 'No salió bien',
     knowledge: 'Información que conviene revisar',

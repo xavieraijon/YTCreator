@@ -138,7 +138,11 @@ export function createSubtitlesService(deps: SubtitlesServiceDeps) {
             queuePosition: current.job.status === 'en_cola' ? (deps.queuePosition?.(current.job.id) ?? null) : null,
           }
         : null,
-      aiProposal: null,
+      // Only the one for the last version: any change after it leaves it behind (R11).
+      aiProposal:
+        track?.aiProposal && latest && track.aiProposal.baseVersion === latest.version
+          ? track.aiProposal.changes
+          : null,
     }
   }
 
@@ -167,7 +171,16 @@ export function createSubtitlesService(deps: SubtitlesServiceDeps) {
     return { status }
   }
 
-  return { view, exportFile, statusOf }
+  /** A change waits while the track is busy: listening, or the AI reviewing it (as in 006). */
+  const assertIdle = (track: SubtitleTrack) => {
+    const current = jobOf(track)
+    if (current && (current.job.status === 'en_curso' || current.job.status === 'en_cola'))
+      throw new ApiError({ code: 'en_curso', jobId: current.job.id })
+  }
+
+  const limitValues = (format: 'largo' | 'short'): SubtitleLimits => valuesOf(limitsOf(format))
+
+  return { view, exportFile, statusOf, find, assertIdle, limitValues }
 }
 
 export type SubtitlesService = ReturnType<typeof createSubtitlesService>

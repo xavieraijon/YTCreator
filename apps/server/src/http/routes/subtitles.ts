@@ -5,10 +5,18 @@ import {
   type SubtitleExportFormat,
   speechEngineModelBodySchema,
   speechEngineStartBodySchema,
+  subtitlesAiProposalBodySchema,
+  subtitlesApproveBodySchema,
+  subtitlesEstimateBodySchema,
   subtitlesExportQuerySchema,
+  subtitlesGenerateBodySchema,
+  subtitlesReplaceBodySchema,
+  subtitlesRestoreBodySchema,
+  subtitlesSaveBodySchema,
 } from '@ytcreator/core/api'
 import { Hono } from 'hono'
 import type { SpeechEngineService } from '../../services/speech-engine.ts'
+import type { SubtitlesEdit } from '../../services/subtitles-edit.ts'
 import type { SubtitlesRecognition } from '../../services/subtitles-recognize.ts'
 import type { SubtitlesService } from '../../services/subtitles.ts'
 import { ApiError } from '../errors.ts'
@@ -21,6 +29,8 @@ export interface SubtitleRoutesDeps {
   /** The program that listens and its models, downloaded the first time (R1, R2). */
   engine: SpeechEngineService
   recognition: SubtitlesRecognition
+  /** What the creator changes, the history and the AI's review (US2). */
+  edit: SubtitlesEdit
 }
 
 const MIME: Record<SubtitleExportFormat, string> = {
@@ -43,7 +53,7 @@ function rangeOf(header: string, size: number): { start: number; end: number } |
 }
 
 // The subtitles of a script (specs/007-subtitles/contracts/http-api.md). The rest of the routes come with each story.
-export function subtitleRoutes({ service, engine, recognition }: SubtitleRoutesDeps) {
+export function subtitleRoutes({ service, engine, recognition, edit }: SubtitleRoutesDeps) {
   const routes = new Hono()
 
   routes.get('/speech/engine', (c) => c.json(engine.view()))
@@ -97,6 +107,50 @@ export function subtitleRoutes({ service, engine, recognition }: SubtitleRoutesD
       'Content-Length': String(part.end - part.start + 1),
       ...(range === 'whole' ? {} : { 'Content-Range': `bytes ${part.start}-${part.end}/${audio.size}` }),
     })
+  })
+
+  routes.put('/scripts/:id/subtitles', async (c) => {
+    const { baseVersion, content } = await parseBody(c, subtitlesSaveBodySchema)
+    return c.json(edit.save(c.req.param('id'), baseVersion, content))
+  })
+
+  routes.post('/scripts/:id/subtitles/replace', async (c) => {
+    const body = await parseBody(c, subtitlesReplaceBodySchema)
+    return c.json(edit.replace(c.req.param('id'), body))
+  })
+
+  routes.post('/scripts/:id/subtitles/restore', async (c) => {
+    const { baseVersion, version } = await parseBody(c, subtitlesRestoreBodySchema)
+    return c.json(edit.restore(c.req.param('id'), baseVersion, version))
+  })
+
+  routes.post('/scripts/:id/subtitles/approve', async (c) => {
+    const { version } = await parseBody(c, subtitlesApproveBodySchema)
+    return c.json(edit.approve(c.req.param('id'), version))
+  })
+
+  routes.get('/scripts/:id/subtitles/versions', (c) => c.json(edit.listVersions(c.req.param('id'))))
+
+  routes.get('/scripts/:id/subtitles/versions/:n', (c) => {
+    const n = c.req.param('n')
+    if (!/^[1-9]\d{0,8}$/.test(n)) throw new ApiError({ code: 'no_encontrado' })
+    return c.json(edit.readVersion(c.req.param('id'), Number(n)))
+  })
+
+  // The AI's review (R11): the cost of every batch first, then a proposal the creator accepts cue by cue.
+  routes.post('/scripts/:id/subtitles/estimate', async (c) => {
+    const { use } = await parseBody(c, subtitlesEstimateBodySchema)
+    return c.json(edit.estimate(c.req.param('id'), use))
+  })
+
+  routes.post('/scripts/:id/subtitles/generate', async (c) => {
+    const { use, estimateId, baseVersion } = await parseBody(c, subtitlesGenerateBodySchema)
+    return c.json({ jobId: edit.generate(c.req.param('id'), use, estimateId, baseVersion) }, 202)
+  })
+
+  routes.post('/scripts/:id/subtitles/ai-proposal', async (c) => {
+    const { baseVersion, accept } = await parseBody(c, subtitlesAiProposalBodySchema)
+    return c.json(edit.decide(c.req.param('id'), baseVersion, accept))
   })
 
   routes.get('/scripts/:id/subtitles/export', (c) => {

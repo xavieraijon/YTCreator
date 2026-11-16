@@ -13,7 +13,8 @@ const positive = z.number().int().positive()
 const cited = z.object({ label: z.string(), date: z.string() })
 
 /** Worked out each time, never kept (research.md R10). */
-export const COMPUTED_CUE_MARKS = ['lectura_rapida', 'fuera_de_limites'] as const
+// `solapado`: it starts before the one before it ends (AS2 of US2).
+export const COMPUTED_CUE_MARKS = ['lectura_rapida', 'fuera_de_limites', 'solapado'] as const
 export type ComputedCueMark = (typeof COMPUTED_CUE_MARKS)[number]
 
 export const SUBTITLE_EXPORT_FORMATS = ['srt', 'vtt', 'sbv'] as const
@@ -151,6 +152,12 @@ export const subtitleVersionSummarySchema = z.object({
   cueCount: count,
 })
 export type SubtitleVersionSummary = z.infer<typeof subtitleVersionSummarySchema>
+
+// GET /scripts/:id/subtitles/versions/:n: the whole version.
+export const subtitleVersionDetailSchema = subtitleVersionMetaSchema.extend({
+  content: subtitlesContentSchema('largo'),
+})
+export type SubtitleVersionDetail = z.infer<typeof subtitleVersionDetailSchema>
 
 export const subtitlesExportQuerySchema = z.object({ format: z.enum(SUBTITLE_EXPORT_FORMATS) })
 
