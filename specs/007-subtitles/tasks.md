@@ -197,9 +197,9 @@ la versión anterior intacta.
 - [X] T074 Recorrer el [quickstart](./quickstart.md) entero con los falsos y guardar el resultado en `checklists/validation.md`
 - [ ] T075 Prueba real del reconocimiento con `pnpm test:real-speech` en `packages/speech/test/whisper.real.test.ts` y un audio de prueba en español hecho para el proyecto con su guion: descarga el motor y el modelo fijados, mide el tiempo (SC-001 en proporción) y comprueba SC-004 y SC-005. No gasta dinero ni cupo: la ejecuta el agente. Si el modelo por defecto no cumple SC-001, se registra en `decisions.md` y se cambia el defecto (decisión 6). Resultado en `checklists/validation.md`
 - [ ] T076 Prueba con la IA real de `revision_subtitulos`, **solo con la autorización del creador** (riesgo alto) y con la suscripción de Claude Code, en `apps/server/test/real/subtitles-ai.real.test.ts`: coste, tiempo y que ningún cambio aceptado altera lo dicho. Pedir también al creador que suba a YouTube Studio un fichero descargado de un vídeo suyo (SC-003). Lo que no se haga consta como no ejecutado
-- [ ] T077 Auditoría de novato de los subtítulos con el agente `usuario-novato`, en `specs/007-subtitles/novice-audit.md`. Debe dar 0 graves y como mucho 3 medios (SC-007). Los menores visuales van a la pasada del modo Design
+- [X] T077 Auditoría de novato de los subtítulos con el agente `usuario-novato`, en `specs/007-subtitles/novice-audit.md`. Debe dar 0 graves y como mucho 3 medios (SC-007). Los menores visuales van a la pasada del modo Design
 - [X] T078 Actualizar `CLAUDE.md` (estado de la 007) y `README.md` (subtítulos, la descarga al primer uso y su tamaño)
-- [ ] T079 [A] Puerta A de Polish: ejecutar `/puerta-a 007 Polish`
+- [X] T079 [A] Puerta A de Polish: ejecutar `/puerta-a 007 Polish`
 
 ---
 

@@ -23,7 +23,7 @@ gasta dinero ni usa servicios reales.
 |---|---|---|---|---|---|
 | 1 | 4371 | 1 | 4 | 9 | No pasa |
 | 2 | 4372 | 0 | 4 | 10 | No pasa |
-| 3 | 4373 | 0 | 4 | 8 | No pasa; tras corregir 3 de sus medios, **pendiente del creador** (P6) |
+| 3 | 4373 | 0 | 4 | 8 | **Cerrada por el creador** tras corregir 3 de sus medios, con 1 medio abierto (decisión 61) |
 
 ## Ronda 1: no pasa (1 grave, 4 medios, 9 menores)
 
@@ -85,3 +85,6 @@ descargados en 1 min 19 s más.
 Tras la ronda 3 quedaría abierto un medio (M1), pero sin una ronda que lo confirme. La Puerta A permite como mucho tres
 rondas antes de parar, así que la decisión de cerrar la auditoría o hacer una cuarta es del creador (P6 en
 `decisions.md`), como en la 006 (decisión 112).
+
+**Cierre (2026-11-16):** el creador cierra la auditoría así (decisión 61). El medio abierto, encontrar los subtítulos
+desde el inicio, va a la pasada de interfaz con modo Design junto con los menores.

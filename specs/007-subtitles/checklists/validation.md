@@ -635,7 +635,7 @@ Las decisiones son la 54 a la 57.
 - Las versiones `reaplicada` ya admitidas por la 0008 se siguen leyendo.
 - Pendiente: la fase de Polish (T071 a T077; T075 y T076 son reales y T076 necesita tu permiso) y P1 a P5.
 
-## Polish (T071–T079), Puerta A del 2026-11-16: bloqueada en T077, pendiente del creador
+## Polish (T071–T079), Puerta A del 2026-11-16
 
 ### 1. Resumen
 
@@ -648,7 +648,7 @@ T071 a T074 y T078 están hechas:
 
 Los cuatro revisores coincidieron en que T077 no estaba cerrada. Sus demás hallazgos confirmados están corregidos.
 
-**Resultado: bloqueada.** La auditoría de novato (T077) hizo tres rondas, el máximo antes de parar. La ronda 3 terminó con 0 graves y 4 medios. Después se corrigieron tres; el que queda (encontrar los subtítulos desde el inicio) viene de la 004 y la 005. La decisión de cerrarla así o hacer una cuarta ronda es del creador (P6). T075 y T076 no se ejecutaron: T075 queda para después y T076 necesita el permiso del creador.
+**Resultado: pasada tras la decisión del creador.** La auditoría de novato (T077) hizo tres rondas, el máximo antes de parar. La ronda 3 terminó con 0 graves y 4 medios. Después se corrigieron tres; el que queda (encontrar los subtítulos desde el inicio) viene de la 004 y la 005. El creador la cerró así (decisión 61, que cierra P6). T075 y T076 no se ejecutaron: T075 queda para después y T076 necesita el permiso del creador.
 
 ### 2. Requisitos
 
@@ -660,7 +660,7 @@ Los cuatro revisores coincidieron en que T077 no estaba cerrada. Sus demás hall
 | R17, FR-020 | Cumplido (decisión 59) | `GET /channels/:id/subtitles/export`: un JSON con todas las versiones de cada guion y el SRT de la última, sin audio ni palabras oídas; botón en «Mis guiones» (test de rutas y e2e). Se aparta de R17 (un `.srt` aparte): R17 queda anotado | 2026-11-16 |
 | T073 | Cumplido | Glosario (`apps/web/test/glossary.test.ts`) en verde. `whisper-cli` sin secretos en su entorno (prueba de contrato `recognizer-contract.ts`, punto 5). `secrets-leak.spec.ts` sin cambios y en verde dentro del e2e. Construido con `vite build --mode production`: 0 apariciones de las marcas del reconocimiento falso (las de `release.yml`) ni de la IA o el YouTube falsos | 2026-11-16 |
 | T074, quickstart | Cumplido con los falsos | Sección 1 (lint, typecheck, test, test:e2e), en verde. Sección 2: cada recorrido tiene su e2e con axe en claro y oscuro a 375 y 1280 px y teclado: US1 y US2 `subtitles.spec.ts`, US3 `subtitles-chapters.spec.ts`, US4 `subtitles-short.spec.ts`, US5 `subtitles-again.spec.ts`. Además, las tres rondas de auditoría recorrieron US1, US2, US3 y US5 a mano. Sección 3 (reales): no ejecutada (T075, T076) | 2026-11-16 |
-| T077, SC-007 | **No cumplido** | Ronda 3: 0 graves, 4 medios (umbral 3). Pendiente P6 | 2026-11-16 |
+| T077, SC-007 | Cerrado por el creador | Ronda 3: 0 graves, 4 medios (umbral 3); tres corregidos después y uno abierto para la pasada de modo Design (decisión 61) | 2026-11-16 |
 | T078 | Cumplido | README: sección «Subtítulos» (580 MB una vez, modelo pequeño de 190 MB, desde GitHub y Hugging Face). CLAUDE.md: estado de la 007 | 2026-11-16 |
 
 ### 3. Cómo se comprobó
@@ -682,7 +682,7 @@ Los cuatro revisores coincidieron en que T077 no estaba cerrada. Sus demás hall
   - axe en claro y oscuro a 375 y 1280 px con movimiento reducido, incluidos los avisos nuevos de «sin sonido», «no se puede leer» y la exportación;
   - teclado en todos los e2e;
   - el paquete de producción sin el reconocimiento falso.
-- **Fallido:** la auditoría de novato (T077), con 4 medios para un umbral de 3.
+- **Cerrado por el creador:** la auditoría de novato (T077), con 4 medios en la ronda 3 para un umbral de 3 (decisión 61).
 - **No aplica:**
   - `test:installer`: no hay migración ni cambios en el instalador;
   - fallos tipados de la IA: esta fase no llama a la IA.
@@ -693,7 +693,7 @@ Los cuatro revisores coincidieron en que T077 no estaba cerrada. Sus demás hall
 ### 5. Hallazgos
 
 **Confirmados y corregidos:**
-- T077 sin pasar (los cuatro revisores). Se hicieron las rondas 2 y 3; ver P6.
+- T077 sin pasar (los cuatro revisores). Se hicieron las rondas 2 y 3, y el creador la cerró (decisión 61).
 - La comprobación previa de los capítulos no contaba el mínimo entre dos minutos que no son reales. Ahora vive en `chapterOrder.ts`, con sus pruebas, y usa la misma regla que el servidor.
 - `markedAtFirst` podía dejar marcado al culpable de un desorden. Ahora quita el marcado más cercano antes del par que falla.
 - Un minuto mal escrito y oculto bloqueaba el botón sin decir por qué. Ahora solo cuentan los campos visibles.
@@ -711,7 +711,7 @@ Los cuatro revisores coincidieron en que T077 no estaba cerrada. Sus demás hall
 - *El botón de exportar sale aunque no haya subtítulos.* Menor, para la pasada de modo Design.
 - *Quitar un capítulo escrito a mano y no encontrado puede desajustar la comprobación previa.* El servidor sigue comprobando, y en ese caso raro el aviso llega después. Menor.
 
-**Abiertos:** P6.
+**Abiertos:** ninguno.
 
 ### 6. Desviaciones
 
@@ -722,7 +722,7 @@ Los cuatro revisores coincidieron en que T077 no estaba cerrada. Sus demás hall
 ### 7. Decisiones
 
 - **Del agente:** 58, 59 y 60 (riesgo medio).
-- **Del creador:** P6, nuevo. Siguen P1 a P5.
+- **Del creador:** 61 (cierra P6). Siguen P1 a P5.
 
 ### 8. Constitución
 
@@ -732,10 +732,10 @@ Los cuatro revisores coincidieron en que T077 no estaba cerrada. Sus demás hall
 - **V:** las cifras supuestas están en el paquete de conocimiento.
 - **VI:** axe y teclado.
 - **VII:** la exportación está en un formato abierto y el audio no sale de la carpeta.
-- **IX:** la auditoría de novato no pasa todavía (P6).
+- **IX:** auditoría de novato en tres rondas, cerrada por el creador con un medio para la pasada de modo Design.
 - **XI:** este informe.
 
 ### 9. Cómo revertir
 
 - Revertir el commit de Polish. No hay migración.
-- Pendiente: P6 y, según su respuesta, la ronda 4 y T079; T075; T076 con tu permiso; P1 a P5.
+- Pendiente: T075; T076 con tu permiso; P1 a P5; el PR de la 007 cuando lo pidas.

@@ -58,9 +58,9 @@ Spec-Driven Development with GitHub Spec Kit (`/speckit-*`).
   on 2026-11-16 (decisions 54–57, no migration). Polish on 2026-11-16 (decisions 58–60): T071–T074 and T078 done
   (the «se entendió poco» warning, the channel subtitles export `GET /channels/:id/subtitles/export` as its own JSON,
   the chapter-order check in `chapterOrder.ts`), reviewers' findings fixed, all controls green. T077 novice audit
-  (`specs/007-subtitles/novice-audit.md`) stopped after 3 rounds (round 3: 0 graves, 4 mediums, 3 fixed after it): P6
-  asks the creator to close it or run round 4; T079 waits on that. Not run: T075 (real speech) and T076 (real AI, needs
-  the creator's permission). Open for the creator: P1–P6. Branch not pushed.
+  (`specs/007-subtitles/novice-audit.md`) closed by the creator after round 3 (0 graves, 4 mediums, 3 fixed after it;
+  decision 61), with «find the subtitles from home» open for the UI pass with Design mode. T079 Puerta A passed. Not run: T075 (real speech) and T076 (real AI, needs
+  the creator's permission). Open for the creator: P1–P5. Branch not pushed.
 - AI: Claude only for now (Claude Code subscription, and the Anthropic API behind «Más opciones»). No other provider
   is planned (creator, 2026-11-14).
 - Commands (Node 24, `fnm exec --using=24 --`): `pnpm dev` (server + web), `pnpm lint`, `pnpm typecheck`,
