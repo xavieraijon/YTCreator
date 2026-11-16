@@ -245,6 +245,7 @@ export function createPackageService(deps: PackageServiceDeps) {
       blockIds: chapter.blockIds,
       startSeconds: times[index]!,
       manual: chapter.manual,
+      fromAudio: chapter.fromAudio === true,
       time: formatChapterTime(times[index]!),
     }))
     const sources = sourcesOf(script)
@@ -576,7 +577,14 @@ export function createPackageService(deps: PackageServiceDeps) {
     return pkg ? { id: pkg.id, status: statusOf(pkg) } : null
   }
 
+  /** The main title of a script's package, to name its subtitles (007, R14); null without a package or a title. */
+  const mainTitleOfScript = (scriptId: string) => {
+    const pkg = packages.getByScript(scriptId)
+    return pkg ? mainTitle(pkg) : null
+  }
+
   return {
+    mainTitleOfScript,
     find,
     assertIdle,
     view,

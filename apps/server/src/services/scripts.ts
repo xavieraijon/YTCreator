@@ -100,6 +100,8 @@ export interface ScriptServiceDeps {
   knowledge: ScriptKnowledge
   /** The publishing package of a script (006); bound late, since the package service reads the scripts. */
   packageOf?: (scriptId: string) => ScriptView['package']
+  /** The state of its subtitles (007); bound late as well. */
+  subtitlesOf?: (scriptId: string) => ScriptView['subtitles']
 }
 
 const LIVE = 'en_curso'
@@ -285,6 +287,7 @@ export function createScriptService(deps: ScriptServiceDeps) {
       },
       voice: voiceOf(script.channelId),
       package: deps.packageOf?.(script.id) ?? null,
+      subtitles: deps.subtitlesOf?.(script.id) ?? null,
     }
   }
 

@@ -25,6 +25,26 @@ function parseEvents(text: string) {
 }
 
 describe('GET /api/jobs/:id/events', () => {
+  it('a job waiting in the queue is not over: the stream stays open after its progress (007, R5)', async () => {
+    const t = makeTestApp()
+    const channel = t.channels.create({ origin: 'nuevo' })
+    t.db
+      .prepare(
+        `INSERT INTO background_job (id, channel_id, kind, status, started_at) VALUES ('q', ?, 'reconocer_voz', 'en_cola', ?)`,
+      )
+      .run(channel.id, new Date().toISOString())
+    const response = await t.request('GET', '/api/jobs/q/events')
+    const reader = response.body!.getReader()
+    const first = new TextDecoder().decode((await reader.read()).value)
+    expect(parseEvents(first).map((event) => event.event)).toEqual(['progress'])
+    const next = await Promise.race([
+      reader.read().then(() => 'otro'),
+      new Promise((r) => setTimeout(() => r('nada'), 100)),
+    ])
+    expect(next).toBe('nada')
+    await reader.cancel()
+  })
+
   it('sends progress, item and done as they happen', async () => {
     const t = makeTestApp()
     const work = controlled()

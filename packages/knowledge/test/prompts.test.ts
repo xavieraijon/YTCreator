@@ -46,9 +46,11 @@ describe('versioned prompts', () => {
 
   it('appends the human writing rules to creative prompts only', () => {
     expect(HUMAN_WRITING.length).toBeGreaterThan(50)
-    expect(PROMPTS['comprobacion']!.text).not.toContain(HUMAN_WRITING)
+    // The check, and the review of the subtitles (007), which only fixes how what was said is written.
+    const plain = ['comprobacion', 'revision_subtitulos']
+    for (const use of plain) expect(PROMPTS[use]!.text).not.toContain(HUMAN_WRITING)
     for (const prompt of Object.values(PROMPTS)) {
-      if (prompt.use !== 'comprobacion' && !SPOKEN.includes(prompt.use)) expect(prompt.text).toContain(HUMAN_WRITING)
+      if (!plain.includes(prompt.use) && !SPOKEN.includes(prompt.use)) expect(prompt.text).toContain(HUMAN_WRITING)
     }
   })
 

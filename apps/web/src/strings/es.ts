@@ -259,6 +259,7 @@ export const es = {
       descripcion: 'Proponer la descripción de un vídeo',
       parte_paquete: 'Pedir de nuevo una parte de la publicación',
       paquete_short: 'Proponer la publicación de un Short',
+      revision_subtitulos: 'Revisar los subtítulos con la IA',
     } satisfies Record<AiUse, string>,
     failed: 'No salió bien',
     knowledge: 'Información que conviene revisar',
@@ -352,6 +353,12 @@ export const es = {
     version_cambiada: 'Esto ha cambiado en otra pestaña. Recarga para ver lo último; lo que has escrito sigue aquí.',
     sin_aprobar: 'Antes hay que aprobar el paso anterior.',
     sin_internet: 'Tu conexión de IA no puede buscar en internet. Puedes seguir con tus apuntes.',
+    sin_motor: 'Falta el programa que escucha el audio. Descárgalo antes de empezar.',
+    sin_modelo: 'Falta una parte del programa que escucha el audio. Descárgala antes de empezar.',
+    sin_audio: 'Todavía no hay audio. Elige el vídeo o el audio final.',
+    audio_no_valido: 'No se ha podido leer el audio. Prueba con otro fichero.',
+    audio_largo: 'El audio dura más de 3 horas. Elige uno más corto.',
+    sin_espacio: 'No queda espacio en el disco para guardar el audio. Libera espacio y vuelve a intentarlo.',
   } satisfies Record<ApiErrorCode, string>,
 
   // The request never reached YTCreator, or its answer made no sense.

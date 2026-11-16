@@ -1,0 +1,346 @@
+// Texts of the subtitles (specs/007-subtitles/contracts/ui-screens.md). Words: «subtítulos» (not «transcripción»),
+// «el programa que escucha el audio» (not «motor», nor «modelo» outside «Modo experto»), «fichero de subtítulos».
+export const subtitlesEs = {
+  screen: {
+    title: 'Subtítulos',
+    why: 'Mucha gente ve los vídeos sin sonido: con subtítulos se entera de todo y se queda más.',
+    loading: 'Cargando los subtítulos…',
+    of: 'Del vídeo «{titulo}»',
+    toScript: 'Volver al guion',
+  },
+  // The state of the subtitles of a script (data-model.md, «Estados»).
+  status: {
+    sin_hacer: 'Sin hacer',
+    en_marcha: 'En marcha',
+    borrador: 'Borrador',
+    aprobados: 'Aprobados',
+  },
+  // From the approved script (005): the way in.
+  entry: {
+    make: 'Hacer los subtítulos',
+    see: 'Ver los subtítulos',
+    state: 'Subtítulos: {estado}',
+    // Inside the sentence above, so in lower case here and not by code (another language would not do it so).
+    states: {
+      sin_hacer: 'sin hacer',
+      en_marcha: 'en marcha',
+      borrador: 'borrador',
+      aprobados: 'aprobados',
+    },
+  },
+  // The program that listens, downloaded once (R1, R2).
+  engine: {
+    title: 'El programa que escucha el audio',
+    needed: 'Para escuchar el audio hace falta descargar una vez un programa de unos {tamano}.',
+    why: 'Se queda en tu equipo: las próximas veces no hace falta descargarlo.',
+    download: 'Descargarlo',
+    downloading: 'Descargando el programa que escucha el audio',
+    ready: 'El programa que escucha el audio ya está listo.',
+    expert: 'Modo experto',
+    modelLegend: 'Modelo de voz',
+    modelOption: '{nombre}: {tamano}',
+    megabytes: '{n} MB',
+    gigabytes: '{n} GB',
+    modelOther: 'otro',
+    recommended: '{nombre} (recomendado)',
+    modelWhy: 'El recomendado acierta más; el pequeño va más rápido en equipos lentos.',
+    modelMissing: 'Este modelo no está descargado. Descárgalo para usarlo.',
+    downloadModel: 'Descargar este modelo',
+    useModel: 'Usar este modelo',
+    modelInUse: 'Se usa el modelo «{nombre}».',
+    models: {
+      'large-v3-turbo-q5_0': 'grande',
+      'small-q5_1': 'pequeño',
+    } as Record<string, string>,
+    failureTitle: 'No se ha podido descargar el programa',
+    failures: {
+      descarga: 'No se ha podido descargar. Comprueba tu conexión a internet y vuelve a intentarlo.',
+      hash: 'Lo descargado no es lo que esperábamos, así que no lo hemos usado. Vuelve a intentarlo.',
+      permisos: 'No se ha podido guardar en tu equipo. Revisa que la carpeta de la aplicación se pueda escribir.',
+      espacio: 'No queda espacio en el disco. Libera espacio y vuelve a intentarlo.',
+      interrumpido: 'La descarga se ha parado antes de terminar. Vuelve a intentarlo: sigue donde se quedó.',
+      interno: 'Algo ha fallado al descargar. Vuelve a intentarlo.',
+    } as Record<string, string>,
+    retry: 'Volver a intentarlo',
+  },
+  // 1. Choosing the file (no subtitles yet).
+  choose: {
+    pick: 'Elegir el vídeo o el audio',
+    need: 'Hace falta el vídeo ya montado o solo su audio.',
+    local: 'Lo escucha tu propio equipo: el vídeo no sale de aquí y no cuesta nada.',
+    empty: 'No se ha oído ninguna palabra en el último fichero. Comprueba que tiene voz y elige otro.',
+    preparing: 'Preparando el audio…',
+    uploading: 'Guardando el audio…',
+    file: 'Fichero: {nombre}',
+    duration: 'Dura {duracion}.',
+    estimate: 'Tardará unos {minutos} minutos.',
+    estimateOne: 'Tardará un minuto, más o menos.',
+    estimateShort: 'Tardará menos de un minuto.',
+    start: 'Empezar',
+    other: 'Elegir otro fichero',
+    // Another file when there are subtitles already (US5, AS1).
+    again:
+      'Se harán unos subtítulos nuevos con este fichero. Los de ahora se guardan en el historial y puedes volver a ellos. Lo que cambiaste a mano en un subtítulo no pasa a los nuevos; tus cambios en todos sí se pueden repetir.',
+    againApproved: 'Los nuevos estarán en borrador hasta que los apruebes.',
+    back: 'Volver a mis subtítulos',
+    shortTooLong:
+      'Este vídeo dura {duracion} y un Short puede durar hasta {maximo}. Si dura más, YouTube no lo trata como un Short. Puedes empezar igualmente o elegir otro fichero.',
+    failureTitle: 'No se ha podido usar este fichero',
+    failures: {
+      no_se_puede_leer:
+        'Este fichero no se puede leer aquí. Exporta solo el audio desde tu editor (MP3, WAV o M4A) y elígelo.',
+      sin_sonido: 'Este fichero no tiene sonido. Elige el vídeo montado o su audio.',
+      demasiado_largo: 'Este fichero dura más de 3 horas. Elige uno más corto.',
+      cancelado: 'Has parado la preparación del audio.',
+      interno: 'No se ha podido preparar el audio de este fichero. Prueba con otro.',
+    } as Record<string, string>,
+  },
+  // 2. Running.
+  running: {
+    label: 'Escuchando el audio',
+    preparing: 'Preparando el audio…',
+    listening: 'Escuchando: {porcentaje} %',
+    leave: 'Puedes seguir con otra cosa o cerrar: te esperamos aquí con los subtítulos.',
+    queued: 'Hay otros subtítulos en marcha. Estos empiezan cuando terminen.',
+    stop: 'Parar',
+    stopTitle: '¿Parar los subtítulos?',
+    stopBody: 'Lo escuchado hasta ahora se pierde. Podrás volver a empezar cuando quieras.',
+    stopConfirm: 'Parar',
+    stopKeep: 'Seguir escuchando',
+  },
+  // When the recognition did not end well (contracts/speech-recognizer.md).
+  failed: {
+    title: 'No se han podido hacer los subtítulos',
+    failures: {
+      sin_motor: 'Falta el programa que escucha el audio.',
+      sin_modelo: 'Falta una parte del programa que escucha el audio.',
+      audio_no_valido: 'No se ha podido leer el audio.',
+      sin_voz: 'No se ha oído ninguna palabra en el fichero nuevo. Comprueba que tiene voz y elige otro.',
+      sin_memoria:
+        'Tu equipo se ha quedado sin memoria. Cierra otros programas y vuelve a empezar o, en «Modo experto», elige la opción «pequeño».',
+      interrumpido: 'Se ha parado antes de terminar.',
+      cancelado: 'Has parado los subtítulos.',
+      interno: 'Algo ha fallado al escuchar el audio.',
+    } as Record<string, string>,
+    again: 'Volver a empezar',
+    other: 'Elegir otro fichero',
+  },
+  // 3. Reviewing (read-only and download in US1).
+  review: {
+    title: 'Tus subtítulos',
+    from: 'Hechos con «{nombre}», que dura {duracion}.',
+    download: 'Descargar los subtítulos',
+    downloadWhy: 'Es el fichero de subtítulos que se sube a YouTube Studio, en «Subtítulos».',
+    formatLegend: 'Tipo de fichero',
+    formats: {
+      srt: 'El habitual (.srt), el que recomendamos',
+      vtt: 'Para la web (.vtt)',
+      sbv: 'El antiguo de YouTube (.sbv)',
+    },
+    filterLegend: 'Qué subtítulos ver',
+    toReview: 'Para revisar ({n})',
+    // How one leaves «Para revisar» (novice audit, round 1): it was not said anywhere.
+    toReviewHow:
+      'Un subtítulo sale de «Para revisar» cuando pulsas «Editar» y luego «Guardar» o «Dar por revisado». «Cambiar en todos» no los da por revisados.',
+    all: 'Todos ({n})',
+    listLabel: 'Subtítulos',
+    empty: 'No se ha oído ninguna palabra en este audio. Comprueba que el fichero tiene voz y elige otro.',
+    noneToReview: 'No queda nada por revisar.',
+    at: '{inicio} a {fin}',
+    marks: {
+      del_guion: 'Escrito como en tu guion; se oyó «{oido}».',
+      poca_seguridad: 'No se oyó bien.',
+      lectura_rapida: 'Se lee demasiado rápido: acorta el texto o alarga el tiempo que se ve.',
+      fuera_de_limites:
+        'Se sale de los límites de lectura: tiene demasiadas líneas o letras, o se ve demasiado o muy poco tiempo.',
+      cambio_ia: 'Cambio de la IA; antes ponía «{oido}».',
+      cambio_ia_oido: 'Cambio de la IA en cómo se escribe.',
+      solapado: 'Empieza antes de que acabe el anterior: se verían los dos a la vez.',
+    },
+    reviewed: 'Revisado',
+    scriptChanged: 'El guion ha cambiado desde que se hicieron estos subtítulos.',
+    // Another language or nearly no voice (spec, edge case): all of it is marked to be looked at.
+    heardLittle:
+      'Se ha entendido poco de este audio: quizá está en otro idioma o casi no hay voz. Por eso todos los subtítulos se marcaron para revisar.',
+    // Approving (FR-013): any change after it makes them a draft again.
+    approve: 'Aprobar los subtítulos',
+    approved:
+      'Subtítulos aprobados el {fecha}. Si cambias algo, volverán a borrador y tendrás que aprobarlos otra vez.',
+    approveTitle: '¿Aprobar los subtítulos?',
+    approvePending: {
+      one: 'Queda 1 subtítulo por revisar: no lo has dado por revisado. Puedes aprobarlos igualmente.',
+      other: 'Quedan {n} subtítulos por revisar: no los has dado por revisados. Puedes aprobarlos igualmente.',
+    },
+    approveConfirm: 'Aprobar',
+    approveKeep: 'Seguir revisando',
+    // Each subtitle (contracts/ui-screens.md, «Teclado»).
+    keysHelp:
+      'Pulsa un subtítulo para editarlo. Con el teclado, Intro lo edita, Espacio lo oye y las flechas pasan al siguiente o al anterior.',
+    keysHelpNoAudio:
+      'Pulsa un subtítulo para editarlo. Con el teclado, Intro lo edita y las flechas pasan al siguiente o al anterior. El audio ya no está en este equipo: para oírlos, elige el fichero otra vez en «Otro montaje», que hace unos subtítulos nuevos.',
+    listen: 'Oír',
+    listenLabel: 'Oír el subtítulo de {inicio}',
+    edit: 'Editar',
+    editor: {
+      title: 'Editar el subtítulo de {inicio}',
+      text: 'Texto',
+      textHelp: 'Hasta {n} líneas. Pasa a otra línea con Intro.',
+      textHelpOne: 'En una sola línea.',
+      textHelpWithSplit: '{lineas} Para partirlo, pon el cursor del texto donde quieres cortarlo.',
+      backToDraft:
+        'Tus subtítulos están aprobados: si guardas un cambio, volverán a borrador y tendrás que aprobarlos otra vez.',
+      start: 'Empieza',
+      end: 'Acaba',
+      timeHelp: 'En minutos, segundos y décimas: 1:05,3',
+      save: 'Guardar',
+      cancel: 'Cancelar',
+      split: 'Partir aquí',
+      join: 'Juntar con el siguiente',
+      markReviewed: 'Dar por revisado',
+      unmarkReviewed: 'Volver a «Para revisar»',
+      limits: 'Así se sale de los límites de lectura. Puedes guardarlo igualmente.',
+      errors: {
+        tiempos: 'El inicio tiene que ir antes del final, y los dos dentro del audio.',
+        reloj: 'Escribe el tiempo como 1:05,3.',
+        vacio: 'Escribe algún texto.',
+        posicion: 'Pon el cursor dentro del texto, no al principio ni al final.',
+        ultimo: 'Es el último: no hay ninguno después para juntarlo.',
+        no_encontrado: 'Este subtítulo ya no está. Vuelve a cargar la página.',
+      },
+    },
+    // «Cambiar en todos» (FR-009).
+    replace: {
+      title: 'Cambiar en todos',
+      why: 'Para una palabra que sale mal en muchos sitios, como un nombre. Solo cambia palabras enteras, tal como las escribes.',
+      from: 'Cambiar',
+      to: 'por',
+      confirmTitle: '¿Cambiar «{de}» por «{por}»?',
+      confirmBody: { one: 'Se cambiará 1 subtítulo.', other: 'Se cambiarán {n} subtítulos.' },
+      confirm: 'Cambiar',
+      keep: 'No cambiar',
+      none: 'No hay ningún subtítulo con «{de}».',
+      same: 'Escribe un texto distinto del que quieres cambiar.',
+      done: { one: 'Cambiado en 1 subtítulo.', other: 'Cambiado en {n} subtítulos.' },
+    },
+    // The AI's review (R11): it only fixes how they are written.
+    ai: {
+      title: 'Revisar con la IA',
+      why: 'La IA mira la puntuación, las mayúsculas y las tildes. No cambia lo que dijiste ni los tiempos, y tú decides cada cambio.',
+      action: 'Revisar con la IA',
+      working: 'La IA está revisando los subtítulos. Puedes seguir con otra cosa.',
+      none: 'La IA no ha encontrado nada que corregir.',
+      proposalTitle: { one: 'La IA propone 1 cambio', other: 'La IA propone {n} cambios' },
+      before: 'Antes: «{texto}»',
+      after: 'Después: «{texto}»',
+      reason: 'Por qué: {motivo}',
+      accept: 'Aceptar el cambio del subtítulo de {inicio}',
+      apply: { one: 'Guardar 1 cambio aceptado', other: 'Guardar {n} cambios aceptados' },
+      choose: 'Marca los cambios que quieres. Los que no marques no se aplican.',
+      acceptAll: 'Aceptar todos',
+      rejectAll: 'Rechazar todos',
+      at: 'Subtítulo de {inicio}',
+      otherFailure: 'La revisión de la IA no ha terminado. Tus subtítulos siguen como estaban.',
+      dismiss: 'Entendido',
+    },
+    // The history (FR-012): no version is ever lost.
+    history: {
+      title: 'Historial',
+      loading: 'Cargando las versiones…',
+      version: 'Versión {n}, {fecha}',
+      cues: { one: '1 subtítulo', other: '{n} subtítulos' },
+      current: 'La que ves ahora',
+      approved: 'La que aprobaste',
+      restore: 'Volver a esta',
+      restoreLabel: 'Volver a esta: la versión {n}',
+      line: '{origen} · {subtitulos}',
+      backToDraft:
+        'Tus subtítulos están aprobados: si vuelves a otra versión, volverán a borrador y tendrás que aprobarlos otra vez.',
+      origins: {
+        reconocimiento: 'Hecha al escuchar el audio',
+        edicion: 'Cambiada por ti',
+        ia: 'Con los cambios de la IA que aceptaste',
+        recuperada: 'Recuperada de la versión {n}',
+        reaplicada: 'Con tus cambios en todos hechos otra vez',
+      },
+    },
+    // After another file (US5, FR-017): the changes made in all of them, offered again.
+    reapply: {
+      title: 'Tus cambios en todos',
+      offer:
+        'En los subtítulos de antes cambiaste esto en todos. Si lo cambias también en estos, cambian {subtitulos}.',
+      change: '«{de}» por «{por}»',
+      cues: { one: '1 subtítulo', other: '{n} subtítulos' },
+      approved: 'Tus subtítulos están aprobados: si lo cambias, volverán a borrador y tendrás que aprobarlos otra vez.',
+      apply: 'Cambiarlo también aquí',
+      later: 'Ahora no',
+      done: { one: 'Hemos cambiado 1 subtítulo.', other: 'Hemos cambiado {n} subtítulos.' },
+    },
+    // Another edit of the video, and deleting the audio (US5, R16).
+    again: {
+      title: 'Otro montaje',
+      why: 'Si has cambiado el vídeo después de hacer los subtítulos, elige el fichero nuevo: se harán otros subtítulos y estos se guardan en el historial.',
+      choose: 'Elegir otro fichero',
+      deleteAudio: 'Borrar el audio de este equipo',
+      deleteWhy:
+        'Tus subtítulos se quedan como están. Para volver a oír cada uno tendrás que elegir el fichero otra vez, y eso hace unos subtítulos nuevos (estos se quedan en el historial).',
+      deleteTitle: '¿Borrar el audio de este equipo?',
+      deleteBody:
+        'Se borra el audio que guardamos para que oigas los subtítulos. Tus subtítulos no cambian y tu vídeo no se toca.',
+      deleteConfirm: 'Borrar el audio',
+      deleteKeep: 'Dejarlo',
+      deleted: 'Hemos borrado el audio de este equipo.',
+      failedTitle: 'No se han podido hacer los subtítulos con el fichero nuevo',
+      failedKept: '{motivo} Siguen los de antes.',
+      stopped: 'Paraste los subtítulos del fichero nuevo. Siguen los de antes.',
+      blockedByAi: 'Antes de elegir otro fichero, decide qué haces con los cambios que propone la IA.',
+      scriptChanged: 'Elegir el fichero de nuevo',
+    },
+    // The real minutes of the chapters (US3, contracts/ui-screens.md).
+    chapters: {
+      title: 'Minutos reales de los capítulos',
+      why: 'Con el audio sabemos en qué minuto empieza de verdad cada capítulo de tu publicación. Marca los que quieras cambiar: nada cambia hasta que lo pongas.',
+      loading: 'Buscando cada capítulo en el audio…',
+      none: 'Tu publicación aún no tiene capítulos. Cuando los tenga, aquí verás sus minutos reales.',
+      now: 'Ahora: {tiempo} ({como})',
+      how: { estimado: 'estimado con el guion', manual: 'escrito por ti', real: 'minuto real' },
+      real: 'En el audio: {tiempo} · {diferencia}',
+      notFound: 'No aparece en el audio: puede que lo cortaras al montar el vídeo.',
+      outOfOrder:
+        'En el audio suena antes que un capítulo anterior: con este minuto, los capítulos no quedarían en orden y YouTube no los mostraría. Escribe abajo el minuto que quieras o déjalo como está.',
+      breaksOrder:
+        'Así, este capítulo no queda en orden con el de al lado, o queda a menos de {n} s de él (el mínimo de YouTube entre capítulos).',
+      notInOrder:
+        'Así los capítulos no quedan en orden o quedan demasiado juntos, y YouTube no los mostraría. Desmarca o cambia los que lo dicen para poder ponerlos. Si no sale ninguna combinación, deja los capítulos como están: ya valen para YouTube.',
+      difference: { later: '{n} s más tarde', earlier: '{n} s antes', same: 'Igual' },
+      put: 'Poner el minuto real de «{titulo}»',
+      handWritten: 'Lo escribiste tú: márcalo solo si quieres cambiarlo.',
+      remove: 'Quitar «{titulo}» de la publicación',
+      removeHelp: 'Su parte del guion se une al capítulo anterior.',
+      write: 'Minuto de «{titulo}»',
+      // For one heard out of order: instead of its real minute (the box goes when that one is marked).
+      writeInstead: 'O escribe otro minuto para «{titulo}»',
+      writeHelp: 'Escríbelo como 1:05, o déjalo vacío para no cambiarlo.',
+      writeInvalid: 'Escríbelo como 1:05 (minutos y segundos).',
+      first: 'El primero siempre empieza en 0:00.',
+      apply: 'Poner estos minutos',
+      nothing: 'Todos los capítulos ya están en su minuto.',
+      done: {
+        one: 'Hemos cambiado 1 capítulo de tu publicación.',
+        other: 'Hemos cambiado {n} capítulos de tu publicación.',
+      },
+      toPackage: 'Ver la publicación',
+      confirmTitle: '¿Poner estos minutos?',
+      confirmBody: 'Tu publicación volverá a borrador y tendrás que aprobarla otra vez.',
+      confirm: 'Poner los minutos',
+      keep: 'No ponerlos',
+      order:
+        'Con esos minutos, algún capítulo queda demasiado cerca de otro y YouTube no los mostraría. Desmarca alguno o escribe un minuto más separado.',
+      tooLate: 'Ese minuto es más largo que el audio, que dura {tiempo}.',
+      stale:
+        'Los capítulos de tu publicación han cambiado mientras mirabas. Te enseñamos cómo están ahora: vuelve a marcar los que quieras poner.',
+    },
+
+    stale:
+      'Estos subtítulos han cambiado mientras los editabas. Te enseñamos cómo están ahora: vuelve a hacer tu cambio.',
+  },
+} as const

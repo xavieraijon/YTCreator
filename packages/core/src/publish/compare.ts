@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { fixedMinute } from './chapters.ts'
 import type {
   ChaptersContent,
   CommentContent,
@@ -152,8 +153,8 @@ function itemsWithoutOrigin<K extends PackageKind>(kind: K, content: PackageCont
         title: chapter.title,
         fields: [
           field('title', chapter.title),
-          // Only a minute the creator wrote: the others are worked out from the script each time.
-          field('start', chapter.manual && chapter.startSeconds !== null ? String(chapter.startSeconds) : ''),
+          // Only a fixed minute (written, or the real one): the others are worked out from the script each time.
+          field('start', fixedMinute(chapter) ? String(chapter.startSeconds) : ''),
           field('blocks', chapter.blockIds.join(',')),
         ],
       }))

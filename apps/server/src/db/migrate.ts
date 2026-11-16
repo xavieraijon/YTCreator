@@ -21,6 +21,13 @@ export class UnknownMigrationError extends Error {
   }
 }
 
+/**
+ * A migration that rebuilds a table other tables point at carries this line. SQLite ignores `PRAGMA foreign_keys`
+ * inside a transaction, so it is turned off around it and every key is checked before committing
+ * (the 12 steps of https://www.sqlite.org/lang_altertable.html#otheralter).
+ */
+export const FOREIGN_KEYS_OFF = '-- ytc:foreign-keys-off'
+
 // Applies each pending migration in its own transaction. A database migrated by a newer version is refused (R7).
 export function migrate(db: DatabaseSync, migrations: Migration[]): { applied: number[] } {
   db.exec('CREATE TABLE IF NOT EXISTS schema_migrations (version INTEGER PRIMARY KEY, applied_at TEXT NOT NULL)')
@@ -37,17 +44,31 @@ export function migrate(db: DatabaseSync, migrations: Migration[]): { applied: n
   const applied: number[] = []
   for (const migration of migrations) {
     if (done.has(migration.version)) continue
-    db.exec('BEGIN IMMEDIATE')
+    const keysOff = migration.sql.includes(FOREIGN_KEYS_OFF)
+    const keysWereOn = Number(db.prepare('PRAGMA foreign_keys').get()?.foreign_keys) === 1
+    if (keysOff) db.exec('PRAGMA foreign_keys = OFF')
     try {
-      db.exec(migration.sql)
-      db.prepare('INSERT INTO schema_migrations (version, applied_at) VALUES (?, ?)').run(
-        migration.version,
-        new Date().toISOString(),
-      )
-      db.exec('COMMIT')
-    } catch (error) {
-      db.exec('ROLLBACK')
-      throw error
+      db.exec('BEGIN IMMEDIATE')
+      try {
+        db.exec(migration.sql)
+        if (keysOff) {
+          const broken = db.prepare('PRAGMA foreign_key_check').all()
+          if (broken.length > 0) {
+            const tables = [...new Set(broken.map((row) => String(row.table)))].join(', ')
+            throw new Error(`Migration ${migration.version} leaves ${broken.length} broken foreign keys in: ${tables}`)
+          }
+        }
+        db.prepare('INSERT INTO schema_migrations (version, applied_at) VALUES (?, ?)').run(
+          migration.version,
+          new Date().toISOString(),
+        )
+        db.exec('COMMIT')
+      } catch (error) {
+        db.exec('ROLLBACK')
+        throw error
+      }
+    } finally {
+      if (keysOff && keysWereOn) db.exec('PRAGMA foreign_keys = ON')
     }
     applied.push(migration.version)
   }

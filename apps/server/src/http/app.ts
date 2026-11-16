@@ -17,6 +17,7 @@ import { ideaRoutes, type IdeaRoutesDeps } from './routes/ideas.ts'
 import { jobsRoutes } from './routes/jobs.ts'
 import { scriptRoutes, type ScriptRoutesDeps } from './routes/scripts.ts'
 import { packageRoutes, type PackageRoutesDeps } from './routes/packages.ts'
+import { subtitleRoutes, type SubtitleRoutesDeps } from './routes/subtitles.ts'
 import { knowledgeRoutes, type KnowledgeRoutesDeps } from './routes/knowledge.ts'
 import { usageRoutes } from './routes/usage.ts'
 import { youtubeSettingsRoutes, type YouTubeSettingsDeps } from './routes/youtube-settings.ts'
@@ -45,6 +46,7 @@ export interface AppDeps {
   ideas?: IdeaRoutesDeps
   script?: ScriptRoutesDeps
   publish?: PackageRoutesDeps
+  subtitles?: SubtitleRoutesDeps
   jobs?: JobsService
   youtube?: YouTubeRoutesDeps
   youtubeSettings?: YouTubeSettingsDeps
@@ -125,6 +127,7 @@ export function createApp(deps: AppDeps) {
   if (deps.ideas) app.route('/api', ideaRoutes(deps.ideas))
   if (deps.script) app.route('/api', scriptRoutes(deps.script))
   if (deps.publish) app.route('/api', packageRoutes(deps.publish))
+  if (deps.subtitles) app.route('/api', subtitleRoutes(deps.subtitles))
   if (deps.youtube) app.route('/api', youtubeRoutes(deps.youtube))
   if (deps.jobs) app.route('/api/jobs', jobsRoutes(deps.jobs))
 

@@ -92,6 +92,8 @@ const CLAIM_FIELDS: Partial<Record<ChannelUse, readonly string[]>> = {
   // A Short's package in one request: only what its description says, which may be left empty by trimming (the
   // creator writes it before approving). A trimmed reason or moment would throw the whole paid answer away (decision 93).
   paquete_short: ['firstLines', 'body', 'comment'],
+  // The subtitles repeat what was said, figures included; reviewOutputFor already refuses any new word (007, R11).
+  revision_subtitulos: [],
 }
 
 // One request can become up to four calls: an answer that does not validate is always asked for again by the adapter
@@ -178,6 +180,18 @@ export function createAiRunService(deps: AiRunDeps) {
   }
 
   return {
+    /** What one request reserves of the budget: the call and the repetition of an invalid answer (P17). */
+    reservedFor(use: ChannelUse, input: Record<string, unknown>): number {
+      const ai = activeOrThrow()
+      const profile = profileOf(ai, use)
+      return reservedCents(callCents(ai, profile, profile.maxOutputTokens, use, input), CALLS_RESERVED)
+    },
+
+    /** Whether `cents` fit every limit now: for work made of several requests that is one operation (007, R11). */
+    blockFor(cents: number): BudgetBlock | null {
+      return budgetBlock(activeOrThrow(), cents)
+    },
+
     assertEstimate(estimateId: string, use: ChannelUse, journeyId?: string, scope?: string): void {
       estimateOf(estimateId, use, journeyId, scope)
     },

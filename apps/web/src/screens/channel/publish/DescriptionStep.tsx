@@ -9,8 +9,8 @@ import {
 } from '@ytcreator/core'
 import type { PackageView } from '@ytcreator/core/api'
 import { Button, Card, DataSource, ErrorMessage, format, TextArea, TextField } from '@ytcreator/ui'
-import { useLayoutEffect, useState } from 'react'
-import { packagesApi } from '../../../api/client.ts'
+import { useEffect, useLayoutEffect, useState } from 'react'
+import { packagesApi, subtitlesApi } from '../../../api/client.ts'
 import { navigate } from '../../../router.ts'
 import { errorText } from '../../../shell/errorText.ts'
 import { es } from '../../../strings/es.ts'
@@ -51,8 +51,10 @@ interface ChapterRow {
   readonly id: string
   readonly title: string
   readonly blockIds: readonly string[]
-  /** What the creator wrote as the minute; empty while it is worked out from the script. */
+  /** What the creator wrote as the minute; empty while it is worked out from the script or is the real one. */
   readonly time: string
+  /** The real minute from the subtitles (007), kept while nothing is written over it. */
+  readonly real: number | null
 }
 
 const rowsOf = (content: ChaptersContent | undefined): ChapterRow[] =>
@@ -61,18 +63,17 @@ const rowsOf = (content: ChaptersContent | undefined): ChapterRow[] =>
     title: chapter.title,
     blockIds: chapter.blockIds,
     time: index > 0 && chapter.manual && chapter.startSeconds !== null ? formatChapterTime(chapter.startSeconds) : '',
+    real: index > 0 && chapter.fromAudio === true && chapter.startSeconds !== null ? chapter.startSeconds : null,
   }))
 
 const chaptersOf = (rows: readonly ChapterRow[]): ChaptersContent => ({
   chapters: rows.map((row, index) => {
     const seconds = index === 0 ? null : parseChapterTime(row.time)
-    return {
-      id: row.id,
-      title: row.title.trim(),
-      blockIds: [...row.blockIds],
-      startSeconds: seconds,
-      manual: seconds !== null,
-    }
+    const base = { id: row.id, title: row.title.trim(), blockIds: [...row.blockIds] }
+    // Nothing written over a real minute keeps it (007).
+    if (seconds === null && row.real !== null)
+      return { ...base, startSeconds: row.real, manual: false, fromAudio: true as const }
+    return { ...base, startSeconds: seconds, manual: seconds !== null }
   }),
 })
 
@@ -99,6 +100,22 @@ const hashtagsOf = (written: string) => [
 ]
 const hashtagsText = (hashtags: readonly string[]) => hashtags.map((tag) => `#${tag}`).join(' ')
 
+/** Whether the script has subtitles (007): its chapters can take their real minutes. */
+function useHasSubtitles(scriptId: string | null) {
+  const [has, setHas] = useState(false)
+  useEffect(() => {
+    if (scriptId === null) return undefined
+    const controller = new AbortController()
+    subtitlesApi
+      .get(scriptId, { signal: controller.signal })
+      .then((view) => setHas(view.latest !== null))
+      // Only a hint: without it the screen says how to get them.
+      .catch(() => setHas(false))
+    return () => controller.abort()
+  }, [scriptId])
+  return has
+}
+
 // «Descripción»: the text under the video, its chapters, the tags and the pinned comment (contracts/ui-screens.md).
 export function DescriptionStep({ pkg, ai, onChange, onError, onDirty, onNext }: DescriptionStepProps) {
   const { descripcion: description, capitulos, etiquetas, comentario } = pkg.pieces
@@ -106,6 +123,7 @@ export function DescriptionStep({ pkg, ai, onChange, onError, onDirty, onNext }:
   const cover = coverApproved(pkg)
   const [asking, setAsking] = useState(false)
   const [saving, setSaving] = useState(false)
+  const hasSubtitles = useHasSubtitles(pkg.format === 'largo' ? pkg.scriptId : null)
   const idle = ai.working === null && !asking
   const busy = saving || !idle
   const isShort = pkg.format === 'short'
@@ -326,7 +344,21 @@ export function DescriptionStep({ pkg, ai, onChange, onError, onDirty, onNext }:
               {text.chapters}
             </h3>
             <p className={styles.why}>{text.chaptersWhy}</p>
-            <p className={styles.notice}>{text.adjustLater}</p>
+            {/* The real minutes come from the subtitles (007): there once they are made, a hint before. */}
+            {hasSubtitles ? (
+              <div className={styles.actions}>
+                <p className={styles.why}>{text.realMinutesWhy}</p>
+                <Button
+                  variant="secondary"
+                  disabled={busy || chaptersDirty}
+                  onClick={() => navigate({ page: 'subtitles', scriptId: pkg.scriptId })}
+                >
+                  {text.realMinutes}
+                </Button>
+              </div>
+            ) : (
+              <p className={styles.notice}>{text.realMinutesLater}</p>
+            )}
             <ol className={styles.options}>
               {rows.map((row, index) => {
                 const n = index + 1
@@ -347,9 +379,11 @@ export function DescriptionStep({ pkg, ai, onChange, onError, onDirty, onNext }:
                       <TextField
                         label={format(text.chapterTime, { n })}
                         description={
-                          estimate && !estimate.manual
-                            ? format(text.chapterTimeEstimated, { tiempo: estimate.time })
-                            : text.chapterTimeHint
+                          estimate?.fromAudio
+                            ? format(text.chapterTimeReal, { tiempo: estimate.time })
+                            : estimate && !estimate.manual
+                              ? format(text.chapterTimeEstimated, { tiempo: estimate.time })
+                              : text.chapterTimeHint
                         }
                         error={wrong}
                         value={row.time}

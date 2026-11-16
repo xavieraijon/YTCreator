@@ -20,12 +20,19 @@ const secondsOf = (blocks: readonly TimedBlock[], wordsPerMinute: number) =>
 const lengthOf = (blockIds: readonly string[], seconds: ReadonlyMap<string, number>) =>
   blockIds.reduce((sum, id) => sum + (seconds.get(id) ?? 0), 0)
 
+/** A minute that is not worked out again: written by the creator, or the real one from the audio (007). */
+export const fixedMinute = (
+  chapter: Pick<Chapter, 'startSeconds' | 'manual' | 'fromAudio'>,
+): chapter is Pick<Chapter, 'manual' | 'fromAudio'> & { startSeconds: number } =>
+  (chapter.manual || chapter.fromAudio === true) && chapter.startSeconds !== null
+
 /**
- * When each chapter starts, in seconds: the one the creator wrote (`manual`), or what the blocks before it last at the
+ * When each chapter starts, in seconds: the one the creator wrote (`manual`), the real one from the audio (`fromAudio`),
+ * or what the blocks before it last at the
  * channel's pace. The first one always starts at 0, as YouTube asks.
  */
 export function chapterTimes(
-  chapters: readonly Pick<Chapter, 'blockIds' | 'startSeconds' | 'manual'>[],
+  chapters: readonly Pick<Chapter, 'blockIds' | 'startSeconds' | 'manual' | 'fromAudio'>[],
   blocks: readonly TimedBlock[],
   wordsPerMinute: number,
 ): number[] {
@@ -45,7 +52,7 @@ export function chapterTimes(
     const worked = first === undefined ? cursor : startOf.get(first)!
     cursor = worked + lengthOf(chapter.blockIds, seconds)
     if (index === 0) return 0
-    if (chapter.manual && chapter.startSeconds !== null) {
+    if (fixedMinute(chapter)) {
       shift = chapter.startSeconds - worked
       return chapter.startSeconds
     }

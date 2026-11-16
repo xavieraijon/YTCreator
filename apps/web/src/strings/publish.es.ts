@@ -211,12 +211,15 @@ export const publishEs = {
     chapters: 'Capítulos',
     chaptersWhy:
       'Los capítulos dividen el vídeo en partes, cada una con su nombre y el minuto en que empieza. YouTube los muestra en la barra del vídeo y la gente salta a lo que busca.',
-    adjustLater:
-      'Ajústalos cuando tengas el vídeo montado. Más adelante, YTCreator podrá ajustarlos con el audio de tu vídeo.',
     chapterName: 'Nombre del capítulo {n}',
     chapterTime: 'Minuto del capítulo {n}',
     chapterTimeHint: 'Escríbelo como 1:05. Vacío, se calcula con el guion.',
     chapterTimeEstimated: 'Escríbelo como 1:05. Vacío, se calcula con el guion: ahora sale {tiempo} (estimado).',
+    chapterTimeReal: 'Escríbelo como 1:05. Vacío, se queda el minuto real, el del audio: {tiempo}.',
+    realMinutes: 'Poner los minutos reales',
+    realMinutesWhy:
+      'Ya tienes los subtítulos de este vídeo: con ellos sabemos en qué minuto empieza de verdad cada capítulo.',
+    realMinutesLater: 'Cuando tengas el vídeo montado, haz los subtítulos y los minutos serán los reales.',
     sourceLine: '{titulo}: {enlace}',
     tagsHint: 'Hasta {n} etiquetas, de {max} caracteres como mucho cada una.',
     timeInvalid: 'Escríbelo como 1:05 (minutos y segundos).',

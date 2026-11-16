@@ -1,0 +1,59 @@
+#!/bin/sh
+# A stand-in for whisper-cli in the tests (T033). It writes what it was given beside itself (args, env, pid) and, by
+# the word in the file `modo` beside it, behaves well or fails like the real one. Never used outside the tests.
+here=$(dirname "$0")
+out=''
+prev=''
+for arg in "$@"; do
+  case "$prev" in
+    -of) out="$arg" ;;
+  esac
+  prev="$arg"
+done
+printf '%s\n' "$@" > "$here/args"
+env > "$here/env"
+echo $$ > "$here/pid"
+mode=$(cat "$here/modo" 2>/dev/null || echo bien)
+case "$mode" in
+  lento)
+    echo "whisper_print_progress_callback: progress =  10%" >&2
+    sleep 30 &
+    echo $! > "$here/child"
+    wait
+    exit 0
+    ;;
+  memoria)
+    echo "ggml_backend_cpu_buffer_type_alloc_buffer: failed to allocate buffer of size 1024" >&2
+    exit 1
+    ;;
+  matado) kill -9 $$ ;;
+  modelo)
+    echo "whisper_init_from_file_with_params_no_state: failed to load model" >&2
+    exit 1
+    ;;
+  audio)
+    echo "error: failed to read audio file" >&2
+    exit 2
+    ;;
+  raro)
+    echo "algo inesperado" >&2
+    exit 3
+    ;;
+  sinjson) exit 0 ;;
+esac
+for n in 5 30 30 20 75 100; do echo "whisper_print_progress_callback: progress = $n%" >&2; done
+echo "[00:00:00.000 --> 00:00:04.000]   Hola, mañana pan casero." 
+# Fragments as whisper.cpp writes them: special ones, words in pieces, half a «ñ» in each of two fragments.
+printf '%s' '{"result":{"language":"es"},"transcription":[{"offsets":{"from":0,"to":4000},"text":" Hola","tokens":[' > "$out.json"
+printf '%s' '{"text":"[_BEG_]","offsets":{"from":0,"to":0},"p":0.9},' >> "$out.json"
+printf '%s' '{"text":" Hola","offsets":{"from":100,"to":500},"p":0.98},' >> "$out.json"
+printf '%s' '{"text":",","offsets":{"from":500,"to":560},"p":0.9},' >> "$out.json"
+printf '%s' '{"text":" ma","offsets":{"from":700,"to":900},"p":0.8},' >> "$out.json"
+printf '{"text":"\303","offsets":{"from":900,"to":950},"p":0.4},' >> "$out.json"
+printf '{"text":"\261ana","offsets":{"from":950,"to":1200},"p":0.6},' >> "$out.json"
+printf '%s' '{"text":" pan","offsets":{"from":1300,"to":1600},"p":0.95},' >> "$out.json"
+printf '%s' '{"text":" -","offsets":{"from":1600,"to":1650},"p":0.5},' >> "$out.json"
+printf '%s' '{"text":" cas","offsets":{"from":1700,"to":1900},"p":0.9},' >> "$out.json"
+printf '%s' '{"text":"ero.","offsets":{"from":1900,"to":99000},"p":0.7},' >> "$out.json"
+printf '%s' '{"text":"[_TT_200]","offsets":{"from":4000,"to":4000},"p":0.9}]}]}' >> "$out.json"
+exit 0

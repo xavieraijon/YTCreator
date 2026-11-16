@@ -1,3 +1,4 @@
+import type { SpeechRecognizer } from '@ytcreator/core'
 import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -8,6 +9,7 @@ import {
   knowledgeFiles,
   loadMarket,
   loadPublishKnowledge,
+  loadSubtitlesKnowledge,
   loadScriptKnowledge,
   STALE_AFTER_DAYS,
   warningKnowledge,
@@ -31,6 +33,16 @@ import { createPackageService } from '../src/services/packages.ts'
 import { createPackageWork } from '../src/services/package-work.ts'
 import { createPackagesRepo } from '../src/db/repos/packages.ts'
 import { createPackageVersionsRepo } from '../src/db/repos/package-versions.ts'
+import { createSubtitleTracksRepo } from '../src/db/repos/subtitle-tracks.ts'
+import { createSubtitleVersionsRepo } from '../src/db/repos/subtitle-versions.ts'
+import { createSubtitlesService } from '../src/services/subtitles.ts'
+import { createSubtitlesChapters } from '../src/services/subtitles-chapters.ts'
+import { createSubtitlesEdit } from '../src/services/subtitles-edit.ts'
+import { createSubtitlesRecognition } from '../src/services/subtitles-recognize.ts'
+import { createSpeechEngine, createSpeechEngineService } from '../src/services/speech-engine.ts'
+import { fakeSpeechDownloads } from '../src/services/speech-engine-fake.ts'
+// Imported straight from its file: the package only exports the registry (the fake stays out of the build).
+import { createFakeRecognizer } from '../../../packages/speech/src/fake/fake-recognizer.ts'
 import { createJourneysRepo } from '../src/db/repos/journeys.ts'
 import { createLimitsRepo } from '../src/db/repos/limits.ts'
 import { createMeasuresRepo } from '../src/db/repos/measures.ts'
@@ -85,6 +97,12 @@ export interface TestAppOptions {
    * `null` falls back to the connection set up through the API (the fake one).
    */
   aiOverride?: { active: () => ActiveAi | null; promptFor: (use: string) => PromptRef | null }
+  /** What the fake recognizer hears (a scenario or `fallo-<código>`); `hola` by default. */
+  fakeSpeech?: string
+  /** The free bytes of the disk for the subtitles' audio; plenty by default. */
+  freeBytes?: (dir: string) => number
+  /** Wraps the fake recognizer, to make it misbehave in one test. */
+  wrapRecognizer?: (fake: SpeechRecognizer) => SpeechRecognizer
 }
 
 const cleanups: (() => void)[] = []
@@ -103,6 +121,9 @@ export function makeTestApp({
   readerVersion = null,
   readerUpdate,
   aiOverride,
+  fakeSpeech,
+  freeBytes = () => 10 ** 12,
+  wrapRecognizer = (fake) => fake,
 }: TestAppOptions = {}) {
   const dir = mkdtempSync(join(tmpdir(), 'ytc-server-'))
   const db = openDatabase(':memory:')
@@ -260,6 +281,7 @@ export function makeTestApp({
     promptFor: promptFor,
     knowledge: scriptKnowledge,
     packageOf: (scriptId: string) => packageService.scriptPackage(scriptId),
+    subtitlesOf: (scriptId: string) => subtitlesService.statusOf(scriptId),
   })
   const script = { service: scriptService, scripts: scriptsRepo }
   const publishKnowledge = loadPublishKnowledge()
@@ -294,6 +316,61 @@ export function makeTestApp({
     promptFor,
     knowledge: publishKnowledge,
   })
+  const subtitleTracks = createSubtitleTracksRepo(db, now)
+  const subtitlesKnowledge = loadSubtitlesKnowledge()
+  const subtitleVersions = createSubtitleVersionsRepo(db, now)
+  const subtitlesService = createSubtitlesService({
+    channels: channel.channels,
+    ideas: ideasRepo,
+    scripts: scriptsRepo,
+    tracks: subtitleTracks,
+    versions: subtitleVersions,
+    jobsRepo,
+    scriptStatus: (ideaId: string) => scriptService.ideaScript(ideaId)?.status ?? null,
+    packageId: (scriptId: string) => packageService.scriptPackage(scriptId)?.id ?? null,
+    knowledge: subtitlesKnowledge,
+    mainTitle: (scriptId: string) => packageService.mainTitleOfScript(scriptId),
+    queuePosition: (jobId: string) => subtitlesRecognition.queuePosition(jobId),
+    newAudio: (scriptId: string) => subtitlesRecognition.hasNewAudio(scriptId),
+  })
+  const recognizer = wrapRecognizer(
+    createFakeRecognizer({ stepMs: 60, ...(fakeSpeech ? { scenario: fakeSpeech } : {}) }),
+  )
+  // The download of the program that listens, from a fake server, into the test folder.
+  const speechDownloads = fakeSpeechDownloads(process.platform, process.arch)
+  const speechEngine = createSpeechEngineService({
+    engine: createSpeechEngine({
+      ...speechDownloads,
+      appHome: join(dir, 'app'),
+      platform: process.platform,
+      arch: process.arch,
+      freeBytes: () => 10 ** 12,
+    }),
+    jobs,
+    settings,
+    logger,
+  })
+  const subtitlesRecognition = createSubtitlesRecognition({
+    scripts: scriptsRepo,
+    scriptVersions,
+    tracks: subtitleTracks,
+    versions: subtitleVersions,
+    jobs,
+    settings,
+    engine: speechEngine,
+    recognizer,
+    knowledge: subtitlesKnowledge,
+    scriptStatus: (ideaId: string) => scriptService.ideaScript(ideaId)?.status ?? null,
+    workspace: join(dir, 'workspace'),
+    logger,
+    shortMax: {
+      seconds: market.shorts.data.maxDurationSeconds,
+      reviewedAt: market.shorts.reviewedAt,
+    },
+    platform: process.platform,
+    arch: process.arch,
+    freeBytes,
+  })
   const version = '0.1.0'
   const ytQuota = createYtQuotaRepo(db, now)
   const keyCheck = createFakeKeyCheck()
@@ -313,6 +390,29 @@ export function makeTestApp({
     ideas,
     script,
     publish: { service: packageService, work: packageWork },
+    subtitles: {
+      service: subtitlesService,
+      recognizer,
+      engine: speechEngine,
+      recognition: subtitlesRecognition,
+      edit: createSubtitlesEdit({
+        service: subtitlesService,
+        tracks: subtitleTracks,
+        versions: subtitleVersions,
+        scriptVersions,
+        journeys: channel.journeys,
+        jobs,
+        aiRun,
+        promptFor,
+        now,
+      }),
+      chapters: createSubtitlesChapters({
+        subtitles: subtitlesService,
+        versions: subtitleVersions,
+        packages: packageService,
+        work: packageWork,
+      }),
+    },
     jobs,
     usage,
     now,
@@ -382,6 +482,11 @@ export function makeTestApp({
     scriptVersions,
     packages: packagesRepo,
     packageVersions,
+    subtitleTracks,
+    subtitleVersions,
+    recognizer,
+    speechEngine,
+    subtitlesRecognition,
     links,
     measures: channel.measures,
     channelProposals: channel.proposals,

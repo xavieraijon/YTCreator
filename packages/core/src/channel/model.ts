@@ -52,10 +52,13 @@ export const JOB_KINDS = [
   'ia',
   'actualizar_lector',
   'medir_ideas',
+  // The subtitles (007): one recognition at a time, the next waits `en_cola` (research.md R5).
+  'reconocer_voz',
+  'descargar_motor',
 ] as const
 export type JobKind = (typeof JOB_KINDS)[number]
 
-export const JOB_STATUSES = ['en_curso', 'hecho', 'fallido', 'interrumpido'] as const
+export const JOB_STATUSES = ['en_cola', 'en_curso', 'hecho', 'fallido', 'interrumpido'] as const
 export type JobStatus = (typeof JOB_STATUSES)[number]
 
 export interface JobProgress {

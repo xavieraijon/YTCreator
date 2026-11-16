@@ -35,7 +35,7 @@ const childProcess = {
     {
       name: 'node:child_process',
       message:
-        'node:child_process solo se usa en packages/youtube/src/ytdlp, packages/ai/src y los puntos ya permitidos del servidor',
+        'node:child_process solo se usa en packages/youtube/src/ytdlp, packages/speech/src/whisper, packages/ai/src y los puntos ya permitidos del servidor',
     },
     { name: 'child_process', message: 'Usa node:child_process, y solo donde está permitido' },
   ],
@@ -103,6 +103,9 @@ export default tseslint.config(
   {
     files: [
       'packages/youtube/src/ytdlp/**/*.ts',
+      // whisper-cli, behind the SpeechRecognizer port (007, R6), and `tar` for its pinned Linux package (R1).
+      'packages/speech/src/whisper/**/*.ts',
+      'apps/server/src/services/speech-engine.ts',
       'apps/server/src/cli.ts',
       'apps/server/src/secrets/**/*.ts',
       'apps/server/src/services/claude-repair.ts',

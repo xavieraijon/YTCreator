@@ -19,6 +19,16 @@ import {
   packageVersionDetailSchema,
   packageVersionSummarySchema,
   packageViewSchema,
+  subtitlesViewSchema,
+  subtitlesAudioResultSchema,
+  subtitlesReapplyResultSchema,
+  subtitlesReplaceCountSchema,
+  subtitleVersionDetailSchema,
+  subtitleVersionSummarySchema,
+  type SubtitleUse,
+  speechEngineViewSchema,
+  speechEngineStartResultSchema,
+  type SubtitleExportFormat,
   publishSettingsViewSchema,
   type PublishSettingsBody,
   scriptSummarySchema,
@@ -66,6 +76,8 @@ import {
   usageListSchema,
   youtubeSettingsSchema,
   type YouTubeSourceSetting,
+  subtitleChapterSchema,
+  type ChaptersFromAudioBody,
 } from '@ytcreator/core/api'
 import type { ChannelProfile, IdeaUse, ProfilePart } from '@ytcreator/core'
 
@@ -178,8 +190,36 @@ export function createApiClient({ fetch = globalThis.fetch.bind(globalThis), bas
     }
   }
 
+  // A file as the body, as it is (the audio of the subtitles, 007): errors answer like any other call.
+  async function upload<T>(path: string, blob: Blob, type: string, schema: Parser<T>, { signal }: RequestOptions = {}) {
+    let response: Response
+    try {
+      response = await fetch(`${baseUrl}${path}`, {
+        method: 'PUT',
+        headers: { accept: 'application/json', 'content-type': type },
+        body: blob,
+        ...(signal ? { signal } : {}),
+      })
+    } catch {
+      throw new ApiClientError(signal?.aborted ? 'cancelada' : 'red', null, null)
+    }
+    const data: unknown = await response.json().catch(() => undefined)
+    if (!response.ok) {
+      const parsed = apiErrorSchema.safeParse(data)
+      throw parsed.success
+        ? new ApiClientError('api', response.status, parsed.data.error)
+        : new ApiClientError('respuesta', response.status, null)
+    }
+    try {
+      return schema.parse(data)
+    } catch {
+      throw new ApiClientError('respuesta', response.status, null)
+    }
+  }
+
   return {
     file,
+    upload,
     get: <T>(path: string, schema: Parser<T>, options?: RequestOptions) =>
       request('GET', path, undefined, schema, options),
     post: <T>(path: string, body: unknown, schema: Parser<T>, options?: RequestOptions) =>
@@ -349,6 +389,68 @@ export const packagesApi = {
     apiClient.get(`${channelPath(channelId)}/publish-settings`, publishSettingsViewSchema, options),
   saveSettings: (channelId: string, body: PublishSettingsBody) =>
     apiClient.put(`${channelPath(channelId)}/publish-settings`, body, publishSettingsViewSchema),
+}
+
+// The subtitles of a script (specs/007-subtitles/contracts/http-api.md). Each story adds its calls.
+export const subtitlesApi = {
+  get: (scriptId: string, options?: RequestOptions) =>
+    apiClient.get(`${scriptPath(scriptId)}/subtitles`, subtitlesViewSchema, options),
+  /** The WAV taken out in the browser; `name` is the file the creator chose, to show it. */
+  uploadAudio: (scriptId: string, wav: Blob, name: string, options?: RequestOptions) =>
+    apiClient.upload(
+      `${scriptPath(scriptId)}/subtitles/audio?name=${encodeURIComponent(name)}`,
+      wav,
+      'audio/wav',
+      subtitlesAudioResultSchema,
+      options,
+    ),
+  recognize: (scriptId: string) => apiClient.post(`${scriptPath(scriptId)}/subtitles/recognize`, {}, jobStartedSchema),
+  cancel: (scriptId: string) => apiClient.post(`${scriptPath(scriptId)}/subtitles/cancel`, {}, subtitlesViewSchema),
+  download: (scriptId: string, format: SubtitleExportFormat) =>
+    apiClient.file(`${scriptPath(scriptId)}/subtitles/export?format=${format}`),
+  audioUrl: (scriptId: string) => `${scriptPath(scriptId)}/subtitles/audio`,
+  // Every subtitle of the channel, with all its versions, for its data (R17, FR-020).
+  downloadAll: (channelId: string) => apiClient.file(`${channelPath(channelId)}/subtitles/export`),
+  // What the creator changes (US2): each one is a new version made from `baseVersion`.
+  save: (scriptId: string, baseVersion: number, cues: unknown[]) =>
+    apiClient.put(`${scriptPath(scriptId)}/subtitles`, { baseVersion, content: { cues } }, subtitlesViewSchema),
+  replaceCount: (scriptId: string, body: { baseVersion: number; from: string; to: string }) =>
+    apiClient.post(`${scriptPath(scriptId)}/subtitles/replace`, { ...body, dryRun: true }, subtitlesReplaceCountSchema),
+  replace: (scriptId: string, body: { baseVersion: number; from: string; to: string }) =>
+    apiClient.post(`${scriptPath(scriptId)}/subtitles/replace`, body, subtitlesViewSchema),
+  restore: (scriptId: string, body: { baseVersion: number; version: number }) =>
+    apiClient.post(`${scriptPath(scriptId)}/subtitles/restore`, body, subtitlesViewSchema),
+  // Another file (US5): the changes made in all of them, applied again; and the audio deleted from here (R16).
+  reapply: (scriptId: string, baseVersion: number) =>
+    apiClient.post(`${scriptPath(scriptId)}/subtitles/reapply`, { baseVersion }, subtitlesReapplyResultSchema),
+  forgetAudio: (scriptId: string) => apiClient.delete(`${scriptPath(scriptId)}/subtitles/audio`),
+  approve: (scriptId: string, version: number) =>
+    apiClient.post(`${scriptPath(scriptId)}/subtitles/approve`, { version }, subtitlesViewSchema),
+  versions: (scriptId: string, options?: RequestOptions) =>
+    apiClient.get(`${scriptPath(scriptId)}/subtitles/versions`, subtitleVersionSummarySchema.array(), options),
+  version: (scriptId: string, version: number) =>
+    apiClient.get(`${scriptPath(scriptId)}/subtitles/versions/${version}`, subtitleVersionDetailSchema),
+  // The AI's review (R11).
+  estimate: (scriptId: string, use: SubtitleUse, options?: RequestOptions) =>
+    apiClient.post(`${scriptPath(scriptId)}/subtitles/estimate`, { use }, estimateSchema, options),
+  generate: (scriptId: string, body: { use: SubtitleUse; estimateId: string; baseVersion: number }) =>
+    apiClient.post(`${scriptPath(scriptId)}/subtitles/generate`, body, jobStartedSchema),
+  decide: (scriptId: string, body: { baseVersion: number; accept: string[] }) =>
+    apiClient.post(`${scriptPath(scriptId)}/subtitles/ai-proposal`, body, subtitlesViewSchema),
+  // The real minutes of the chapters (US3): worked out when asked for; the accepted ones go into the package.
+  chapters: (scriptId: string, options?: RequestOptions) =>
+    apiClient.get(`${scriptPath(scriptId)}/subtitles/chapters`, subtitleChapterSchema.array(), options),
+  chaptersFromAudio: (packageId: string, body: ChaptersFromAudioBody) =>
+    apiClient.post(`${packagePath(packageId)}/chapters/from-audio`, body, packageViewSchema),
+}
+
+// The program that listens to the audio, downloaded the first time (007, R1 and R2).
+export const speechEngineApi = {
+  get: (options?: RequestOptions) => apiClient.get('/api/speech/engine', speechEngineViewSchema, options),
+  /** 202 with the job, or the view when everything is already there. */
+  start: (model?: string) =>
+    apiClient.post('/api/speech/engine', model ? { model } : {}, speechEngineStartResultSchema),
+  choose: (model: string) => apiClient.put('/api/speech/engine/model', { model }, speechEngineViewSchema),
 }
 
 // The script of an idea (specs/005-script-and-outline/contracts/http-api.md).

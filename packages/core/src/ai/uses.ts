@@ -26,5 +26,7 @@ export const AI_USES = [
   'descripcion',
   'parte_paquete',
   'paquete_short',
+  // The subtitles (007).
+  'revision_subtitulos',
 ] as const
 export type AiUse = (typeof AI_USES)[number]

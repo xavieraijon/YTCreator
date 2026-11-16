@@ -25,6 +25,10 @@ function makeApp() {
   app.get('/api/missing', () => {
     throw new ApiError({ code: 'no_encontrado' })
   })
+  // A code with two statuses in the contract (007): `sin_audio` is 409 by default, 404 to read the audio.
+  app.get('/api/no-audio', () => {
+    throw new ApiError({ code: 'sin_audio' }, { status: 404 })
+  })
   return { app, logger }
 }
 
@@ -42,6 +46,10 @@ describe('createApp', () => {
     const missing = await app.request('/api/missing', { headers: HOST })
     expect(missing.status).toBe(404)
     expect(await missing.json()).toEqual({ error: { code: 'no_encontrado' } })
+    const noAudio = await app.request('/api/no-audio', { headers: HOST })
+    expect(noAudio.status).toBe(404)
+    expect(await noAudio.json()).toEqual({ error: { code: 'sin_audio' } })
+    expect(new ApiError({ code: 'sin_audio' }).status).toBe(409)
 
     const boom = await app.request('/api/boom', { headers: HOST })
     expect(boom.status).toBe(500)

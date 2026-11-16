@@ -52,9 +52,10 @@ export async function writtenScript(
   t: TestApp,
   title = 'Pan sin amasar',
   format: 'largo' | 'short' = 'largo',
-  { facts = false }: { facts?: boolean } = {},
+  { facts = false, channelId: existing }: { facts?: boolean; channelId?: string } = {},
 ) {
-  const { channelId } = await finished(t)
+  // Another script of the same channel, when it is given: the app has one channel.
+  const channelId = existing ?? (await finished(t)).channelId
   const made = await call(t, 'POST', `/api/channels/${channelId}/ideas`, { title, format })
   const ideaId = (made.body['idea'] as { id: string }).id
   await call(t, 'PATCH', `/api/ideas/${ideaId}`, { revision: 1, status: 'elegida' })
@@ -67,7 +68,11 @@ export async function writtenScript(
 }
 
 /** A script approved with whatever claims were left to check. */
-export async function approvedScript(t: TestApp, title?: string, options: { facts?: boolean } = {}) {
+export async function approvedScript(
+  t: TestApp,
+  title?: string,
+  options: { facts?: boolean; channelId?: string } = {},
+) {
   const written = await writtenScript(t, title, 'largo', options)
   const { scriptId, draft } = written
   const approved = await call(t, 'POST', `/api/scripts/${scriptId}/draft/approve`, {

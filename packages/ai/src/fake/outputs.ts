@@ -16,6 +16,9 @@ export type FakeOutputMode =
   | 'sin_resultados'
   // The publishing package (006): an answer that writes a web address, which never validates (research.md R4).
   | 'con_direccion'
+  // The subtitles (007, contracts/ai-uses.md): a change that rewrites, and one of a cue that is not in the batch.
+  | 'reescribe'
+  | 'id_inventado'
 
 // Reserved names (RFC 2606): nothing here can ever reach a real site. `createFakeLinkCheck` answers for them.
 export const FAKE_LINKS = {
@@ -165,6 +168,23 @@ const draftBlocks = (input: Record<string, unknown>) => {
   const ids = ((input['draft'] as { blocks?: { id: string }[] } | undefined)?.blocks ?? []).map((block) => block.id)
   return ids.length > 0 ? ids : ['bloque']
 }
+// Two changes of punctuation and one of capitals (`ok`), or the two ways an answer is refused (contracts/ai-uses.md).
+function reviewChanges(input: Record<string, unknown>, mode: FakeOutputMode): Record<string, unknown> {
+  const cues = (Array.isArray(input['cues']) ? input['cues'] : []) as { id: string; text: string }[]
+  if (mode === 'id_inventado') return { changes: [{ id: 'inventado', text: 'Hola.', reason: 'falta el punto final' }] }
+  if (mode === 'reescribe' && cues[0])
+    return { changes: [{ id: cues[0].id, text: 'Esto se dijo de una forma muy distinta', reason: 'queda mejor' }] }
+  const point = (text: string) => (text.endsWith('.') ? text.slice(0, -1) : `${text}.`)
+  const changes = cues.slice(0, 2).map((cue) => ({ id: cue.id, text: point(cue.text), reason: 'falta el punto final' }))
+  const capital = cues.slice(2).find((cue) => /^\p{L}/u.test(cue.text))
+  if (capital) {
+    const first = capital.text[0]!
+    const other = first === first.toUpperCase() ? first.toLowerCase() : first.toUpperCase()
+    if (other !== first) changes.push({ id: capital.id, text: other + capital.text.slice(1), reason: 'mayúscula' })
+  }
+  return { changes }
+}
+
 const CHAPTER_NAMES = ['Empezamos', 'Lo que necesitas', 'El truco', 'Paso a paso', 'El resultado', 'Para terminar']
 
 function normal(
@@ -480,6 +500,8 @@ function normal(
         },
       }
     }
+    case 'revision_subtitulos':
+      return reviewChanges(input, mode)
     case 'bloque_guion':
       return {
         text: 'Este bloque está escrito de nuevo. Lo agradecen dos millones de personas.',
@@ -567,6 +589,12 @@ function invent(use: ChannelUse, output: Record<string, unknown>): Record<string
       return { ...output, body: add(output.body as string) }
     case 'paquete_short':
       return { ...output, body: add(output.body as string) }
+    case 'revision_subtitulos': {
+      // A figure nobody said: the batch's own check refuses it as a new word (reviewOutputFor).
+      const changes = output.changes as { id: string; text: string; reason: string }[]
+      const first = changes[0] ?? { id: 'c1', text: '', reason: 'falta el punto final' }
+      return { changes: [{ ...first, text: add(first.text).trim() }, ...changes.slice(1)] }
+    }
     case 'parte_paquete':
       if (typeof output.body === 'string') return { ...output, body: add(output.body) }
       if (typeof output.comment === 'string') return { ...output, comment: add(output.comment) }

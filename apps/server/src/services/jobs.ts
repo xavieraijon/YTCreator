@@ -66,6 +66,25 @@ export function createJobsService({ jobs, logger }: { jobs: JobsRepo; logger: Lo
       return started
     },
 
+    /** A job that waits its turn (`en_cola`); `runQueued` starts it when it comes (007, R5). */
+    enqueue(job: NewJob): Job {
+      return jobs.start(job, 'en_cola')
+    },
+
+    /** Starts a queued job; false if it was no longer waiting. */
+    runQueued(id: string, work: JobWork): boolean {
+      if (!jobs.begin(id)) return false
+      emit(id, { type: 'progress', done: 0, total: jobs.get(id)?.progress.total ?? 0 })
+      void run(id, work)
+      return true
+    },
+
+    /** Ends a job that never ran, as failed with this code. */
+    failQueued(id: string, failure: string): void {
+      jobs.fail(id, failure)
+      end(id, { type: 'failed', failure })
+    },
+
     subscribe(id: string, listener: (event: JobEvent) => void): () => void {
       const set = listeners.get(id) ?? new Set()
       set.add(listener)
@@ -76,7 +95,7 @@ export function createJobsService({ jobs, logger }: { jobs: JobsRepo; logger: Lo
       }
     },
 
-    // On start-up nothing is running yet: whatever says `en_curso` was cut short.
+    // On start-up nothing is running yet: whatever says `en_curso` or waits `en_cola` was cut short (decision 12).
     interruptRunning: () => jobs.interruptRunning(),
   }
 }

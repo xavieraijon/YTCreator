@@ -11,13 +11,16 @@ import {
   knowledgeFiles,
   loadMarket,
   loadPublishKnowledge,
+  loadSubtitlesKnowledge,
   loadScriptKnowledge,
   publishKnowledgeFiles,
+  subtitlesKnowledgeFiles,
   scriptKnowledgeFiles,
   promptFor,
   STALE_AFTER_DAYS,
   warningKnowledge,
 } from '@ytcreator/knowledge'
+import { createSpeechRecognizer, createWhisperRecognizer } from '@ytcreator/speech'
 import { createKeyCheck, createYouTubeAdapters } from '@ytcreator/youtube'
 // Bundled with the server: the same pinned reader as the installer of this release (R2).
 import readerVersionsJson from '../../../installer/versions.json?raw'
@@ -34,6 +37,14 @@ import { createPackageService } from './services/packages.ts'
 import { createPackageWork } from './services/package-work.ts'
 import { createPackagesRepo } from './db/repos/packages.ts'
 import { createPackageVersionsRepo } from './db/repos/package-versions.ts'
+import { createSubtitleTracksRepo } from './db/repos/subtitle-tracks.ts'
+import { createSubtitleVersionsRepo } from './db/repos/subtitle-versions.ts'
+import { createSubtitlesService } from './services/subtitles.ts'
+import { createSubtitlesChapters } from './services/subtitles-chapters.ts'
+import { createSubtitlesEdit } from './services/subtitles-edit.ts'
+import { createSubtitlesRecognition } from './services/subtitles-recognize.ts'
+import { createSpeechEngine, createSpeechEngineService, speechVersionsSchema } from './services/speech-engine.ts'
+import { fakeSpeechDownloads } from './services/speech-engine-fake.ts'
 import { createIdeaMeasure } from './services/idea-measure.ts'
 import { createIdeasRepo } from './db/repos/ideas.ts'
 import { createScriptVersionsRepo } from './db/repos/script-versions.ts'
@@ -202,6 +213,8 @@ export async function startServer({
   const scriptKnowledge = loadScriptKnowledge()
   // The same for the publishing package (006).
   const publishKnowledge = loadPublishKnowledge()
+  // And for the subtitles (007).
+  const subtitlesKnowledge = loadSubtitlesKnowledge()
   const pricing: Pricing = {
     version: market.pricing.version,
     models: market.pricing.data.models,
@@ -392,6 +405,7 @@ export async function startServer({
     promptFor: channelPrompt,
     knowledge: scriptKnowledge,
     packageOf: (scriptId: string) => packageService.scriptPackage(scriptId),
+    subtitlesOf: (scriptId: string) => subtitlesService.statusOf(scriptId),
   })
   const packagesRepo = createPackagesRepo(db, now)
   const packageVersions = createPackageVersionsRepo(db, now)
@@ -423,6 +437,69 @@ export async function startServer({
     aiRun: channel.aiRun,
     promptFor: channelPrompt,
     knowledge: publishKnowledge,
+  })
+  const subtitleTracks = createSubtitleTracksRepo(db, now)
+  const subtitleVersions = createSubtitleVersionsRepo(db, now)
+  const subtitlesService = createSubtitlesService({
+    channels: channel.channels,
+    ideas: ideasRepo,
+    scripts: scriptsRepo,
+    tracks: subtitleTracks,
+    versions: subtitleVersions,
+    jobsRepo,
+    scriptStatus: (ideaId: string) => scriptService.ideaScript(ideaId)?.status ?? null,
+    packageId: (scriptId: string) => packageService.scriptPackage(scriptId)?.id ?? null,
+    knowledge: subtitlesKnowledge,
+    mainTitle: (scriptId: string) => packageService.mainTitleOfScript(scriptId),
+    queuePosition: (jobId: string) => subtitlesRecognition.queuePosition(jobId),
+    newAudio: (scriptId: string) => subtitlesRecognition.hasNewAudio(scriptId),
+  })
+  const speech = createSpeechRecognizer({
+    env,
+    // whisper-cli where the download left it (speechFiles, below: only used once it is there).
+    real: () =>
+      createWhisperRecognizer({
+        locate: (model) => speechFiles.locate(model),
+        log: (line) => logger.info('speech', { line }),
+      }),
+    log: (line) => logger.info('speech', { line }),
+  })
+  // The program that listens: the pinned one of versions.json; with the fake recognizer, small files from a fake server.
+  const speechDownloads =
+    __YTC_ALLOW_FAKE_AI__ && speech.fake
+      ? fakeSpeechDownloads(process.platform, process.arch, { delayMs: 300 })
+      : { fetch: globalThis.fetch, versions: speechVersionsSchema.parse(JSON.parse(readerVersionsJson)) }
+  const speechFiles = createSpeechEngine({
+    ...speechDownloads,
+    appHome: paths.appHome,
+    platform: process.platform,
+    arch: process.arch,
+  })
+  const speechEngine = createSpeechEngineService({
+    engine: speechFiles,
+    jobs,
+    settings,
+    logger,
+  })
+  const subtitlesRecognition = createSubtitlesRecognition({
+    scripts: scriptsRepo,
+    scriptVersions,
+    tracks: subtitleTracks,
+    versions: subtitleVersions,
+    jobs,
+    settings,
+    engine: speechEngine,
+    recognizer: speech.recognizer,
+    knowledge: subtitlesKnowledge,
+    scriptStatus: (ideaId: string) => scriptService.ideaScript(ideaId)?.status ?? null,
+    workspace: paths.workspace,
+    logger,
+    shortMax: {
+      seconds: market.shorts.data.maxDurationSeconds,
+      reviewedAt: market.shorts.reviewedAt,
+    },
+    platform: process.platform,
+    arch: process.arch,
   })
   app = createApp({
     port,
@@ -466,6 +543,29 @@ export async function startServer({
     },
     script: { service: scriptService, scripts: scriptsRepo },
     publish: { service: packageService, work: packageWork },
+    subtitles: {
+      service: subtitlesService,
+      recognizer: speech.recognizer,
+      engine: speechEngine,
+      recognition: subtitlesRecognition,
+      edit: createSubtitlesEdit({
+        service: subtitlesService,
+        tracks: subtitleTracks,
+        versions: subtitleVersions,
+        scriptVersions,
+        journeys: channel.journeys,
+        jobs,
+        aiRun: channel.aiRun,
+        promptFor: channelPrompt,
+        now,
+      }),
+      chapters: createSubtitlesChapters({
+        subtitles: subtitlesService,
+        versions: subtitleVersions,
+        packages: packageService,
+        work: packageWork,
+      }),
+    },
     jobs,
     youtubeSettings,
     usage,
@@ -474,6 +574,7 @@ export async function startServer({
         ...knowledgeFiles(market),
         ...scriptKnowledgeFiles(scriptKnowledge),
         ...publishKnowledgeFiles(publishKnowledge),
+        ...subtitlesKnowledgeFiles(subtitlesKnowledge),
       ],
       staleAfterDays: STALE_AFTER_DAYS,
     },
@@ -500,6 +601,8 @@ export async function startServer({
     close: () =>
       new Promise((resolve) => {
         if (versionCheckTimer) clearInterval(versionCheckTimer)
+        // whisper-cli runs in a group of its own: it is killed here, not left running after the app (007, rule 2).
+        subtitlesRecognition.stop()
         // A connection busy when close() starts stays open after its answer (keep-alive) and would hold close()
         // for good: whatever is left after a short grace is cut.
         const forceClose = setTimeout(() => server.closeAllConnections(), CLOSE_GRACE_MS)

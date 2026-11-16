@@ -143,7 +143,8 @@ export const packageViewSchema = z.object({
   ),
   // The description as it is copied, put together from its parts (R3 to R6).
   texts: z.object({
-    // Each chapter with when it starts: the creator's minute (`manual`) or worked out from the script, an estimate.
+    // Each chapter with when it starts: the creator's minute (`manual`), the real one from the subtitles (`fromAudio`,
+    // 007) or worked out from the script, an estimate.
     chapters: z.array(
       z.object({
         id,
@@ -151,6 +152,7 @@ export const packageViewSchema = z.object({
         blockIds: z.array(id),
         startSeconds: count,
         manual: z.boolean(),
+        fromAudio: z.boolean(),
         time: z.string(),
       }),
     ),

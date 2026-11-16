@@ -8,6 +8,7 @@ import { navigate } from '../../../router.ts'
 import { errorText } from '../../../shell/errorText.ts'
 import { es } from '../../../strings/es.ts'
 import { publishEs } from '../../../strings/publish.es.ts'
+import { subtitlesEs } from '../../../strings/subtitles.es.ts'
 import { scriptEs } from '../../../strings/script.es.ts'
 import styles from '../channel.module.css'
 import { AiAction } from '../Proposal.tsx'
@@ -66,6 +67,8 @@ function whereText(notice: ReviewNotice, titulo: string): string {
 // What can be fixed for free before recording. Nothing here stops the approval (FR-016).
 export function ReviewStep({ script, ai, onChange, onError, onToBlock, onToDraft, busy }: ReviewStepProps) {
   const [rules, setRules] = useState<ReviewRulesView | null>(null)
+  // An audio chosen but not listened to yet is not subtitles (contracts/ui-screens.md, «con subtítulos»).
+  const hasSubtitles = script.subtitles !== null && script.subtitles.status !== 'sin_hacer'
   const [failed, setFailed] = useState<unknown>(null)
   const [attempt, setAttempt] = useState(0)
   const [asking, setAsking] = useState(false)
@@ -259,7 +262,16 @@ export function ReviewStep({ script, ai, onChange, onError, onToBlock, onToDraft
                   ? publishEs.entry.see
                   : publishEs.entry.continue}
             </Button>
+            {/* Its subtitles (007, contracts/ui-screens.md): a secondary action next to the package. */}
+            <Button variant="secondary" onClick={() => navigate({ page: 'subtitles', scriptId: script.id })}>
+              {hasSubtitles ? subtitlesEs.entry.see : subtitlesEs.entry.make}
+            </Button>
           </div>
+          {hasSubtitles && script.subtitles && (
+            <p className={styles.notice}>
+              {format(subtitlesEs.entry.state, { estado: subtitlesEs.entry.states[script.subtitles.status] })}
+            </p>
+          )}
         </>
       ) : (
         <>

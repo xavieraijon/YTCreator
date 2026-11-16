@@ -15,6 +15,7 @@ import { itemComparisonSchema } from '../script/compare.ts'
 import { SCRIPT_USES, shortAngleViewSchema } from '../script/outputs.ts'
 import { SCRIPT_STATUSES, SCRIPT_WARNINGS } from '../script/status.ts'
 import { PACKAGE_STATUSES } from '../publish/status.ts'
+import { SUBTITLE_STATUSES } from '../subtitles/status.ts'
 
 // The script routes (specs/005-script-and-outline/contracts/http-api.md).
 const id = z.string().min(1)
@@ -108,6 +109,8 @@ export const scriptViewSchema = z.object({
   voice: scriptSettingsViewSchema,
   // Its publishing package, once opened (006, contracts/http-api.md).
   package: z.object({ id, status: z.enum(PACKAGE_STATUSES) }).nullable(),
+  // Its subtitles, once the creator started them (007): «Hacer los subtítulos» or «Ver los subtítulos».
+  subtitles: z.object({ status: z.enum(SUBTITLE_STATUSES) }).nullable(),
 })
 export type ScriptView = z.infer<typeof scriptViewSchema>
 

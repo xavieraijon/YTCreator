@@ -4,6 +4,7 @@ import { AUDIENCE_REGIONS } from './model.ts'
 import { RPM_CATEGORIES } from './monetization.ts'
 import { IDEA_OUTPUTS } from '../ideas/outputs.ts'
 import { PUBLISH_OUTPUTS } from '../publish/outputs.ts'
+import { reviewOutput } from '../subtitles/review.ts'
 
 // Output schemas of the six channel uses (contracts/ai-uses.md). The AI writes these; the domain fills the rest.
 export const HANDLE_PATTERN = /^[A-Za-z0-9._-]{3,30}$/
@@ -123,6 +124,8 @@ export const CHANNEL_OUTPUTS = {
   ...SCRIPT_OUTPUTS,
   // And the publishing package (006).
   ...PUBLISH_OUTPUTS,
+  // The subtitles (007): only how they are written (reviewOutputFor adds what the batch knows).
+  revision_subtitulos: reviewOutput,
 } as const
 export type ChannelUse = keyof typeof CHANNEL_OUTPUTS
 export type ChannelOutput<U extends ChannelUse> = z.infer<(typeof CHANNEL_OUTPUTS)[U]>

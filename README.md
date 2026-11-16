@@ -6,7 +6,8 @@ subtítulos. YTCreator nunca sube nada a YouTube: el paquete se copia o se desca
 
 Tus datos se quedan en tu ordenador. YTCreator solo se conecta a la IA que tú elijas, a YouTube para ver qué funciona en
 tu tema, cuando investigas un vídeo a las páginas de las fuentes para comprobar que abren y, una vez al día, a la página
-de versiones para saber si hay una nueva (se puede desactivar).
+de versiones para saber si hay una nueva (se puede desactivar). La primera vez que haces unos subtítulos descarga además
+el programa que los saca de la voz, desde GitHub y Hugging Face (ver «Subtítulos»).
 
 ## Lo que necesitas
 
@@ -18,6 +19,14 @@ YTCreator necesita **una de estas dos cosas** para funcionar. No incluye una IA 
   empezar. Crea la cuenta y añade saldo en [console.anthropic.com](https://console.anthropic.com).
 
 La elegirás y la conectarás en el primer arranque, sin tocar la Terminal.
+
+## Subtítulos
+
+Los subtítulos se sacan de la voz de tu vídeo **en tu propio ordenador**: el vídeo y su audio no salen de él. La
+primera vez que los haces, YTCreator te pide descargar el programa que reconoce la voz, unos **580 MB**, una sola vez.
+Si tu ordenador es lento, puedes elegir uno más pequeño (unos 190 MB) que va más rápido y acierta algo menos. La
+pantalla te dice cuánto tardará antes de empezar. Revisarlos con la IA es opcional y te dice lo que cuesta antes de
+hacerlo.
 
 ## Sistemas compatibles
 
