@@ -12,13 +12,17 @@ import styles from '../channel.module.css'
 import { durationText } from '../existing/format.ts'
 import { saveFile } from '../scripts/saveFile.ts'
 import { AiReview } from './AiReview.tsx'
+import { AnotherEdit } from './AnotherEdit.tsx'
 import { CueEditor } from './CueEditor.tsx'
 import { clockText } from './format.ts'
 import { History } from './History.tsx'
+import { ReapplyOffer } from './ReapplyOffer.tsx'
 import { RealChapters } from './RealChapters.tsx'
 import { ReplaceAll } from './ReplaceAll.tsx'
 
 const text = subtitlesEs.review
+
+const failedText = (code: string) => subtitlesEs.failed.failures[code] ?? subtitlesEs.failed.failures['interno'] ?? ''
 
 type Latest = NonNullable<SubtitlesView['latest']>
 
@@ -58,10 +62,13 @@ export function ReviewStep({
   view,
   onView,
   onReload,
+  onAgain,
 }: {
   readonly view: SubtitlesView & { latest: Latest }
   readonly onView: (view: SubtitlesView) => void
-  readonly onReload: () => void
+  readonly onReload: () => Promise<void> | void
+  /** «Elegir otro fichero»: back to choosing, for a new version from another edit (US5). */
+  readonly onAgain: () => void
 }) {
   const cues = view.latest.content.cues
   const version = view.latest.version
@@ -188,6 +195,30 @@ export function ReviewStep({
   }
 
   const aiBusy = view.job?.op === 'revision_ia' && (view.job.status === 'en_curso' || view.job.status === 'en_cola')
+  // Another file that could not be heard after these subtitles were made (US5): they stay, and it says why.
+  const failedAgain =
+    view.job?.op === 'reconocer' &&
+    (view.job.status === 'fallido' || view.job.status === 'interrumpido') &&
+    view.job.finishedAt !== null &&
+    view.job.finishedAt > view.latest.createdAt
+      ? (view.job.failure ?? (view.job.status === 'interrumpido' ? 'interrumpido' : 'interno'))
+      : null
+  // Choosing another file leaves the screen: not with a subtitle open, while the AI works or with its proposal waiting.
+  const againBlocked = editing !== null || aiBusy || view.aiProposal !== null
+  // The same file again for what may go well a second time; another file (or the program) for the rest.
+  const retry = async () => {
+    setError(null)
+    try {
+      await subtitlesApi.recognize(view.scriptId)
+      await onReload()
+    } catch (cause) {
+      fail(cause)
+    }
+  }
+  const againFix =
+    failedAgain === 'interrumpido' || failedAgain === 'interno' || failedAgain === 'sin_memoria'
+      ? { label: subtitlesEs.failed.again, onClick: () => void retry() }
+      : { label: text.again.choose, onClick: onAgain }
 
   return (
     <section aria-labelledby="review-title">
@@ -200,7 +231,40 @@ export function ReviewStep({
           })}
         </p>
       )}
-      {view.scriptChanged && <p className={styles.notice}>{text.scriptChanged}</p>}
+      {/* Stopped by the creator: said, not as a failure. */}
+      {failedAgain === 'cancelado' && <p className={styles.notice}>{text.again.stopped}</p>}
+      {failedAgain &&
+        failedAgain !== 'cancelado' &&
+        (againBlocked ? (
+          // While a subtitle is open or the AI's proposal waits, it is said without its button.
+          <p className={styles.notice}>
+            {text.again.failedTitle}. {format(text.again.failedKept, { motivo: failedText(failedAgain) })}
+          </p>
+        ) : (
+          <ErrorMessage
+            live
+            title={text.again.failedTitle}
+            description={format(text.again.failedKept, { motivo: failedText(failedAgain) })}
+            action={againFix}
+          />
+        ))}
+      {view.scriptChanged && (
+        <>
+          <p className={styles.notice}>{text.scriptChanged}</p>
+          <div className={styles.actions}>
+            <Button variant="secondary" disabled={againBlocked} onClick={onAgain}>
+              {text.again.scriptChanged}
+            </Button>
+          </div>
+        </>
+      )}
+      <ReapplyOffer
+        view={view}
+        version={version}
+        disabled={editing !== null || aiBusy}
+        onView={onView}
+        onError={fail}
+      />
       {approved && view.approvedAt && <p>{format(text.approved, { fecha: formatDate(view.approvedAt) })}</p>}
       <div className={styles.actions}>
         {!approved && (
@@ -263,6 +327,14 @@ export function ReviewStep({
             disabled={editing !== null || aiBusy}
           />
           <History view={view} version={version} onView={onView} onError={fail} disabled={editing !== null || aiBusy} />
+          <AnotherEdit
+            view={view}
+            disabled={editing !== null || aiBusy}
+            blockedByAi={view.aiProposal !== null}
+            onAgain={onAgain}
+            onReload={onReload}
+            onError={fail}
+          />
           {/* Only a long video with a package has chapters to place (US3). */}
           {view.format === 'largo' && view.packageId !== null && (
             <RealChapters

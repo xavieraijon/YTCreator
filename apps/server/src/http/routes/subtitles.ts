@@ -12,6 +12,7 @@ import {
   subtitlesExportQuerySchema,
   subtitlesGenerateBodySchema,
   subtitlesReplaceBodySchema,
+  subtitlesReapplyBodySchema,
   subtitlesRestoreBodySchema,
   subtitlesSaveBodySchema,
 } from '@ytcreator/core/api'
@@ -111,6 +112,17 @@ export function subtitleRoutes({ service, engine, recognition, edit, chapters }:
       'Content-Length': String(part.end - part.start + 1),
       ...(range === 'whole' ? {} : { 'Content-Range': `bytes ${part.start}-${part.end}/${audio.size}` }),
     })
+  })
+
+  // R16: the audio goes from this machine; the subtitles stay as they are.
+  routes.delete('/scripts/:id/subtitles/audio', (c) => {
+    recognition.forgetAudio(c.req.param('id'))
+    return c.json(service.view(c.req.param('id')))
+  })
+
+  routes.post('/scripts/:id/subtitles/reapply', async (c) => {
+    const { baseVersion } = await parseBody(c, subtitlesReapplyBodySchema)
+    return c.json(edit.reapply(c.req.param('id'), baseVersion))
   })
 
   routes.put('/scripts/:id/subtitles', async (c) => {

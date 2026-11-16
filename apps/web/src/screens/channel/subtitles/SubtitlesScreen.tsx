@@ -19,6 +19,8 @@ export function SubtitlesScreen({ scriptId }: { readonly scriptId: string }) {
   const [view, setView] = useState<SubtitlesView | null>(null)
   const [engine, setEngine] = useState<SpeechEngineView | null>(null)
   const [error, setError] = useState<unknown>(null)
+  // Choosing another file while there are subtitles (US5): until it starts, the ones there are stay as they are.
+  const [again, setAgain] = useState(false)
 
   const load = useCallback(
     async (signal?: AbortSignal) => {
@@ -66,10 +68,25 @@ export function SubtitlesScreen({ scriptId }: { readonly scriptId: string }) {
       <p>{format(text.of, { titulo: view.idea.title })}</p>
       {listening ? (
         <RunningStep view={{ ...view, job }} onChanged={reload} />
-      ) : view.latest && view.latest.content.cues.length > 0 ? (
-        <ReviewStep view={{ ...view, latest: view.latest }} onView={setView} onReload={reload} />
+      ) : view.latest && view.latest.content.cues.length > 0 && !again ? (
+        <ReviewStep
+          view={{ ...view, latest: view.latest }}
+          onView={setView}
+          onReload={reload}
+          onAgain={() => setAgain(true)}
+        />
       ) : (
-        <ChooseStep view={view} engine={engine} onEngineChanged={reload} onStarted={reload} />
+        <ChooseStep
+          view={view}
+          engine={engine}
+          again={again}
+          onBack={() => setAgain(false)}
+          onEngineChanged={reload}
+          onStarted={async () => {
+            setAgain(false)
+            await reload()
+          }}
+        />
       )}
       {error !== null && (
         <ErrorMessage live title={errorText(error)} action={{ label: es.app.retry, onClick: () => void load() }} />

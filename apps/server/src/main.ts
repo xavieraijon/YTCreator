@@ -452,6 +452,7 @@ export async function startServer({
     knowledge: subtitlesKnowledge,
     mainTitle: (scriptId: string) => packageService.mainTitleOfScript(scriptId),
     queuePosition: (jobId: string) => subtitlesRecognition.queuePosition(jobId),
+    newAudio: (scriptId: string) => subtitlesRecognition.hasNewAudio(scriptId),
   })
   const speech = createSpeechRecognizer({
     env,

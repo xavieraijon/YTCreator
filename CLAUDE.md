@@ -53,7 +53,10 @@ Spec-Driven Development with GitHub Spec Kit (`/speckit-*`).
   batches of 200, history, approve) closed with Puerta A on 2026-11-16 (decisions 34–43, migration 0009). Open for the
   creator: P1–P5. US3 (T052–T060: real chapter minutes into the 006 package, remove a chapter cut in the edit) closed
   with Puerta A on 2026-11-16 (decisions 44–51, no migration). US4 (T061–T064: Short subtitles, the over-Short
-  warning from the server before «Empezar», no chapters) closed with Puerta A on 2026-11-16 (decisions 52–53). Next: US5.
+  warning from the server before «Empezar», no chapters) closed with Puerta A on 2026-11-16 (decisions 52–53). US5
+  (T065–T070: another edit as a new version, the changes in all offered again, deleting the audio) closed with Puerta A
+  on 2026-11-16 (decisions 54–57, no migration). Next: Polish (T071–T077; T075 real speech, T076 real AI with the
+  creator's permission, T077 novice audit).
 - AI: Claude only for now (Claude Code subscription, and the Anthropic API behind «Más opciones»). No other provider
   is planned (creator, 2026-11-14).
 - Commands (Node 24, `fnm exec --using=24 --`): `pnpm dev` (server + web), `pnpm lint`, `pnpm typecheck`,

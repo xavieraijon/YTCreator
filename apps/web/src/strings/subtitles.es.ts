@@ -78,6 +78,11 @@ export const subtitlesEs = {
     estimateShort: 'Tardará menos de un minuto.',
     start: 'Empezar',
     other: 'Elegir otro fichero',
+    // Another file when there are subtitles already (US5, AS1).
+    again:
+      'Se harán unos subtítulos nuevos con este fichero. Los de ahora se guardan en el historial y puedes volver a ellos.',
+    againApproved: 'Los nuevos estarán en borrador hasta que los apruebes.',
+    back: 'Volver a mis subtítulos',
     shortTooLong:
       'Este vídeo dura {duracion} y un Short puede durar hasta {maximo}. Si dura más, YouTube no lo trata como un Short. Puedes empezar igualmente o elegir otro fichero.',
     failureTitle: 'No se ha podido usar este fichero',
@@ -110,6 +115,7 @@ export const subtitlesEs = {
       sin_motor: 'Falta el programa que escucha el audio.',
       sin_modelo: 'Falta una parte del programa que escucha el audio.',
       audio_no_valido: 'No se ha podido leer el audio.',
+      sin_voz: 'No se ha oído ninguna palabra en el fichero nuevo. Comprueba que tiene voz y elige otro.',
       sin_memoria:
         'Tu equipo se ha quedado sin memoria. Cierra otros programas y vuelve a empezar o, en «Modo experto», elige la opción «pequeño».',
       interrumpido: 'Se ha parado antes de terminar.',
@@ -164,7 +170,7 @@ export const subtitlesEs = {
     keysHelp:
       'Pulsa un subtítulo para editarlo. Con el teclado, Intro lo edita, Espacio lo oye y las flechas pasan al siguiente o al anterior.',
     keysHelpNoAudio:
-      'Pulsa un subtítulo para editarlo. Con el teclado, Intro lo edita y las flechas pasan al siguiente o al anterior. El audio ya no está en este equipo: no se puede oír.',
+      'Pulsa un subtítulo para editarlo. Con el teclado, Intro lo edita y las flechas pasan al siguiente o al anterior. El audio ya no está en este equipo: para oírlos, elige el fichero otra vez en «Otro montaje», que hace unos subtítulos nuevos.',
     listen: 'Oír',
     listenLabel: 'Oír el subtítulo de {inicio}',
     edit: 'Editar',
@@ -246,8 +252,40 @@ export const subtitlesEs = {
         edicion: 'Cambiada por ti',
         ia: 'Con los cambios de la IA que aceptaste',
         recuperada: 'Recuperada de la versión {n}',
-        reaplicada: 'Con tus correcciones aplicadas otra vez',
+        reaplicada: 'Con tus cambios en todos hechos otra vez',
       },
+    },
+    // After another file (US5, FR-017): the changes made in all of them, offered again.
+    reapply: {
+      title: 'Tus cambios en todos',
+      offer:
+        'En los subtítulos de antes cambiaste esto en todos. Si lo cambias también en estos, cambian {subtitulos}.',
+      change: '«{de}» por «{por}»',
+      cues: { one: '1 subtítulo', other: '{n} subtítulos' },
+      approved: 'Tus subtítulos están aprobados: si lo cambias, volverán a borrador y tendrás que aprobarlos otra vez.',
+      apply: 'Cambiarlo también aquí',
+      later: 'Ahora no',
+      done: { one: 'Hemos cambiado 1 subtítulo.', other: 'Hemos cambiado {n} subtítulos.' },
+    },
+    // Another edit of the video, and deleting the audio (US5, R16).
+    again: {
+      title: 'Otro montaje',
+      why: 'Si has cambiado el vídeo después de hacer los subtítulos, elige el fichero nuevo: se harán otros subtítulos y estos se guardan en el historial.',
+      choose: 'Elegir otro fichero',
+      deleteAudio: 'Borrar el audio de este equipo',
+      deleteWhy:
+        'Tus subtítulos se quedan como están. Para volver a oír cada uno tendrás que elegir el fichero otra vez, y eso hace unos subtítulos nuevos (estos se quedan en el historial).',
+      deleteTitle: '¿Borrar el audio de este equipo?',
+      deleteBody:
+        'Se borra el audio que guardamos para que oigas los subtítulos. Tus subtítulos no cambian y tu vídeo no se toca.',
+      deleteConfirm: 'Borrar el audio',
+      deleteKeep: 'Dejarlo',
+      deleted: 'Hemos borrado el audio de este equipo.',
+      failedTitle: 'No se han podido hacer los subtítulos con el fichero nuevo',
+      failedKept: '{motivo} Siguen los de antes.',
+      stopped: 'Paraste los subtítulos del fichero nuevo. Siguen los de antes.',
+      blockedByAi: 'Antes de elegir otro fichero, decide qué haces con los cambios que propone la IA.',
+      scriptChanged: 'Elegir el fichero de nuevo',
     },
     // The real minutes of the chapters (US3, contracts/ui-screens.md).
     chapters: {

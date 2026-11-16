@@ -191,6 +191,30 @@ describe('POST /packages/:id/chapters/from-audio', () => {
     expect((await proposalOf(t, scriptId))[2]).toMatchObject({ estimated: third.real, fromAudio: true })
   })
 
+  it('another edit heard later proposes the chapters again, also one with its real minute already (US5)', async () => {
+    const { t, id, scriptId, view } = await withPackage()
+    const third = (await proposalOf(t, scriptId))[2]!
+    await accept(t, id, {
+      baseVersion: view.pieces['capitulos']!.version,
+      accept: [{ chapterId: third.chapterId, seconds: third.real }],
+    })
+    // The new edit: the same words, 10 s later from the third chapter on.
+    const track = t.subtitleTracks.getByScript(scriptId)!
+    const heard = t.subtitleVersions.latest(track.id)!
+    const moved = heard.content.words.map((word) =>
+      word.start >= third.real! ? { ...word, start: word.start + 10, end: word.end + 10 } : word,
+    )
+    t.subtitleVersions.add({
+      trackId: track.id,
+      origin: 'reconocimiento',
+      draftVersion: heard.draftVersion,
+      content: { ...heard.content, words: moved, audioSeconds: heard.content.audioSeconds + 10 },
+    })
+    const again = (await proposalOf(t, scriptId))[2]!
+    expect(again).toMatchObject({ estimated: third.real, fromAudio: true, status: 'encontrado' })
+    expect(Math.abs(again.real! - (third.real! + 10))).toBeLessThanOrEqual(1)
+  })
+
   it('a minute other than the real one is written by the creator (`manual`)', async () => {
     const { t, id, scriptId, view } = await withPackage()
     const third = (await proposalOf(t, scriptId))[2]!

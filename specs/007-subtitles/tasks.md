@@ -180,12 +180,12 @@ capítulos, y descargados.
 **Independent Test**: Con subtítulos aprobados y una corrección en todos, elegir otro fichero, aceptar reaplicarla y ver
 la versión anterior intacta.
 
-- [ ] T065 [P] [US5] Test en `packages/core/test/subtitles/edit.test.ts` de `reapply`: aplica las correcciones de `replacements` en orden y cuenta los subtítulos que cambian
-- [ ] T066 [US5] Implementar `reapply` en `packages/core/src/subtitles/edit.ts` para que pase T065
-- [ ] T067 [P] [US5] Test de rutas en `apps/server/test/http/subtitles-again.test.ts`: un audio nuevo no sustituye al anterior hasta que el reconocimiento termina bien; el resultado es una versión nueva y las anteriores siguen; la vista ofrece reaplicar con su número; `POST …/reapply` crea la versión `reaplicada`; con un paquete con minutos reales, la propuesta de capítulos se recalcula; `DELETE …/audio` borra el fichero y deja los subtítulos (R16), y `GET …/audio` da 404 `sin_audio`
-- [ ] T068 [US5] Implementar las rutas de T067 y, en la web, «Elegir otro fichero» con su aviso, el ofrecimiento de reaplicar y «Borrar el audio de este equipo» con su confirmación, con sus textos
-- [ ] T069 [US5] e2e en `apps/web/e2e/subtitles.spec.ts` (US5) con el WAV de prueba; axe en claro y oscuro a 375 y 1280 px
-- [ ] T070 [A] [US5] Puerta A de US5: ejecutar `/puerta-a 007 US5`
+- [X] T065 [P] [US5] Test en `packages/core/test/subtitles/edit.test.ts` de `reapply`: aplica las correcciones de `replacements` en orden y cuenta los subtítulos que cambian
+- [X] T066 [US5] Implementar `reapply` en `packages/core/src/subtitles/edit.ts` para que pase T065
+- [X] T067 [P] [US5] Test de rutas en `apps/server/test/http/subtitles-again.test.ts`: un audio nuevo no sustituye al anterior hasta que el reconocimiento termina bien; el resultado es una versión nueva y las anteriores siguen; la vista ofrece reaplicar con su número; `POST …/reapply` crea la versión `reaplicada`; con un paquete con minutos reales, la propuesta de capítulos se recalcula; `DELETE …/audio` borra el fichero y deja los subtítulos (R16), y `GET …/audio` da 404 `sin_audio`
+- [X] T068 [US5] Implementar las rutas de T067 y, en la web, «Elegir otro fichero» con su aviso, el ofrecimiento de reaplicar y «Borrar el audio de este equipo» con su confirmación, con sus textos
+- [X] T069 [US5] e2e en `apps/web/e2e/subtitles-again.spec.ts` (US5, decisión 57) con el WAV de prueba; axe en claro y oscuro a 375 y 1280 px
+- [X] T070 [A] [US5] Puerta A de US5: ejecutar `/puerta-a 007 US5`
 
 ---
 

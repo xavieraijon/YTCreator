@@ -343,6 +343,9 @@ export function createSubtitlesRecognition(deps: SubtitlesRecognitionDeps) {
       audioSeconds,
       lowConfidence: knowledge.craft.data.lowConfidence.value,
     })
+    // Another file where nothing is heard does not take the place of the subtitles there are, nor of their audio (US5,
+    // principle II); the first one does, and the screen asks for another file (US1, «casi sin voz»).
+    if (cues.length === 0 && versions.latestNumber(track.id) !== null) return { failure: 'sin_voz' }
     versions.add({
       trackId: track.id,
       origin: 'reconocimiento',
@@ -409,13 +412,39 @@ export function createSubtitlesRecognition(deps: SubtitlesRecognitionDeps) {
     }
   }
 
+  /** «Borrar el audio de este equipo» (R16): the audio goes, also a new one not heard yet; the subtitles stay. */
+  function forgetAudio(scriptId: string) {
+    if (!scripts.get(scriptId)) throw new ApiError({ code: 'no_encontrado' })
+    if (busy(scriptId)) throw new ApiError({ code: 'en_curso' })
+    const track = tracks.getByScript(scriptId)
+    const folder = folderOf(scriptId)
+    let failed: unknown = null
+    for (const one of [join(folder, NEW_AUDIO), join(folder, NEW_AUDIO_INFO), track?.audioFile]) {
+      try {
+        if (one) rmSync(one, { force: true })
+      } catch (error) {
+        failed ??= error
+      }
+    }
+    // What is gone is said gone, even if another file could not be deleted: no «Oír» for an audio that is not there.
+    if (track?.audioFile && !existsSync(track.audioFile)) tracks.forgetAudio(track.id)
+    if (failed) {
+      // The code only, never the path (rule 6).
+      logger.error('subtitles.audio_forget_failed', { code: (failed as NodeJS.ErrnoException).code ?? 'desconocido' })
+      throw new ApiError({ code: 'interno' })
+    }
+  }
+
+  /** A new audio uploaded and not heard yet (or not heard well): it can be deleted too (FR-019). */
+  const hasNewAudio = (scriptId: string) => existsSync(join(folderOf(scriptId), NEW_AUDIO))
+
   /** The app is closing: whatever is listening stops now, so no program is left running (contract, rule 2). */
   function stop() {
     waiting.length = 0
     running?.controller.abort()
   }
 
-  return { upload, recognize, cancel, queuePosition, audioFile, speedOf, stop }
+  return { upload, recognize, cancel, queuePosition, audioFile, forgetAudio, hasNewAudio, speedOf, stop }
 }
 
 export type SubtitlesRecognition = ReturnType<typeof createSubtitlesRecognition>

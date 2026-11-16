@@ -21,6 +21,7 @@ import {
   packageViewSchema,
   subtitlesViewSchema,
   subtitlesAudioResultSchema,
+  subtitlesReapplyResultSchema,
   subtitlesReplaceCountSchema,
   subtitleVersionDetailSchema,
   subtitleVersionSummarySchema,
@@ -417,6 +418,10 @@ export const subtitlesApi = {
     apiClient.post(`${scriptPath(scriptId)}/subtitles/replace`, body, subtitlesViewSchema),
   restore: (scriptId: string, body: { baseVersion: number; version: number }) =>
     apiClient.post(`${scriptPath(scriptId)}/subtitles/restore`, body, subtitlesViewSchema),
+  // Another file (US5): the changes made in all of them, applied again; and the audio deleted from here (R16).
+  reapply: (scriptId: string, baseVersion: number) =>
+    apiClient.post(`${scriptPath(scriptId)}/subtitles/reapply`, { baseVersion }, subtitlesReapplyResultSchema),
+  forgetAudio: (scriptId: string) => apiClient.delete(`${scriptPath(scriptId)}/subtitles/audio`),
   approve: (scriptId: string, version: number) =>
     apiClient.post(`${scriptPath(scriptId)}/subtitles/approve`, { version }, subtitlesViewSchema),
   versions: (scriptId: string, options?: RequestOptions) =>

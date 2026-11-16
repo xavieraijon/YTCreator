@@ -449,7 +449,7 @@ Con un guion de Short aprobado, el creador hace, revisa, aprueba y descarga sus 
 
 Los cuatro revisores coincidieron en que la fuente citada para el máximo era una página de ingresos, en un redondeo que hacía contradictorio el aviso y en que el e2e no aprobaba ni descargaba. Todo está corregido (decisión 52).
 
-**Resultado: pasada.** Sin pendientes nuevos del creador. Siguen P1 a P5. La IA no interviene en esta historia y el audio real no está probado (T076).
+**Resultado: pasada.** Sin pendientes nuevos del creador. Siguen P1 a P5. La IA no interviene en esta historia y el reconocimiento real no está probado (T075).
 
 ### 2. Requisitos
 
@@ -486,7 +486,7 @@ Los cuatro revisores coincidieron en que la fuente citada para el máximo era un
 - **No aplica:**
   - `test:installer`: ni el instalador ni la base de datos cambian;
   - fallos tipados de la IA: esta historia no llama a la IA.
-- **No ejecutado:** un Short real con el motor real (T076).
+- **No ejecutado:** un Short real con el motor real (T075).
 
 ### 5. Hallazgos
 
@@ -526,4 +526,111 @@ Los cuatro revisores coincidieron en que la fuente citada para el máximo era un
 
 - Revertir el commit de US4. No hay migración.
 - Un cliente antiguo ignora `overShort`.
-- Pendiente: T076, las historias siguientes y P1 a P5.
+- Pendiente: la fase de Polish (T071 a T077, con T075 y T076 reales) y P1 a P5.
+
+## US5: volver a hacerlos con otro montaje (T065–T070), Puerta A del 2026-11-16
+
+### 1. Resumen
+
+Con subtítulos hechos, el creador elige el fichero de un montaje nuevo desde «Otro montaje». Antes de empezar, la app le avisa de que se hará una versión nueva y de que la de ahora se conserva. Después le ofrece hacer otra vez sus cambios en todos, diciendo cuántos subtítulos cambian. El historial lo guarda todo. También puede borrar de su equipo el audio que guarda la app.
+
+Ninguno de los cuatro revisores encontró hallazgos graves. Los medios confirmados están corregidos:
+- un fichero nuevo sin voz sustituía a los subtítulos de antes;
+- la oferta de reaplicar se perdía con cualquier edición;
+- elegir otro fichero tiraba la propuesta de la IA sin avisar;
+- un audio nuevo pendiente no se podía borrar;
+- faltaban las decisiones y el contrato.
+
+Las decisiones son la 54 a la 57.
+
+**Resultado: pasada.** Sin pendientes nuevos del creador; siguen P1 a P5. La IA no interviene en esta historia y el reconocimiento real no está probado (T075).
+
+### 2. Requisitos
+
+| Requisito | Estado | Evidencia | Fecha |
+|-----------|--------|-----------|-------|
+| AS1, FR-017 | Cumplido | En «Otro montaje», «Elegir otro fichero» avisa de que se hará una versión nueva y de que la de ahora se conserva, y dice que irán a borrador si estaban aprobados. «Volver a mis subtítulos» deja todo como estaba. El audio nuevo solo sustituye al anterior cuando se oye bien. Si falla o no tiene voz, todo sigue igual (test de rutas y e2e) | 2026-11-16 |
+| AS2, FR-017 | Cumplido | Al terminar, «Tus cambios en todos» lista los cambios y dice cuántos subtítulos cambian. «Cambiarlo también aquí» crea la versión `reaplicada`. La oferta sigue aunque se edite antes y, una vez usada, no vuelve (`edit.test.ts`, test de rutas y e2e) | 2026-11-16 |
+| Resultado observable | Cumplido | En el e2e: versión nueva del fichero nuevo, cambios aplicados e historial completo (dos «Hecha al escuchar el audio» y «Con tus cambios en todos hechos otra vez») | 2026-11-16 |
+| US3 (capítulos) | Cumplido | Con otro montaje, la propuesta de capítulos se recalcula, también la de uno que ya tenía su minuto real (`subtitles-chapters.test.ts`) | 2026-11-16 |
+| R16, FR-019 | Cumplido | «Borrar el audio de este equipo», con confirmación, borra el audio y el nuevo sin oír. Los subtítulos no cambian, `GET …/audio` da 404 `sin_audio` y la pantalla dice cómo volver a oírlos (test de rutas y e2e) | 2026-11-16 |
+| Principio II | Cumplido | Ninguna versión se pierde, y nada cambia sin «Cambiarlo también aquí» | 2026-11-16 |
+
+### 3. Cómo se comprobó
+
+- `pnpm lint` y `pnpm typecheck`: 0.
+- `pnpm test`: 221 ficheros, 2877 pasan y 4 se saltan.
+- `test:e2e`:
+  - catálogo, 97 pasan y 2 se saltan;
+  - web, 59 pasan, entre ellos el nuevo `subtitles-again.spec.ts` (puerto 4483).
+- Una primera vuelta completa, antes de las correcciones de la revisión, también pasó entera.
+- Flujo con los falsos, en el e2e:
+  1. Subtítulos aprobados con «Hola» → «Buenas» en todos.
+  2. En «Otro montaje», «Elegir otro fichero» muestra el aviso, y «Volver a mis subtítulos» deja todo como estaba.
+  3. Se elige otro fichero con el teclado y se pulsa «Empezar»; salen subtítulos en borrador.
+  4. Aparece «Tus cambios en todos» con «cambian 1 subtítulo»; se pulsa «Cambiarlo también aquí».
+  5. El historial tiene las cuatro versiones.
+  6. «Borrar el audio de este equipo» pide confirmación; después ya no hay «Oír» y sale el texto de cómo volver a oírlos.
+
+### 4. Controles
+
+- **Pasados:**
+  - lint, typecheck, test y test:e2e;
+  - glosario y fuga de secretos (dentro de `pnpm test`);
+  - axe en claro y oscuro a 375 y 1280 px con movimiento reducido, en el aviso de otro fichero, la oferta de reaplicar, el diálogo de borrar y la revisión sin audio;
+  - teclado: todo el e2e se hace con Tab, Intro y el diálogo, y tras reaplicar y tras borrar el foco va al mensaje de lo que pasó.
+- **No aplica:**
+  - `test:installer`: no hay migración (`reaplicada` ya estaba en la 0008);
+  - fallos tipados de la IA: esta historia no llama a la IA.
+- **No ejecutado:** otro montaje real con el motor real (T075).
+
+### 5. Hallazgos
+
+**Confirmados y corregidos:**
+- Un fichero nuevo sin voz guardaba una versión vacía, sustituía el audio y dejaba al creador sin forma de volver desde la pantalla. Ahora falla con `sin_voz` y no toca nada (test).
+- La oferta de reaplicar se perdía con cualquier edición, y «Ahora no» prometía un después que no existía. Ahora sigue hasta que se usa, y una vez usada no vuelve (test).
+- Elegir otro fichero dejaba atrás, sin avisar, una propuesta de la IA pendiente. Ahora se bloquea y lo dice. También se bloquea con un subtítulo abierto o mientras la IA trabaja, en los tres botones que llevan a elegir.
+- Un audio nuevo sin oír no se podía borrar si el anterior ya no estaba. La vista gana `newAudio` (test).
+- Un fallo viejo reaparecía al volver a elegir, con un «Volver a intentarlo» que escuchaba un fichero abandonado. Ahora solo cuenta un fallo posterior a la última versión.
+- Parar salía como fallo. Ahora sale como aviso, y cada fallo tiene su botón (volver a empezar o elegir otro).
+- Reaplicar dos veces o sobre un texto ya corregido duplicaba palabras. Ahora solo se acepta lo ofrecido y un subtítulo que ya dice el cambio no se toca (test).
+- La oferta podía fallar al validar. Ahora solo se ofrece si el resultado es válido.
+- Un borrado a medias dejaba «Oír» sin audio. Ahora lo borrado se da por borrado.
+- Faltaba el aviso de borrador al reaplicar sobre aprobados. Añadido.
+- El foco se perdía tras reaplicar y tras borrar. Ahora va al mensaje.
+- Faltaba decir que volver a elegir el fichero hace subtítulos nuevos. Ahora lo dicen los textos.
+- Faltaban las decisiones y el contrato: decisiones 54 a 57, `http-api.md` y T069.
+
+**Descartados:**
+- *El test de capítulos no pasa por un audio real.* La propuesta lee la última versión sea cual sea su origen, y `subtitles-again.test.ts` prueba que el reconocimiento guarda así la del fichero nuevo (decisión 57).
+- *Borrar el audio nuevo es riesgo alto.* Es una función de la spec aprobada (R16, FR-019) sobre una copia hecha por la app, con confirmación del creador, y el vídeo no se toca (decisión 56).
+- *El WAV antiguo podría quedarse en la caché del navegador.* La revisión se vuelve a montar con la versión nueva y el servidor sirve el fichero actual; no se ha visto en el e2e. Queda anotado como algo a mirar con audio real (T075).
+
+**Abiertos:** ninguno.
+
+### 6. Desviaciones
+
+- La vista gana `reapply`, `newAudio` y `job.finishedAt` (decisiones 54 a 56).
+- `reapply` da 409 `conflicto` si no se ofrece.
+- `DELETE …/audio` borra también el audio nuevo y da 409 `en_curso`.
+- Un fichero nuevo sin voz falla con `sin_voz` (decisión 55).
+
+### 7. Decisiones
+
+- **Del agente:** 54, 55 y 56 (riesgo medio) y 57 (riesgo bajo).
+- **Del creador:** ninguna nueva. Siguen P1 a P5.
+
+### 8. Constitución
+
+- **I:** un aviso antes de rehacer y un botón para cada salida; parar no se presenta como error.
+- **II:** ninguna versión se pierde. Un fichero que falla no toca nada, y la propuesta de la IA no se tira sin decidir.
+- **III:** no hay gasto.
+- **VI:** axe, teclado, foco y movimiento reducido.
+- **VII:** el audio queda en la carpeta de trabajo y el creador lo puede borrar.
+- **XI:** este informe.
+
+### 9. Cómo revertir
+
+- Revertir el commit de US5. No hay migración.
+- Las versiones `reaplicada` ya admitidas por la 0008 se siguen leyendo.
+- Pendiente: la fase de Polish (T071 a T077; T075 y T076 son reales y T076 necesita tu permiso) y P1 a P5.

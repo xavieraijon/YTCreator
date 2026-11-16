@@ -32,11 +32,16 @@ type Stage =
 export function ChooseStep({
   view,
   engine,
+  again = false,
+  onBack,
   onEngineChanged,
   onStarted,
 }: {
   readonly view: SubtitlesView
   readonly engine: SpeechEngineView
+  /** There are subtitles already: these will be a new version, and the creator can go back to them (US5). */
+  readonly again?: boolean
+  readonly onBack?: () => void
   readonly onEngineChanged: () => Promise<void>
   readonly onStarted: () => Promise<void>
 }) {
@@ -46,7 +51,14 @@ export function ChooseStep({
   const [starting, setStarting] = useState(false)
   const input = useRef<HTMLInputElement>(null)
   const working = useRef<AbortController | null>(null)
-  const failedJob = view.job && view.job.op === 'reconocer' && view.job.status !== 'hecho' ? view.job : null
+  // With subtitles already, only a failure after them is about this file: an older one was left behind (US5).
+  const failedJob =
+    view.job &&
+    view.job.op === 'reconocer' &&
+    view.job.status !== 'hecho' &&
+    (view.latest === null || (view.job.finishedAt !== null && view.job.finishedAt > view.latest.createdAt))
+      ? view.job
+      : null
   // A job the server did not finish has no failure of its own: it was stopped before the end (R5).
   const failure = failedJob
     ? (failedJob.failure ?? (failedJob.status === 'interrumpido' ? 'interrumpido' : 'interno'))
@@ -118,14 +130,19 @@ export function ChooseStep({
   const fixOf = (code: string) =>
     (code === 'sin_motor' || code === 'sin_modelo') && !engine.installed
       ? { label: subtitlesEs.engine.download, onClick: () => void download() }
-      : code === 'audio_no_valido'
+      : code === 'audio_no_valido' || code === 'sin_voz'
         ? { label: subtitlesEs.failed.other, onClick: pick }
         : { label: subtitlesEs.failed.again, onClick: () => void start() }
-  const pickInError = failure === 'audio_no_valido' && stage.kind === 'idle'
+  const pickInError = (failure === 'audio_no_valido' || failure === 'sin_voz') && stage.kind === 'idle'
 
   return (
     <>
       {/* What it needs and that nothing leaves the machine, also before the program is there (AS1, AS2). */}
+      {again && (
+        <p className={styles.notice}>
+          {text.again} {view.status === 'aprobados' && text.againApproved}
+        </p>
+      )}
       <p className={styles.why}>{text.need}</p>
       <p className={styles.why}>{text.local}</p>
       <EngineStep engine={engine} onChanged={onEngineChanged} />
@@ -214,6 +231,17 @@ export function ChooseStep({
               : { label: es.app.retry, onClick: () => void (error.fix === 'start' ? start() : download()) }
           }
         />
+      )}
+      {again && onBack && (
+        <div className={styles.actions}>
+          <Button
+            variant="ghost"
+            disabled={stage.kind === 'preparing' || stage.kind === 'uploading' || starting}
+            onClick={onBack}
+          >
+            {text.back}
+          </Button>
+        </div>
       )}
     </>
   )

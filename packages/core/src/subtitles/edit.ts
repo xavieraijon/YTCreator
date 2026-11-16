@@ -139,3 +139,22 @@ export function replaceAll(cues: readonly Cue[], from: string, to: string): { cu
   })
   return { cues: changed, count }
 }
+
+/**
+ * The changes made in all of them, applied again in order to new subtitles: how many subtitles end up changed. A
+ * subtitle that already says what the change writes is left as it is, so «Juan» → «Juan Pérez» never gives «Juan Pérez
+ * Pérez» (the new recognition may come already written as in the script, R9).
+ */
+export function reapply(
+  cues: readonly Cue[],
+  replacements: readonly { from: string; to: string }[],
+): { cues: Cue[]; count: number } {
+  const changed = replacements.reduce<Cue[]>(
+    (now, { from, to }) =>
+      now.map((cue) => (cue.text.search(wholeWord(to)) >= 0 ? cue : replaceAll([cue], from, to).cues[0]!)),
+    [...cues],
+  )
+  // A cue whose text ends as it was is the same cue: the one before is kept as is.
+  const kept = changed.map((one, index) => (one.text === cues[index]!.text ? cues[index]! : one))
+  return { cues: kept, count: kept.filter((one, index) => one !== cues[index]).length }
+}

@@ -83,6 +83,8 @@ export const subtitlesJobSchema = z.object({
   failure: z.string().nullable(),
   /** Where it waits in the queue (R5); null when it is not waiting. */
   queuePosition: positive.nullable(),
+  /** When it ended: a recognition that failed after the last version is said (US5). */
+  finishedAt: z.string().nullable(),
 })
 export type SubtitlesJob = z.infer<typeof subtitlesJobSchema>
 
@@ -104,11 +106,15 @@ export const subtitlesViewSchema = z.object({
   audio: z
     .object({ available: z.boolean(), seconds: z.number().positive(), sourceName: z.string().nullable() })
     .nullable(),
+  /** A new audio uploaded and not heard (well) yet: deleting the audio deletes it too (US5, FR-019). */
+  newAudio: z.boolean(),
   approvedVersion: positive.nullable(),
   approvedAt: z.string().nullable(),
   /** The approved script changed after the subtitles were aligned with it. */
   scriptChanged: z.boolean(),
   replacements: z.array(replacementSchema),
+  /** After another file: the corrections made in all of them, offered again with how many subtitles change (US5). */
+  reapply: z.object({ corrections: positive, count: positive }).nullable(),
   // The reading limits of its format, each with where it comes from (principle V).
   limits: z.object({
     maxLines: limitFigure,
@@ -147,6 +153,7 @@ export const subtitlesReplaceCountSchema = z.object({ count })
 export const subtitlesReapplyBodySchema = z.object({ baseVersion })
 export const subtitlesRestoreBodySchema = z.object({ baseVersion, version: positive })
 export const subtitlesApproveBodySchema = z.object({ version: positive })
+export const subtitlesReapplyResultSchema = subtitlesViewSchema.extend({ count: positive })
 
 export const subtitleVersionSummarySchema = z.object({
   version: positive,

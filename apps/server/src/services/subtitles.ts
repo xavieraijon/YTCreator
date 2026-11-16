@@ -2,8 +2,10 @@ import {
   countToReview,
   cueMarks,
   exportSubtitles,
+  reapply,
   type ScriptStatus,
   type SubtitleLimits,
+  subtitlesContentSchema,
   subtitlesFileName,
   subtitlesStatus,
 } from '@ytcreator/core'
@@ -33,6 +35,8 @@ export interface SubtitlesServiceDeps {
   packageId?: (scriptId: string) => string | null
   /** Where a waiting recognition is in the queue (1 is next). */
   queuePosition?: (jobId: string) => number | null
+  /** Whether a new audio waits, not heard yet (US5): it can be deleted too. */
+  newAudio?: (scriptId: string) => boolean
 }
 
 // What every route of the subtitles needs: reading them (specs/007-subtitles/contracts/http-api.md).
@@ -83,6 +87,29 @@ export function createSubtitlesService(deps: SubtitlesServiceDeps) {
     return job ? { job, op: track.jobOp } : null
   }
 
+  // After another file is heard (a recognition that is not the first), the changes made in all of them are offered
+  // again until they are made again, whatever is changed meanwhile, if any subtitle would change and the result is
+  // valid (FR-017, decision 54).
+  const reapplyOffer = (
+    track: SubtitleTrack | null,
+    latest: ReturnType<SubtitleVersionsRepo['latest']>,
+    format: 'largo' | 'short',
+  ): SubtitlesView['reapply'] => {
+    if (!track || !latest || track.replacements.length === 0) return null
+    const since: string[] = []
+    for (const one of versions.summaries(track.id)) {
+      if (one.origin === 'reconocimiento') {
+        // The first recognition has nothing before it to bring changes from.
+        if (one.version === 1 || since.includes('reaplicada')) return null
+        const { cues, count } = reapply(latest.content.cues, track.replacements)
+        if (count === 0 || !subtitlesContentSchema(format).safeParse({ ...latest.content, cues }).success) return null
+        return { corrections: track.replacements.length, count }
+      }
+      since.push(one.origin)
+    }
+    return null
+  }
+
   const view = (scriptId: string): SubtitlesView => {
     const { script, idea, track } = find(scriptId)
     const latest = track ? versions.latest(track.id) : null
@@ -119,8 +146,13 @@ export function createSubtitlesService(deps: SubtitlesServiceDeps) {
       toReview: countToReview(cues, marks),
       audio:
         track && track.audioSeconds !== null
-          ? { available: track.audioFile !== null, seconds: track.audioSeconds, sourceName: track.sourceName }
+          ? {
+              available: track.audioFile !== null,
+              seconds: track.audioSeconds,
+              sourceName: track.sourceName,
+            }
           : null,
+      newAudio: deps.newAudio?.(script.id) ?? false,
       approvedVersion: track?.approvedVersion ?? null,
       approvedAt: track?.approvedAt ?? null,
       scriptChanged:
@@ -129,6 +161,7 @@ export function createSubtitlesService(deps: SubtitlesServiceDeps) {
         approvedDraft !== null &&
         latest.draftVersion !== approvedDraft,
       replacements: track?.replacements ?? [],
+      reapply: reapplyOffer(track, latest, script.format),
       limits,
       job: current
         ? {
@@ -138,6 +171,7 @@ export function createSubtitlesService(deps: SubtitlesServiceDeps) {
             progress: { done: current.job.progress.done, total: current.job.progress.total },
             failure: current.job.failure,
             queuePosition: current.job.status === 'en_cola' ? (deps.queuePosition?.(current.job.id) ?? null) : null,
+            finishedAt: current.job.finishedAt,
           }
         : null,
       // Only the one for the last version: any change after it leaves it behind (R11).
@@ -183,7 +217,7 @@ export function createSubtitlesService(deps: SubtitlesServiceDeps) {
 
   const limitValues = (format: 'largo' | 'short'): SubtitleLimits => valuesOf(limitsOf(format))
 
-  return { view, exportFile, statusOf, find, assertIdle, limitValues }
+  return { view, reapplyOffer, exportFile, statusOf, find, assertIdle, limitValues }
 }
 
 export type SubtitlesService = ReturnType<typeof createSubtitlesService>

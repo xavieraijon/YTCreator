@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import {
   type Cue,
+  reapply as reapplyCorrections,
   replaceAll,
   replaceCount,
   replacementsSchema,
@@ -115,6 +116,16 @@ export function createSubtitlesEdit(deps: SubtitlesEditDeps) {
     addVersion(track, latest, 'edicion', content)
     tracks.setReplacements(track.id, replacements.data)
     return service.view(scriptId)
+  }
+
+  /** The corrections made in all of them, applied again to the subtitles of another file, as a new version (FR-017). */
+  const reapply = (scriptId: string, baseVersion: number) => {
+    const { script, track, latest } = current(scriptId, baseVersion)
+    // Only what the view offers: after another file, once (decision 54); never twice over the same subtitles.
+    if (!service.reapplyOffer(track, latest, script.format)) throw new ApiError({ code: 'conflicto' })
+    const { cues, count } = reapplyCorrections(latest.content.cues, track.replacements)
+    addVersion(track, latest, 'reaplicada', valid(script.format, { ...latest.content, cues }))
+    return { ...service.view(scriptId), count }
   }
 
   /** «Volver a esta»: a copy as a new version; the ones after it stay in the history (FR-012). */
@@ -318,7 +329,7 @@ export function createSubtitlesEdit(deps: SubtitlesEditDeps) {
     return service.view(scriptId)
   }
 
-  return { save, replace, restore, approve, listVersions, readVersion, estimate, generate, decide }
+  return { save, replace, reapply, restore, approve, listVersions, readVersion, estimate, generate, decide }
 }
 
 export type SubtitlesEdit = ReturnType<typeof createSubtitlesEdit>

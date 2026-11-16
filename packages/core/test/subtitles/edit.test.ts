@@ -5,6 +5,7 @@ import {
   joinCues,
   markReviewed,
   nextCueId,
+  reapply,
   replaceAll,
   replaceCount,
   splitCue,
@@ -147,6 +148,40 @@ describe('changing a word in all of them (FR-009)', () => {
     expect(replaceAll(CUES, 'Pan Casero', 'PanCasero TV').count).toBe(1)
     expect(replaceCount(CUES, '.')).toBe(0)
     expect(replaceCount([cue('c1', 0, 1, 'Cuesta 3 € (más IVA).')], '(más IVA)')).toBe(1)
+  })
+})
+
+describe('applying the corrections again to new subtitles (FR-017)', () => {
+  it('applies them in order and counts the subtitles that change, not the words', () => {
+    const cues = [...CUES, cue('c4', 7, 9, 'Panadero, pan y más pan.')]
+    const { cues: changed, count } = reapply(cues, [
+      { from: 'pan', to: 'bollo' },
+      { from: 'bollo casero', to: 'bollo de casa' },
+    ])
+    expect(changed[0]!.text).toBe('Hoy hacemos bollo de casa.')
+    expect(changed[3]!.text).toBe('Panadero, bollo y más bollo.')
+    expect(changed[1]).toEqual(cues[1])
+    expect(count).toBe(3)
+  })
+
+  it('a correction that undoes another leaves that subtitle out of the count', () => {
+    const { cues: changed, count } = reapply(CUES, [
+      { from: 'casero', to: 'de casa' },
+      { from: 'de casa', to: 'casero' },
+    ])
+    expect(changed).toEqual(CUES)
+    expect(count).toBe(0)
+  })
+
+  it('a subtitle that already says what the change writes is left as it is', () => {
+    const cues = [cue('c1', 0, 1, 'Soy Juan.'), cue('c2', 1, 2, 'Soy Juan Pérez.')]
+    const { cues: changed, count } = reapply(cues, [{ from: 'Juan', to: 'Juan Pérez' }])
+    expect(changed.map((one) => one.text)).toEqual(['Soy Juan Pérez.', 'Soy Juan Pérez.'])
+    expect(count).toBe(1)
+  })
+
+  it('without corrections, nothing changes', () => {
+    expect(reapply(CUES, [])).toEqual({ cues: CUES, count: 0 })
   })
 })
 

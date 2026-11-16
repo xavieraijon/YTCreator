@@ -331,6 +331,7 @@ export function makeTestApp({
     knowledge: subtitlesKnowledge,
     mainTitle: (scriptId: string) => packageService.mainTitleOfScript(scriptId),
     queuePosition: (jobId: string) => subtitlesRecognition.queuePosition(jobId),
+    newAudio: (scriptId: string) => subtitlesRecognition.hasNewAudio(scriptId),
   })
   const recognizer = wrapRecognizer(
     createFakeRecognizer({ stepMs: 60, ...(fakeSpeech ? { scenario: fakeSpeech } : {}) }),

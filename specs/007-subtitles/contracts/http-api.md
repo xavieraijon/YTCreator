@@ -24,10 +24,10 @@ Fallos de la descarga: `descarga`, `hash`, `permisos` y `espacio` (los de `reade
 | `POST /scripts/:id/subtitles/recognize` | `{}` | 202 con el trabajo `reconocer_voz` (o `en_cola`); 409 `sin_motor` si falta el motor o el modelo; 409 `sin_audio` si no se subió |
 | `POST /scripts/:id/subtitles/cancel` | | 200; el trabajo queda `fallido` con `cancelado` |
 | `GET /scripts/:id/subtitles/audio` | | el WAV, con `Range` (R15); 404 `sin_audio` si se borró |
-| `DELETE /scripts/:id/subtitles/audio` | | `SubtitlesView` sin audio; los subtítulos no cambian (R16) |
+| `DELETE /scripts/:id/subtitles/audio` | | `SubtitlesView` sin audio; borra también un audio nuevo sin oír; los subtítulos no cambian (R16, decisión 56). 409 `en_curso` mientras se sube, se escucha o la IA revisa |
 | `PUT /scripts/:id/subtitles` | `{baseVersion, content}` | `SubtitlesView` con la versión nueva (`edicion`); 409 `version_cambiada` si `baseVersion` no es la última |
 | `POST /scripts/:id/subtitles/replace` | `{baseVersion, from, to}` | `{count}` en un `dryRun: true`; sin él, `SubtitlesView` con la versión nueva y la corrección añadida a `replacements` |
-| `POST /scripts/:id/subtitles/reapply` | `{baseVersion}` | `SubtitlesView` con las correcciones de `replacements` aplicadas (`reaplicada`) y `{count}` |
+| `POST /scripts/:id/subtitles/reapply` | `{baseVersion}` | `SubtitlesView` con las correcciones de `replacements` aplicadas (`reaplicada`) y `{count}`. 409 `conflicto` si la vista no lo ofrece (`reapply` nulo, decisión 54); 409 `version_cambiada` |
 | `POST /scripts/:id/subtitles/restore` | `{baseVersion, version}` | `SubtitlesView` con la versión `recuperada` |
 | `POST /scripts/:id/subtitles/approve` | `{version}` | `SubtitlesView` aprobado; 409 `version_cambiada` si no es la última |
 | `GET /scripts/:id/subtitles/versions` | | `[{version, origin, createdAt, cueCount}]` |
@@ -55,4 +55,4 @@ El guion (idea, formato, versión aprobada), el estado (data-model, «Estados»)
 las marcas calculadas, el número «para revisar», si hay audio y su duración, el nombre del fichero de origen, la versión
 aprobada, `scriptChanged` (si el guion aprobado cambió después de reconocer), los límites de lectura con su fuente, el
 último trabajo con su estado y su avance, la propuesta de la IA pendiente, si la hay, y `packageId`, el paquete de la
-006 del guion o `null` (adonde van los minutos reales, US3).
+006 del guion o `null` (adonde van los minutos reales, US3). Con US5: `newAudio` (hay un audio nuevo subido sin oír, que también se puede borrar), `reapply` (`{corrections, count}`, los cambios en todos que se ofrecen otra vez tras otro fichero, o `null`; decisión 54) y, en el trabajo, `finishedAt` (para decir un fallo del fichero nuevo solo si pasó después de la última versión; decisión 55).

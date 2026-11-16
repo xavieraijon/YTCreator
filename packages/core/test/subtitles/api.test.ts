@@ -12,7 +12,14 @@ describe('the bodies of the subtitles (contracts/http-api.md)', () => {
   })
 
   it('the job of a track is one of its operations', () => {
-    const job = { id: 'j', status: 'en_curso', progress: { done: 0, total: 0 }, failure: null, queuePosition: null }
+    const job = {
+      id: 'j',
+      status: 'en_curso',
+      progress: { done: 0, total: 0 },
+      failure: null,
+      queuePosition: null,
+      finishedAt: null,
+    }
     for (const op of SUBTITLE_JOB_OPS) expect(subtitlesJobSchema.safeParse({ ...job, op }).success).toBe(true)
     expect(subtitlesJobSchema.safeParse({ ...job, op: 'otra' }).success).toBe(false)
   })
