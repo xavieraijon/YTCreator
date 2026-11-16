@@ -2,6 +2,7 @@ import { createReadStream } from 'node:fs'
 import { Readable } from 'node:stream'
 import type { SpeechRecognizer } from '@ytcreator/core'
 import {
+  chaptersFromAudioBodySchema,
   type SubtitleExportFormat,
   speechEngineModelBodySchema,
   speechEngineStartBodySchema,
@@ -16,6 +17,7 @@ import {
 } from '@ytcreator/core/api'
 import { Hono } from 'hono'
 import type { SpeechEngineService } from '../../services/speech-engine.ts'
+import type { SubtitlesChapters } from '../../services/subtitles-chapters.ts'
 import type { SubtitlesEdit } from '../../services/subtitles-edit.ts'
 import type { SubtitlesRecognition } from '../../services/subtitles-recognize.ts'
 import type { SubtitlesService } from '../../services/subtitles.ts'
@@ -31,6 +33,8 @@ export interface SubtitleRoutesDeps {
   recognition: SubtitlesRecognition
   /** What the creator changes, the history and the AI's review (US2). */
   edit: SubtitlesEdit
+  /** The real minutes of the chapters (US3). */
+  chapters: SubtitlesChapters
 }
 
 const MIME: Record<SubtitleExportFormat, string> = {
@@ -53,7 +57,7 @@ function rangeOf(header: string, size: number): { start: number; end: number } |
 }
 
 // The subtitles of a script (specs/007-subtitles/contracts/http-api.md). The rest of the routes come with each story.
-export function subtitleRoutes({ service, engine, recognition, edit }: SubtitleRoutesDeps) {
+export function subtitleRoutes({ service, engine, recognition, edit, chapters }: SubtitleRoutesDeps) {
   const routes = new Hono()
 
   routes.get('/speech/engine', (c) => c.json(engine.view()))
@@ -127,6 +131,14 @@ export function subtitleRoutes({ service, engine, recognition, edit }: SubtitleR
   routes.post('/scripts/:id/subtitles/approve', async (c) => {
     const { version } = await parseBody(c, subtitlesApproveBodySchema)
     return c.json(edit.approve(c.req.param('id'), version))
+  })
+
+  // The real minutes of the chapters (R13): worked out when asked for; the accepted ones go into the package of 006.
+  routes.get('/scripts/:id/subtitles/chapters', (c) => c.json(chapters.proposal(c.req.param('id'))))
+
+  routes.post('/packages/:id/chapters/from-audio', async (c) => {
+    const body = await parseBody(c, chaptersFromAudioBodySchema)
+    return c.json(chapters.accept(c.req.param('id'), body))
   })
 
   routes.get('/scripts/:id/subtitles/versions', (c) => c.json(edit.listVersions(c.req.param('id'))))

@@ -36,6 +36,7 @@ import { createPackageVersionsRepo } from '../src/db/repos/package-versions.ts'
 import { createSubtitleTracksRepo } from '../src/db/repos/subtitle-tracks.ts'
 import { createSubtitleVersionsRepo } from '../src/db/repos/subtitle-versions.ts'
 import { createSubtitlesService } from '../src/services/subtitles.ts'
+import { createSubtitlesChapters } from '../src/services/subtitles-chapters.ts'
 import { createSubtitlesEdit } from '../src/services/subtitles-edit.ts'
 import { createSubtitlesRecognition } from '../src/services/subtitles-recognize.ts'
 import { createSpeechEngine, createSpeechEngineService } from '../src/services/speech-engine.ts'
@@ -326,6 +327,7 @@ export function makeTestApp({
     versions: subtitleVersions,
     jobsRepo,
     scriptStatus: (ideaId: string) => scriptService.ideaScript(ideaId)?.status ?? null,
+    packageId: (scriptId: string) => packageService.scriptPackage(scriptId)?.id ?? null,
     knowledge: subtitlesKnowledge,
     mainTitle: (scriptId: string) => packageService.mainTitleOfScript(scriptId),
     queuePosition: (jobId: string) => subtitlesRecognition.queuePosition(jobId),
@@ -398,6 +400,12 @@ export function makeTestApp({
         aiRun,
         promptFor,
         now,
+      }),
+      chapters: createSubtitlesChapters({
+        subtitles: subtitlesService,
+        versions: subtitleVersions,
+        packages: packageService,
+        work: packageWork,
       }),
     },
     jobs,

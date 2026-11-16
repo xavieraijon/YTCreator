@@ -249,6 +249,45 @@ export const subtitlesEs = {
         reaplicada: 'Con tus correcciones aplicadas otra vez',
       },
     },
+    // The real minutes of the chapters (US3, contracts/ui-screens.md).
+    chapters: {
+      title: 'Minutos reales de los capítulos',
+      why: 'Con el audio sabemos en qué minuto empieza de verdad cada capítulo de tu publicación. Marca los que quieras cambiar: nada cambia hasta que lo pongas.',
+      loading: 'Buscando cada capítulo en el audio…',
+      none: 'Tu publicación aún no tiene capítulos. Cuando los tenga, aquí verás sus minutos reales.',
+      now: 'Ahora: {tiempo} ({como})',
+      how: { estimado: 'estimado con el guion', manual: 'escrito por ti', real: 'minuto real' },
+      real: 'En el audio: {tiempo} · {diferencia}',
+      notFound: 'No aparece en el audio: puede que lo cortaras al montar el vídeo.',
+      outOfOrder:
+        'En el audio suena antes que un capítulo anterior: si pones este minuto, los capítulos no quedan en orden y YouTube no los mostraría. Decide qué minuto poner.',
+      difference: { later: '{n} s más tarde', earlier: '{n} s antes', same: 'Igual' },
+      put: 'Poner el minuto real de «{titulo}»',
+      handWritten: 'Lo escribiste tú: márcalo solo si quieres cambiarlo.',
+      remove: 'Quitar «{titulo}» de la publicación',
+      removeHelp: 'Su parte del guion se une al capítulo anterior.',
+      write: 'Minuto de «{titulo}»',
+      writeHelp: 'Escríbelo como 1:05, o déjalo vacío para no cambiarlo.',
+      writeInvalid: 'Escríbelo como 1:05 (minutos y segundos).',
+      first: 'El primero siempre empieza en 0:00.',
+      apply: 'Poner los minutos marcados',
+      nothing: 'Todos los capítulos ya están en su minuto.',
+      done: {
+        one: 'Hemos cambiado 1 capítulo de tu publicación.',
+        other: 'Hemos cambiado {n} capítulos de tu publicación.',
+      },
+      toPackage: 'Ver la publicación',
+      confirmTitle: '¿Poner los minutos marcados?',
+      confirmBody: 'Tu publicación volverá a borrador y tendrás que aprobarla otra vez.',
+      confirm: 'Poner los minutos',
+      keep: 'No ponerlos',
+      order:
+        'Con esos minutos los capítulos no quedan en orden, o quedan demasiado cerca de un capítulo que escribiste tú, y YouTube no los mostraría. Desmarca o cambia los que avisan.',
+      tooLate: 'Ese minuto es más largo que el audio, que dura {tiempo}.',
+      stale:
+        'Los capítulos de tu publicación han cambiado mientras mirabas. Te enseñamos cómo están ahora: vuelve a marcar los que quieras poner.',
+    },
+
     stale:
       'Estos subtítulos han cambiado mientras los editabas. Te enseñamos cómo están ahora: vuelve a hacer tu cambio.',
   },

@@ -6,7 +6,8 @@ import {
   parseChapterTime,
   proposeChapters,
 } from '../../src/publish/chapters.ts'
-import type { Chapter } from '../../src/publish/model.ts'
+import { chaptersContentSchema, type Chapter } from '../../src/publish/model.ts'
+import { reviewPackage } from '../../src/publish/review.ts'
 import { durationSeconds } from '../../src/script/duration.ts'
 
 // At 150 words a minute, 25 words last 10 seconds.
@@ -58,6 +59,60 @@ describe('chapterTimes (research.md R3)', () => {
     expect(chapterTimes([chapter('1', ['a']), chapter('2', ['gone'])], blocks, WPM)).toEqual([
       0,
       durationSeconds(blocks[0]!.text, WPM),
+    ])
+  })
+})
+
+describe('the real minute of a chapter, from the audio (007, R13)', () => {
+  const blocks = [block('a', 50), block('b', 100), block('c', 25), block('d', 75)]
+
+  it('chapterTimes keeps it like a written one, and moves the estimated ones after it', () => {
+    const times = chapterTimes(
+      [chapter('1', ['a']), chapter('2', ['b'], { startSeconds: 40, fromAudio: true }), chapter('3', ['c', 'd'])],
+      blocks,
+      WPM,
+    )
+    expect(times[1]).toBe(40)
+    expect(times[2]).toBe(40 + durationSeconds(blocks[1]!.text, WPM))
+  })
+
+  it('a version saved before 007, without the field, still reads; one from the audio needs its minute', () => {
+    const old = { chapters: [{ id: '1', title: 'Uno', blockIds: ['a'], startSeconds: null, manual: false }] }
+    expect(chaptersContentSchema.safeParse(old).success).toBe(true)
+    const real = { chapters: [{ ...old.chapters[0]!, startSeconds: 0, fromAudio: true }] }
+    expect(chaptersContentSchema.safeParse(real).success).toBe(true)
+    const noMinute = { chapters: [{ ...old.chapters[0]!, fromAudio: true }] }
+    expect(chaptersContentSchema.safeParse(noMinute).success).toBe(false)
+  })
+
+  it('the review of 006 warns of a real chapter under YouTube’s minimum', () => {
+    const chapters = [
+      chapter('1', ['a']),
+      chapter('2', ['b'], { startSeconds: 40, fromAudio: true }),
+      chapter('3', ['c'], { startSeconds: 45, fromAudio: true }),
+      chapter('4', ['d'], { startSeconds: 90, fromAudio: true }),
+    ]
+    const times = chapterTimes(chapters, blocks, WPM)
+    const notices = reviewPackage(
+      {
+        format: 'largo',
+        pieces: { capitulos: { chapters } },
+        assembled: null,
+        chapters: chapters.map((one, index) => ({ id: one.id, startSeconds: times[index]! })),
+        scriptSeconds: 200,
+      },
+      {
+        titleMaxChars: 100,
+        mobileTitleChars: 70,
+        descriptionMaxChars: 5000,
+        tagsMaxTotalChars: 500,
+        chapterMinCount: 3,
+        chapterMinSeconds: 10,
+        hashtagsShown: 3,
+      },
+    )
+    expect(notices.filter((one) => one.rule === 'capitulo_corto')).toEqual([
+      expect.objectContaining({ chapterId: '2', value: 5 }),
     ])
   })
 })

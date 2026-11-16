@@ -135,8 +135,11 @@ export const chapterSchema = z
     /** `null` while it is worked out from the script; a number written by the creator is `manual` (R3). */
     startSeconds: z.number().int().nonnegative().nullable(),
     manual: z.boolean(),
+    /** Its real minute, taken from the subtitles (007, R13): fixed like a written one. Absent in older versions. */
+    fromAudio: z.literal(true).optional(),
   })
   .refine((chapter) => !chapter.manual || chapter.startSeconds !== null, { message: 'manual_sin_minuto' })
+  .refine((chapter) => !chapter.fromAudio || chapter.startSeconds !== null, { message: 'audio_sin_minuto' })
 export type Chapter = z.infer<typeof chapterSchema>
 
 export const chaptersContentSchema = z

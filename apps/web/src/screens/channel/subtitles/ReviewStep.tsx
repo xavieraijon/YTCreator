@@ -15,6 +15,7 @@ import { AiReview } from './AiReview.tsx'
 import { CueEditor } from './CueEditor.tsx'
 import { clockText } from './format.ts'
 import { History } from './History.tsx'
+import { RealChapters } from './RealChapters.tsx'
 import { ReplaceAll } from './ReplaceAll.tsx'
 
 const text = subtitlesEs.review
@@ -44,6 +45,10 @@ const limitValues = (limits: SubtitlesView['limits']): SubtitleLimits => ({
   maxSeconds: limits.maxSeconds.value,
   minGapSeconds: limits.minGapSeconds.value,
 })
+
+/** What was heard, said short: another recognition changes it, editing a subtitle does not. */
+const heardKey = (words: Latest['content']['words']) =>
+  `${words.length}:${words[0]?.start ?? 0}:${words.at(-1)?.end ?? 0}`
 
 const isStale = (cause: unknown) => cause instanceof ApiClientError && cause.body?.code === 'version_cambiada'
 
@@ -258,6 +263,16 @@ export function ReviewStep({
             disabled={editing !== null || aiBusy}
           />
           <History view={view} version={version} onView={onView} onError={fail} disabled={editing !== null || aiBusy} />
+          {/* Only a long video with a package has chapters to place (US3). */}
+          {view.format === 'largo' && view.packageId !== null && (
+            <RealChapters
+              scriptId={view.scriptId}
+              packageId={view.packageId}
+              heard={heardKey(view.latest.content.words)}
+              audioSeconds={view.latest.content.audioSeconds}
+              onError={fail}
+            />
+          )}
         </>
       )}
 

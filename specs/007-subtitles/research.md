@@ -177,8 +177,9 @@ plano) y la 006 (capítulos ligados a bloques, vuelta a borrador del paquete).
 
 ## R13. Los minutos reales de los capítulos
 
-- **Decisión**: el alineamiento de R9 también dice en qué palabra oída empieza cada bloque del guion. El minuto real de
-  un capítulo es el inicio de la primera palabra alineada de su primer bloque. Si se alinea menos del 30 % de las
+- **Decisión**: cada bloque del guion se busca en las palabras oídas por separado, con un alineamiento local (no el
+  global de R9, que no encuentra un bloque movido en el montaje); un tramo del audio solo puede ser de un bloque
+  (decisión 44). El minuto real de un capítulo es el inicio de la primera palabra alineada de su primer bloque. Si se alinea menos del 30 % de las
   palabras del bloque, el capítulo consta como «no encontrado» (FR-014). La propuesta se calcula al pedirla (no se
   guarda). Al aceptarla, el servicio de paquetes de la 006 guarda una versión nueva de `capitulos` con origen `edicion`
   y, en cada capítulo aceptado, `startSeconds` con el minuto real y una marca nueva y opcional, `fromAudio: true`.

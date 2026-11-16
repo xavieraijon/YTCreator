@@ -91,7 +91,9 @@ Dos claves nuevas: `speech.model` (el modelo elegido en «Modo experto»; por de
 ### Capítulos de la 006
 
 `Chapter` gana un campo opcional, `fromAudio?: true`. Con él, `startSeconds` es el minuto real y `chapterTimes` lo
-trata como fijo, igual que `manual`. Las versiones guardadas antes no lo llevan y se leen igual (R13).
+trata como fijo, igual que `manual`. Las versiones guardadas antes no lo llevan y se leen igual (R13). En la vista del
+paquete (`texts.chapters`) cada capítulo dice `fromAudio: boolean`, para que la 006 diga «minuto real»; editar los
+capítulos en la 006 sin escribir encima conserva el minuto real.
 
 ## Estados
 

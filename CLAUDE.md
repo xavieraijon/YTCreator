@@ -51,7 +51,8 @@ Spec-Driven Development with GitHub Spec Kit (`/speckit-*`).
   A on 2026-11-14 (decisions 25–32); open for the creator: P1–P3 in its `decisions.md`. T032 done on 2026-11-16: `whisper-cpp-b5454`
   published for macOS (PR #10) and pinned in `versions.json`. US2 (T042–T051: edit, «Cambiar en todos», AI review in
   batches of 200, history, approve) closed with Puerta A on 2026-11-16 (decisions 34–43, migration 0009). Open for the
-  creator: P1–P5. Next: US3.
+  creator: P1–P5. US3 (T052–T060: real chapter minutes into the 006 package, remove a chapter cut in the edit) closed
+  with Puerta A on 2026-11-16 (decisions 44–51, no migration). Next: US4.
 - AI: Claude only for now (Claude Code subscription, and the Anthropic API behind «Más opciones»). No other provider
   is planned (creator, 2026-11-14).
 - Commands (Node 24, `fnm exec --using=24 --`): `pnpm dev` (server + web), `pnpm lint`, `pnpm typecheck`,

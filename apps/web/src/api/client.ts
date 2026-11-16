@@ -75,6 +75,8 @@ import {
   usageListSchema,
   youtubeSettingsSchema,
   type YouTubeSourceSetting,
+  subtitleChapterSchema,
+  type ChaptersFromAudioBody,
 } from '@ytcreator/core/api'
 import type { ChannelProfile, IdeaUse, ProfilePart } from '@ytcreator/core'
 
@@ -428,6 +430,11 @@ export const subtitlesApi = {
     apiClient.post(`${scriptPath(scriptId)}/subtitles/generate`, body, jobStartedSchema),
   decide: (scriptId: string, body: { baseVersion: number; accept: string[] }) =>
     apiClient.post(`${scriptPath(scriptId)}/subtitles/ai-proposal`, body, subtitlesViewSchema),
+  // The real minutes of the chapters (US3): worked out when asked for; the accepted ones go into the package.
+  chapters: (scriptId: string, options?: RequestOptions) =>
+    apiClient.get(`${scriptPath(scriptId)}/subtitles/chapters`, subtitleChapterSchema.array(), options),
+  chaptersFromAudio: (packageId: string, body: ChaptersFromAudioBody) =>
+    apiClient.post(`${packagePath(packageId)}/chapters/from-audio`, body, packageViewSchema),
 }
 
 // The program that listens to the audio, downloaded the first time (007, R1 and R2).

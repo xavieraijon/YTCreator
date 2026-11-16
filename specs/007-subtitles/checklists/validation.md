@@ -340,3 +340,103 @@ Los revisores encontraron tres graves en la revisión por tandas: el presupuesto
 - Revertir el commit de US2.
 - La migración 0009 solo añade `ai_proposal`. Revertir el código no la deshace: en una base ya migrada, la columna se queda sin usar.
 - Pendiente: P4 y P5, T076 (IA y motor reales) y US3 en adelante.
+
+## US3: los minutos reales de los capítulos (T052–T060), Puerta A del 2026-11-16
+
+### 1. Resumen
+
+Con los subtítulos hechos, el creador ve cada capítulo de su publicación con su minuto ahora, dónde suena en el audio y la diferencia. Marca los que quiere cambiar, quita o escribe a mano los que no aparecen y los lleva al paquete de la 006 como una versión nueva de los capítulos («minuto real»), con el aviso de vuelta a borrador.
+
+Los revisores encontraron dos graves: no se podía quitar un capítulo cortado en el montaje (AS3), y el e2e de la 006 seguía esperando el texto sustituido. Están corregidos, igual que los medios confirmados (decisiones 44 a 51).
+
+**Resultado: pasada.** Sin pendientes nuevos del creador. Siguen P1 a P5. La IA no interviene en esta historia y el audio real no está probado (T076).
+
+### 2. Requisitos
+
+| Requisito | Estado | Evidencia | Fecha |
+|-----------|--------|-----------|-------|
+| AS1, FR-014 | Cumplido | Cada capítulo con su minuto ahora (estimado, escrito o real), el del audio y la diferencia. `subtitles-chapters.test.ts` (a 2 s o menos del inicio del bloque) y e2e | 2026-11-16 |
+| AS2, FR-015 | Cumplido | Un capítulo escrito a mano sale sin marcar y se queda como estaba salvo que se acepte. Test de rutas | 2026-11-16 |
+| AS3, FR-014 | Cumplido | «No aparece en el audio», sin minuto propuesto: se puede quitar (sus bloques pasan al anterior) o escribir a mano (decisión 51). `align.test.ts` y test de rutas | 2026-11-16 |
+| AS4, FR-016 | Cumplido | Versión nueva de `capitulos` con origen `edicion` y `fromAudio`; aviso antes con los textos o el paquete aprobados; vuelta a borrador; la descripción lleva el minuto real. Test de rutas y e2e (pone uno, vuelve a borrador y se aprueba otra vez) | 2026-11-16 |
+| AS5 | Cumplido | Un capítulo que queda corto junto a un minuto real se guarda y la revisión de la 006 lo avisa (`capitulo_corto`), y la 006 lo sigue dejando editar. `chapters.test.ts` y test de rutas | 2026-11-16 |
+| Caso límite: bloques en otro orden | Cumplido | `blockStarts` los encuentra donde están, y la lista dice cuál suena fuera de orden sin marcarlo (decisiones 44 y 51) | 2026-11-16 |
+| SC-005 | Cumplido en casos fijos | A 2 s o menos en las pruebas de dominio y de rutas, y en la medida de una hora (decisión 44). Con audio real: no ejecutado | 2026-11-16 |
+| Versiones guardadas antes de la 007 | Cumplido | `fromAudio` es opcional y se leen igual (`chapters.test.ts`) | 2026-11-16 |
+
+### 3. Cómo se comprobó
+
+- `pnpm lint` y `pnpm typecheck`: 0.
+- `pnpm test`: 219 ficheros, 2860 pasan y 4 se saltan.
+- `test:e2e`:
+  - catálogo, 97 pasan y 2 se saltan;
+  - web, 57 pasan, entre ellos el nuevo `subtitles-chapters.spec.ts` y `publish.spec.ts` con su texto actualizado.
+- Una primera vuelta del catálogo falló en `theme.spec.ts` (WebKit, «10 cargas sin destello»). Repetido 3 veces, falló 1 de 18. Esta historia no toca el catálogo; en la vuelta final pasó.
+- Flujo con los falsos: el e2e prepara un guion cuyos bloques son las frases del escenario `capitulos` del reconocedor falso (el tercero suena 40 s tarde) y aprueba su paquete. Comprueba la línea de la 006 sin subtítulos y los hace. Después, desde la 006, «Poner los minutos reales» lleva a la lista. Ahí ve tres marcados y desmarca dos con el teclado. Confirma la vuelta a borrador, ve el minuto real en la 006 y aprueba otra vez.
+- Tiempo de `blockStarts`: 2,2 s para una hora (60 bloques de 150 palabras), medido con Node 24 en este Mac (decisión 44).
+
+### 4. Controles
+
+- **Pasados:**
+  - lint, typecheck, test y test:e2e;
+  - glosario y fuga de secretos (dentro de `pnpm test`);
+  - axe en claro y oscuro a 375 y 1280 px con movimiento reducido, en la lista de minutos reales, el diálogo de vuelta a borrador y el paso de textos de la 006 con un minuto real;
+  - teclado: las casillas con Tab y Espacio, y el botón y el diálogo con Intro.
+- **No aplica:**
+  - `test:installer`, porque el instalador no cambia y no hay migración (`fromAudio` va dentro del JSON de `capitulos`);
+  - los fallos tipados de la IA, porque esta historia no llama a la IA.
+- **No ejecutado:** SC-005 con un vídeo real (T076).
+
+### 5. Hallazgos
+
+**Confirmados y corregidos:**
+- No se podía quitar un capítulo que no está en el audio (AS3). Ahora `remove` lo quita y sus bloques pasan al anterior; el primero nunca se quita (test).
+- El e2e de la 006 esperaba «Ajústalos cuando tengas el vídeo montado», texto sustituido por la decisión 48. Actualizado; pasa.
+- Un capítulo real corto bloqueaba después cualquier edición de los capítulos en la 006. Ahora, junto a un minuto real, solo cuenta el orden. Un minuto escrito a mano cumple el mínimo de la 006 (test).
+- Un 409 de otra pestaña culpaba a los subtítulos y dejaba la sección atascada. Ahora se vuelve a leer el paquete antes de poner y tras un 409, y se dice que cambiaron los capítulos.
+- El aviso de borrador dependía del estado leído al abrir. Ahora se lee al pulsar, y también cuenta una aprobación guardada.
+- Bloques en otro orden: la propuesta no lo decía y el error culpaba al creador. Ahora lo dice, no los marca, y el error dice qué pasa.
+- La propuesta se recalculaba (unos 2 s en un vídeo de una hora) y borraba lo marcado en cada edición de un subtítulo. Ahora solo cuando cambia lo oído.
+- Tras poner uno, volvían a salir marcados los capítulos movidos con él. Ahora solo se marcan las diferencias de más de 2 s.
+- Sin capítulos en el paquete decía «ya están en su minuto». Ahora dice que aún no hay.
+- La 006 admitía un `fromAudio` inventado por la API. Ahora solo conserva el que ya estaba guardado con ese minuto (test).
+- Un minuto escrito no tenía tope. Ahora no puede pasar del audio (test).
+- El separador « · » estaba en el código. Ahora está en el catálogo.
+- `ui-screens.md`, R13, T058, T059 y el contrato de la 006 estaban desfasados. Actualizados.
+- Los riesgos de las decisiones 44, 45 y 47 subieron a Medio.
+
+**Descartados:**
+- *Un minuto real aceptado se guarda como «escrito por ti» si lo oído cambia entre ver y aceptar.* Pasa solo si se rehace el reconocimiento en otra pestaña. Entonces ese minuto ya no coincide con el audio, y guardarlo como escrito por el creador es lo cierto.
+- *Desde la 006 no se puede volver al minuto estimado.* Escribir encima o «Volver a esta» lo hacen, y el campo dice que vacío conserva el minuto real.
+- *Pedir de nuevo los capítulos a la IA pierde los minutos reales.* Son capítulos nuevos y la propuesta los vuelve a ofrecer.
+- *`compare.ts` no distingue escrito de real con el mismo minuto.* El minuto no cambia.
+- *Comprobar la 006 descarga toda la vista de subtítulos.* Una petición local al abrir el paso; menor.
+- *Una aprobación de textos con la portada en borrador.* Ahora la cubre el aviso por aprobación guardada.
+
+**Abiertos:** ninguno.
+
+### 6. Desviaciones
+
+- Lista en lugar de tabla, y «Poner los minutos marcados» como secundaria (decisión 49).
+- `remove` añadido al cuerpo del contrato para cumplir AS3, y 404 también sin subtítulos (decisiones 47 y 51).
+- La 006 deja de rechazar un capítulo corto junto a un minuto real (decisiones 46 y 51).
+
+### 7. Decisiones
+
+- **Del agente:** 44 a 51, todas de riesgo bajo o medio.
+- **Del creador:** ninguna nueva. Siguen P1 a P5.
+
+### 8. Constitución
+
+- **I:** una acción principal, avisos en llano (fuera de orden, sin capítulos, cambios de otra pestaña) y la vuelta a borrador dicha antes.
+- **II:** nada cambia en el paquete sin marcarlo. Lo escrito a mano no se marca, y el minuto real se distingue del escrito y del estimado.
+- **III:** no hay gasto: ni IA ni Data API.
+- **V:** ninguna cifra nueva en la interfaz. El mínimo de YouTube sigue saliendo del paquete de conocimiento, y la medida de tiempo está anotada con cómo se hizo.
+- **VI:** axe, teclado y movimiento reducido.
+- **XI:** este informe.
+
+### 9. Cómo revertir
+
+- Revertir el commit de US3. No hay migración.
+- Las versiones de capítulos guardadas con `fromAudio` se siguen leyendo sin el campo (Zod lo ignora), con su minuto como estimación a recalcular.
+- Pendiente: T076 (motor real y SC-005 con audio real), US4 en adelante, y P1 a P5.

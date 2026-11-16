@@ -119,6 +119,8 @@ export const subtitlesViewSchema = z.object({
   // Kept after it ends: on coming back the screen still has to say that it failed.
   job: subtitlesJobSchema.nullable(),
   aiProposal: z.array(aiCueProposalSchema).nullable(),
+  /** The publishing package of the script (006), where the real minutes of the chapters go (US3). */
+  packageId: id.nullable(),
 })
 export type SubtitlesView = z.infer<typeof subtitlesViewSchema>
 
@@ -181,7 +183,10 @@ export type SubtitleChapter = z.infer<typeof subtitleChapterSchema>
 export const chaptersFromAudioBodySchema = z.object({
   baseVersion,
   accept: z.array(z.object({ chapterId: id, seconds: count })),
+  /** Chapters not in the audio that the creator removes: their blocks join the chapter before (AS3). */
+  remove: z.array(id).default([]),
 })
+export type ChaptersFromAudioBody = z.infer<typeof chaptersFromAudioBodySchema>
 
 /** The failures of a recognition job, as the job keeps them. `cancelado`: the creator stopped it. */
 export const RECOGNITION_JOB_FAILURES = [...SPEECH_FAILURES, 'cancelado'] as const

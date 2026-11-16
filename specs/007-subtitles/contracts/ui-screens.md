@@ -65,11 +65,14 @@ queda más.»
 
 ### Minutos reales de los capítulos
 
-- Una tabla: capítulo, minuto estimado, minuto real (o «No aparece en el audio») y diferencia, con una casilla por fila;
-  marcadas por defecto las que cambian, salvo las escritas a mano.
-- «Poner los minutos marcados» (principal). Si el paquete estaba aprobado: «Tu publicación volverá a borrador y tendrás
-  que aprobarla otra vez», antes de confirmar.
-- «No aparece en el audio»: escribirlo a mano o dejarlo como está.
+- Una lista (decisión 49): cada capítulo con su minuto ahora (estimado, escrito por ti o minuto real), el minuto en el
+  audio (o «No aparece en el audio») y la diferencia, con una casilla si cambia; marcadas por defecto las que cambian
+  más de 2 s, salvo las escritas a mano y las que suenan fuera de orden, que lo dicen (decisión 51).
+- «Poner los minutos marcados» (secundaria: la principal de la pantalla es aprobar o descargar). Si los textos o el
+  paquete estaban aprobados: «Tu publicación volverá a borrador y tendrás que aprobarla otra vez», antes de confirmar.
+- «No aparece en el audio»: quitarlo de la publicación (su parte del guion se une al capítulo anterior), escribir su
+  minuto a mano o dejarlo como está.
+- Sin capítulos en el paquete, lo dice; si los capítulos cambian en otra pestaña, se vuelven a leer y lo dice.
 
 ## Errores
 

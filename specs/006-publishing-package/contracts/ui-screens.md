@@ -55,7 +55,8 @@ cada uno con su acción («Pedir de nuevo · {coste}», «Usar la nueva», «Ir 
 - **Por qué importa**: «Las dos primeras líneas son lo único que se ve sin pulsar "más": di de qué va el vídeo con las
   palabras que busca la gente.»
 - Partes editables: primeras líneas, cuerpo, capítulos (nombre y minuto; el minuto calculado lleva «estimado», con una
-  frase: «Ajústalos cuando tengas el vídeo montado»), fuentes (solo lectura, de la lista de hechos), hashtags (solo en un Short), parte fija
+  frase: «Ajústalos cuando tengas el vídeo montado»; desde la 007, «Poner los minutos reales» con subtítulos o «Cuando
+  tengas el vídeo montado, haz los subtítulos y los minutos serán los reales», decisión 48 de la 007), fuentes (solo lectura, de la lista de hechos), hashtags (solo en un Short), parte fija
   (enlace a «Ajustes de publicación»). Etiquetas y comentario fijado, aparte.
 - Cada parte tiene «Pedir de nuevo · {coste}» con indicaciones.
 - **Principal**: «Proponer descripción · {coste}» y, con todo escrito, «Aprobar descripción».

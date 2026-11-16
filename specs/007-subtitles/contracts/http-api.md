@@ -46,12 +46,13 @@ Fallos de la descarga: `descarga`, `hash`, `permisos` y `espacio` (los de `reade
 
 | Método y ruta | Cuerpo | Respuesta |
 |---|---|---|
-| `GET /scripts/:id/subtitles/chapters` | | `[{chapterId, title, estimated, real, status: 'encontrado' \| 'no_encontrado', manual, fromAudio}]`; 404 si no hay paquete; calculado al pedirlo (R13) |
-| `POST /packages/:id/chapters/from-audio` | `{baseVersion, accept: [{chapterId, seconds}]}` | `PackageView` de la 006 con la versión nueva de `capitulos`; vuelve a borrador si estaba aprobado (FR-015 de la 006) |
+| `GET /scripts/:id/subtitles/chapters` | | `[{chapterId, title, estimated, real, status: 'encontrado' \| 'no_encontrado', manual, fromAudio}]`; `estimated` es el minuto que el paquete muestra ahora; el primero siempre `0`; 404 si no hay paquete, no es un vídeo largo o aún no hay subtítulos; calculado al pedirlo (R13, decisiones 44 a 47) |
+| `POST /packages/:id/chapters/from-audio` | `{baseVersion, accept: [{chapterId, seconds}], remove?: [chapterId]}` | `PackageView` de la 006 con la versión nueva de `capitulos` (origen `edicion`); un minuto igual al real propuesto lleva `fromAudio`, otro cualquiera queda como escrito a mano (`manual`); vuelve a borrador si estaba aprobado (FR-015 de la 006); 409 `version_cambiada` si `baseVersion` no es la última; 400 `validacion` con un capítulo que no existe, el primero fuera de `0` o quitado, un minuto más allá del audio o un orden que YouTube no acepta. Junto a un minuto real solo cuenta el orden y un capítulo que queda corto se guarda y lo avisa la revisión de la 006; uno escrito a mano cumple el mínimo de la 006 (decisión 46). `remove` quita capítulos que no están en el audio: sus bloques pasan al anterior (AS3). Sin nada que cambiar no crea versión |
 
 ## `SubtitlesView`
 
 El guion (idea, formato, versión aprobada), el estado (data-model, «Estados»), la última versión con sus subtítulos y
 las marcas calculadas, el número «para revisar», si hay audio y su duración, el nombre del fichero de origen, la versión
 aprobada, `scriptChanged` (si el guion aprobado cambió después de reconocer), los límites de lectura con su fuente, el
-último trabajo con su estado y su avance, y la propuesta de la IA pendiente, si la hay.
+último trabajo con su estado y su avance, la propuesta de la IA pendiente, si la hay, y `packageId`, el paquete de la
+006 del guion o `null` (adonde van los minutos reales, US3).

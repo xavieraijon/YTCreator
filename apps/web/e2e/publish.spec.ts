@@ -200,7 +200,7 @@ test('the description, its chapters, tags and comment, and the publishing settin
   await expect(page.getByRole('heading', { name: 'Así queda la descripción' })).toBeVisible()
   // The script has no facts with a link: it says so instead of making sources up.
   await expect(page.getByText('La descripción no dice de dónde salen los datos', { exact: false })).toBeVisible()
-  await expect(page.getByText('Ajústalos cuando tengas el vídeo montado.')).toBeVisible()
+  await expect(page.getByText('Cuando tengas el vídeo montado, haz los subtítulos', { exact: false })).toBeVisible()
   await expect(page.getByText('(estimado)', { exact: false }).first()).toBeVisible()
   await audit(page)
 

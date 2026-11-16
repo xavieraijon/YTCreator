@@ -306,3 +306,113 @@ function replace(words: readonly HeardWord[], scriptTexts: readonly string[]): A
     return word
   })
 }
+
+/** At least this share of a block's words has to be found in the audio for it to count as there (R13). */
+export const BLOCK_FOUND_SHARE = 0.3
+
+export interface BlockStart {
+  blockId: string
+  /** When its first found word starts; null when it is not in the audio (cut in the edit). */
+  seconds: number | null
+}
+
+interface LocalMatch {
+  score: number
+  /** The first and last heard words of the match, and how many of the block's words it found. */
+  start: number
+  end: number
+  matched: number
+}
+
+// Smith–Waterman over the heard words (rows) and the block's (columns), carrying along each path where it starts and how
+// many words it matched, so nothing has to be traced back. `null` stands for a heard word another block already took.
+function bestLocal(heard: readonly (string | null)[], block: readonly string[]): LocalMatch | null {
+  const m = block.length
+  let score = new Int32Array(m + 1)
+  let start = new Int32Array(m + 1)
+  let matched = new Int32Array(m + 1)
+  let best: LocalMatch | null = null
+  for (let i = 1; i <= heard.length; i++) {
+    const word = heard[i - 1]
+    const nextScore = new Int32Array(m + 1)
+    const nextStart = new Int32Array(m + 1)
+    const nextMatched = new Int32Array(m + 1)
+    for (let j = 1; j <= m; j++) {
+      const same = word !== null && word === block[j - 1]
+      let value = 0
+      let from = -1
+      let count = 0
+      const diagonal = score[j - 1]! + (same ? 2 : -1)
+      if (diagonal > value) {
+        value = diagonal
+        count = matched[j - 1]! + (same ? 1 : 0)
+        from = matched[j - 1]! > 0 ? start[j - 1]! : same ? i - 1 : -1
+      }
+      const up = score[j]! - 1
+      if (up > value) {
+        value = up
+        count = matched[j]!
+        from = start[j]!
+      }
+      const left = nextScore[j - 1]! - 1
+      if (left > value) {
+        value = left
+        count = nextMatched[j - 1]!
+        from = nextStart[j - 1]!
+      }
+      nextScore[j] = value
+      nextStart[j] = value > 0 ? from : -1
+      nextMatched[j] = value > 0 ? count : 0
+      if (value > 0 && from >= 0 && (best === null || value > best.score))
+        best = { score: value, start: from, end: i - 1, matched: count }
+    }
+    score = nextScore
+    start = nextStart
+    matched = nextMatched
+  }
+  return best
+}
+
+/**
+ * Where each block of the script starts in the audio (R13). Each block is looked for on its own, as the best local
+ * alignment of its words with the heard ones, so blocks moved in the edit are found where they are. A stretch of the
+ * audio is only one block's: the block that fits best takes it first, so a cut block whose sentences repeat another's
+ * is not found in the other's place.
+ */
+export function blockStarts(
+  heard: readonly HeardWord[],
+  blocks: readonly { id: string; text: string }[],
+): BlockStart[] {
+  const free: (string | null)[] = heard.map((word) => normalizeWord(word.text))
+  const words = blocks.map((block) =>
+    block.text
+      .split(/\s+/)
+      .map(normalizeWord)
+      .filter((word) => word !== ''),
+  )
+  const enough = (index: number, match: LocalMatch | null) =>
+    match !== null && match.matched >= BLOCK_FOUND_SHARE * words[index]!.length
+  const found = new Map<number, LocalMatch>()
+  const pending = new Map<number, LocalMatch | null>()
+  words.forEach((block, index) => {
+    if (block.length > 0 && free.length > 0) pending.set(index, bestLocal(free, block))
+  })
+  for (;;) {
+    let pick: number | null = null
+    for (const [index, match] of pending)
+      if (enough(index, match) && (pick === null || match!.score > pending.get(pick)!.score)) pick = index
+    if (pick === null) break
+    const taken = pending.get(pick)!
+    pending.delete(pick)
+    found.set(pick, taken)
+    for (let i = taken.start; i <= taken.end; i++) free[i] = null
+    // Only the blocks whose best match used that stretch look again.
+    for (const [index, match] of pending)
+      if (match !== null && match.start <= taken.end && match.end >= taken.start)
+        pending.set(index, bestLocal(free, words[index]!))
+  }
+  return blocks.map((block, index) => {
+    const match = found.get(index)
+    return { blockId: block.id, seconds: match ? heard[match.start]!.start : null }
+  })
+}

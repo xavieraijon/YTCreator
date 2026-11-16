@@ -245,6 +245,7 @@ export function createPackageService(deps: PackageServiceDeps) {
       blockIds: chapter.blockIds,
       startSeconds: times[index]!,
       manual: chapter.manual,
+      fromAudio: chapter.fromAudio === true,
       time: formatChapterTime(times[index]!),
     }))
     const sources = sourcesOf(script)

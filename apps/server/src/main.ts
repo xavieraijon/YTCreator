@@ -40,6 +40,7 @@ import { createPackageVersionsRepo } from './db/repos/package-versions.ts'
 import { createSubtitleTracksRepo } from './db/repos/subtitle-tracks.ts'
 import { createSubtitleVersionsRepo } from './db/repos/subtitle-versions.ts'
 import { createSubtitlesService } from './services/subtitles.ts'
+import { createSubtitlesChapters } from './services/subtitles-chapters.ts'
 import { createSubtitlesEdit } from './services/subtitles-edit.ts'
 import { createSubtitlesRecognition } from './services/subtitles-recognize.ts'
 import { createSpeechEngine, createSpeechEngineService, speechVersionsSchema } from './services/speech-engine.ts'
@@ -447,6 +448,7 @@ export async function startServer({
     versions: subtitleVersions,
     jobsRepo,
     scriptStatus: (ideaId: string) => scriptService.ideaScript(ideaId)?.status ?? null,
+    packageId: (scriptId: string) => packageService.scriptPackage(scriptId)?.id ?? null,
     knowledge: subtitlesKnowledge,
     mainTitle: (scriptId: string) => packageService.mainTitleOfScript(scriptId),
     queuePosition: (jobId: string) => subtitlesRecognition.queuePosition(jobId),
@@ -551,6 +553,12 @@ export async function startServer({
         aiRun: channel.aiRun,
         promptFor: channelPrompt,
         now,
+      }),
+      chapters: createSubtitlesChapters({
+        subtitles: subtitlesService,
+        versions: subtitleVersions,
+        packages: packageService,
+        work: packageWork,
       }),
     },
     jobs,

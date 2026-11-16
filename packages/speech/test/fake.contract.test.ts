@@ -1,4 +1,4 @@
-import { copyFile, mkdtemp, rm } from 'node:fs/promises'
+import { copyFile, mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import type { RecognizeRequest } from '@ytcreator/core'
@@ -25,6 +25,30 @@ runRecognizerContract('fake', () => {
   }
 })
 
+/** A WAV PCM 8 kHz mono of so many seconds of silence, in a folder of its own. */
+async function silentWav(seconds: number) {
+  const rate = 8_000
+  const data = seconds * rate * 2
+  const header = Buffer.alloc(44)
+  header.write('RIFF', 0, 'ascii')
+  header.writeUInt32LE(36 + data, 4)
+  header.write('WAVE', 8, 'ascii')
+  header.write('fmt ', 12, 'ascii')
+  header.writeUInt32LE(16, 16)
+  header.writeUInt16LE(1, 20)
+  header.writeUInt16LE(1, 22)
+  header.writeUInt32LE(rate, 24)
+  header.writeUInt32LE(rate * 2, 28)
+  header.writeUInt16LE(2, 32)
+  header.writeUInt16LE(16, 34)
+  header.write('data', 36, 'ascii')
+  header.writeUInt32LE(data, 40)
+  const dir = await mkdtemp(join(tmpdir(), 'ytc-capitulos-'))
+  const path = join(dir, 'capitulos.wav')
+  await writeFile(path, Buffer.concat([header, Buffer.alloc(data)]))
+  return path
+}
+
 const req = (audioPath: string): RecognizeRequest => ({
   audioPath,
   language: 'es',
@@ -38,7 +62,8 @@ describe('fake speech recognizer', () => {
   it('hears the words of each test audio, inside its length', async () => {
     const fake = createFakeRecognizer()
     for (const scenario of FAKE_SPEECH_SCENARIOS) {
-      const path = `${FIXTURES}${scenario}.wav`
+      // «capitulos» lasts a minute and a half: its silence is made here rather than kept in the repository.
+      const path = scenario === 'capitulos' ? await silentWav(100) : `${FIXTURES}${scenario}.wav`
       const result = await fake.recognize(req(path))
       if (!result.ok) throw new Error(`${scenario}: ${result.failure}`)
       const length = (await readWavInfo(path))!.seconds

@@ -29,6 +29,8 @@ export interface SubtitlesServiceDeps {
   knowledge: SubtitlesKnowledge
   /** The main title of the script's publishing package (006), to name the file; null without one. */
   mainTitle?: (scriptId: string) => string | null
+  /** The publishing package of the script (006), for the real minutes of its chapters; null without one. */
+  packageId?: (scriptId: string) => string | null
   /** Where a waiting recognition is in the queue (1 is next). */
   queuePosition?: (jobId: string) => number | null
 }
@@ -143,6 +145,7 @@ export function createSubtitlesService(deps: SubtitlesServiceDeps) {
         track?.aiProposal && latest && track.aiProposal.baseVersion === latest.version
           ? track.aiProposal.changes
           : null,
+      packageId: deps.packageId?.(script.id) ?? null,
     }
   }
 

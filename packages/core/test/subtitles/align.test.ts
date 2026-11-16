@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { align, normalizeWord, spanishNumber } from '../../src/subtitles/align.ts'
+import { align, blockStarts, normalizeWord, spanishNumber } from '../../src/subtitles/align.ts'
 import type { HeardWord } from '../../src/subtitles/model.ts'
 
 /** Heard words at a steady pace, with a probability for each one. */
@@ -115,5 +115,109 @@ describe('correcting the heard words with the script (R9)', () => {
     expect(performance.now() - began).toBeLessThan(2000)
     expect(result).toHaveLength(said.length)
     expect(changed(result).length).toBeGreaterThan(80)
+  })
+})
+
+// Words said one after another from `from`, at 0.4 s each.
+const said = (text: string, from: number): HeardWord[] =>
+  text.split(' ').map((word, i) => ({ text: word, start: from + i * 0.4, end: from + i * 0.4 + 0.35, p: 0.9 }))
+
+const BLOCKS = [
+  { id: 'b1', text: 'Hoy hacemos pan con masa madre en casa.' },
+  { id: 'b2', text: 'Primero mezclamos la harina con el agua y la sal.' },
+  { id: 'b3', text: 'Después lo dejamos reposar toda la noche en la nevera.' },
+]
+
+describe('where each block of the script starts in the audio (R13)', () => {
+  it('at the first aligned word of each block, within 2 s (SC-005)', () => {
+    const words = [
+      ...said('Hola a todos.', 0),
+      ...said('Hoy hacemos pan con masa madre en casa.', 2),
+      ...said('Primero mezclamos la harina con el agua y la sal.', 8),
+      ...said('Un momento que se me cae.', 14),
+      // 40 s later than it would have been.
+      ...said('Después lo dejamos reposar toda la noche en la nevera.', 56),
+    ]
+    const starts = blockStarts(words, BLOCKS)
+    expect(starts.map((one) => one.blockId)).toEqual(['b1', 'b2', 'b3'])
+    expect(starts[0]!.seconds).toBeCloseTo(2, 1)
+    expect(starts[1]!.seconds).toBeCloseTo(8, 1)
+    expect(starts[2]!.seconds).toBeCloseTo(56, 1)
+  })
+
+  it('heard wrong here and there is still found', () => {
+    const words = [
+      ...said('Hoy hacemos pan con masa madr en casa.', 1),
+      ...said('Primero mezclamos la arina con el agua y la sal.', 6.5),
+    ]
+    const [first, second] = blockStarts(words, BLOCKS.slice(0, 2))
+    expect(first!.seconds).toBeCloseTo(1, 1)
+    expect(second!.seconds).toBeCloseTo(6.5, 1)
+  })
+
+  it('«no encontrado» if under 30 % of its words are aligned: cut in the edit', () => {
+    const words = [
+      ...said('Hoy hacemos pan con masa madre en casa.', 0),
+      ...said('Después lo dejamos reposar toda la noche en la nevera.', 5),
+    ]
+    const starts = blockStarts(words, BLOCKS)
+    expect(starts[1]).toMatchObject({ blockId: 'b2', seconds: null })
+    expect(starts[2]!.seconds).toBeCloseTo(5, 1)
+  })
+
+  it('blocks put in another order in the edit are each found where they are', () => {
+    const words = [
+      ...said('Después lo dejamos reposar toda la noche en la nevera.', 0),
+      ...said('Hoy hacemos pan con masa madre en casa.', 10),
+      ...said('Primero mezclamos la harina con el agua y la sal.', 20),
+    ]
+    const starts = blockStarts(words, BLOCKS)
+    expect(starts.map((one) => one.seconds)).toEqual([
+      expect.closeTo(10, 1),
+      expect.closeTo(20, 1),
+      expect.closeTo(0, 1),
+    ])
+  })
+
+  it('a few words of a block said in another one are not its start', () => {
+    // «la harina» appears early, inside another sentence; the block itself comes later.
+    const words = [
+      ...said('Hoy hacemos pan con masa madre en casa y la harina importa.', 0),
+      ...said('Primero mezclamos la harina con el agua y la sal.', 30),
+    ]
+    expect(blockStarts(words, BLOCKS.slice(0, 2))[1]!.seconds).toBeCloseTo(30, 1)
+  })
+
+  it('two blocks with the same sentences each take their own place', () => {
+    const same = [
+      { id: 'x', text: 'Esto es lo que dirías en el gancho. Esta parte sale del guion.' },
+      { id: 'y', text: 'Esto es lo que dirías en el cierre. Esta parte sale del guion.' },
+    ]
+    const words = [
+      ...said('Esto es lo que dirías en el gancho. Esta parte sale del guion.', 0),
+      ...said('Esto es lo que dirías en el cierre. Esta parte sale del guion.', 20),
+    ]
+    expect(blockStarts(words, same).map((one) => one.seconds)).toEqual([expect.closeTo(0, 1), expect.closeTo(20, 1)])
+  })
+
+  it('a cut block whose sentences repeat another one’s is not found in its place', () => {
+    const same = [
+      { id: 'x', text: 'Esto es lo que dirías en el gancho. Esta parte sale del guion.' },
+      { id: 'y', text: 'Esto es lo que dirías en el medio. Esta parte sale del guion.' },
+      { id: 'z', text: 'Esto es lo que dirías en el cierre. Esta parte sale del guion.' },
+    ]
+    const words = [
+      ...said('Esto es lo que dirías en el gancho. Esta parte sale del guion.', 0),
+      ...said('Esto es lo que dirías en el cierre. Esta parte sale del guion.', 20),
+    ]
+    expect(blockStarts(words, same).map((one) => one.seconds)).toEqual([
+      expect.closeTo(0, 1),
+      null,
+      expect.closeTo(20, 1),
+    ])
+  })
+
+  it('without words, nothing is found', () => {
+    expect(blockStarts([], BLOCKS).every((one) => one.seconds === null)).toBe(true)
   })
 })

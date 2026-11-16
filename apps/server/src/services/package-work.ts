@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import {
   chapterTimes,
-  chaptersInOrder,
+  fixedMinute,
   channelProfileSchema,
   emptyPiece,
   formatKinds,
@@ -123,6 +123,19 @@ export function createPackageWork(deps: PackageWorkDeps) {
 
   const assertBase = (latest: number | null, baseVersion: number) => {
     if ((latest ?? 0) !== baseVersion) throw new ApiError({ code: 'version_cambiada' })
+  }
+
+  /**
+   * Minutes out of order, or too close, and YouTube shows no chapter at all. Next to a real minute (007) only the order
+   * counts: the audio says where it is, and the review warns if it is short (decision 46).
+   */
+  const assertSpacing = (chapters: readonly { readonly fromAudio?: true }[], times: readonly number[]) => {
+    const minSeconds = deps.knowledge.youtube.data.chapters.minSeconds.value
+    const real = (index: number) => chapters[index]?.fromAudio === true
+    const tooClose = times.some(
+      (start, index) => index > 0 && start - times[index - 1]! < (real(index) || real(index - 1) ? 1 : minSeconds),
+    )
+    if (tooClose) throw new ApiError({ code: 'validacion', fields: { chapters: 'no_valido' } })
   }
 
   const addVersion = <K extends PackageKind>(
@@ -679,17 +692,30 @@ export function createPackageWork(deps: PackageWorkDeps) {
         throw new ApiError({ code: 'validacion', fields: { hashtags: 'no_valido' } })
       addVersion(pkg, 'descripcion', 'edicion', sent, keepTitle)
     } else if (kind === 'capitulos') {
-      // A minute is either the creator's (`manual`) or worked out from the script: never a stale one in between (R3).
+      // A minute is the creator's (`manual`), the real one (`fromAudio`, 007) or worked out from the script: never a stale
+      // one in between (R3).
       const sent = parsed.data as ChaptersContent
-      const chapters = sent.chapters.map((chapter) => (chapter.manual ? chapter : { ...chapter, startSeconds: null }))
-      // Minutes out of order, or too close, and YouTube shows no chapter at all.
+      // A real minute only comes from the subtitles (007): here it can be kept as it was, never made up.
+      const realBefore = new Map(
+        ((latest?.content as ChaptersContent | undefined)?.chapters ?? [])
+          .filter((chapter) => chapter.fromAudio === true)
+          .map((chapter) => [chapter.id, chapter.startSeconds]),
+      )
+      if (
+        sent.chapters.some(
+          (chapter) => chapter.fromAudio === true && realBefore.get(chapter.id) !== chapter.startSeconds,
+        )
+      )
+        throw new ApiError({ code: 'validacion', fields: { chapters: 'no_valido' } })
+      const chapters = sent.chapters.map((chapter) =>
+        fixedMinute(chapter) ? chapter : { ...chapter, startSeconds: null },
+      )
       const times = chapterTimes(
         chapters,
         service.approvedDraftOf(script)?.content.blocks ?? [],
         service.paceOf(pkg.channelId),
       )
-      if (!chaptersInOrder(times, deps.knowledge.youtube.data.chapters.minSeconds.value))
-        throw new ApiError({ code: 'validacion', fields: { chapters: 'no_valido' } })
+      assertSpacing(chapters, times)
       addVersion(pkg, 'capitulos', 'edicion', { chapters }, keepTitle)
     } else if (kind === 'portada_short') {
       const sent = parsed.data as PackageContentOf<'portada_short'>
@@ -799,7 +825,76 @@ export function createPackageWork(deps: PackageWorkDeps) {
     return service.read(pkg.id)
   }
 
-  return { estimate, generate, savePiece, approve, restoreVersion }
+  /**
+   * The minutes of some chapters, from the subtitles (007, R13): `fromAudio` is the real one, any other is written by the
+   * creator. A new version of the chapters, like an edit, so an approved package is back in draft (FR-015). A short one
+   * next to a real minute is kept and the review warns of it; a written one keeps the minimum of 006.
+   */
+  const saveChapterMinutes = (
+    id: string,
+    baseVersion: number,
+    minutes: readonly { chapterId: string; seconds: number; fromAudio: boolean }[],
+    removed: readonly string[] = [],
+  ): PackageView => {
+    const { pkg, script } = service.find(id)
+    if (pkg.format !== 'largo') throw new ApiError({ code: 'no_encontrado' })
+    service.assertIdle(pkg)
+    const latest = versions.latest(pkg.id, 'capitulos')
+    assertBase(latest?.version ?? null, baseVersion)
+    if (!latest) throw new ApiError({ code: 'no_encontrado' })
+    const chapters = latest.content.chapters
+    const byId = new Map(minutes.map((minute) => [minute.chapterId, minute]))
+    const gone = new Set(removed)
+    const exists = (chapterId: string) => chapters.some((chapter) => chapter.id === chapterId)
+    const known = minutes.every((minute) => exists(minute.chapterId)) && removed.every(exists)
+    // The first chapter is always at 0:00, as YouTube asks, and is never removed.
+    const first = chapters[0] ? byId.get(chapters[0].id) : undefined
+    if (
+      !known ||
+      byId.size !== minutes.length ||
+      gone.size !== removed.length ||
+      (first !== undefined && first.seconds !== 0) ||
+      (chapters[0] !== undefined && gone.has(chapters[0].id)) ||
+      removed.some((chapterId) => byId.has(chapterId))
+    )
+      throw new ApiError({ code: 'validacion', fields: { accept: 'no_valido' } })
+    if (minutes.length === 0 && removed.length === 0) return service.read(pkg.id)
+    const placed = chapters.map((chapter) => {
+      const minute = byId.get(chapter.id)
+      if (!minute) return chapter
+      const { id: chapterId, title, blockIds } = chapter
+      return minute.fromAudio
+        ? { id: chapterId, title, blockIds, startSeconds: minute.seconds, manual: false, fromAudio: true as const }
+        : { id: chapterId, title, blockIds, startSeconds: minute.seconds, manual: true }
+    })
+    // A chapter cut in the edit is removed: its blocks join the chapter before, so every block keeps one (R3 of 006).
+    const next: typeof placed = []
+    for (const chapter of placed) {
+      const before = next.at(-1)
+      if (gone.has(chapter.id) && before)
+        next[next.length - 1] = { ...before, blockIds: [...before.blockIds, ...chapter.blockIds] }
+      else next.push(chapter)
+    }
+    const times = chapterTimes(
+      next,
+      service.approvedDraftOf(script)?.content.blocks ?? [],
+      service.paceOf(pkg.channelId),
+    )
+    assertSpacing(next, times)
+    addVersion(
+      pkg,
+      'capitulos',
+      'edicion',
+      { chapters: next },
+      {
+        draftVersion: draftVersionOf(script, pkg, 'capitulos'),
+        mainTitle: latest.mainTitle,
+      },
+    )
+    return service.read(pkg.id)
+  }
+
+  return { estimate, generate, savePiece, approve, restoreVersion, saveChapterMinutes }
 }
 
 export type PackageWork = ReturnType<typeof createPackageWork>
