@@ -1,0 +1,91 @@
+name: whisper-cli for macOS
+
+# research.md R1, decision 5: whisper.cpp publishes no program for the Mac, so this builds `whisper-cli` from the pinned
+# tag, once per whisper.cpp version, and publishes it in its own release of this repository. installer/versions.json
+# then pins its addresses and SHA256, as with yt-dlp. Run by hand only: publishing is an outward action.
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Etiqueta de whisper.cpp
+        required: true
+        default: b5454
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          # Apple Silicon: Metal, with its shaders inside the program.
+          - runner: macos-15
+            platform: darwin-arm64
+            metal: 'ON'
+          # Intel: the processor only.
+          - runner: macos-15-intel
+            platform: darwin-x64
+            metal: 'OFF'
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          repository: ggml-org/whisper.cpp
+          ref: ${{ inputs.tag }}
+          persist-credentials: false
+
+      - name: Build
+        run: |
+          cmake -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_OSX_DEPLOYMENT_TARGET=12.0 \
+            -DBUILD_SHARED_LIBS=OFF \
+            -DGGML_NATIVE=OFF \
+            -DGGML_METAL=${{ matrix.metal }} \
+            -DGGML_METAL_EMBED_LIBRARY=${{ matrix.metal }} \
+            -DWHISPER_BUILD_TESTS=OFF \
+            -DWHISPER_BUILD_SERVER=OFF
+          cmake --build build --config Release --target whisper-cli -j "$(sysctl -n hw.ncpu)"
+          cp build/bin/whisper-cli "whisper-cli-${{ matrix.platform }}"
+
+      - name: Runs without outside libraries
+        run: |
+          file="whisper-cli-${{ matrix.platform }}"
+          otool -L "$file"
+          # Only the system's own libraries and frameworks.
+          if otool -L "$file" | tail -n +2 | grep -v -E '^\s+(/usr/lib/|/System/Library/)'; then
+            echo "whisper-cli depends on a library outside the system" >&2
+            exit 1
+          fi
+          "./$file" --help > /dev/null
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: whisper-cli-${{ matrix.platform }}
+          path: whisper-cli-${{ matrix.platform }}
+          if-no-files-found: error
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # to create the release and upload the two programs
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: whisper-cli-*
+          merge-multiple: true
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: whisper-cpp-${{ inputs.tag }}
+          VERSION: ${{ inputs.tag }}
+        run: |
+          sha256sum whisper-cli-darwin-* > SHA256SUMS
+          cat SHA256SUMS
+          gh release create "$TAG" whisper-cli-darwin-arm64 whisper-cli-darwin-x64 SHA256SUMS \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "whisper-cli $VERSION para macOS" \
+            --notes "whisper-cli de whisper.cpp $VERSION, compilado para macOS por whisper-macos.yml. Lo descarga YTCreator la primera vez que se hacen subtítulos."
