@@ -66,6 +66,8 @@ export interface SubtitlesRecognitionDeps {
   platform: string
   arch: string
   freeBytes?: (dir: string) => number
+  /** The longest a Short can be, from the knowledge of 005 (market/shorts.json), with its source. */
+  shortMax?: { seconds: number; reviewedAt: string }
 }
 
 const defaultFreeBytes = (dir: string) => {
@@ -215,9 +217,17 @@ export function createSubtitlesRecognition(deps: SubtitlesRecognitionDeps) {
       const audioSeconds = Math.round(info.seconds * 1000) / 1000
       trackOf(script)
       logger.info('subtitles.audio', { seconds: Math.round(audioSeconds) })
+      // A Short longer than YouTube takes is said before starting, never refused (US4, AS2). In whole seconds, as the
+      // screen shows it: a video of 3:00 whose audio runs a few hundredths longer is not warned.
+      const { shortMax } = deps
+      const overShort =
+        script.format === 'short' && shortMax && Math.round(audioSeconds) > shortMax.seconds
+          ? { limitSeconds: shortMax.seconds, reviewedAt: shortMax.reviewedAt }
+          : null
       return {
         audioSeconds,
         estimateSeconds: Math.max(1, Math.round(audioSeconds * speedOf(engine.chosenModel()))),
+        overShort,
       } satisfies SubtitlesAudioResult
     } catch (error) {
       await file?.close().catch(() => {})

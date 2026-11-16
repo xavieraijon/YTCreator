@@ -58,6 +58,8 @@ export const subtitlesAudioResultSchema = z.object({
   audioSeconds: z.number().positive(),
   /** How long recognizing it will take on this machine, roughly (R7). */
   estimateSeconds: count,
+  /** In a Short, when the file is longer than YouTube takes for one: the maximum of 005 and the day it was reviewed (US4). */
+  overShort: z.object({ limitSeconds: positive, reviewedAt: z.string() }).nullable(),
 })
 export type SubtitlesAudioResult = z.infer<typeof subtitlesAudioResultSchema>
 

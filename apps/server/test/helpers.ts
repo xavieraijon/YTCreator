@@ -362,6 +362,10 @@ export function makeTestApp({
     scriptStatus: (ideaId: string) => scriptService.ideaScript(ideaId)?.status ?? null,
     workspace: join(dir, 'workspace'),
     logger,
+    shortMax: {
+      seconds: market.shorts.data.maxDurationSeconds,
+      reviewedAt: market.shorts.reviewedAt,
+    },
     platform: process.platform,
     arch: process.arch,
     freeBytes,

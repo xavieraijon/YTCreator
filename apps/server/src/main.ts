@@ -493,6 +493,10 @@ export async function startServer({
     scriptStatus: (ideaId: string) => scriptService.ideaScript(ideaId)?.status ?? null,
     workspace: paths.workspace,
     logger,
+    shortMax: {
+      seconds: market.shorts.data.maxDurationSeconds,
+      reviewedAt: market.shorts.reviewedAt,
+    },
     platform: process.platform,
     arch: process.arch,
   })

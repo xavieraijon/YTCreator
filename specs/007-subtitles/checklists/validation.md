@@ -440,3 +440,90 @@ Los revisores encontraron dos graves: no se podía quitar un capítulo cortado e
 - Revertir el commit de US3. No hay migración.
 - Las versiones de capítulos guardadas con `fromAudio` se siguen leyendo sin el campo (Zod lo ignora), con su minuto como estimación a recalcular.
 - Pendiente: T076 (motor real y SC-005 con audio real), US4 en adelante, y P1 a P5.
+
+## US4: subtítulos de un Short (T061–T064), Puerta A del 2026-11-16
+
+### 1. Resumen
+
+Con un guion de Short aprobado, el creador hace, revisa, aprueba y descarga sus subtítulos igual que los de un vídeo largo, con los límites del Short (una línea) y sin capítulos. Si el fichero dura más que el máximo de un Short de la 005, se le avisa antes de «Empezar» y puede seguir o elegir otro.
+
+Los cuatro revisores coincidieron en que la fuente citada para el máximo era una página de ingresos, en un redondeo que hacía contradictorio el aviso y en que el e2e no aprobaba ni descargaba. Todo está corregido (decisión 52).
+
+**Resultado: pasada.** Sin pendientes nuevos del creador. Siguen P1 a P5. La IA no interviene en esta historia y el audio real no está probado (T076).
+
+### 2. Requisitos
+
+| Requisito | Estado | Evidencia | Fecha |
+|-----------|--------|-----------|-------|
+| AS1, FR-004 | Cumplido | La pista toma el formato del guion: una línea de 32 caracteres como máximo. Lo prueban `segment.test.ts` («a Short: one line of 32»), `subtitles-short.test.ts` (cada subtítulo dentro de los límites, sin saltos de línea), el e2e (el editor dice «En una sola línea.» y cada bloque del SRT tiene una línea) | 2026-11-16 |
+| AS1, sin capítulos | Cumplido | `GET …/chapters` da 404 aunque el Short tenga paquete (test de rutas), y la pantalla no muestra «Minutos reales de los capítulos» (e2e) | 2026-11-16 |
+| AS2 | Cumplido | `PUT …/audio` devuelve `overShort` con el máximo de la 005 y su fecha, sin bloquear (test de rutas). La web avisa antes de «Empezar», que sigue activo. Con «Elegir otro fichero» y uno que cabe, el aviso desaparece (e2e) | 2026-11-16 |
+| Resultado observable | Cumplido | En el e2e, los subtítulos del Short se aprueban y se descargan como SRT | 2026-11-16 |
+| Principio V | Cumplido | El máximo sale de `market.shorts` y se cita igual que en la 005, con su fecha de revisión | 2026-11-16 |
+
+### 3. Cómo se comprobó
+
+- `pnpm lint` y `pnpm typecheck`: 0.
+- `pnpm test`: 220 ficheros, 2864 pasan y 4 se saltan.
+- `test:e2e`:
+  - catálogo, 97 pasan y 2 se saltan;
+  - web, 58 pasan, entre ellos el nuevo `subtitles-short.spec.ts` (puerto 4482).
+- Flujo con los falsos, en el e2e:
+  1. Se escribe un Short con la IA falsa y se descarga el programa falso.
+  2. Se elige un WAV de 200 s: sale «Dura 3 min 20 s», el aviso y la fuente.
+  3. Con «Elegir otro fichero» se elige `pan.wav`, y el aviso desaparece.
+  4. Se pulsa «Empezar», sin sección de capítulos.
+  5. Se abre un subtítulo («En una sola línea.»), se aprueba y se descarga el SRT.
+
+### 4. Controles
+
+- **Pasados:**
+  - lint, typecheck, test y test:e2e;
+  - glosario y fuga de secretos (dentro de `pnpm test`);
+  - axe en claro y oscuro a 375 y 1280 px con movimiento reducido, en el aviso y en la revisión del Short;
+  - teclado: «Elegir otro fichero», «Empezar», abrir un subtítulo, aprobar y descargar con Tab e Intro;
+  - el aviso se anuncia con `role="status"`.
+- **No aplica:**
+  - `test:installer`: ni el instalador ni la base de datos cambian;
+  - fallos tipados de la IA: esta historia no llama a la IA.
+- **No ejecutado:** un Short real con el motor real (T076).
+
+### 5. Hallazgos
+
+**Confirmados y corregidos:**
+- La fuente del máximo se elegía como `market.shorts.source[0]`, una página sobre el reparto de ingresos, y no coincidía con la de la 005. Ahora se cita como en la 005 («Máximo de un Short, según el paquete de datos de YTCreator») con su fecha.
+- Un audio de 180,4 s avisaba «dura 3 min y un Short puede durar hasta 3 min». Ahora se compara en segundos enteros, como se muestra; hay un test con 180,4 y 180,6.
+- El aviso no se anunciaba al lector de pantalla. Ahora lleva `role="status"`.
+- El e2e no aprobaba, no descargaba, no abría el editor y no usaba «Elegir otro fichero». Ahora hace las cuatro cosas.
+- El contrato HTTP no recogía `overShort`, y faltaba la decisión. Actualizados `contracts/http-api.md` y la decisión 52.
+- Las rutas de T062 y T063 no coincidían con los ficheros. Decisión 53, y `tasks.md` actualizado.
+
+**Descartados:** ninguno.
+
+**Abiertos:** ninguno.
+
+### 6. Desviaciones
+
+- El aviso lo calcula el servidor, no la web leyendo el guion (decisión 52).
+- Las pruebas están en ficheros propios (decisión 53).
+- Se añade al texto «Puedes empezar igualmente o elegir otro fichero.», como pide AS2.
+
+### 7. Decisiones
+
+- **Del agente:** 52 (riesgo medio) y 53 (riesgo bajo).
+- **Del creador:** ninguna nueva. Siguen P1 a P5.
+
+### 8. Constitución
+
+- **I:** el aviso se da antes de empezar y en llano, con las dos salidas a la vista.
+- **II:** no se bloquea; el creador decide.
+- **III:** no hay gasto.
+- **V:** la cifra sale del paquete de conocimiento, con su fuente y su fecha, igual que en la 005.
+- **VI:** axe, teclado, lector de pantalla y movimiento reducido.
+- **XI:** este informe.
+
+### 9. Cómo revertir
+
+- Revertir el commit de US4. No hay migración.
+- Un cliente antiguo ignora `overShort`.
+- Pendiente: T076, las historias siguientes y P1 a P5.

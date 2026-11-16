@@ -166,10 +166,10 @@ todos, aceptar un cambio de la IA y rechazar otro, volver a una versión y aprob
 **Independent Test**: Con un audio de Short y el falso, subtítulos de una línea dentro de los límites del Short, sin
 capítulos, y descargados.
 
-- [ ] T061 [P] [US4] Test en `packages/core/test/subtitles/segment.test.ts` de los límites del Short (1 línea de 32 caracteres) y test de rutas en `apps/server/test/http/subtitles-short.test.ts`: el formato de la pista sale del guion, no hay capítulos (`GET …/chapters` da 404) y `PUT …/audio` devuelve el aviso de duración por encima del máximo de un Short del conocimiento de la 005, sin bloquear
-- [ ] T062 [US4] Implementar los límites del Short en `segment.ts` y el aviso en `apps/server/src/services/subtitles.ts` para que pase T061; en la web, el aviso antes de «Empezar» y sin la parte de capítulos
-- [ ] T063 [US4] e2e en `apps/web/e2e/subtitles.spec.ts` (US4) con un guion de Short; axe en claro y oscuro a 375 y 1280 px
-- [ ] T064 [A] [US4] Puerta A de US4: ejecutar `/puerta-a 007 US4`
+- [X] T061 [P] [US4] Test en `packages/core/test/subtitles/segment.test.ts` de los límites del Short (1 línea de 32 caracteres) y test de rutas en `apps/server/test/http/subtitles-short.test.ts`: el formato de la pista sale del guion, no hay capítulos (`GET …/chapters` da 404) y `PUT …/audio` devuelve el aviso de duración por encima del máximo de un Short del conocimiento de la 005, sin bloquear
+- [X] T062 [US4] Implementar los límites del Short en `segment.ts` y el aviso en `apps/server/src/services/subtitles-recognize.ts` (decisión 53) para que pase T061; en la web, el aviso antes de «Empezar» y sin la parte de capítulos
+- [X] T063 [US4] e2e en `apps/web/e2e/subtitles-short.spec.ts` (US4, decisión 53) con un guion de Short; axe en claro y oscuro a 375 y 1280 px
+- [X] T064 [A] [US4] Puerta A de US4: ejecutar `/puerta-a 007 US4`
 
 ---
 

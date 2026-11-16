@@ -1,7 +1,7 @@
-import type { SpeechEngineView, SubtitlesView } from '@ytcreator/core/api'
+import type { SpeechEngineView, SubtitlesAudioResult, SubtitlesView } from '@ytcreator/core/api'
 import { Button, DataSource, ErrorMessage, format, ProgressBar } from '@ytcreator/ui'
 import { useEffect, useRef, useState } from 'react'
-import { scriptsApi, speechEngineApi, subtitlesApi } from '../../../api/client.ts'
+import { speechEngineApi, subtitlesApi } from '../../../api/client.ts'
 import { extractAudio, type ExtractFailure } from '../../../audio/extract.ts'
 import { errorText } from '../../../shell/errorText.ts'
 import { es } from '../../../strings/es.ts'
@@ -18,7 +18,13 @@ type Stage =
   | { kind: 'idle' }
   | { kind: 'preparing'; name: string; fraction: number }
   | { kind: 'uploading'; name: string }
-  | { kind: 'ready'; name: string; seconds: number; estimateSeconds: number }
+  | {
+      kind: 'ready'
+      name: string
+      seconds: number
+      estimateSeconds: number
+      overShort: SubtitlesAudioResult['overShort']
+    }
   | { kind: 'failed'; failure: ExtractFailure }
 
 // 1. Choosing the video or the audio (contracts/ui-screens.md): the program that listens first, then the file, taken
@@ -38,7 +44,6 @@ export function ChooseStep({
   // What failed and what fixes it: choosing the file again, or pressing «Empezar» again.
   const [error, setError] = useState<{ cause: unknown; fix: 'pick' | 'start' | 'download' } | null>(null)
   const [starting, setStarting] = useState(false)
-  const [shortLimit, setShortLimit] = useState<{ seconds: number; reviewedAt: string | null } | null>(null)
   const input = useRef<HTMLInputElement>(null)
   const working = useRef<AbortController | null>(null)
   const failedJob = view.job && view.job.op === 'reconocer' && view.job.status !== 'hecho' ? view.job : null
@@ -48,17 +53,6 @@ export function ChooseStep({
     : null
   // The last recognition heard nothing: the creator chooses another file here (spec, «casi sin voz»).
   const heardNothing = view.latest !== null && view.latest.content.cues.length === 0
-
-  // A Short that runs past what YouTube takes as one gets the warning of 005 before «Empezar».
-  useEffect(() => {
-    if (view.format !== 'short') return
-    const controller = new AbortController()
-    scriptsApi
-      .get(view.scriptId, { signal: controller.signal })
-      .then((script) => setShortLimit({ seconds: script.limits.maxSeconds, reviewedAt: script.limits.maxReviewedAt }))
-      .catch(() => {})
-    return () => controller.abort()
-  }, [view.format, view.scriptId])
 
   useEffect(() => () => working.current?.abort(), [])
 
@@ -82,7 +76,13 @@ export function ChooseStep({
       const saved = await subtitlesApi.uploadAudio(view.scriptId, extracted.wav, file.name, {
         signal: controller.signal,
       })
-      setStage({ kind: 'ready', name: file.name, seconds: saved.audioSeconds, estimateSeconds: saved.estimateSeconds })
+      setStage({
+        kind: 'ready',
+        name: file.name,
+        seconds: saved.audioSeconds,
+        estimateSeconds: saved.estimateSeconds,
+        overShort: saved.overShort,
+      })
     } catch (cause) {
       if (controller.signal.aborted) return
       setStage({ kind: 'idle' })
@@ -176,17 +176,20 @@ export function ChooseStep({
               <p>{format(text.file, { nombre: stage.name })}</p>
               <p>{format(text.duration, { duracion: durationText(Math.round(stage.seconds)) })}</p>
               <p role="status">{estimateText(stage.estimateSeconds)}</p>
-              {shortLimit && stage.seconds > shortLimit.seconds && (
+              {/* A Short longer than YouTube takes for one (US4): said before «Empezar», which still works. */}
+              {stage.overShort && (
                 <>
-                  <p className={styles.notice}>
+                  <p role="status" className={styles.notice}>
                     {format(text.shortTooLong, {
                       duracion: durationText(Math.round(stage.seconds)),
-                      maximo: durationText(shortLimit.seconds),
+                      maximo: durationText(stage.overShort.limitSeconds),
                     })}
                   </p>
-                  {shortLimit.reviewedAt && (
-                    <DataSource kind="conocimiento" label={scriptEs.review.shortsBasis} date={shortLimit.reviewedAt} />
-                  )}
+                  <DataSource
+                    kind="conocimiento"
+                    label={scriptEs.review.shortsBasis}
+                    date={stage.overShort.reviewedAt}
+                  />
                 </>
               )}
               <div className={styles.actions}>

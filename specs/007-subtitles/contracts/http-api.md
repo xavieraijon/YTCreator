@@ -20,7 +20,7 @@ Fallos de la descarga: `descarga`, `hash`, `permisos` y `espacio` (los de `reade
 | Método y ruta | Cuerpo | Respuesta |
 |---|---|---|
 | `GET /scripts/:id/subtitles` | | `SubtitlesView`; 404 si el guion no existe; sin pista, `{status: 'sin_hacer', …}` |
-| `PUT /scripts/:id/subtitles/audio` | WAV PCM 16 kHz mono, `Content-Type: audio/wav` | `{audioSeconds, estimateSeconds}`. 400 `audio_no_valido` si no lo es; 413 `audio_largo` por encima de 3 horas; 507 `sin_espacio`; 409 `sin_aprobar` |
+| `PUT /scripts/:id/subtitles/audio` | WAV PCM 16 kHz mono, `Content-Type: audio/wav` | `{audioSeconds, estimateSeconds, overShort}`; `overShort` es `{limitSeconds, reviewedAt}` en un Short que dura más (en segundos enteros) que el máximo de la 005, si no `null`: avisa, no bloquea (US4). 400 `audio_no_valido` si no lo es; 413 `audio_largo` por encima de 3 horas; 507 `sin_espacio`; 409 `sin_aprobar` |
 | `POST /scripts/:id/subtitles/recognize` | `{}` | 202 con el trabajo `reconocer_voz` (o `en_cola`); 409 `sin_motor` si falta el motor o el modelo; 409 `sin_audio` si no se subió |
 | `POST /scripts/:id/subtitles/cancel` | | 200; el trabajo queda `fallido` con `cancelado` |
 | `GET /scripts/:id/subtitles/audio` | | el WAV, con `Range` (R15); 404 `sin_audio` si se borró |

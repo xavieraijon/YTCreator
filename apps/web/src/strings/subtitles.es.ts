@@ -79,7 +79,7 @@ export const subtitlesEs = {
     start: 'Empezar',
     other: 'Elegir otro fichero',
     shortTooLong:
-      'Este vídeo dura {duracion} y un Short puede durar hasta {maximo}. Si dura más, YouTube no lo trata como un Short.',
+      'Este vídeo dura {duracion} y un Short puede durar hasta {maximo}. Si dura más, YouTube no lo trata como un Short. Puedes empezar igualmente o elegir otro fichero.',
     failureTitle: 'No se ha podido usar este fichero',
     failures: {
       no_se_puede_leer:
