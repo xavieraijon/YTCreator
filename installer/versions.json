@@ -34,6 +34,18 @@
         "sha256": "6b95ebfc60447df48e70ef00a73bdc3f41679ed2d01ef465827206a2ff325149",
         "sizeBytes": 4608377,
         "archive": "tar.gz"
+      },
+      "darwin-arm64": {
+        "url": "https://github.com/xavieraijon/YTCreator/releases/download/whisper-cpp-b5454/whisper-cli-darwin-arm64",
+        "sha256": "e3da71ef15218a9a14edbbf740ffb775c70d0cbdfedf0db54a881e2498f3689e",
+        "sizeBytes": 8021976,
+        "archive": "binary"
+      },
+      "darwin-x64": {
+        "url": "https://github.com/xavieraijon/YTCreator/releases/download/whisper-cpp-b5454/whisper-cli-darwin-x64",
+        "sha256": "295318d555f10c73116ff38e614f39b5e561a3488c89d0a868e4ba1f02853714",
+        "sizeBytes": 3218952,
+        "archive": "binary"
       }
     }
   },

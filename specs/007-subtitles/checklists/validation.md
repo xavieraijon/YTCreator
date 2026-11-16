@@ -220,3 +220,16 @@ Los cuatro revisores no encontraron nada grave. Los medios y menores confirmados
 - Revertir el commit de US1.
 - La migración 0008 es de Foundational y no cambia.
 - Pendiente: T032 (P4), T076 (prueba real) y US2 en adelante.
+
+### T032, 2026-11-16
+
+- El creador aprobó lanzar el flujo. El PR #10 llevó a `main` solo el fichero del flujo, porque GitHub solo deja lanzar a mano lo que ya está en `main`.
+- La ejecución 43848831389 terminó bien: compiló en Apple Silicon y en Intel, `otool` no encontró librerías de fuera del sistema y `--help` arrancó.
+- Se publicó `whisper-cpp-b5454`.
+- En este Mac:
+  - se descargaron los dos programas y `shasum -c SHA256SUMS` dio OK en ambos;
+  - `whisper-cli-darwin-arm64 --help` aceptó `-ojf`, `-pp`, `--prompt`, `--vad` y `-vm`.
+- `versions.json` fija `darwin-arm64` y `darwin-x64`, con `archive: binary`.
+- `lint`, `typecheck`, `test` (2771) y `test:installer` (29) pasan.
+- Sigue sin probarse el reconocimiento real con el modelo, que queda para T076.
+- Cierra P4 y el hallazgo abierto de que en Mac el fallo decía «Comprueba tu conexión».
