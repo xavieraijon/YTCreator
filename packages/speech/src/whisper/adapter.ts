@@ -73,7 +73,7 @@ export function createWhisperRecognizer({ locate, log, threads }: WhisperOptions
       if (failure) return { ok: false, failure }
       let words
       try {
-        words = parseWhisperJson(await readFile(`${outBase}.json`), wav.seconds)
+        words = parseWhisperJson(await readFile(`${outBase}.json`), wav.seconds, finished.vad)
       } catch {
         return { ok: false, failure: 'interno' }
       }

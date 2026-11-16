@@ -4,7 +4,7 @@ import { join } from 'node:path'
 import type { RecognizeRequest } from '@ytcreator/core'
 import { afterEach, describe, expect, it } from 'vitest'
 import { createWhisperRecognizer, type WhisperLocation } from '../src/whisper/adapter.ts'
-import { parseWhisperJson } from '../src/whisper/parse.ts'
+import { afterSilence, parseVadLine, parseWhisperJson, startsOfStretches, toAudioTime } from '../src/whisper/parse.ts'
 import { whisperEnv } from '../src/whisper/process.ts'
 import { AUDIO, FIXTURES, runRecognizerContract } from './contract/recognizer-contract.ts'
 
@@ -160,6 +160,114 @@ describe('the whisper.cpp adapter (R6)', () => {
 describe('reading the JSON of whisper-cli', () => {
   it('an empty transcription is no words', () => {
     expect(parseWhisperJson(Buffer.from('{"transcription":[]}'), 10)).toEqual([])
+  })
+
+  // As whisper.cpp b5454 says and writes it with the voice detection on (T075): the stretches of voice in its messages,
+  // and a fragment whose words count only the voice, across the silence cut between the first two stretches.
+  const lines = [
+    'whisper_vad: vad_segment_info: orig_start: 0.96, orig_end: 7.71, vad_start: 0.00, vad_end: 6.75',
+    'whisper_vad: vad_segment_info: orig_start: 9.09, orig_end: 16.54, vad_start: 6.95, vad_end: 14.40',
+  ]
+  const detected = {
+    transcription: [
+      {
+        offsets: { from: 960, to: 16540 },
+        tokens: [
+          ['[_BEG_]', 0, 0],
+          [' Hola', 40, 600],
+          [' todos', 600, 2200],
+          [' Necesit', 7220, 7700],
+          ['áis', 7700, 8000],
+          [' fin', 14300, 14400],
+          ['[_TT_720]', 14400, 14400],
+        ].map(([text, from, to]) => ({ text, offsets: { from, to }, p: 0.9 })),
+      },
+    ],
+  }
+
+  it('reads the stretches of voice from its messages, and nothing else', () => {
+    expect(lines.map(parseVadLine)).toEqual([
+      { origStart: 0.96, origEnd: 7.71, vadStart: 0, vadEnd: 6.75 },
+      { origStart: 9.09, origEnd: 16.54, vadStart: 6.95, vadEnd: 14.4 },
+    ])
+    expect(parseVadLine('whisper_full: VAD is enabled, processing speech segments only')).toBeNull()
+    expect(parseVadLine('[00:00.000 --> 00:03.000]  Hola a todos')).toBeNull()
+  })
+
+  it('with the voice detection on, each word is put back in the audio, stretch by stretch', () => {
+    const segments = lines.map((line) => parseVadLine(line)!)
+    const words = parseWhisperJson(Buffer.from(JSON.stringify(detected), 'utf8'), 60, segments)
+    expect(words.map(({ text, start, end }) => [text, start, end])).toEqual([
+      ['Hola', 1, 1.56],
+      ['todos', 1.56, 3.16],
+      ['Necesitáis', 9.36, 10.14],
+      ['fin', 16.44, 16.54],
+    ])
+  })
+
+  it('in the gap between two stretches, a time goes to the nearer edge; before or after all, to the first or last', () => {
+    const segments = lines.map((line) => parseVadLine(line)!)
+    expect(toAudioTime(6.8, segments)).toBe(7.71)
+    expect(toAudioTime(6.9, segments)).toBe(9.09)
+    expect(toAudioTime(-1, segments)).toBe(0.96)
+    expect(toAudioTime(20, segments)).toBe(16.54)
+    expect(toAudioTime(3, [])).toBe(3)
+  })
+
+  it('a word that runs over a cut silence starts where the voice comes back, never in the silence', () => {
+    const segments = lines.map((line) => parseVadLine(line)!)
+    // «Mezclad» heard from the end of the word before, across the pause, to just after the voice came back.
+    expect(afterSilence(7.5, 9.2, segments)).toBe(9.09)
+    expect(afterSilence(7.71, 9.2, segments)).toBe(9.09)
+    // Its end fell in the second half of the silence, so it was put where the voice comes back.
+    expect(afterSilence(7.5, 9.09, segments)).toBe(9.09)
+    // Ending in the pause, or inside one stretch: as it is.
+    expect(afterSilence(7.5, 7.71, segments)).toBe(7.5)
+    expect(afterSilence(10, 11, segments)).toBe(10)
+    expect(afterSilence(7.5, 9.2, [])).toBe(7.5)
+  })
+
+  it('the first word of a stretch left at the end of the one before goes to where the voice comes back', () => {
+    const segments = lines.map((line) => parseVadLine(line)!)
+    const said = (text: string, start: number, end: number) => ({ text, start, end, p: 0.9 })
+    const atEdge = [
+      said('minutos.', 7.2, 7.5),
+      said('Dejadlo', 7.5, 7.71),
+      said('enfriar', 9.12, 9.5),
+      said('sobre', 9.5, 9.8),
+    ]
+    startsOfStretches(atEdge, segments)
+    expect(atEdge.map((word) => [word.start, word.end])).toEqual([
+      [7.2, 7.5],
+      [9.09, 9.12],
+      [9.12, 9.5],
+      [9.5, 9.8],
+    ])
+    // Even when whisper put it well before the end of the stretch.
+    const early = [said('minutos.', 6.4, 6.7), said('Dejadlo', 6.7, 7.2), said('enfriar', 9.6, 9.9)]
+    startsOfStretches(early, segments)
+    expect(early.map((word) => [word.start, word.end])).toEqual([
+      [6.4, 6.7],
+      [9.09, 9.59],
+      [9.6, 9.9],
+    ])
+    // The last word of a sentence, one not after a sentence, or one whose next word is still in its stretch: as they are.
+    const kept = [
+      [said('fresca', 7.2, 7.5), said('final.', 7.5, 7.71), said('Mezclad', 9.12, 9.5)],
+      [said('una', 7.2, 7.5), said('pizca', 7.5, 7.71), said('de', 9.12, 9.5)],
+      [said('fin.', 7.0, 7.2), said('Bueno,', 7.3, 7.6), said('vamos', 9.12, 9.5)],
+      [said('fin.', 7.0, 7.2), said('Dejadlo', 7.5, 7.71), said('enfriar', 7.71, 7.71)],
+    ]
+    for (const one of kept) {
+      const before = structuredClone(one)
+      startsOfStretches(one, segments)
+      expect(one).toEqual(before)
+    }
+  })
+
+  it('without it, the times are left as they are', () => {
+    const words = parseWhisperJson(Buffer.from(JSON.stringify(detected), 'utf8'), 60)
+    expect(words.map((word) => word.start)).toEqual([0.04, 0.6, 7.22, 14.3])
   })
 })
 
