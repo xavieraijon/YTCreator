@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process'
+import { parseVadLine, type VadSegment } from './parse.ts'
 
 export interface WhisperRun {
   exitCode: number | null
@@ -7,9 +8,14 @@ export interface WhisperRun {
   stderr: string
   spawnError?: string
   aborted: boolean
+  /** The stretches of voice it kept, read as they are said (they come first, so the end of stderr may not hold them). */
+  vad: VadSegment[]
 }
 
 const STDERR_KEEP = 16_384
+// Far more than three hours of audio can split into; a longer line than this is not one of them.
+const VAD_KEEP = 100_000
+const LINE_KEEP = 4_096
 const PROGRESS = /progress\s*=\s*(\d{1,3})%/g
 
 // Runs whisper-cli without a shell, in its own process group so that stopping it leaves nothing behind (contract,
@@ -21,13 +27,15 @@ export function runWhisper(
 ): Promise<WhisperRun> {
   return new Promise((resolve) => {
     let stderr = ''
+    let line = ''
+    const vad: VadSegment[] = []
     let aborted = false
     let settled = false
-    const finish = (result: Omit<WhisperRun, 'stderr' | 'aborted'>) => {
+    const finish = (result: Omit<WhisperRun, 'stderr' | 'aborted' | 'vad'>) => {
       if (settled) return
       settled = true
       options.signal.removeEventListener('abort', onAbort)
-      resolve({ ...result, stderr, aborted })
+      resolve({ ...result, stderr, aborted, vad })
     }
     const child = spawn(bin, args, {
       env: options.env,
@@ -52,6 +60,13 @@ export function runWhisper(
     child.stderr.on('data', (chunk: string) => {
       for (const match of chunk.matchAll(PROGRESS)) options.onPercent(Math.min(100, Number(match[1])))
       stderr = (stderr + chunk).slice(-STDERR_KEEP)
+      // Line by line: a chunk can end halfway through one.
+      const lines = (line + chunk).split('\n')
+      line = (lines.pop() ?? '').slice(-LINE_KEEP)
+      for (const one of lines) {
+        const segment = vad.length < VAD_KEEP ? parseVadLine(one) : null
+        if (segment) vad.push(segment)
+      }
     })
     child.on('error', (error: NodeJS.ErrnoException) =>
       finish({ exitCode: null, signal: null, spawnError: error.code }),

@@ -739,3 +739,61 @@ Los cuatro revisores coincidieron en que T077 no estaba cerrada. Sus demás hall
 
 - Revertir el commit de Polish. No hay migración.
 - Pendiente: T075; T076 con tu permiso; P1 a P5; el PR de la 007 cuando lo pidas.
+
+## T075: prueba real del reconocimiento (2026-11-16)
+
+### 1. Resumen
+
+- whisper.cpp b5454 y `large-v3-turbo-q5_0` oyen un audio en español con dos voces del Mac: 0,08 s por segundo de audio, la ortografía del guion en todas las cifras y nombres, y la frase improvisada intacta.
+- La prueba encontró un fallo grave: con la detección de voz, los tiempos de cada palabra no contaban los silencios y los subtítulos se iban retrasando (hasta 7,5 s). Corregido en `parse.ts` (decisión 62).
+- Hallado también: el programa para Mac no se puede descargar porque el repositorio es privado (P7, pendiente del creador).
+
+### 2. Requisitos
+
+| Requisito | Estado | Evidencia | Fecha |
+|---|---|---|---|
+| SC-001 (10 min de vídeo listos en menos de 15 min) | Cumplido | 0,082 s por segundo con Mónica (50,8 s de audio en 4,2 s) y 0,077 con Paulina (61,1 s en 4,7 s), Mac con Apple Silicon: un vídeo de 10 min en menos de 1 min. El modelo por defecto se queda (decisión 6) | 2026-11-16 |
+| SC-004 (lo escrito de otra forma, corregido y marcado; nada improvisado sustituido) | Cumplido | «Cuchara Viva», «350 mililitros», «10 gramos», «12 horas», «230 grados» y «40 minutos» salen como en el guion. «ricón» se corrigió a «rincón» y su subtítulo lleva «Escrito como en tu guion»; ninguna palabra corregida quedó sin marca. La frase que no está en el guion sale como se oyó (100 % con Mónica; con Paulina, «prisa» por «prisas», que es lo oído: el guion no tocó nada) | 2026-11-16 |
+| SC-005 (minutos reales a ≤2 s en el 95 % de los capítulos) | Cumplido tras corregir | Inicio de cada bloque: 0 / 0,04 / 0,03 / 0,02 / 0,02 s (Mónica) y 0 / 0,03 / 0,04 / 0,01 / 0,02 s (Paulina). Antes de la decisión 62: 0,96 / 2,59 / 3,72 / 5,86 / 7,53 s (20 %) | 2026-11-16 |
+| Contrato del reconocedor, regla 6 (el registro no lleva el texto) | Cumplido | El registro dice solo «whisper ok 139 palabras en 4 s» | 2026-11-16 |
+| SHA256 fijados (decisión 20, P3) | Cumplido en parte | El modelo grande (574 MB), Silero y el binario de Mac coinciden con `versions.json`; `small-q5_1` no se descargó | 2026-11-16 |
+
+### 3. Cómo se comprobó
+
+- `pnpm test:real-speech` (`packages/speech/test/whisper.real.test.ts`, decisión 63): genera el audio con `say` y `afconvert`, descarga y comprueba lo fijado, oye con el reconocedor real, y pasa por `align`, `segment` y `blockStarts` como el servidor. Deja su informe en `last-report.json` de la carpeta de descargas.
+- `YTC_WHISPER_CLI=<copia del binario de la release> pnpm test:real-speech`: pasa con Mónica y con `YTC_REAL_SPEECH_VOICE=Paulina` (código de salida 0 las dos).
+- El fallo se aisló llamando a `whisper-cli` a mano con y sin `--vad`, con y sin la pista del guion. Se leyó el código de whisper.cpp b5454 (`src/whisper.cpp`: tabla `vad_mapping_table`, `whisper_map_token_time_segment_aware`): la librería sabe llevar las palabras al audio, pero `whisper-cli -ojf` escribe los tiempos sin llevarlos.
+- Pruebas unitarias nuevas en `packages/speech/test/whisper.test.ts`: leer los tramos, llevar cada palabra al audio, el hueco entre tramos, la palabra que cruza un silencio y la primera de un tramo (40 pruebas del paquete, todas pasan).
+
+### 4. Controles
+
+- `pnpm lint`, `pnpm typecheck` y `pnpm test`: pasan (código de salida 0). `pnpm test:real-speech` vuelve a pasar tras `prettier`.
+- No ejecutados: e2e e instalador (no cambia la interfaz ni el instalador); axe (sin interfaz).
+
+### 5. Hallazgos
+
+- **Grave, corregido:** tiempos de palabra sin silencios con la detección de voz (decisión 62).
+- **Grave, abierto (creador):** el binario de Mac da 404 a quien no tiene sesión en GitHub, porque el repositorio es privado (P7).
+- **Menor:** whisper escribió «ricón» por «rincón» con Mónica; el guion lo corrige y lo marca, como pide SC-004.
+
+### 6. Desviaciones
+
+- La tarea no pedía tocar el reconocedor: la corrección de la decisión 62 es necesaria para cumplir SC-005 y para que los subtítulos vayan a tiempo.
+- El audio es una voz sintética, no una persona (decisión 63). Una voz real con ruido, música o acento puede dar otros números.
+
+### 7. Decisiones
+
+- **Del agente:** 62 (medio) y 63 (bajo).
+- **Del creador:** P7 nuevo (alto); P3 queda solo para `small-q5_1`.
+
+### 8. Constitución
+
+- **I:** los subtítulos y los capítulos van a tiempo aunque el vídeo tenga pausas.
+- **III:** 0 €; no se usó la IA.
+- **VII:** el audio de prueba se hace en el equipo y no sale de él.
+- **XI:** este informe.
+
+### 9. Cómo revertir
+
+- Revertir el commit de T075: vuelven los tiempos sin silencios.
+- Pendiente: P7 (descarga en Mac), T076 con tu permiso, P1 a P5 y P3 (solo `small-q5_1`).
