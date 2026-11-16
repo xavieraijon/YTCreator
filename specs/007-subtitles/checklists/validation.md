@@ -746,7 +746,7 @@ Los cuatro revisores coincidieron en que T077 no estaba cerrada. Sus demás hall
 
 - whisper.cpp b5454 y `large-v3-turbo-q5_0` oyen un audio en español con dos voces del Mac: 0,08 s por segundo de audio, la ortografía del guion en todas las cifras y nombres, y la frase improvisada intacta.
 - La prueba encontró un fallo grave: con la detección de voz, los tiempos de cada palabra no contaban los silencios y los subtítulos se iban retrasando (hasta 7,5 s). Corregido en `parse.ts` (decisión 62).
-- Hallado también: el programa para Mac no se puede descargar porque el repositorio es privado (P7, pendiente del creador).
+- Hallado también: el programa para Mac no se podía descargar porque el repositorio era privado; el creador lo hizo público (decisión 64).
 
 ### 2. Requisitos
 
@@ -773,7 +773,7 @@ Los cuatro revisores coincidieron en que T077 no estaba cerrada. Sus demás hall
 ### 5. Hallazgos
 
 - **Grave, corregido:** tiempos de palabra sin silencios con la detección de voz (decisión 62).
-- **Grave, abierto (creador):** el binario de Mac da 404 a quien no tiene sesión en GitHub, porque el repositorio es privado (P7).
+- **Grave, cerrado por el creador:** el binario de Mac daba 404 a quien no tiene sesión en GitHub, porque el repositorio era privado (P7). El creador lo hizo público (decisión 64); la prueba real pasa descargándolo.
 - **Menor:** whisper escribió «ricón» por «rincón» con Mónica; el guion lo corrige y lo marca, como pide SC-004.
 
 ### 6. Desviaciones
@@ -784,7 +784,7 @@ Los cuatro revisores coincidieron en que T077 no estaba cerrada. Sus demás hall
 ### 7. Decisiones
 
 - **Del agente:** 62 (medio) y 63 (bajo).
-- **Del creador:** P7 nuevo (alto); P3 queda solo para `small-q5_1`.
+- **Del creador:** 64 (repositorio público, cierra P7); P3 queda solo para `small-q5_1`.
 
 ### 8. Constitución
 
@@ -796,4 +796,4 @@ Los cuatro revisores coincidieron en que T077 no estaba cerrada. Sus demás hall
 ### 9. Cómo revertir
 
 - Revertir el commit de T075: vuelven los tiempos sin silencios.
-- Pendiente: P7 (descarga en Mac), T076 con tu permiso, P1 a P5 y P3 (solo `small-q5_1`).
+- Pendiente: T076 con tu permiso, P1 a P5 y P3 (solo `small-q5_1`).
